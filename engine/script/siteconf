@@ -60,7 +60,9 @@ and the F<MANIFEST> they were pointed at, and writes the build file
 in I<${B}>, and F<MY/MANIFEST.I<goal>> for each goal in the manifest.
 See L<RdKw::WwW::SiteConf> for what those look like.
 
-With the C<web> preset (C<-P web>), F<configure> requires an
+With the C<web> preset (C<-P web>), F<siteconf -i> also writes a plain
+F<render> script next to the rules (in C<-SA>, which is the current directory
+by default), unless one is already there.  F<configure> requires an
 C<-Osite_url>, and sees to it that C<base_url> agrees.  The files
 are rendered through Template Toolkit; by convention with the
 namespaces C<D> and C<O> (including C<O.location>), and the function
@@ -107,7 +109,7 @@ Do not whine about dropped C<WANT>s.
 =cut
 
 use Data::Dumper ();
-use File::Basename qw( basename );
+use File::Basename qw( basename dirname );
 use File::ShareDir ();
 use File::Spec;
 use Getopt::Long qw( GetOptionsFromArray );
@@ -278,12 +280,17 @@ sub do_init
 
 	my $preset = '';
 	my $help = '';
+	my $render;
 	if (defined $opt->{P} and $opt->{P} ne 'none') {
 		$opt->{P} =~ /\A\w+\z/ or die "$prog: bad preset name: $opt->{P}\n";
-		my $file = eval { share_file("presets/$opt->{P}.pl") }
+		my $file = eval { share_file("presets/$opt->{P}.config") }
 			or die "$prog: no such preset: $opt->{P}\n";
 		$preset = slurp($file);
 		$preset =~ s/\n*\z/\n/;
+		# The web preset comes with a `render' script.
+		# Its name is not overrideable with -o...
+		# (though we won't clobber any existing `render' script.)
+		$render = eval { share_file("presets/$opt->{P}.render") };
 	}
 	if (%Ox) {
 		$help = "\nOptions with defaults:\n\n"
@@ -310,4 +317,18 @@ sub do_init
 	close $fh or die "$prog: write >$out: $!\n";
 	chmod 0777 & ~umask, $out or die "$prog: chmod $out: $!\n";
 	print STDERR "Wrote $out\n";
+
+	# `render' goes in the project root, next to the rules that run it;
+	# one that is already there is yours, and is left alone.
+	if (defined $render) {
+		my $dest = File::Spec->catfile(dirname($out), $A, 'render');
+		if (!-e $dest) {
+			my $text = slurp($render);
+			open my $rh, '>:encoding(UTF-8)', $dest or die "$prog: open >$dest: $!\n";
+			print $rh $text or die "$prog: write >$dest: $!\n";
+			close $rh or die "$prog: write >$dest: $!\n";
+			chmod 0777 & ~umask, $dest or die "$prog: chmod $dest: $!\n";
+			print STDERR "Wrote $dest\n";
+		}
+	}
 }

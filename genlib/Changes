@@ -2,17 +2,39 @@ Revision history of WwW-GenLib
 
 
 0.00_00  2026-10-31  RC
-    First, informally-dev, release.
+    !>! written with substantial help from Anthropic Claude !<!
+
+    first release!  (there is one fewer ``Gen'' since this
+    isn't as general as I thought it would be (limited range
+    of file names, and only one-to-one same-file-name build
+    rules), but also i looked it up and learned that there's
+    this thing called GNU gengen, where both Gen's stand for
+    generator.)
 
     * locate and relapath: URL arithmetic for static sites.
-      locator makes `locate' for a page; it does nothing to the
-      spec but locate (no index.html rewrite; that is for each
-      site to decide).
-    * location: where in the site a page is, i.e. O.location.
+      locator makes `locate' for a page; it does nothing to
+      the spec but locate (no index.html rewrite; that is
+      for each site to decide).
+
+      locate was ported from www-cellar, which was in turn
+      ported from the cooper-www experiment.  Many helps to
+      Claude for the edge case handling prior to porting.
+
+    * location: where in the site a page is; accessible in
+      render via [% O.location %].
+      (Not [% location %]!!! render can now access %D vars
+        (${B}/MY/config.mk) as well because we want it to
+        know where its peers live.)
+
     * read_make/write_make/update_file/load_state: MY/config.mk
       and MY/option.mk, written only if they changed (mtime
       kept, so reconfiguring does not rebuild the world).
+
     * read_deps: HAVE/NEED/WANT headers in any comment style,
       REM and :: included.  Paths are from the project root
       and are expanded by siteconf (see its docs).
+
     * parse_base: sanitize site_url and base_url.
+
+      This is also a port, with the special handling of `/'
+      base_url patched by Claude too.

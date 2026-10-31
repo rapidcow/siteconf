@@ -133,9 +133,7 @@ my %reserved_goal = map { $_ => 1 } qw( clean Makefile MY );
 
 I<dir> is the build directory, as seen from the current directory.
 C<MY/config.mk> there must exist.  Warnings are not printed when
-I<quiet> is true.  I<D> overrides C<MY/config.mk> parameters, except that
-C<F> and C<R> are paths from the current directory rather than
-from the project root.
+I<quiet> is true.  I<D> overrides C<MY/config.mk> parameters.
 
 =cut
 

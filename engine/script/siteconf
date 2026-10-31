@@ -167,8 +167,8 @@ exit 0;
 sub share_file
 {
 	my ($file) = @_;
-	my $path = eval { File::ShareDir::dist_file('www-siteconf', $file) };
-	defined $path or die "$prog: cannot find share/$file (is www-siteconf installed?)\n";
+	my $path = eval { File::ShareDir::dist_file('WwW-SiteConf', $file) };
+	defined $path or die "$prog: cannot find share/$file (is WwW-SiteConf installed?)\n";
 	$path;
 }
 

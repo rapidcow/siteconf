@@ -29,7 +29,7 @@ my %WriteMakefileArgs = (
 		'script/siteconf' => 'blib/man1/siteconf.1',
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-	clean => { FILES => 'www-siteconf-*' },
+	clean => { FILES => 'WwW-SiteConf-*' },
 	test => { TESTS => 't/*.t' },
 );
 

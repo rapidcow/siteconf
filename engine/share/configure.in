@@ -83,7 +83,7 @@ The following variables may be defined:
   -DR         Transformation rules (default: $Dd{R})
   -DF         Manifest (default: $Dd{F})
   -De         Directory marker (default: $Dd{e})
-@OPTHELP@
+@DEFHELP@@OPTHELP@
 Anything else you may -D or -O goes into MY/config.mk or MY/option.mk
 respectively, for the rulebook or for the files being transformed.
 

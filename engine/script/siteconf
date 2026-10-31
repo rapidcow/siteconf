@@ -285,6 +285,7 @@ sub do_init
 
 	my $preset = '';
 	my $help = '';
+	my $dhelp = '';
 	my $render;
 	if (defined $opt->{P} and $opt->{P} ne 'none') {
 		$opt->{P} =~ /\A\w+\z/ or die "$prog: bad preset name: $opt->{P}\n";
@@ -297,11 +298,17 @@ sub do_init
 		# (though we won't clobber any existing `render' script.)
 		$render = eval { share_file("presets/$opt->{P}.render") };
 	}
+	# -D beyond B a b R F e (which configure already describes)
+	my @Dextra = grep { !exists $Dd{$_} } sort keys %Dx;
+	if (@Dextra) {
+		$dhelp = join '', map { sprintf "  -D%-9s (default: \$Dd{%s})\n", $_, pK($_) }
+			@Dextra;
+	}
 	if (%Ox) {
 		$help = "\nOptions with defaults:\n\n" .
 			join '', map {
 				sprintf "  -O%-9s %s(default: \$Od{%s})\n",
-					$_, exists $OD{$_} ? "$OD{$_} " : "", pK($Ox{$_})
+					$_, exists $OD{$_} ? "$OD{$_} " : "", pK($_)
 			} sort keys %Ox;
 	}
 
@@ -314,6 +321,7 @@ sub do_init
 		ODEF => hash_lines(\%Ox),
 		MODULES => join("\n", @mod),
 		PRESET => $preset,
+		DEFHELP => $dhelp,
 		OPTHELP => $help,
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: template: \@$1\@?\n"/ge;

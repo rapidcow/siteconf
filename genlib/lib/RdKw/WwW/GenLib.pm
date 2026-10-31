@@ -346,7 +346,7 @@ sub update_file
 
 =item B<write_make> I<file>, \%vars, I<prog>
 
-The converse of B<read_make>, through B<update_file>.  Keys are
+The reverse of B<read_make>, through B<update_file>.  Keys are
 sorted by length, then alphabetically.  I<prog> is credited in the
 header comment.
 

@@ -17,11 +17,11 @@ my $make = $ENV{MAKE} || 'make';
 system("$make -v >/dev/null 2>&1") == 0 or plan skip_all => "no make";
 
 my $root = abs_path(File::Spec->catdir(dirname(__FILE__), File::Spec->updir));
-my $script = "$root/script/siteconf";
+my $script = "$root/blib/script/siteconf";
+-f $script or plan skip_all => "not built: perl Makefile.PL && make, in engine/ and genlib/";
 my $fixture = "$root/t/fixture/web";
 # Whatever lets us load our modules lets the children do so
 local $ENV{PERL5LIB} = join ':', map { abs_path($_) } grep { defined && -d } @INC;
-local $ENV{SITECONF_SHARE} = "$root/share";
 
 my $dir = tempdir(CLEANUP => 1);
 system('cp', '-R', "$fixture/.", $dir) == 0 or die "cp: $?";

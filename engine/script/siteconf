@@ -98,7 +98,7 @@ Do not whine about dropped C<WANT>s.
 =cut
 
 use File::Basename qw( basename );
-use FindBin ();
+use File::ShareDir ();
 use File::Spec;
 use Getopt::Long qw( GetOptionsFromArray );
 
@@ -158,23 +158,15 @@ exit 0;
 
 # ---
 
-# Where does `share' live?  Preferably alongside the installed
-# modules (File::ShareDir); in a source tree, right next to script/.
+# `share' lives where File::ShareDir finds it: alongside the modules
+# we were loaded from (so under blib/ in a built checkout), and nowhere
+# else.  No environment variable, no path relative to us.
 sub share_file
 {
 	my ($file) = @_;
-	my @try;
-	push @try, "$ENV{SITECONF_SHARE}/$file"
-		if defined $ENV{SITECONF_SHARE} and length $ENV{SITECONF_SHARE};
-	push @try, "$FindBin::RealBin/../share/$file";
-	if (eval { require File::ShareDir; 1 }) {
-		my $dir = eval { File::ShareDir::dist_dir('www-siteconf') };
-		push @try, "$dir/$file" if defined $dir;
-	}
-	for (@try) {
-		-f $_ and return $_;
-	}
-	die "$prog: cannot find share/$file (tried: @try)\n";
+	my $path = eval { File::ShareDir::dist_file('www-siteconf', $file) };
+	defined $path or die "$prog: cannot find share/$file (is www-siteconf installed?)\n";
+	$path;
 }
 
 sub slurp

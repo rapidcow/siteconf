@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 use File::ShareDir::Install qw(install_share);
 
 my %WriteMakefileArgs = (
-	NAME             => 'www-siteconf',
+	NAME             => 'WwW::SiteConf',
 	AUTHOR           => q{rapidcow},
 	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf.pm',
 	ABSTRACT         => q{Web site transformation rulebook configuration utilties},

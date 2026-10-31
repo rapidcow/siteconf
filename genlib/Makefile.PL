@@ -4,7 +4,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %WriteMakefileArgs = (
-	NAME             => 'www-genlib',
+	NAME             => 'WwW::GenLib',
 	AUTHOR           => q{rapidcow},
 	VERSION_FROM     => 'lib/RdKw/WwW/GenLib.pm',
 	ABSTRACT         => q{Web site transformation rulebook configuration utilties},
@@ -23,7 +23,7 @@ my %WriteMakefileArgs = (
 		'parent' => '0',
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-	clean => { FILES => 'www-genlib-*' },
+	clean => { FILES => 'WwW-GenLib-*' },
 	test => { TESTS => 't/*.t' },
 );
 

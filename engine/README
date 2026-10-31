@@ -10,6 +10,13 @@ MANIFEST:
     MAKE small
         NEED file1
 
+Headers (HAVE/NEED/WANT in any comment style, REM and :: too): paths
+from the project root, spelled in full:
+    # HAVE: ${A}/${a}/index.html     ${A} is always "."
+    # NEED: ${B}/${b}/style.css      a generated file: made first
+    # NEED: skel/HTML                bare names are from the root
+${b} is relative to ${B}; on its own it is an error.
+
 In templates (TT2): D.* (config.mk), O.* (option.mk, plus O.location),
 locate(...).  Keep local changes to ./configure as a patch; it is
 generated deterministically.

@@ -61,9 +61,49 @@ relative to C<${a}> (and made in C<${b}>).
 
 =item the files themselves
 
-A source file may declare (see L<RdKw::WwW::GenLib/read_deps>)
-what it C<NEED>s and C<WANT>s, relative to C<${A}>, or to the
-build directory for paths under F<MY/>.
+A source file declares its place in the graph in a header (see
+L<RdKw::WwW::GenLib/read_deps>, which also says what comments they
+may hide in):
+
+    # HAVE: ${A}/${a}/index.html
+    # NEED: skel/HTML
+    # NEED: ${B}/${b}/style.css
+    # WANT: ${A}/data/extra.scm
+
+Every path here is from the project root, spelled in full, and
+nothing is relative to anything else.  These are expanded first:
+
+=over
+
+=item C<${A}>
+
+The root itself, which is always C<.>  (This is not C<A> of
+F<config.mk>, which is the way from the build directory back.)
+
+=item C<${a}>, C<${B}>
+
+The source tree, and the build directory, as configured.
+
+=item C<${b}>
+
+The target tree, as configured -- which is relative to C<${B}>, so
+it is only good after it: C<${B}/${b}/style.css>.  A bare C<${b}/...>
+is an error.
+
+=back
+
+A single letter may drop its braces (C<$a>).  A name with none of
+these is relative to the root, so C<skel/HTML> and C<${A}/skel/HTML>
+are the same.  Build state is under C<${B}/MY/>.
+
+C<HAVE> is the source's own path, C<${A}/${a}/FILE>.  A dependency on
+something in C<${B}/${b}> is an edge to that file in the graph, which
+needs a rule and a source of its own, and is made first, whether or
+not any goal asks for it.  (Cycles are an error.)  Other
+dependencies must exist.
+
+The dependencies in F<Makefile.in> are those of L<make(1)>, as
+seen from the build directory, after the substitutions above.
 
 =back
 
@@ -80,6 +120,7 @@ what was dropped left as comments).
 =cut
 
 use File::Basename qw( dirname basename );
+use Cwd qw( abs_path );
 use File::Spec ();
 
 use RdKw::WwW::GenLib qw( read_make read_deps update_file );
@@ -119,6 +160,11 @@ RUSH
 		and die "E: `b' prefix must be a relative path.\n";
 	$D{e} =~ m!/! and die "E: `e' (directory marker) may not contain a slash.\n";
 	$self->{D} = \%D;
+	# The build directory and the project root, as they really are
+	$self->{Babs} = abs_path($self->{B});
+	$self->{Rabs} = abs_path($self->_fs($D{A}));
+	defined $self->{Babs} && defined $self->{Rabs}
+		or die "E: cannot find the build dir or the source tree: $!\n";
 	$self;
 }
 
@@ -138,26 +184,67 @@ sub _fs
 		? $path : File::Spec->catfile($self->{B}, $path);
 }
 
-# `path' relative to `a', as seen from the build dir.  A pure function
-# of what is in %D; `a' itself is relative to the sources, unless it
-# is absolute (out-of-tree sources).
+# Paths come in two frames: the project root (what headers say, see
+# _expand), and the build directory (what the Makefile says, and what
+# we can open from here).  This is the way over.  Whatever is absolute
+# stays that way.
+sub _to_build
+{
+	my ($self, $path) = @_;
+	return File::Spec->canonpath($path) if File::Spec->file_name_is_absolute($path);
+	File::Spec->abs2rel(File::Spec->rel2abs($path, $self->{Rabs}), $self->{Babs});
+}
+
+# A path in a header, as one from the project root.  It is relative to
+# the root unless it says otherwise, and may say so with these:
+#
+#   ${A}  the root itself, so `.' (not where A leads from the build dir)
+#   ${a}  the source tree, relative to ${A}; so ${A}/${a}/x is html/x
+#   ${B}  the build dir, relative to ${A}
+#   ${b}  the target tree, but relative to ${B}!  It is only good after
+#         one: ${B}/${b}/x.  On its own it names the wrong place.
+#
+# and a single letter spelled as $a is as good as ${a}.
+sub _expand
+{
+	my ($self, $spec, $where) = @_;
+	my $D = $self->{D};
+	my %var = ( A => '.', a => $D->{a}, B => $D->{B}, b => $D->{b} );
+	$spec =~ /(?<!\$\{B\}\/)(?<!\$B\/)\$(?:\{b\}|b)/
+		and die "E: $where: `$spec': \${b} is relative to \${B};"
+			. " write \${B}/\${b}\n";
+	$spec =~ s{\$(?:\{(\w+)\}|(\w))}{
+		my $x = defined $1 ? $1 : $2;
+		exists $var{$x} or die "E: $where: `$spec': no such variable \${$x}"
+			. " (there are A a B b)\n";
+		$var{$x};
+	}ge;
+	$spec =~ /\$/ and die "E: $where: stray \$ in `$spec'\n";
+	length $spec or die "E: $where: empty path\n";
+	File::Spec->canonpath($spec);
+}
+
+# `path' relative to `a', as seen from the build dir.
 sub apath
 {
 	my ($self, $path) = @_;
-	my $D = $self->{D};
-	File::Spec->canonpath(
-		File::Spec->file_name_is_absolute($D->{a})
-			? "$D->{a}/$path"
-			: "$D->{A}/$D->{a}/$path");
+	$self->_to_build(File::Spec->canonpath("$self->{D}{a}/$path"));
 }
 
-# Things under A, as seen from the build dir; and MY/, which is
-# build state and is where it says it is.
+# What a header calls a dependency, as seen from the build dir
 sub _dep
 {
+	my ($self, $path, $where) = @_;
+	$self->_to_build($self->_expand($path, $where));
+}
+
+# `b'-relative name of what we make, if `path' (seen from the build
+# dir) is something we make
+sub _target
+{
 	my ($self, $path) = @_;
-	$path =~ m!^MY/! ? $path
-		: File::Spec->canonpath("$self->{D}{A}/$path");
+	my $b = File::Spec->canonpath($self->{D}{b});
+	index($path, "$b/") == 0 ? substr($path, length($b) + 1) : undef;
 }
 
 sub bpath
@@ -338,12 +425,21 @@ sub _read_rules
 
 # A node of the graph: what it takes to make one file in `b' from one
 # in `a'.  `ok' says whether that can be done at all, and `why' not
-# if it cannot.
+# if it cannot.  A dependency on something in `b' is an edge to
+# the node for that, which is how we know to make it (and to make it
+# first); `kids' are those.
 sub _node
 {
 	my ($self, $file) = @_;
 	my $D = $self->{D};
-	return $self->{node}{$file} if $self->{node}{$file};
+	if (my $node = $self->{node}{$file}) {
+		if ($node->{visiting}) {
+			my @stack = @{ $self->{stack} };
+			shift @stack while @stack && $stack[0] ne $file;
+			die "E: dependency cycle: " . join(' -> ', @stack, $file) . "\n";
+		}
+		return $node;
+	}
 
 	my $rule = $self->{rules}{$file};
 	my $apath = $self->apath($file);
@@ -356,47 +452,81 @@ sub _node
 		apath => $apath,
 		bpath => $bpath,
 		deps => [],
+		kids => [],
 		recipe => '',
 		ok => 1,
 		why => [],
+		visiting => 1,
 	};
+	push @{ $self->{stack} }, $file;
 	my $fail = sub { $node->{ok} = 0; push @{ $node->{why} }, @_; };
+	my $done = sub { delete $node->{visiting}; pop @{ $self->{stack} }; $node };
 
 	unless ($rule) {
 		$fail->("no rule to make it ($D->{R})");
-		return $node;
+		return $done->();
 	}
 	unless (-f $self->_fs($apath)) {
 		$fail->("source `$apath' is missing");
-		return $node;
+		return $done->();
 	}
 	$node->{recipe} = $rule->{recipe};
 
 	my %I = read_deps($self->_fs($apath));
-	if (defined $I{HAVE} and $I{HAVE} ne $file) {
-		die "E: $apath: You have $I{HAVE}, but I have $file?\n";
+	if (defined $I{HAVE}) {
+		# The source's own name, as a header spells it, is the one
+		# the rule says it is: ${A}/${a}/FILE.
+		my $where = "$apath: HAVE";
+		my $have = $self->_expand($I{HAVE}, $where);
+		my $want = File::Spec->canonpath("$D->{a}/$file");
+		$have eq $want or die "E: $apath: You have $I{HAVE} (which is $have),"
+			. " but I have $want?\n";
 	}
 
-	my @deps = ($apath, @{ $rule->{deps} });
+	# What the headers say they need, and what the rules do
+	my $where = "$apath";
+	my @hneed = map { [ $_, $self->_dep($_, $where) ] } @{ $I{NEED} || [] };
+	my @hwant = map { [ $_, $self->_dep($_, $where) ] } @{ $I{WANT} || [] };
+	my @rdep = map { [ $_, $_ ] } @{ $rule->{deps} };
+
+	my @deps = ($apath);
 	my $bdir = File::Spec->canonpath($D->{b});
-	for my $dep (@deps, map { $self->_dep($_) } @{ $I{NEED} || [] }) {
-		# What `b' holds is made by us, and need not be there yet.
-		next if $dep eq $bdir or index($dep, "$bdir/") == 0;
-		-e $self->_fs($dep) or $fail->("needs `$dep', which we don't seem to have");
+	my $check = sub {
+		my ($said, $dep, $soft) = @_;
+		return 1 if $dep eq $bdir;
+		if (defined(my $made = $self->_target($dep))) {
+			my $kid = $self->_node($made);
+			unless ($kid->{ok}) {
+				return 0 if $soft;
+				$fail->("needs `$dep', which cannot be made: "
+					. join('; ', @{ $kid->{why} }));
+				return 0;
+			}
+			push @{ $node->{kids} }, $made unless grep { $_ eq $made } @{ $node->{kids} };
+			return 1;
+		}
+		return 1 if -e $self->_fs($dep);
+		unless ($soft) {
+			my $hint = $said =~ m!\AMY/! ? " (is it \${B}/$said?)" : "";
+			$fail->("needs `$dep', which we don't seem to have$hint");
+		}
+		0;
+	};
+	for my $d (@rdep, @hneed) {
+		$check->(@$d, 0) and push @deps, $d->[1];
 	}
-	push @deps, map { $self->_dep($_) } @{ $I{NEED} || [] };
-	for my $want (map { $self->_dep($_) } @{ $I{WANT} || [] }) {
-		if (-e $self->_fs($want)) {
-			push @deps, $want;
+	for my $d (@hwant) {
+		if ($check->(@$d, 1)) {
+			push @deps, $d->[1];
 		} else {
-			$self->_warn("W: $file: WANT `$want' is missing;",
+			$self->_warn("W: $file: WANT `$d->[1]' is missing;",
 				" going on without it\n");
 		}
 	}
 
 	my %iHaz;
 	$node->{deps} = [ grep { !$iHaz{$_}++ } @deps ];
-	$node;
+	$done->();
 }
 
 =item B<plan>
@@ -418,12 +548,20 @@ sub plan
 	my ($self) = @_;
 	my $D = $self->{D};
 	$self->{node} = {};
+	$self->{stack} = [];
 	$self->{rules} = $self->_read_rules;
 
 	my $manifest = File::Spec->canonpath("$D->{A}/$D->{F}");
 	my @spec = $self->read_manifest($self->_fs($manifest));
 
 	my (@goal, @err, @order, %known);
+	# A file comes after what it takes to make it
+	my $add; $add = sub {
+		my ($file) = @_;
+		return if $known{$file}++;
+		$add->($_) for @{ $self->{node}{$file}{kids} };
+		push @order, $file;
+	};
 	for my $spec (@spec) {
 		my (@files, %iHaz, @dropped);
 		for my $kind (qw( need want )) {
@@ -433,7 +571,7 @@ sub plan
 				if ($node->{ok}) {
 					next if $iHaz{$file}++;
 					push @files, $file;
-					push @order, $file unless $known{$file}++;
+					$add->($file);
 					next;
 				}
 				my $why = join '; ', @{ $node->{why} };

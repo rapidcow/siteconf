@@ -3,5 +3,5 @@
 #
 index.html sub/index.html extra/index.html: ${A}/render
 	cd -- ${A:Q} && ${^X} render -B ${B:Q} ${a}/${.TARGET} ${B:Q}/${b}/${.TARGET}
-robots.txt:
+robots.txt style.css:
 	cd -- ${A:Q} && cp ${a}/${.TARGET} ${B:Q}/${b}/${.TARGET}

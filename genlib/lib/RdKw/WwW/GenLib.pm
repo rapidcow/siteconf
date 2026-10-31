@@ -14,12 +14,11 @@ RdKw::WwW::GenLib - static web-site generation library
 
 =head1 SYNOPSIS
 
-    use RdKw::WwW::GenLib qw( load_state tt_vars read_deps );
+    use RdKw::WwW::GenLib qw( load_state tt_vars location );
 
     # in a `render' script:
     my ($D, $O) = load_state($B);       # ${B}/MY/{config,option}.mk
-    my %I = read_deps($apath);          # HAVE / NEED / WANT
-    my $vars = tt_vars($D, $O, $I{HAVE});
+    my $vars = tt_vars($D, $O, location($D, $bpath));
 
     # [% D.b %], [% O.base_url %], [% O.location %], [% locate('x') %]
     unless ($tt->process($if, $vars, $of)) {
@@ -39,6 +38,7 @@ our @EXPORT_OK = qw(
 	parse_base
 	read_make write_make update_file load_state
 	read_deps
+	location
 	tt_vars
 );
 
@@ -390,6 +390,28 @@ RUSH
 	@h;
 }
 
+=item B<location> \%D, I<bpath>
+
+Where in the site the file I<bpath> is, i.e. its path relative to
+C<${B}/${b}>.  This is what C<O.location> is.  I<bpath> is spelled
+as the rules spell it, as seen from the source tree.
+
+=cut
+
+sub location
+{
+	my ($D, $bpath) = @_;
+	my $root = File::Spec->canonpath("$D->{B}/$D->{b}");
+	my $path = File::Spec->canonpath($bpath);
+	$root = '' if $root eq '.';
+	if (length $root) {
+		index($path, "$root/") == 0
+			or die "location: $bpath is not under $root\n";
+		substr($path, 0, length($root) + 1) = '';
+	}
+	$path;
+}
+
 =item B<tt_vars> \%D, \%O, I<location>
 
 The variable stash for TT2, with the namespaces kept apart:
@@ -443,6 +465,13 @@ dependency list, optionally emitting a warning.
 
 =back
 
+The names are returned as written: they are paths from the project
+root, in which C<${a}> and C<${b}> and the like mean what they mean
+to L<siteconf(1)>, which does the expanding.  So a page may say
+
+   # HAVE: ${a}/index.html
+   # NEED: ${b}/style.css
+
 This function returns a hash map:
 
    [%#
@@ -487,10 +516,12 @@ sub read_deps {
 		#   '  (VBScript (aughhhhhh!!! >n<!))
 		#   -- (lua)
 		#   %  (TeX, lilypond)
+		#   REM, @REM  (BASIC, DOS batch; any case)
+		#   :: (DOS batch, the label that is not)
 		# A space is necessary both due to my
 		# subjective aesthetics and preventing
 		# false positives (e.g. a quoted string)
-		if (/^\s*(?:#|;|\*|\/\/|"|'|--|%) (HAVE|WANT|NEED):/g) {
+		if (/^\s*(?:#|;|\*|\/\/|"|'|--|%|\@?(?i:rem)|::) (HAVE|WANT|NEED):/g) {
 			my $type = $1;
 			my @list = /\S+/g;
 			$onit = 1;

@@ -75,6 +75,7 @@ unlike($err = run('siteconf make (alias)', $^X, $script, qw( make -B build )),
 run('make basic', $make, '-C', 'build', 'basic');
 ok(-f 'build/site/sub/index.html', 'basic: sub built');
 ok(!-e 'build/site/robots.txt', 'basic: only the subset');
+ok(-f 'build/site/style.css', 'basic: and what index.html needs from ${b}');
 like(slurp('build/site/sub/index.html'), qr/location=sub\/index\.html/, 'O.location');
 like(slurp('build/site/index.html'), qr/out=site .*site=https:\/\/example\.test/s, 'D and O');
 like(slurp('build/site/sub/index.html'), qr/href="\.\.\/index\.html"/, 'locate');

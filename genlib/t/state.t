@@ -11,7 +11,7 @@ use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenLib qw(
 	read_make write_make update_file load_state
-	read_deps parse_base tt_vars locator
+	read_deps parse_base tt_vars locator location
 );
 
 my $dir = tempdir(CLEANUP => 1);
@@ -84,6 +84,29 @@ HTML
 	$f = spew('d', "# HAVE: a\n# HAVE: b\n");
 	ok(!eval { read_deps($f); 1 }, 'two HAVEs');
 	like($@, qr/HAVE too many/, '... too many');
+}
+
+# --- read_deps: BASIC and DOS
+{
+	for my $head ("REM HAVE: a\nREM NEED: b\n", "rem HAVE: a\nrem NEED: b\n",
+		"\@REM HAVE: a\n\@REM NEED: b\n", ":: HAVE: a\n:: NEED: b\n",
+		"' HAVE: a\n' NEED: b\n") {
+		my $f = spew('rem', "\@echo off\n$head\necho hi\n");
+		is_deeply({ read_deps($f) }, { HAVE => 'a', NEED => ['b'] },
+			'header in ' . (split ' ', $head)[0]);
+	}
+	my $f = spew('remark', "REMEMBER HAVE: a\n");
+	is_deeply({ read_deps($f) }, {}, 'REM is a word');
+}
+
+# --- location
+{
+	my %D = (B => '.', b => 'site');
+	is(location(\%D, 'site/a/b.html'), 'a/b.html', 'location, in-tree');
+	%D = (B => 'build', b => 'site');
+	is(location(\%D, 'build/site/a/b.html'), 'a/b.html', 'location, build dir');
+	is(location(\%D, 'build//site/./a.html'), 'a.html', 'location, canonical');
+	ok(!eval { location(\%D, 'site/a.html'); 1 }, 'location, not ours');
 }
 
 # --- parse_base

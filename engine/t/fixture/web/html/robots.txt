@@ -1,5 +1,5 @@
 #
-# HAVE: robots.txt
+# HAVE: ${A}/${a}/robots.txt
 #
 User-agent: *
 Disallow:

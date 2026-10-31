@@ -8,7 +8,7 @@ use open ':std', ':encoding(UTF-8)';
 
 use Getopt::Std;
 use Template;
-use RdKw::WwW::GenLib qw( load_state read_deps tt_vars );
+use RdKw::WwW::GenLib qw( load_state location tt_vars );
 
 my %o;
 getopts('B:', \%o) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
@@ -17,9 +17,7 @@ my ($apath, $bpath) = @ARGV;
 
 # D and O, each in a namespace of its own
 my ($D, $O) = load_state(defined $o{B} ? $o{B} : '.');
-my %I = read_deps($apath);
-defined $I{HAVE} or die "E: $apath: missing HAVE declaration\n";
-my $vars = tt_vars($D, $O, $I{HAVE});
+my $vars = tt_vars($D, $O, location($D, $bpath));
 
 my $tt = Template->new({ INCLUDE_PATH => [ 'skel', '.' ] })
 	or die "[TT] ", $Template::ERROR, "\n";

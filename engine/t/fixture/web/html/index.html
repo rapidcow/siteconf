@@ -1,6 +1,7 @@
 [%
-# HAVE: index.html
+# HAVE: ${A}/${a}/index.html
 # NEED: skel/HTML
+# NEED: ${B}/${b}/style.css
 -%]
 [% WRAPPER "HTML" title = "home" -%]
 <p>location=[% O.location %] out=[% D.b %] site=[% O.site_url %]</p>

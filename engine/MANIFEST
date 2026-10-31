@@ -10,12 +10,14 @@ share/presets/web.pl
 t/00-load.t
 t/e2e.t
 t/manifest.t
+t/graph.t
 t/ninja.t
 t/fixture/web/MANIFEST
 t/fixture/web/Makefile.in
 t/fixture/web/render
 t/fixture/web/html/index.html
 t/fixture/web/html/robots.txt
+t/fixture/web/html/style.css
 t/fixture/web/html/sub/index.html
 t/fixture/web/html/extra/index.html
 t/fixture/web/skel/HTML

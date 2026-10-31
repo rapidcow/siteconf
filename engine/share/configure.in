@@ -125,8 +125,12 @@ while (@ARGV) {
 }
 @ARGV and die "$prog: too many arguments\n";
 
-# We are in the source tree, wherever we have been started from; that
-# is where $A says it is.
+# Store where we were started from: for telling the user what
+# to run after configuring.
+my $start = getcwd();
+
+# We are in the source tree, wherever we have been started from;
+# that is where $A says it is.
 my $srcdir = abs_path(File::Spec->rel2abs($A, $FindBin::RealBin));
 defined $srcdir or die "E: cannot find the project root ($A): $!\n";
 chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
@@ -196,6 +200,11 @@ for my $f ([ option => \%O ], [ config => \%D ]) {
 		" MY/$name.mk\n";
 }
 
-my $where = $B eq '.' ? '' : " -B " . ($B =~ m!\A[\w./:@%+=,-]+\z! ? $B : "'$B'");
+# Compute $B for siteconf -g, as seen from the current directory
+# (not from the source tree, which is where -DB is seen from)
+my $Bhere = File::Spec->abs2rel($Babs, $start);
+my $where = $Bhere eq '.' ? '' : " -B " . ($Bhere =~ m!\A[\w./:@%+=,-]+\z! ? $Bhere : "'$Bhere'");
+print STDERR "Done!\n";
 print STDERR "Now run: @PROG@ -g$where\n";
+
 exit 0;

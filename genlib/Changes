@@ -1,0 +1,18 @@
+Revision history of WwW-GenLib
+
+
+0.00_00  2026-10-31  RC
+    First, informally-dev, release.
+
+    * locate and relapath: URL arithmetic for static sites.
+      locator makes `locate' for a page; it does nothing to the
+      spec but locate (no index.html rewrite; that is for each
+      site to decide).
+    * location: where in the site a page is, i.e. O.location.
+    * read_make/write_make/update_file/load_state: MY/config.mk
+      and MY/option.mk, written only if they changed (mtime
+      kept, so reconfiguring does not rebuild the world).
+    * read_deps: HAVE/NEED/WANT headers in any comment style,
+      REM and :: included.  Paths are from the project root
+      and are expanded by siteconf (see its docs).
+    * parse_base: sanitize site_url and base_url.

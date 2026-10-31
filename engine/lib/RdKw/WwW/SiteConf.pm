@@ -168,8 +168,6 @@ RUSH
 	$self;
 }
 
-sub D { $_[0]{D} }
-
 sub _warn
 {
 	my ($self, @mesg) = @_;
@@ -225,7 +223,7 @@ sub _expand
 }
 
 # `path' relative to `a', as seen from the build dir.
-sub apath
+sub _apath
 {
 	my ($self, $path) = @_;
 	$self->_to_build(File::Spec->canonpath("$self->{D}{a}/$path"));
@@ -247,7 +245,7 @@ sub _target
 	index($path, "$b/") == 0 ? substr($path, length($b) + 1) : undef;
 }
 
-sub bpath
+sub _bpath
 {
 	my ($self, $path) = @_;
 	File::Spec->canonpath("$self->{D}{b}/$path");
@@ -442,8 +440,8 @@ sub _node
 	}
 
 	my $rule = $self->{rules}{$file};
-	my $apath = $self->apath($file);
-	my $bpath = $self->bpath($file);
+	my $apath = $self->_apath($file);
+	my $bpath = $self->_bpath($file);
 	basename($bpath) eq $D->{e}
 		and die "E: $file: `$D->{e}' is reserved for directory markers.\n";
 
@@ -690,7 +688,7 @@ sub generate
 	}
 
 	$plan->{prog} = "$self->{prog} -g -G $G";
-	my $text = $module->can('emit')->($plan);
+	my $text = $module->can('_emit')->($plan);
 	$self->_report($outfile, update_file("$self->{B}/$outfile", $text));
 	$plan;
 }

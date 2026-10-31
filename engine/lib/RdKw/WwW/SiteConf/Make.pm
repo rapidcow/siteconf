@@ -10,7 +10,7 @@ RdKw::WwW::SiteConf::Make - Makefile backend for siteconf
 
 =head1 SYNOPSIS
 
-    my $text = RdKw::WwW::SiteConf::Make::emit($plan);
+    my $text = RdKw::WwW::SiteConf::Make::_emit($plan);
 
 =head1 DESCRIPTION
 
@@ -22,7 +22,7 @@ a tab-indented shell fragment, so any make will do.
 
 =cut
 
-sub emit
+sub _emit
 {
 	my ($plan) = @_;
 	my $D = $plan->{D};

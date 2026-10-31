@@ -1,4 +1,5 @@
 MANIFEST
+Changes
 Makefile.PL
 lib/RdKw/WwW/GenLib.pm
 t/00-load.t

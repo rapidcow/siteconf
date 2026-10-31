@@ -1,4 +1,5 @@
 MANIFEST
+Changes
 Makefile.PL
 README
 script/siteconf

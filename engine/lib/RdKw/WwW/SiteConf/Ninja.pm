@@ -10,7 +10,7 @@ RdKw::WwW::SiteConf::Ninja - build.ninja backend for siteconf
 
 =head1 SYNOPSIS
 
-    my $text = RdKw::WwW::SiteConf::Ninja::emit($plan);
+    my $text = RdKw::WwW::SiteConf::Ninja::_emit($plan);
 
 =head1 DESCRIPTION
 
@@ -30,7 +30,7 @@ failure.  For clean-up there is C<ninja -t clean>.
 
 =cut
 
-sub emit
+sub _emit
 {
 	my ($plan) = @_;
 	my @goal = @{ $plan->{goals} };

@@ -27,13 +27,13 @@ my $plan = {
 	order => ['x'], dirs => [],
 	node => { x => { bpath => 'site/x', recipe => '', deps => ['in/x'] } },
 };
-ok(!eval { RdKw::WwW::SiteConf::Ninja::emit($plan); 1 }, 'no recipe, no build');
+ok(!eval { RdKw::WwW::SiteConf::Ninja::_emit($plan); 1 }, 'no recipe, no build');
 like($@, qr/no recipe/, '... says so');
 
 $plan->{node}{x}{recipe} = "\tcp \$< \$\@\n";
 $plan->{node}{x}{deps} = [ 'in/x', 'a b', 'site/.ok' ];
 $plan->{dirs} = [ { dir => 'site', marker => 'site/.ok', deps => [] } ];
-my $text = RdKw::WwW::SiteConf::Ninja::emit($plan);
+my $text = RdKw::WwW::SiteConf::Ninja::_emit($plan);
 like($text, qr/^build site\/x: rule1 in\/x \| a\$ b \|\| site\/\.ok$/m,
 	'input, implicit (escaped), order-only');
 like($text, qr/^default all$/m, 'default goal');

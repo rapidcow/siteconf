@@ -98,6 +98,7 @@ Do not whine about dropped C<WANT>s.
 
 =cut
 
+use Data::Dumper ();
 use File::Basename qw( basename );
 use File::ShareDir ();
 use File::Spec;
@@ -183,14 +184,22 @@ sub slurp
 sub pq
 {
 	my ($s) = @_;
-	$s =~ s/([\\'])/\\$1/g;
-	"'$s'";
+	Data::Dumper->new([$s])->Terse(1)->Indent(0)->Useqq(1)->Dump();
+}
+
+# Perl key preceding a fat comma
+sub pK
+{
+	my ($K) = @_;
+	($K !~ /[^A-Z0-9a-z]/) ? $K : pq($K);
 }
 
 sub hash_lines
 {
 	my ($H) = @_;
-	join '', map { "\t" . pq($_) . " => " . pq($H->{$_}) . ",\n" } sort keys %$H;
+	join "\n", map {
+		"\t@{[ pK($_) ]} => @{[ pq($H->{$_}) ]},"
+	} sort keys %$H;
 }
 
 sub do_init

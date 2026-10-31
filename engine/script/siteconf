@@ -107,9 +107,11 @@ With C<-g>, write I<file> in the build directory instead of F<Makefile>
 (or F<build.ninja>); say C<make -f Makefile.proj> to use it.  Just a
 name, not a path.  (With C<-i>, this is where F<configure> goes.)
 
-=item B<-q>
+=item B<-q>, B<--quiet>
 
-Do not whine about dropped C<WANT>s.
+Say nothing but errors: not the C<WANT>s that were dropped, nor the
+files that are written, updated, or removed.  (F<configure> takes
+C<-q> too.)
 
 =item B<-F> I<manifest>
 
@@ -137,7 +139,7 @@ use RdKw::WwW::SiteConf;
 
 my $prog = basename($0);
 my $usage = <<EOM;
-usage: $prog -i [-P preset] [-o file] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+usage: $prog -i [-P preset] [-o file] [-q] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
        $prog -g [-B builddir] [-G make] [-F manifest] [-R rulebook] [-o file] [-q]
        $prog -V [-V]
 EOM
@@ -154,7 +156,6 @@ GetOptions(
 	'M=s@'     => \@{ $opt{M} },
 	'B=s'      => \$opt{B},
 	'G=s'      => \$opt{G},
-	'q'        => \$opt{q},
 	'S=s%'     => $opt{S},
 	'D=s%'     => $opt{D},
 	'O=s%'     => $opt{O},
@@ -197,7 +198,7 @@ defined $opt{mode} or die $usage;
 @ARGV and die "$prog: too many arguments\n";
 
 if ($opt{mode} eq 'init') {
-	for my $k (qw( B F G R q )) {
+	for my $k (qw( B F G R )) {
 		defined $opt{$k} and die "$prog: -$k is not for init\n";
 	}
 	do_init(\%opt);

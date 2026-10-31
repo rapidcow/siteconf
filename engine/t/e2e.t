@@ -14,7 +14,7 @@ for my $m (qw( Template URI )) {
 	eval "require $m; 1" or plan skip_all => "$m is not installed";
 }
 my $make = $ENV{MAKE} || 'make';
-system("$make -v >/dev/null 2>&1") == 0 or plan skip_all => "no make";
+system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0 or plan skip_all => "no make";
 
 plan tests => 49;
 
@@ -85,7 +85,8 @@ like(slurp('build/site/sub/index.html'), qr/href="\.\.\/index\.html"/, 'locate')
 run('make (default goal)', $make, '-C', 'build');
 ok(-f 'build/site/robots.txt', 'all');
 my $nothing = run('make again', $make, '-C', 'build');
-like($nothing, qr/Nothing to be done/, 'incremental');
+# (GNU make says so, bmake says nothing: what matters is that no recipe ran)
+unlike($nothing, qr/\brender\b|\bcp\b|\bmkdir\b/, 'incremental');
 
 # an option changes => the pages are rendered anew; a definition is not.
 sleep 1;

@@ -26,7 +26,8 @@ RdKw::WwW::GenLib - static web-site generation library
     		"usage" => "[% locate PATH %]");
     	my ($where) = @_;
     	if ($O{base_url} !~ m{^https?://}i) {
-    		$where .= 'index.html' if $where =~ m{/$};
+    		$where .= 'index.html' if !length($where)
+			or $where =~ m{/$};
     	}
     	locate(\%O, $O{location}, $where);
     } );

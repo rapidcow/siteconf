@@ -155,8 +155,8 @@ WwW::GenGenLib version $RdKw::WwW::GenGenLib::VERSION
 LVER
 
 	foreach my $fren (qw( Template URI URI::Escape RdKw::WwW::GenLib )) {
-		(my $path = $fren) =~ s!::!/!g;
-		eval { require "$path.pm"; 1 } or next;
+		(my $path = "$fren.pm") =~ s!::!/!g;
+		eval { require $path; 1 } or next;
 		(my $cheeky = $fren) =~ s/^RdKw:://;
 		# Obtain version without using symbolic ref :x
 		print "$cheeky version " . $fren->VERSION() . "\n";

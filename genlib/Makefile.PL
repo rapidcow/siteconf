@@ -17,6 +17,10 @@ my %WriteMakefileArgs = (
 		'Test::More' => '0',
 	},
 	PREREQ_PM => {
+		'Exporter' => '0',
+		'URI::Escape' => '0',
+		# pragma
+		'parent' => '0',
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
 	clean => { FILES => 'www-genlib-*' },

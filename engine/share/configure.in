@@ -18,6 +18,7 @@ use File::Basename;
 use File::Path qw(make_path);
 use File::Spec;
 use FindBin;
+use Getopt::Long qw( GetOptions );
 
 # --- what we need: [ module, minimum version ], from `@PROG@ -i -M',
 # and the preset if any (which comes first, so it can add to the list)
@@ -104,7 +105,7 @@ respectively, for the rulebook or for the files being transformed.
 
   -h          This help message
   --reset     Clear all configuration at this point
-  -q          Disable tips
+  -q          Disable tips (and --quiet)
 EOM
 
 # `use open' covers the standard handles and `use utf8' our source,
@@ -114,33 +115,26 @@ EOM
 utf8::decode($_) for @ARGV;
 
 my (%D, %O, $reset, $shutup);
-while (@ARGV) {
-	my $arg = shift;
-	if ($arg eq '--') {
-		last;
-	} elsif ($arg eq '-h' or $arg eq '-?' or $arg eq '--help') {
-		print $usage;
-		exit 0;
-	} elsif ($arg eq '--reset') {
-		%D = ();
-		%O = ();
-		$reset = 1;
-	} elsif ($arg eq '-q' or $arg eq '--quiet') {
-		$shutup = 1;
-	} elsif ($arg =~ /^-([DO])(.*)$/s) {
-		my ($S, $s) = ($1, $2);
-		unless (length $s) {
-			@ARGV or die "$prog: -$S requires an argument.\n";
-			$s = shift;
-		}
-		my ($k, $v) = split(/=/, $s, 2);
+
+# -Dname=val, -Oname=val (a lone -Dname is -Dname=)
+sub setter
+{
+	my ($S, $H) = @_;
+	sub {
+		my ($k, $v) = split(/=/, $_[1], 2);
 		length $k or die "$prog: -$S: empty name.\n";
-		($S eq 'D' ? \%D : \%O)->{$k} = defined $v ? $v : "";
-	} else {
-		print STDERR "$prog: invalid option: \`$arg'\n";
-		die +( split(/^/, $usage, 2) )[0];
-	}
+		$H->{$k} = defined $v ? $v : "";
+	};
 }
+
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+GetOptions(
+	'h|help|?' => sub { print $usage; exit 0 },
+	'reset'    => sub { %D = (); %O = (); $reset = 1 },
+	'q|quiet'  => \$shutup,
+	'D=s'      => setter(D => \%D),
+	'O=s'      => setter(O => \%O),
+) or die +( split(/^/, $usage, 2) )[0];
 @ARGV and die "$prog: too many arguments\n";
 
 # Store where we were started from: for telling the user what

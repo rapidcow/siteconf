@@ -19,6 +19,10 @@ use File::Path qw(make_path);
 use File::Spec;
 use FindBin;
 
+# --- the preset, if any (first, so it can check what we are about to load)
+@PRESET@
+# ---
+
 use RdKw::WwW::GenLib qw(read_make write_make);
 
 my $prog = basename($0);
@@ -34,10 +38,6 @@ my %Ddef = (
 my %Odef = (
 @ODEF@
 );
-
-# --- the preset, if any
-@PRESET@
-# ---
 
 sub isnull
 {

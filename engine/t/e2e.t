@@ -44,6 +44,18 @@ my $again = do { run('siteconf -i again', $^X, $script,
 	slurp('configure.2') };
 is($again, $text, 'configure is generated deterministically');
 
+# a missing Template (not core) is reported by configure, not later
+{
+	my $stub = tempdir(CLEANUP => 1);
+	open my $fh, '>', "$stub/Template.pm" or die;
+	print $fh "die 'not here';\n1;\n";
+	close $fh;
+	local $ENV{PERL5LIB} = "$stub:$ENV{PERL5LIB}";
+	my $out = `$^X ./configure 2>&1`;
+	isnt($?, 0, 'configure without Template fails');
+	like($out, qr/E: missing Template\nE: 1 module missing/, '... and says so');
+}
+
 like(run('./configure', $^X, './configure'), qr/Writing MY\/config\.mk/, 'configure');
 my $quiet = run('./configure again', $^X, './configure');
 unlike($quiet, qr/Writing|Updating/, 'reconfiguring changes nothing');

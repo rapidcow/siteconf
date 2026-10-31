@@ -93,6 +93,23 @@ like(slurp('build/site/index.html'), qr/other\.test/, 'options reach the pages')
 run('make clean', $make, '-C', 'build', 'clean');
 ok(!-e 'build/site/index.html', 'clean');
 
+# ... and the same through ninja
+SKIP: {
+	my $ninja = $ENV{NINJA} || 'ninja';
+	system("$ninja --version >/dev/null 2>&1") == 0 or skip "no ninja", 9;
+
+	run('siteconf -g -G ninja', $^X, $script, qw( -g -q -G ninja -B build ));
+	run('ninja basic', $ninja, '-C', 'build', 'basic');
+	ok(-f 'build/site/sub/index.html', 'ninja basic: sub built');
+	ok(!-e 'build/site/robots.txt', 'ninja basic: only the subset');
+	like(slurp('build/site/sub/index.html'), qr/location=sub\/index\.html/, 'ninja: O.location');
+	like(run('ninja again', $ninja, '-C', 'build', 'basic'), qr/no work to do/, 'ninja: incremental');
+	run('ninja (default goal)', $ninja, '-C', 'build');
+	ok(-f 'build/site/robots.txt', 'ninja all');
+	run('ninja -t clean', $ninja, '-C', 'build', '-t', 'clean');
+	ok(!-e 'build/site/index.html', 'ninja clean');
+}
+
 # a NEED that cannot be had is fatal
 open my $fh, '>>', 'MANIFEST' or die;
 print $fh "MAKE broken\n\tNEED ghost.html\n\tNEED extra/index.html\n";

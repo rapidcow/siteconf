@@ -4,11 +4,13 @@ README
 script/siteconf
 lib/RdKw/WwW/SiteConf.pm
 lib/RdKw/WwW/SiteConf/Make.pm
+lib/RdKw/WwW/SiteConf/Ninja.pm
 share/configure.in
 share/presets/web.pl
 t/00-load.t
 t/e2e.t
 t/manifest.t
+t/ninja.t
 t/fixture/web/MANIFEST
 t/fixture/web/Makefile.in
 t/fixture/web/render

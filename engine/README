@@ -1,6 +1,6 @@
 siteconf -i [-P web] [-SB=build] [-Osite_url=...]   # writes ./configure
 ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val]    # MY/config.mk, MY/option.mk
-siteconf -g [-B outdir] [-G make]                   # Makefile, MY/MANIFEST.*
+siteconf -g [-B outdir] [-G make|ninja]             # Makefile or build.ninja, MY/MANIFEST.*
 cd ${B} && make [goal]
 
 MANIFEST:

@@ -513,13 +513,14 @@ sub manifest_text
 =item B<generate> [ I<generator> ]
 
 Writes F<MY/MANIFEST.I<goal>> for each goal, and the build file
-for I<generator> (C<make>, the default; C<ninja> has yet to come).
+for I<generator> (C<make>, the default, or C<ninja>).
 The files that would not change are left alone, mtime and all.
 
 =cut
 
 my %generator = (
 	make => [ 'RdKw::WwW::SiteConf::Make', 'Makefile' ],
+	ninja => [ 'RdKw::WwW::SiteConf::Ninja', 'build.ninja' ],
 );
 
 sub generate
@@ -527,7 +528,6 @@ sub generate
 	my ($self, $G) = @_;
 	$G = 'make' unless defined $G and length $G;
 	my $gen = $generator{$G} or die "E: unknown generator `$G'"
-		. ($G eq 'ninja' ? " (not implemented yet)" : "")
 		. ".  Choose one of: " . join(', ', sort keys %generator) . "\n";
 	my ($module, $outfile) = @$gen;
 	(my $pm = "$module.pm") =~ s!::!/!g;

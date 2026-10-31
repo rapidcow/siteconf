@@ -46,7 +46,7 @@ siteconf - configurable incremental build script generator
 
     siteconf -g [-B outdir] [-G make|ninja] [-q]
     siteconf make ...                         # same
-    cd ${B} && [make|ninja] [goal]
+    cd ${B} && [make|ninja] [goal]   # ninja -t clean to clean
 
 =head1 DESCRIPTION
 
@@ -87,7 +87,8 @@ run.
 
 =item B<-G> I<generator>
 
-C<make> (default).  C<ninja> is not implemented.
+C<make> (default), writing F<Makefile>, or C<ninja>, writing
+F<build.ninja>.
 
 =item B<-q>
 

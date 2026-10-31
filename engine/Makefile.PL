@@ -30,7 +30,7 @@ my %WriteMakefileArgs = (
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
 	clean => { FILES => 'www-siteconf-*' },
-	test => { TESTS => 't/*' },
+	test => { TESTS => 't/*.t' },
 );
 
 # Compatibility with old versions of ExtUtils::MakeMaker

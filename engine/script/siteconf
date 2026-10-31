@@ -118,6 +118,7 @@ my $prog = basename($0);
 my $usage = <<EOM;
 usage: $prog -i [-P preset] [-o file] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
        $prog -g [-B builddir] [-G make] [-q]
+       $prog -V [-V]
 EOM
 
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
@@ -137,7 +138,21 @@ GetOptions(
 	'D=s%'     => $opt{D},
 	'O=s%'     => $opt{O},
 	'h|help'   => sub { print $usage; exit 0 },
+	'V|version+' => \( my $vee ),
 ) or die $usage;
+
+if ($vee) {
+	print <<VAR;
+$prog version $RdKw::WwW::SiteConf::VERSION
+VAR
+
+	exit unless $vee > 1;
+	print <<LVER;
+perl version $], $^X
+WwW::GenGenLib version $RdKw::WwW::GenGenLib::VERSION
+LVER
+	exit;
+}
 
 # `siteconf init', `siteconf make'
 if (@ARGV and $ARGV[0] =~ /\A(?:init|make)\z/) {
@@ -166,7 +181,7 @@ if ($opt{mode} eq 'init') {
 		B => $opt{B}, quiet => $opt{q}, prog => $prog);
 	$sc->generate($opt{G});
 }
-exit 0;
+exit;
 
 # ---
 

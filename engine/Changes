@@ -1,5 +1,19 @@
 Revision history of WwW-SiteConf
 
+0.01_00  2026-10-31  RC
+    this is mostly a clean-up of AI-generated oddities
+    i didn't like, but nonetheless breaking so i bumped
+    the first two digits.
+
+    + non-web-specific logic has been extracted to GenGenLib.
+      (we do not depend on GenLib.)
+
+    + -V for printing versions.  double -V for library versions
+      (possibly useful for bug hunting)
+
+    *** the web preset now generates stock render-er.  it does
+      not generate the Makefile.in that makes it useful though.
+
 
 0.00_00  2026-10-31  RC
     !>! written with substantial help from Anthropic Claude !<!

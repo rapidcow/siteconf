@@ -513,7 +513,7 @@ sub manifest_text
 
 =item B<generate> [ I<generator> ]
 
-Writes F<MY/Manifest.I<goal>> for each goal, and the build file
+Writes F<MY/MANIFEST.I<goal>> for each goal, and the build file
 for I<generator> (C<make>, the default; C<ninja> has yet to come).
 The files that would not change are left alone, mtime and all.
 
@@ -538,14 +538,14 @@ sub generate
 	my $My = "$self->{B}/MY";
 	my %have;
 	for my $goal (@{ $plan->{goals} }) {
-		my $name = "Manifest.$goal->{name}";
+		my $name = "MANIFEST.$goal->{name}";
 		$have{$name}++;
 		$self->_report($name, update_file("$My/$name", $self->manifest_text($goal)));
 	}
 	# Goals that are no more
-	for my $old (glob("$My/Manifest.*")) {
+	for my $old (glob("$My/MANIFEST.*")) {
 		my $name = basename($old);
-		$name =~ /\AManifest\.[A-Za-z0-9][-\w.+]*\z/ or next;
+		$name =~ /\AMANIFEST\.[A-Za-z0-9][-\w.+]*\z/ or next;
 		$have{$name} or do {
 			unlink $old;
 			$self->_warn("Removing MY/$name\n");
@@ -563,7 +563,7 @@ sub _report
 	my ($self, $name, $what) = @_;
 	return unless $what;
 	$self->_warn(($what eq 'created' ? "Writing" : "Updating"),
-		($name =~ /^Manifest\./ ? " MY/$name" : " $name"), "\n");
+		($name =~ /^MANIFEST\./ ? " MY/$name" : " $name"), "\n");
 }
 
 =back

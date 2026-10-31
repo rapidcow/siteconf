@@ -54,9 +54,9 @@ unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
 my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build ));
 like($err, qr/dropping WANT `extra\/index\.html'/, 'WANT with a missing need is dropped');
 like($err, qr/dropping WANT `ghost\.html'/, 'WANT without a rule is dropped');
-like(slurp('build/MY/Manifest.all'), qr/\A.*^MAKE all\n\tNEED index\.html\n\tNEED sub\/index\.html\n\tNEED robots\.txt\n/ms,
-	'MY/Manifest.all');
-like(slurp('build/MY/Manifest.basic'), qr/NEED sub\/index\.html/, 'WANT that can be had is kept');
+like(slurp('build/MY/MANIFEST.all'), qr/\A.*^MAKE all\n\tNEED index\.html\n\tNEED sub\/index\.html\n\tNEED robots\.txt\n/ms,
+	'MY/MANIFEST.all');
+like(slurp('build/MY/MANIFEST.basic'), qr/NEED sub\/index\.html/, 'WANT that can be had is kept');
 unlike($err = run('siteconf make (alias)', $^X, $script, qw( make -B build )),
 	qr/Writing|Updating/, 'regenerating changes nothing');
 

@@ -162,6 +162,7 @@ GetOptions(
 	'R=s'      => \$opt{R},
 	'h|help'   => sub { print $usage; exit 0 },
 	'V|version+' => \( my $vee ),
+	'q|quiet'  => \$opt{q},
 ) or die $usage;
 
 if ($vee) {
@@ -366,7 +367,7 @@ sub do_init
 	print $fh $text or die "$prog: write >$out: $!\n";
 	close $fh or die "$prog: write >$out: $!\n";
 	chmod 0777 & ~umask, $out or die "$prog: chmod $out: $!\n";
-	print STDERR "Wrote $out\n";
+	print STDERR "Wrote $out\n" unless $opt->{q};
 
 	# `render' goes in the project root, next to the rules that run it;
 	# one that is already there is yours, and is left alone.
@@ -378,7 +379,7 @@ sub do_init
 			print $rh $text or die "$prog: write >$dest: $!\n";
 			close $rh or die "$prog: write >$dest: $!\n";
 			chmod 0777 & ~umask, $dest or die "$prog: chmod $dest: $!\n";
-			print STDERR "Wrote $dest\n";
+			print STDERR "Wrote $dest\n" unless $opt->{q};
 		}
 	}
 }

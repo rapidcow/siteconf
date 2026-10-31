@@ -196,12 +196,7 @@ sub locator {
 	my ($O, $location) = @_;
 	sub {
 		@_ == 1 or die "usage: [% locate PATH %]\n";
-		my ($where) = @_;
-		if ($O->{base_url} !~ m{^https?://}i) {
-			$where .= 'index.html' if !length($where)
-				|| $where =~ m{/$};
-		}
-		locate($O, $location, $where);
+		locate($O, $location, @_);
 	};
 }
 

@@ -138,7 +138,7 @@ HTML
 	is($v->{locate}->('//c.html'), 'https://example.test/c.html', 'locate, absolute');
 
 	my $l = locator({ %O, base_url => '/' }, 'a/b.html');
-	is($l->('c/'), '../c/index.html', 'index.html appended away from http(s)');
+	is($l->('c/'), '../c/', 'index.html NOT appended away from http(s)');
 	$l = locator({ %O, base_url => 'https://example.test/' }, 'a/b.html');
 	is($l->('c/'), '../c/', '... but not on http(s)');
 }

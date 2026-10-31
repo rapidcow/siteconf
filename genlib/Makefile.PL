@@ -18,7 +18,6 @@ my %WriteMakefileArgs = (
 	},
 	PREREQ_PM => {
 		'Exporter' => '0',
-		'RdKw::WwW::GenGenLib' => '0',
 		'URI' => '0',
 		'URI::Escape' => '0',
 		# pragma

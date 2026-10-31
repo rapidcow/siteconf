@@ -209,7 +209,7 @@ sub do_init
 	my %S = %{ $opt->{S} };
 
 	# What -S sets: where we are, and the defaults for B a b R F e.
-	my %Ddef = (
+	my %Dd = (
 		B => '.',
 		a => 'html',
 		b => 'site',
@@ -220,18 +220,18 @@ sub do_init
 	my $A = delete $S{A};
 	$A = '.' unless defined $A;
 	for my $k (keys %S) {
-		exists $Ddef{$k} or die "$prog: -S$k: no such thing"
+		exists $Dd{$k} or die "$prog: -S$k: no such thing"
 			. " (A B a b R F e)\n";
-		$Ddef{$k} = $S{$k};
-		length $Ddef{$k} or die "$prog: -S$k may not be empty.\n";
+		$Dd{$k} = $S{$k};
+		length $Dd{$k} or die "$prog: -S$k may not be empty.\n";
 	}
 	length $A or die "$prog: -SA may not be empty.\n";
-	File::Spec->file_name_is_absolute($Ddef{b})
+	File::Spec->file_name_is_absolute($Dd{b})
 		and die "$prog: -Sb must be a relative path.\n";
 
 	# -D and -O set what defaults to have in addition.
 	exists $opt->{D}{A} and die "$prog: -DA: use -SA.\n";
-	my %Dx = (%Ddef, %{ $opt->{D} });
+	my %Dx = (%Dd, %{ $opt->{D} });
 	my %Ox = %{ $opt->{O} };
 
 	my $preset = '';

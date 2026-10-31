@@ -32,10 +32,10 @@ my $prog = basename($0);
 #   D   definitions, which are filesystem routing and nothing else
 #   O   options, which alter the state of the build
 my $A = @A@;
-my %Ddef = (
+my %Dd = (
 @DDEF@
 );
-my %Odef = (
+my %Od = (
 @ODEF@
 );
 
@@ -49,12 +49,12 @@ usage: $prog [-Dvar=val ...] [-Ovar=val ...] [--reset] [-h]
 
 The following variables may be defined:
 
-  -DB         Build directory, seen from the source tree (default: $Ddef{B})
-  -Da         Source directory, seen from the source tree (default: $Ddef{a})
-  -Db         Target directory, seen from the build directory (default: $Ddef{b})
-  -DR         Transformation rules (default: $Ddef{R})
-  -DF         Manifest (default: $Ddef{F})
-  -De         Directory marker (default: $Ddef{e})
+  -DB         Build directory, seen from the source tree (default: $Dd{B})
+  -Da         Source directory, seen from the source tree (default: $Dd{a})
+  -Db         Target directory, seen from the build directory (default: $Dd{b})
+  -DR         Transformation rules (default: $Dd{R})
+  -DF         Manifest (default: $Dd{F})
+  -De         Directory marker (default: $Dd{e})
 @OPTHELP@
 Anything else you may -D or -O goes into MY/config.mk or MY/option.mk
 respectively, for the rulebook or for the files being transformed.
@@ -113,7 +113,7 @@ EUGH
 # spelling is kept as is -- absolute or not.  It is a statement about
 # *this* run: nothing about it is ever read back from MY/config.mk,
 # which is the very file it is about to choose.
-my $B = defined $D{B} ? $D{B} : $Ddef{B};
+my $B = defined $D{B} ? $D{B} : $Dd{B};
 length $B or die "E: `B' must not be empty; use -DB=. for the source tree.\n";
 -d $B or make_path($B);
 chdir $B or die "E: cannot chdir to $B: $!\n";
@@ -139,11 +139,11 @@ $D{B} = $B;
 $D{A} = File::Spec->abs2rel($srcdir, $Babs);
 
 # What was not said, is the default (even if it was said to be empty).
-for my $k (keys %Ddef) {
-	$D{$k} = $Ddef{$k} if isnull($D{$k});
+for my $k (keys %Dd) {
+	$D{$k} = $Dd{$k} if isnull($D{$k});
 }
-for my $k (keys %Odef) {
-	$O{$k} = $Odef{$k} if isnull($O{$k});
+for my $k (keys %Od) {
+	$O{$k} = $Od{$k} if isnull($O{$k});
 }
 
 defined &preset_finish and preset_finish(\%D, \%O);

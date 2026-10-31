@@ -6,17 +6,21 @@ use warnings;
 
 =head1 NAME
 
-siteconf - web-site configuration generation utility
+siteconf - configurable incremental build script generator
 
 =head1 SYNOPSIS
 
-    siteconf -i [-Sopt=val ...]
+    siteconf -i [-P preset] [-o configure] [-Sopt=val ...]
+             [-Dvar=val ...] [-Ovar=val ...]
+    siteconf init ...                         # same
 
     #
-    # path to project root
+    # -S: where things are, baked into ./configure as defaults
+    #
+    # path to project root, seen from ./configure
     #   -SA=.       (default)
     #   -SA=..      (alternatively if we live in a subdirectory
-    # path to project build dir (default to -DB=.)
+    # path to project build dir (default to -SB=.)
     #   -SB=.       (default)
     #   -SB=build   (CMake style)
     #   -SB=/tmp/writable/build/dir  (read-only checkout)
@@ -33,23 +37,230 @@ siteconf - web-site configuration generation utility
     #   -Se=.ok     (default)
     #   -Se=.exists (mimics EU::MM)
     #
+    # -D, -O: defaults for definitions and options (see ./configure -h)
+    #
+    # -P: preset, such as web (the default is none)
+    #
 
-    ./configure [-DB=outdir] [-Db=reldir]
-    siteconf -g [-B=outdir] [-G make|ninja]
-    cd ${B} && [make|ninja]
+    ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
+
+    siteconf -g [-B outdir] [-G make|ninja] [-q]
+    siteconf make ...                         # same
+    cd ${B} && [make|ninja] [goal]
+
+=head1 DESCRIPTION
+
+C<siteconf -i> writes F<configure>.  F<configure> writes
+F<${B}/MY/config.mk> (I<definitions>, which are only filesystem
+routing) and F<${B}/MY/option.mk> (I<options>, which alter the
+state of the build, and which whatever is transformed may depend on).
+
+C<siteconf -g> reads those, along with the rules (F<Makefile.in>)
+and the F<MANIFEST> they were pointed at, and writes the build file
+in I<${B}>, and F<MY/Manifest.I<goal>> for each goal in the manifest.
+See L<RdKw::WwW::SiteConf> for what those look like.
+
+With the C<web> preset (C<-P web>), F<configure> requires an
+C<-Osite_url>, and sees to it that C<base_url> agrees.  The files
+are rendered through Template Toolkit, with the namespaces C<D>
+and C<O> (including C<O.location>), and the function C<locate>;
+see L<RdKw::WwW::GenLib/tt_vars>.
+
+=head1 OPTIONS
+
+=over
+
+=item B<-i>, B<init>
+
+Write F<configure> (or whatever I<-o> says).
+
+=item B<-g>, B<make>
+
+Write the build file, reading the configuration from C<-B>
+(the current directory by default).
+
+=item B<-B> I<dir>
+
+The build directory, as seen from here.  Everything else is derived
+from F<MY/config.mk> there, so it does not matter from where this is
+run.
+
+=item B<-G> I<generator>
+
+C<make> (default).  C<ninja> is not implemented.
+
+=item B<-q>
+
+Do not whine about dropped C<WANT>s.
+
+=back
 
 =cut
 
-use File::ShareDir qw(dist_file);
+use File::Basename qw( basename );
+use FindBin ();
+use File::Spec;
+use Getopt::Long qw( GetOptionsFromArray );
 
-my $web_txt = dist_file('www-siteconf', 'presets/web.txt');
+use RdKw::WwW::SiteConf;
 
-my $content;
-{
-	open my $fh, '<', $web_txt or die "open $web_txt: $!\n";
-	$content = do { local $/; readline $fh; };
-	$fh->error() and die "read $web_txt: $!\n";
-	close $fh or die "open $web_txt: $!\n";
+my $prog = basename($0);
+my $usage = <<EOM;
+usage: $prog -i [-P preset] [-o file] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+       $prog -g [-B builddir] [-G make] [-q]
+EOM
+
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+utf8::decode($_) for @ARGV;
+
+my %opt = (S => {}, D => {}, O => {});
+GetOptions(
+	'i|init'   => sub { $opt{mode} = 'init' },
+	'g|make'   => sub { $opt{mode} = 'make' },
+	'P=s'      => \$opt{P},
+	'o=s'      => \$opt{o},
+	'B=s'      => \$opt{B},
+	'G=s'      => \$opt{G},
+	'q'        => \$opt{q},
+	'S=s%'     => $opt{S},
+	'D=s%'     => $opt{D},
+	'O=s%'     => $opt{O},
+	'h|help'   => sub { print $usage; exit 0 },
+) or die $usage;
+
+# `siteconf init', `siteconf make'
+if (@ARGV and $ARGV[0] =~ /\A(?:init|make)\z/) {
+	my $word = shift @ARGV;
+	defined $opt{mode} and $opt{mode} ne $word
+		and die "$prog: conflicting modes: $opt{mode} and $word\n";
+	$opt{mode} = $word;
 }
-print("Toot toot -- -- Here's yur webbie text!\n");
-print($content);
+defined $opt{mode} or die $usage;
+@ARGV and die "$prog: too many arguments\n";
+
+if ($opt{mode} eq 'init') {
+	for my $k (qw( B G q )) {
+		defined $opt{$k} and die "$prog: -$k is not for init\n";
+	}
+	do_init(\%opt);
+} else {
+	for my $k (qw( P o )) {
+		defined $opt{$k} and die "$prog: -$k is not for make\n";
+	}
+	for my $S (qw( S D O )) {
+		%{ $opt{$S} } and die "$prog: -$S is not for make\n";
+	}
+	my $sc = RdKw::WwW::SiteConf->new(
+		B => $opt{B}, quiet => $opt{q}, prog => $prog);
+	$sc->generate($opt{G});
+}
+exit 0;
+
+# ---
+
+# Where does `share' live?  Preferably alongside the installed
+# modules (File::ShareDir); in a source tree, right next to script/.
+sub share_file
+{
+	my ($file) = @_;
+	my @try;
+	push @try, "$ENV{SITECONF_SHARE}/$file"
+		if defined $ENV{SITECONF_SHARE} and length $ENV{SITECONF_SHARE};
+	push @try, "$FindBin::RealBin/../share/$file";
+	if (eval { require File::ShareDir; 1 }) {
+		my $dir = eval { File::ShareDir::dist_dir('www-siteconf') };
+		push @try, "$dir/$file" if defined $dir;
+	}
+	for (@try) {
+		-f $_ and return $_;
+	}
+	die "$prog: cannot find share/$file (tried: @try)\n";
+}
+
+sub slurp
+{
+	my ($file) = @_;
+	open my $fh, '<:encoding(UTF-8)', $file or die "$prog: open <$file: $!\n";
+	my $text = do { local $/; readline $fh };
+	close $fh or die "$prog: read <$file: $!\n";
+	$text;
+}
+
+# A Perl string literal
+sub pq
+{
+	my ($s) = @_;
+	$s =~ s/([\\'])/\\$1/g;
+	"'$s'";
+}
+
+sub hash_lines
+{
+	my ($H) = @_;
+	join '', map { "\t" . pq($_) . " => " . pq($H->{$_}) . ",\n" } sort keys %$H;
+}
+
+sub do_init
+{
+	my ($opt) = @_;
+	my %S = %{ $opt->{S} };
+
+	# What -S sets: where we are, and the defaults for B a b R F e.
+	my %Ddef = (
+		B => '.',
+		a => 'html',
+		b => 'site',
+		R => 'Makefile.in',
+		F => 'MANIFEST',
+		e => '.ok',
+	);
+	my $A = delete $S{A};
+	$A = '.' unless defined $A;
+	for my $k (keys %S) {
+		exists $Ddef{$k} or die "$prog: -S$k: no such thing"
+			. " (A B a b R F e)\n";
+		$Ddef{$k} = $S{$k};
+		length $Ddef{$k} or die "$prog: -S$k may not be empty.\n";
+	}
+	length $A or die "$prog: -SA may not be empty.\n";
+	File::Spec->file_name_is_absolute($Ddef{b})
+		and die "$prog: -Sb must be a relative path.\n";
+
+	# -D and -O set what defaults to have in addition.
+	exists $opt->{D}{A} and die "$prog: -DA: use -SA.\n";
+	my %Dx = (%Ddef, %{ $opt->{D} });
+	my %Ox = %{ $opt->{O} };
+
+	my $preset = '';
+	my $help = '';
+	if (defined $opt->{P} and $opt->{P} ne 'none') {
+		$opt->{P} =~ /\A\w+\z/ or die "$prog: bad preset name: $opt->{P}\n";
+		my $file = eval { share_file("presets/$opt->{P}.pl") }
+			or die "$prog: no such preset: $opt->{P}\n";
+		$preset = slurp($file);
+		$preset =~ s/\n*\z/\n/;
+	}
+	if (%Ox) {
+		$help = "\nOptions with defaults:\n\n"
+			. join '', map { sprintf "  -O%-9s (default: %s)\n", $_, $Ox{$_} }
+				sort keys %Ox;
+	}
+
+	my $text = slurp(share_file('configure.in'));
+	my %sub = (
+		PROG => "$prog",
+		A => pq($A),
+		DDEF => hash_lines(\%Dx),
+		ODEF => hash_lines(\%Ox),
+		PRESET => $preset,
+		OPTHELP => $help,
+	);
+	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: template: \@$1\@?\n"/ge;
+
+	my $out = defined $opt->{o} ? $opt->{o} : 'configure';
+	open my $fh, '>:encoding(UTF-8)', $out or die "$prog: open >$out: $!\n";
+	print $fh $text or die "$prog: write >$out: $!\n";
+	close $fh or die "$prog: write >$out: $!\n";
+	chmod 0777 & ~umask, $out or die "$prog: chmod $out: $!\n";
+	print STDERR "Wrote $out\n";
+}

@@ -1,0 +1,9 @@
+[%
+# HAVE: index.html
+# NEED: skel/HTML
+-%]
+[% WRAPPER "HTML" title = "home" -%]
+<p>location=[% O.location %] out=[% D.b %] site=[% O.site_url %]</p>
+<a href="[% locate('sub/') | xml %]">sub</a>
+<a href="[% locate('/robots.txt') | xml %]">robots</a>
+[% END -%]

@@ -14,33 +14,33 @@ RdKw::WwW::GenLib - static web-site generation library
 
 =head1 SYNOPSIS
 
-    use RdKw::WwW::GenLib qw( locate );
+    use RdKw::WwW::GenLib qw( load_state tt_vars read_deps );
 
-    my $if = "${a}/file.ext";
-    my $of = "${B}/${b}/file.ext";
+    # in a `render' script:
+    my ($D, $O) = load_state($B);       # ${B}/MY/{config,option}.mk
+    my %I = read_deps($apath);          # HAVE / NEED / WANT
+    my $vars = tt_vars($D, $O, $I{HAVE});
 
-    my %D = read_make("${B}/MY/config.mk");
-    my %O = read_make("${B}/MY/option.mk");
-    my %F = ( locate => sub {
-    	@_ == 1 or die Template::Exception->new(
-    		"usage" => "[% locate PATH %]");
-    	my ($where) = @_;
-    	if ($O{base_url} !~ m{^https?://}i) {
-    		$where .= 'index.html' if !length($where)
-			or $where =~ m{/$};
-    	}
-    	locate(\%O, $O{location}, $where);
-    } );
-
-    my %V = ( D => \%D, O => \%O, %F );
-    unless ($tt->process($if, \%V), $of) {
+    # [% D.b %], [% O.base_url %], [% O.location %], [% locate('x') %]
+    unless ($tt->process($if, $vars, $of)) {
     	die "[TT] ", $tt->error();
     }
 
 =cut
 
+use URI ();
 use URI::Escape qw( uri_unescape );
-our @EXPORT_OK = qw( locate relapath );
+use File::Basename qw( dirname basename );
+use File::Compare ();
+use File::Spec ();
+
+our @EXPORT_OK = qw(
+	locate locator relapath
+	parse_base
+	read_make write_make update_file load_state
+	read_deps
+	tt_vars
+);
 
 =head1 ROUTINES
 
@@ -180,6 +180,339 @@ COMM:	while () {
 		@rest = @rest > 1 ? ('') : ();
 	}
 	join '/', ('..') x $upupup, @rest;
+}
+
+=item B<locator> \%O, I<location>
+
+Returns the TT2 function C<locate> for the page at I<location>
+(a path relative to the site root, i.e. the C<HAVE> of its source).
+Where I<base_url> is not absolute, a spec ending in a slash (or
+the empty string) is spelled out with C<index.html>, so that the
+result also works from C<file://>.
+
+=cut
+
+sub locator {
+	my ($O, $location) = @_;
+	sub {
+		@_ == 1 or die "usage: [% locate PATH %]\n";
+		my ($where) = @_;
+		if ($O->{base_url} !~ m{^https?://}i) {
+			$where .= 'index.html' if !length($where)
+				|| $where =~ m{/$};
+		}
+		locate($O, $location, $where);
+	};
+}
+
+=item B<parse_base> \%O
+
+Sanitize, normalize, and whine about user-supplied
+I<base_url> and I<site_url>.
+
+=cut
+
+sub parse_base
+{
+	my ($D) = @_;
+	my ($base_url, $site_url);
+	my $Me = "parse_base";
+
+	# site_url cannot be derived, so it is required.
+	defined $D->{site_url} and $D->{site_url} ne ''
+		or die "$Me: missing site_url\n";
+	$site_url = URI->new($D->{site_url});
+
+	{
+		my $proto = $site_url->scheme;
+		unless (defined $proto and grep { lc($proto) eq $_ } qw( file http https )) {
+			die "$Me: site_url has no file or www URI scheme: $D->{site_url}\n";
+		}
+	}
+
+	# There is basically no way to see an empty base_url
+	# (given how `configure' usually provides a default),
+	# so we treat the case of -Obase_url=/ as a request
+	# from the user to explicitly inherit from site_url.
+	#
+	# We lose the check on domain-wide hosts, but I think
+	# it is worth the convenience.
+	if (defined $D->{base_url} and $D->{base_url} ne ''
+		and $D->{base_url} ne '/'
+	) {
+		$base_url = $D->{base_url};
+		unless ($base_url =~ m!^/!) {
+			die "$Me: base_url must begin with a slash\n";
+		}
+		unless ($site_url->path eq '' or $base_url eq $site_url->path) {
+			# This is probably one of the more grave cases;
+			# so report it thoroughly to the console.
+			my $path = $site_url->path;
+			die <<EUGH;
+$Me: site_url has an nonempty path ($path), and
+$Me: is inconsistent with base_url ($base_url)
+EUGH
+		}
+	} else {
+		# An empty site_url path leaves nothing to inherit,
+		# which is an error -- unless base_url is literally `/',
+		# the one value that is both a request to inherit and
+		# a perfectly good answer on its own.  Anything else
+		# that lands here (unset, or empty) has no such excuse.
+		$base_url = $site_url->path;
+		if ($base_url eq '') {
+			defined $D->{base_url} and $D->{base_url} eq '/'
+				or die <<EUGH;
+$Me: base_url cannot be inferred from site_url,
+$Me: as the latter has an empty path
+EUGH
+			$base_url = '/';
+		}
+	}
+
+	$site_url->fragment(undef);
+	$site_url->query(undef);
+	$site_url->path('');
+
+	# Plain strings, so that what we write to MY/option.mk
+	# and what we hand over to TT2 are one and the same.
+	$D->{base_url} = $base_url;
+	$D->{site_url} = "$site_url";
+	# All is well
+	1;
+}
+
+=item B<read_make> I<file>
+
+This reads user-configured B<MY/*.mk> files.
+They're kind of like DOS-INI / GNU libconfini, but
+well... dumber.  Namely, we implement no escapes,
+and whitespaces are heartlessly stripped.  And
+certainly no line continuation.  We also want to
+see C<=>, which is admittedly unnecessary, but
+that's what we call ourselves: read L<make(1)>-like
+declarations.  Helps keep the mind sane. ;D
+
+=cut
+
+sub read_make
+{
+	local ($_, $.);
+	my ($file) = @_;
+
+	open my $fh, '<', $file or die "read_make: open <$file: $!\n";
+	binmode $fh, ':encoding(UTF-8)';
+
+	my %O;
+	while (<$fh>) {
+		next if /^\s*#/ or /^\s*$/;
+		my ($k, $v) = split /=/, $_, 2;
+		defined $v or die "read_make: $file line $.: no `='\n";
+		$k =~ s/^\s+|\s+$//g;
+		$v =~ s/^\s+|\s+$//g;
+		$O{$k} = $v;
+	}
+
+	close $fh;
+	%O;
+}
+
+=item B<update_file> I<file>, I<text>
+
+Replace I<file> with I<text> (characters, written as UTF-8) -- but
+only if that would change anything.  Preserving the mtime means a
+reconfiguration that changes nothing will not rebuild the world.
+Returns C<"created">, C<"updated"> or the empty string (unchanged).
+
+=cut
+
+sub update_file
+{
+	my ($file, $text) = @_;
+	my $tmp = File::Spec->catfile(dirname($file), 'tmp-' . basename($file));
+
+	open my $fh, '>:encoding(UTF-8)', $tmp
+		or die "update_file: open >$tmp: $!\n";
+	print $fh $text or die "update_file: write >$tmp: $!\n";
+	close $fh or die "update_file: write >$tmp: $!\n";
+
+	my $exists = -e $file;
+	if ($exists && File::Compare::compare($tmp, $file) == 0) {
+		unlink $tmp;
+		return '';
+	}
+	rename $tmp, $file or die "update_file: mv $tmp $file: $!\n";
+	$exists ? 'updated' : 'created';
+}
+
+=item B<write_make> I<file>, \%vars, I<prog>
+
+The converse of B<read_make>, through B<update_file>.  Keys are
+sorted by length, then alphabetically.  I<prog> is credited in the
+header comment.
+
+=cut
+
+sub write_make
+{
+	my ($file, $H, $prog) = @_;
+	my $text = "#\n# configured by `$prog'\n#\n";
+	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
+		my $v = defined $H->{$k} ? $H->{$k} : '';
+		$k =~ /\A[^\s=#]+\z/ or die "write_make: bad name: $k\n";
+		$v =~ /[\r\n]/ and die "write_make: $k: value has a newline\n";
+		$text .= "$k=\t$v\n";
+	}
+	update_file($file, $text);
+}
+
+=item B<load_state> I<B>
+
+Reads C<${B}/MY/config.mk> and C<${B}/MY/option.mk> and returns
+two hash references, I<D> and I<O>.  Dies kindly if you have not
+configured.
+
+=cut
+
+sub load_state
+{
+	my ($B) = @_;
+	$B = '.' unless defined $B and length $B;
+	my @h;
+	for my $f (qw( config option )) {
+		my $file = "$B/MY/$f.mk";
+		-f $file or die <<RUSH;
+error: You have not configured!
+error: (no $file)  You should ./configure first. ;)
+RUSH
+		push @h, { read_make($file) };
+	}
+	@h;
+}
+
+=item B<tt_vars> \%D, \%O, I<location>
+
+The variable stash for TT2, with the namespaces kept apart:
+C<D> are definitions, C<O> are options (with C<O.location> set to
+I<location> for this page only), and C<locate> is the function.
+
+=cut
+
+sub tt_vars
+{
+	my ($D, $O, $location) = @_;
+	my %O = (%$O, location => $location);
+	+{
+		D => { %$D },
+		O => \%O,
+		locate => locator(\%O, $location),
+	};
+}
+
+=item B<read_deps> I<file>
+
+This is an ambitious one.  Essentially, we're trying
+to propose a framework for a lean, but robust build
+dependency specification.  This function itself doesn't
+do much, but it reads/parses outgoing edges of what's
+conceptually a I<dependency graph>.  Here's how.
+
+=over
+
+=item *
+
+We have the reflexive node name called B<HAVE>.
+This is a unique value; you cannot be Heisenberg.
+
+=item *
+
+Dependency B<NEED> is just normal dependency.
+Its absence would cause any attempts at building
+the target explode on the spot.  Such fellas are
+called hard-dependency retronymically due to...
+
+=item *
+
+Soft-dependency B<WANT> conceptually means that the
+transformation rule responsible for producing some
+target from this node I<can> utilize this resource
+but will degrade accordingly if it is absent.  In
+practice, soft-dependencies are checked at configuration
+time, and if it is missing, it is removed from the
+dependency list, optionally emitting a warning.
+
+=back
+
+This function returns a hash map:
+
+   [%#
+   # HAVE: ethan
+   # WANT: art music
+   # WANT: 2-draw
+   # NEED: puterz!!!
+   -%]
+   # WANT: jork-off :,<
+
+becomes
+
+   {
+      HAVE => "ethan",
+      WANT => [ "art", "music", "2-draw" ],
+      NEED => [ "puterz!!!" ],
+   }
+
+The header is found within the first few lines, and ends at the
+first line that is not another header line.  For this reason,
+you won't see my evil desires following the TT2 closing tag...
+
+=cut
+
+sub read_deps {
+	local ($_, $.);
+	my ($file) = @_;
+	my $onit = 0;
+	my $I = {};
+
+	open my $fh, '<', $file or die "read_deps: open $file: $!\n";
+	binmode $fh, ':encoding(UTF-8)';
+
+	while (<$fh>) {
+		chomp;
+		# Common comment chars:
+		#   #  (UNIX sh, scripting languages)
+		#   ;  (BIND zone, DOS-INI, Lisp, ledger)
+		#   *  (C89/ANSI/K&R /* ... */)
+		#   // (C++, Java, C99 line-comment)
+		#   "  (vimscript)
+		#   '  (VBScript (aughhhhhh!!! >n<!))
+		#   -- (lua)
+		#   %  (TeX, lilypond)
+		# A space is necessary both due to my
+		# subjective aesthetics and preventing
+		# false positives (e.g. a quoted string)
+		if (/^\s*(?:#|;|\*|\/\/|"|'|--|%) (HAVE|WANT|NEED):/g) {
+			my $type = $1;
+			my @list = /\S+/g;
+			$onit = 1;
+			next unless @list;
+
+			if ($type eq 'HAVE') {
+				die "read_deps: $file line $.: You HAVE too many.\n"
+					if @list > 1 or exists $I->{$type};
+				$I->{HAVE} = $list[0];
+			} else {
+				push @{$I->{$type}}, @list;
+			}
+			next;
+		}
+		# Not a header line: that is the end of it,
+		# or we never found one, and it is a long
+		# way down to look for one.
+		last if $onit or $. >= 32;
+	}
+
+	close $fh;
+	%$I;
 }
 
 =back

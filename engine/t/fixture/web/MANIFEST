@@ -1,0 +1,11 @@
+# the top-level goals of the build
+MAKE all
+	NEED index.html            # implicitly prepended by ${B}/${b}
+	NEED sub/index.html
+	NEED robots.txt
+	WANT extra/index.html      # skel/EXTRA is not here: dropped
+	WANT ghost.html            # no rule for it: dropped
+
+MAKE basic
+	NEED index.html
+	WANT sub/index.html        # everything it needs is here: kept

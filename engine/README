@@ -1,27 +1,17 @@
-siteconf -i [-Sopt=val ...]
+siteconf -i [-P web] [-SB=build] [-Osite_url=...]   # writes ./configure
+./configure [-DB=outdir] [-Db=reldir] [-Ovar=val]    # MY/config.mk, MY/option.mk
+siteconf -g [-B outdir] [-G make]                   # Makefile, MY/Manifest.*
+cd ${B} && make [goal]
 
-#
-# path to project root
-#   -SA=.       (default)
-#   -SA=..      (alternatively if we live in a subdirectory
-# path to project build dir (default to -DB=.)
-#   -SB=.       (default)
-#   -SB=build   (CMake style)
-#   -SB=/tmp/writable/build/dir  (read-only checkout)
-# path to transformation rules relative to $A
-#   -SR=Makefile.in (default)
-# path to top-level manifest relative to $A
-#   -SF=MANIFEST  (default)
-# path to source tree relative to $A
-#   -Sa=html    (default, since we originate from SSG.)
-#   -Sa=.       (a sane alternative)
-# path to output tree relative to $B
-#   -Sb=site    (default)
-# directory marker
-#   -Se=.ok     (default)
-#   -Se=.exists (mimics EU::MM)
-#
+MANIFEST:
+    MAKE all
+        NEED file1      # relative to ${a}; made as ${B}/${b}/file1
+        WANT file2      # soft: resolved into MY/Manifest.all
+    MAKE small
+        NEED file1
 
-./configure [-DB=outdir] [-Db=reldir]
-siteconf -g [-B=outdir] [-G make|ninja]
-cd ${B} && [make|ninja]
+In templates (TT2): D.* (config.mk), O.* (option.mk, plus O.location),
+locate(...).  Keep local changes to ./configure as a patch; it is
+generated deterministically.
+
+Tests: PERL5LIB=genlib/lib:engine/lib prove -r engine/t genlib/t

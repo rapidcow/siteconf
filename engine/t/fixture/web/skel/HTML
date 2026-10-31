@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html><head>
+  <title>[% title | html %]</title>
+  <link rel="canonical" href="[% locate('//' _ O.location) | xml %]">
+</head>
+<body>
+[% content -%]
+</body></html>

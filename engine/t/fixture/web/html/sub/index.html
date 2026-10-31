@@ -1,0 +1,8 @@
+[%
+# HAVE: sub/index.html
+# NEED: skel/HTML
+-%]
+[% WRAPPER "HTML" title = "sub" -%]
+<p>location=[% O.location %]</p>
+<a href="[% locate('') | xml %]">up</a>
+[% END -%]

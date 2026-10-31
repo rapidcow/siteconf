@@ -1,0 +1,33 @@
+#!/usr/bin/env perl
+# HAVE: render
+
+use 5.006;
+use strict;
+use warnings;
+use open ':std', ':encoding(UTF-8)';
+
+use Getopt::Std;
+use Template;
+use RdKw::WwW::GenLib qw( load_state read_deps tt_vars );
+
+my %o;
+getopts('B:', \%o) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
+@ARGV == 2 or die "$0: need exactly two args\n";
+my ($apath, $bpath) = @ARGV;
+
+# D and O, each in a namespace of its own
+my ($D, $O) = load_state(defined $o{B} ? $o{B} : '.');
+my %I = read_deps($apath);
+defined $I{HAVE} or die "E: $apath: missing HAVE declaration\n";
+my $vars = tt_vars($D, $O, $I{HAVE});
+
+my $tt = Template->new({ INCLUDE_PATH => [ 'skel', '.' ] })
+	or die "[TT] ", $Template::ERROR, "\n";
+open my $if, '<:encoding(UTF-8)', $apath or die "open <$apath: $!\n";
+open my $of, '>:encoding(UTF-8)', $bpath or die "open >$bpath: $!\n";
+unless ($tt->process($if, $vars, $of)) {
+	close $of;
+	unlink $bpath;
+	die "[TT] ", $tt->error(), "\n";
+}
+close $of or die "close >$bpath: $!\n";

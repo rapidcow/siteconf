@@ -1,0 +1,173 @@
+#!/usr/bin/env perl
+#
+# configure -- written by `@PROG@ -i'.
+#
+# Keep local changes as a patch on top of this file (it is generated
+# deterministically, so the same arguments give the same text and the
+# patch keeps applying), rather than editing it in place and losing
+# them the next time `@PROG@ -i' is run.
+#
+use utf8;
+use 5.006;
+use strict;
+use warnings;
+use open ':std', ':encoding(UTF-8)';
+
+use Cwd qw(getcwd abs_path);
+use File::Basename;
+use File::Path qw(make_path);
+use File::Spec;
+use FindBin;
+
+use RdKw::WwW::GenLib qw(read_make write_make);
+
+my $prog = basename($0);
+
+# Baked in by `@PROG@ -i'.
+#   A   the project root, as seen from this script
+#   D   definitions, which are filesystem routing and nothing else
+#   O   options, which alter the state of the build
+my $A = @A@;
+my %Ddef = (
+@DDEF@
+);
+my %Odef = (
+@ODEF@
+);
+
+# --- the preset, if any
+@PRESET@
+# ---
+
+sub isnull
+{
+	!(defined $_[0]) || !(length $_[0]);
+}
+
+my $usage = <<EOM;
+usage: $prog [-Dvar=val ...] [-Ovar=val ...] [--reset] [-h]
+
+The following variables may be defined:
+
+  -DB         Build directory, seen from the source tree (default: $Ddef{B})
+  -Da         Source directory, seen from the source tree (default: $Ddef{a})
+  -Db         Target directory, seen from the build directory (default: $Ddef{b})
+  -DR         Transformation rules (default: $Ddef{R})
+  -DF         Manifest (default: $Ddef{F})
+  -De         Directory marker (default: $Ddef{e})
+@OPTHELP@
+Anything else you may -D or -O goes into MY/config.mk or MY/option.mk
+respectively, for the rulebook or for the files being transformed.
+
+  -h          This help message
+  --reset     Clear all configuration at this point
+EOM
+
+# `use open' covers the standard handles and `use utf8' our source,
+# but not @ARGV: those arrive as raw bytes, and would be encoded a
+# second time on their way into MY/*.mk.  (Anything that is not
+# valid UTF-8 is left alone.)
+utf8::decode($_) for @ARGV;
+
+my (%D, %O, $reset);
+while (@ARGV) {
+	my $arg = shift;
+	if ($arg eq '--') {
+		last;
+	} elsif ($arg eq '-h' or $arg eq '-?' or $arg eq '--help') {
+		print $usage;
+		exit 0;
+	} elsif ($arg eq '--reset') {
+		%D = ();
+		%O = ();
+		$reset = 1;
+	} elsif ($arg =~ /^-([DO])(.*)$/s) {
+		my ($S, $s) = ($1, $2);
+		unless (length $s) {
+			@ARGV or die "$prog: -$S requires an argument.\n";
+			$s = shift;
+		}
+		my ($k, $v) = split(/=/, $s, 2);
+		length $k or die "$prog: -$S: empty name.\n";
+		($S eq 'D' ? \%D : \%O)->{$k} = defined $v ? $v : "";
+	} else {
+		print STDERR "$prog: invalid option: \`$arg'\n";
+		die +( split(/^/, $usage, 2) )[0];
+	}
+}
+@ARGV and die "$prog: too many arguments\n";
+
+# We are in the source tree, wherever we have been started from; that
+# is where $A says it is.
+my $srcdir = abs_path(File::Spec->rel2abs($A, $FindBin::RealBin));
+defined $srcdir or die "E: cannot find the project root ($A): $!\n";
+chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
+
+exists $D{A} and die <<EUGH;
+E: `A' (the source tree, seen from the build directory) is derived
+E: from where we are standing, and cannot be set.
+EUGH
+
+# -DB is the build directory, seen from the source tree; like
+# `cmake -B' we go there, and make it if it is not there.  Its
+# spelling is kept as is -- absolute or not.  It is a statement about
+# *this* run: nothing about it is ever read back from MY/config.mk,
+# which is the very file it is about to choose.
+my $B = defined $D{B} ? $D{B} : $Ddef{B};
+length $B or die "E: `B' must not be empty; use -DB=. for the source tree.\n";
+-d $B or make_path($B);
+chdir $B or die "E: cannot chdir to $B: $!\n";
+my $Babs = getcwd();
+
+# Files first, command line over them -- unless --reset said otherwise.
+unless ($reset) {
+	my %Dcli = %D;
+	my %Ocli = %O;
+	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk") : ();
+	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk") : ();
+	@D{keys %Dcli} = values %Dcli;
+	@O{keys %Ocli} = values %Ocli;
+}
+
+# Both are facts about where we are standing right now, so we clobber
+# whatever MY/config.mk said.  They are still written out, so that
+# whatever makes the Makefile need only read MY/*.mk.
+#
+#   A  the source tree, seen from the build dir (`.' in-tree)
+#   B  the build dir, seen from the source tree (`.' in-tree)
+$D{B} = $B;
+$D{A} = File::Spec->abs2rel($srcdir, $Babs);
+
+# What was not said, is the default (even if it was said to be empty).
+for my $k (keys %Ddef) {
+	$D{$k} = $Ddef{$k} if isnull($D{$k});
+}
+for my $k (keys %Odef) {
+	$O{$k} = $Odef{$k} if isnull($O{$k});
+}
+
+defined &preset_finish and preset_finish(\%D, \%O);
+
+for my $k (qw( a b R F )) {
+	$D{$k} =~ s!/+$!!;
+	length $D{$k} or die "E: `$k' may not be empty.\n";
+}
+# b is a directory we create rules under, one parent at a time; that
+# walk only ends at `.', so it must be relative.  (a, on the other
+# hand, is free to be absolute: out-of-tree builds.)
+File::Spec->file_name_is_absolute($D{b})
+	and die "E: `b' prefix must be a relative path.\n";
+$D{e} =~ m!/! and die "E: `e' may not contain a slash.\n";
+
+# MY/option.mk first, or this would be circular.
+-d 'MY' or mkdir 'MY' or die "mkdir MY: $!\n";
+for my $f ([ option => \%O ], [ config => \%D ]) {
+	my ($name, $H) = @$f;
+	my $what = write_make("MY/$name.mk", $H, $prog);
+	$what and print STDERR ($what eq 'created' ? "Writing" : "Updating"),
+		" MY/$name.mk\n";
+}
+
+my $where = $B eq '.' ? '' : " -B " . ($B =~ m!\A[\w./:@%+=,-]+\z! ? $B : "'$B'");
+print STDERR "Now run: @PROG@ -g$where\n";
+exit 0;

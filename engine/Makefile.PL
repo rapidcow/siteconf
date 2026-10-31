@@ -20,6 +20,7 @@ my %WriteMakefileArgs = (
 	},
 	PREREQ_PM => {
 		'File::ShareDir' => '0',
+		'RdKw::WwW::GenLib' => '0',
 	},
 	EXE_FILES => [
 		'script/siteconf',

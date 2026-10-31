@@ -1,0 +1,123 @@
+#!perl
+#
+# t/state.t - MY/*.mk, HAVE/NEED/WANT headers, base_url, TT2 stash
+
+use 5.006;
+use strict;
+use warnings;
+use utf8;
+use Test::More;
+use File::Temp qw( tempdir );
+
+use RdKw::WwW::GenLib qw(
+	read_make write_make update_file load_state
+	read_deps parse_base tt_vars locator
+);
+
+my $dir = tempdir(CLEANUP => 1);
+sub spew {
+	my ($name, $text) = @_;
+	open my $fh, '>:encoding(UTF-8)', "$dir/$name" or die "$name: $!";
+	print $fh $text;
+	close $fh or die;
+	"$dir/$name";
+}
+
+# --- write_make / read_make / update_file
+{
+	my $f = "$dir/x.mk";
+	is(write_make($f, { b => 'site', aa => 'a b', c => 'é' }, 'test'),
+		'created', 'write_make creates');
+	is_deeply({ read_make($f) }, { b => 'site', aa => 'a b', c => 'é' },
+		'read_make reads it back');
+	like(do { open my $fh, '<', $f; local $/; <$fh> }, qr/^b=\tsite\nc=.*\naa=/m,
+		'short keys first');
+
+	# Preserve the mtime of an unchanged file.
+	utime 1000000000, 1000000000, $f;
+	is(write_make($f, { b => 'site', aa => 'a b', c => 'é' }, 'test'),
+		'', 'unchanged');
+	is((stat $f)[9], 1000000000, 'mtime kept');
+	is(write_make($f, { b => 'docs' }, 'test'), 'updated', 'changed');
+	ok(!-e "$dir/tmp-x.mk", 'no temporary left behind');
+	ok(!eval { write_make($f, { k => "a\nb" }, 'test'); 1 }, 'newline refused');
+	ok(!eval { write_make($f, { 'a=b' => 1 }, 'test'); 1 }, 'bad name refused');
+}
+
+# --- load_state
+{
+	mkdir "$dir/MY" or die;
+	ok(!eval { load_state($dir); 1 }, 'unconfigured');
+	like($@, qr/not configured/, '... says so');
+	write_make("$dir/MY/config.mk", { a => 'html' }, 't');
+	write_make("$dir/MY/option.mk", { base_url => '/' }, 't');
+	my ($D, $O) = load_state($dir);
+	is($D->{a}, 'html', 'D from config.mk');
+	is($O->{base_url}, '/', 'O from option.mk');
+	ok(!exists $D->{base_url}, 'namespaces are separate');
+}
+
+# --- read_deps
+{
+	my $f = spew('a.html', <<'HTML');
+[%
+# HAVE: index.html
+# NEED: skel/HTML skel/FOOT
+# WANT: data/x
+# NEED: more
+-%]
+# NEED: ignored, this is body text
+HTML
+	is_deeply({ read_deps($f) }, {
+		HAVE => 'index.html',
+		NEED => [qw( skel/HTML skel/FOOT more )],
+		WANT => [qw( data/x )],
+	}, 'TT2 header');
+
+	$f = spew('b.css', "/*\n * HAVE: b.css\n * NEED: c.css\n */\n");
+	is_deeply({ read_deps($f) }, { HAVE => 'b.css', NEED => ['c.css'] },
+		'C comment header (several lines)');
+
+	$f = spew('c.bin', "binary\n" . ("x\n" x 40) . "# HAVE: too-late\n");
+	is_deeply({ read_deps($f) }, {}, 'no header, no peeking far down');
+
+	$f = spew('d', "# HAVE: a\n# HAVE: b\n");
+	ok(!eval { read_deps($f); 1 }, 'two HAVEs');
+	like($@, qr/HAVE too many/, '... too many');
+}
+
+# --- parse_base
+{
+	my %O = (site_url => 'https://example.test/x?y#z', base_url => '/');
+	ok(eval { parse_base(\%O); 1 }, 'inherits path') or diag $@;
+	is($O{base_url}, '/x', 'base_url inherited');
+	is($O{site_url}, 'https://example.test', 'site_url is host only');
+	ok(!ref $O{site_url}, 'site_url is a plain string');
+
+	%O = (site_url => 'https://example.test/x/', base_url => '/y/');
+	ok(!eval { parse_base(\%O); 1 }, 'path in site_url vs. base_url');
+	%O = (site_url => 'ftp://example.test');
+	ok(!eval { parse_base(\%O); 1 }, 'scheme');
+	%O = (base_url => '/');
+	ok(!eval { parse_base(\%O); 1 }, 'missing site_url');
+}
+
+# --- tt_vars
+{
+	my %D = (b => 'site');
+	my %O = (base_url => '/', site_url => 'https://example.test');
+	my $v = tt_vars(\%D, \%O, 'a/b.html');
+	is($v->{O}{location}, 'a/b.html', 'O.location');
+	ok(!exists $O{location}, '... without touching the caller\'s O');
+	is($v->{D}{b}, 'site', 'D.b');
+	is($v->{locate}->('c.html'), '../c.html', 'locate, relative');
+	is($v->{locate}->('/c.html'), '/c.html', 'locate, host-relative');
+	is($v->{locate}->('//c.html'), 'https://example.test/c.html', 'locate, absolute');
+
+	my $l = locator({ %O, base_url => '/' }, 'a/b.html');
+	is($l->('c/'), '../c/index.html', 'index.html appended away from http(s)');
+	$l = locator({ %O, base_url => 'https://example.test/' }, 'a/b.html');
+	is($l->('c/'), '../c/', '... but not on http(s)');
+}
+
+done_testing;

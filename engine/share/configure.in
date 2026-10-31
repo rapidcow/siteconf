@@ -103,9 +103,9 @@ The following variables may be defined:
 Anything else you may -D or -O goes into MY/config.mk or MY/option.mk
 respectively, for the rulebook or for the files being transformed.
 
-  -h          This help message
+  -h          This help message (alias: --help, -?)
   --reset     Clear all configuration at this point
-  -q          Disable tips (and --quiet)
+  -q          Disable tips (alias: --quiet)
 EOM
 
 # `use open' covers the standard handles and `use utf8' our source,

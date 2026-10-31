@@ -4,4 +4,4 @@ Makefile.PL
 lib/RdKw/WwW/GenLib.pm
 t/00-load.t
 t/locate.t
-t/state.t
+t/parse_base.t

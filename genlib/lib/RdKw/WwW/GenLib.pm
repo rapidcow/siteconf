@@ -12,6 +12,30 @@ $VERSION = eval $VERSION;
 
 RdKw::WwW::GenLib - static web-site generation library
 
+=head1 SYNOPSIS
+
+    use RdKw::WwW::GenLib qw( locate );
+
+    my $if = "${a}/file.ext";
+    my $of = "${B}/${b}/file.ext";
+
+    my %D = read_make("${B}/MY/config.mk");
+    my %O = read_make("${B}/MY/option.mk");
+    my %F = ( locate => sub {
+    	@_ == 1 or die Template::Exception->new(
+    		"usage" => "[% locate PATH %]");
+    	my $where = $_[0];
+    	if ($O{base_url} !~ m{^https?://}i) {
+    		$_[0] .= 'index.html' if $_[0] =~ m{/$};
+    	}
+    	locate(\%O, $O{location}, $where);
+    } );
+
+    my %V = ( D => \%D, O => \%O, %F );
+    unless ($tt->process($if, \%V), $of) {
+    	die "[TT] ", $tt->error();
+    }
+
 =cut
 
 use URI::Escape qw( uri_unescape );

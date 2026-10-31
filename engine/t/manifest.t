@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 28;
 use File::Temp qw( tempdir );
 use RdKw::WwW::SiteConf;
 
@@ -46,5 +46,3 @@ bad("MAKE clean\n", qr/reserved/, 'reserved goal');
 bad("MAKE\n", qr/exactly one goal/, 'nameless goal');
 bad("FROB x\n", qr/expected MAKE/, 'unknown keyword');
 bad("# nothing\n", qr/no goals/, 'empty');
-
-done_testing;

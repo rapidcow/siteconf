@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More;
+use Test::More tests => 42;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenLib qw(
@@ -136,5 +136,3 @@ HTML
 	ok(!eval { $l->(); 1 }, 'one argument');
 	like($@, qr/usage: \[% locate PATH %\]/, '... says how');
 }
-
-done_testing;

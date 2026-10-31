@@ -16,6 +16,8 @@ for my $m (qw( Template URI )) {
 my $make = $ENV{MAKE} || 'make';
 system("$make -v >/dev/null 2>&1") == 0 or plan skip_all => "no make";
 
+plan tests => 49;
+
 my $root = abs_path(File::Spec->catdir(dirname(__FILE__), File::Spec->updir));
 my $script = "$root/blib/script/siteconf";
 -f $script or plan skip_all => "not built: perl Makefile.PL && make, in engine/ and genlib/";
@@ -121,4 +123,3 @@ like($bad, qr/goal `broken' needs `ghost\.html'.*\n.*goal `broken' needs `extra\
 	'all problems are reported at once');
 
 chdir '/';
-done_testing;

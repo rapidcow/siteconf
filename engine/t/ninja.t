@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 13;
 use RdKw::WwW::SiteConf::Ninja;
 
 sub cmd { RdKw::WwW::SiteConf::Ninja::_command($_[0]) }
@@ -38,5 +38,3 @@ like($text, qr/^build site\/x: rule1 in\/x \| a\$ b \|\| site\/\.ok$/m,
 	'input, implicit (escaped), order-only');
 like($text, qr/^default all$/m, 'default goal');
 like($text, qr/^build all: phony site\/x$/m, 'goal');
-
-done_testing;

@@ -1,0 +1,40 @@
+Revision history of WwW-GenGenLib
+
+
+0.00_00  2026-10-31  RC
+    Migration from WwW-GenLib?  I'll copy the change log
+    from there:
+
+    * read_make/write_make/update_file/load_state: MY/config.mk
+      and MY/option.mk, written only if they changed (mtime
+      kept, so reconfiguring does not rebuild the world).
+
+    *** BREAKING interface from WwW-GenLib 0.00_00!
+        -> write_make (and the update_file that implements it)
+           now returns a number instead of a string.
+
+                | genlib-0.0000  | gengenlib-0.0000
+         -------+----------------+----------------------
+           new? | "created"      | 2
+           chg? | "updated"      | 1
+           none | ""             | 0
+
+        -> load_state returns a flat hash ( config => \%D,
+           option => \%O ) instead of a pair ( \%D, \%O ).
+           to assign the old names in list context anyways:
+
+             my %S = load_state($Bdir);
+             my ($D, $O) = @S{qw( config option )};
+
+           or in one line:
+
+             my ($D, $O) = @{+{ load_state($Bdir) }}{qw( config option )};
+
+    * read_deps: HAVE/NEED/WANT headers in any comment style,
+      REM and :: included.  Paths are from the project root
+      and are expanded by siteconf (see its docs).
+
+    * parse_base: sanitize site_url and base_url.
+
+      This is also a port, with the special handling of `/'
+      base_url patched by Claude too.

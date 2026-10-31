@@ -164,7 +164,7 @@ $D{e} =~ m!/! and die "E: `e' may not contain a slash.\n";
 for my $f ([ option => \%O ], [ config => \%D ]) {
 	my ($name, $H) = @$f;
 	my $what = write_make("MY/$name.mk", $H, $prog);
-	$what and print STDERR ($what eq 'created' ? "Writing" : "Updating"),
+	$what and print STDERR ($what > 1 ?"Writing" : "Updating"),
 		" MY/$name.mk\n";
 }
 

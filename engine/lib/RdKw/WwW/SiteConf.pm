@@ -133,7 +133,9 @@ my %reserved_goal = map { $_ => 1 } qw( clean Makefile MY );
 
 I<dir> is the build directory, as seen from the current directory.
 C<MY/config.mk> there must exist.  Warnings are not printed when
-I<quiet> is true.  I<D> overrides C<MY/config.mk> parameters.
+I<quiet> is true.  I<D> overrides C<MY/config.mk> parameters, except that
+C<F> and C<R> are paths from the current directory rather than
+from the project root.
 
 =cut
 
@@ -152,10 +154,17 @@ E: You have not configured!
 E: (no $conf)  You should ./configure first. ;)
 RUSH
 	my %D = read_make($conf);
+	# F and R overrides are paths from where we are, not from the
+	# project root; they are converted once we know where that is.
+	my %fromhere;
 	if ($arg{D}) {
 		my $Doverrides = $arg{D};
 		foreach (keys %$Doverrides) {
-			$D{$_} = $Doverrides->{$_};
+			if ($_ eq 'F' or $_ eq 'R') {
+				$fromhere{$_} = $Doverrides->{$_};
+			} else {
+				$D{$_} = $Doverrides->{$_};
+			}
 		}
 	}
 	for my $k (qw( A B a b R F e )) {
@@ -171,6 +180,11 @@ RUSH
 	$self->{Rabs} = abs_path($self->_fs($D{A}));
 	defined $self->{Babs} && defined $self->{Rabs}
 		or die "E: cannot find the build dir or the source tree: $!\n";
+	$self->{fromhere} = \%fromhere;
+	for my $k (sort keys %fromhere) {
+		length $fromhere{$k} or die "E: `$k' may not be empty.\n";
+		$D{$k} = File::Spec->abs2rel(File::Spec->rel2abs($fromhere{$k}), $self->{Rabs});
+	}
 	$self;
 }
 
@@ -700,7 +714,10 @@ sub generate
 		};
 	}
 
-	$plan->{prog} = "$self->{prog} -g -G $G" . ($named ? " -o " . shell_quote($out) : '');
+	$plan->{prog} = "$self->{prog} -g -G $G" . join '', map {
+		" -$_ " . shell_quote($self->{fromhere}{$_})
+	} sort keys %{ $self->{fromhere} };
+	$plan->{prog} .= " -o " . shell_quote($out) if $named;
 	my $text = $module->can('_emit')->($plan);
 	$self->_report($outfile, update_file("$self->{B}/$outfile", $text));
 	$plan;

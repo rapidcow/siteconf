@@ -8,7 +8,7 @@ use open ':std', ':encoding(UTF-8)';
 
 use Getopt::Std;
 use Template;
-use RdKw::WwW::GenLib qw( load_state location tt_vars );
+use RdKw::WwW::GenLib qw( load_state location locator );
 
 my %o;
 getopts('B:', \%o) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
@@ -17,13 +17,19 @@ my ($apath, $bpath) = @ARGV;
 
 # D and O, each in a namespace of its own
 my ($D, $O) = load_state(defined $o{B} ? $o{B} : '.');
-my $vars = tt_vars($D, $O, location($D, $bpath));
+my $where = location($D, $bpath);
+my %O = (%$O, location => $where);
+my %V = (
+	D => $D,
+	O => \%O,
+	locate => locator(\%O, $where),
+);
 
 my $tt = Template->new({ INCLUDE_PATH => [ 'skel', '.' ] })
 	or die "[TT] ", $Template::ERROR, "\n";
 open my $if, '<:encoding(UTF-8)', $apath or die "open <$apath: $!\n";
 open my $of, '>:encoding(UTF-8)', $bpath or die "open >$bpath: $!\n";
-unless ($tt->process($if, $vars, $of)) {
+unless ($tt->process($if, \%V, $of)) {
 	close $of;
 	unlink $bpath;
 	die "[TT] ", $tt->error(), "\n";

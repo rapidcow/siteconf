@@ -62,9 +62,10 @@ See L<RdKw::WwW::SiteConf> for what those look like.
 
 With the C<web> preset (C<-P web>), F<configure> requires an
 C<-Osite_url>, and sees to it that C<base_url> agrees.  The files
-are rendered through Template Toolkit, with the namespaces C<D>
-and C<O> (including C<O.location>), and the function C<locate>;
-see L<RdKw::WwW::GenLib/tt_vars>.
+are rendered through Template Toolkit; by convention with the
+namespaces C<D> and C<O> (including C<O.location>), and the function
+C<locate>, though it is each F<render> that decides;
+see L<RdKw::WwW::GenLib/SYNOPSIS>.
 
 =head1 OPTIONS
 

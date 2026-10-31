@@ -11,7 +11,7 @@ use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenLib qw(
 	read_make write_make update_file load_state
-	read_deps parse_base tt_vars locator location
+	read_deps parse_base locator location
 );
 
 my $dir = tempdir(CLEANUP => 1);
@@ -125,22 +125,16 @@ HTML
 	ok(!eval { parse_base(\%O); 1 }, 'missing site_url');
 }
 
-# --- tt_vars
+# --- locator
 {
-	my %D = (b => 'site');
 	my %O = (base_url => '/', site_url => 'https://example.test');
-	my $v = tt_vars(\%D, \%O, 'a/b.html');
-	is($v->{O}{location}, 'a/b.html', 'O.location');
-	ok(!exists $O{location}, '... without touching the caller\'s O');
-	is($v->{D}{b}, 'site', 'D.b');
-	is($v->{locate}->('c.html'), '../c.html', 'locate, relative');
-	is($v->{locate}->('/c.html'), '/c.html', 'locate, host-relative');
-	is($v->{locate}->('//c.html'), 'https://example.test/c.html', 'locate, absolute');
-
-	my $l = locator({ %O, base_url => '/' }, 'a/b.html');
-	is($l->('c/'), '../c/', 'index.html NOT appended away from http(s)');
-	$l = locator({ %O, base_url => 'https://example.test/' }, 'a/b.html');
-	is($l->('c/'), '../c/', '... but not on http(s)');
+	my $l = locator(\%O, 'a/b.html');
+	is($l->('c.html'), '../c.html', 'locate, relative');
+	is($l->('/c.html'), '/c.html', 'locate, host-relative');
+	is($l->('//c.html'), 'https://example.test/c.html', 'locate, absolute');
+	is($l->('c/'), '../c/', 'nothing is done to the spec');
+	ok(!eval { $l->(); 1 }, 'one argument');
+	like($@, qr/usage: \[% locate PATH %\]/, '... says how');
 }
 
 done_testing;

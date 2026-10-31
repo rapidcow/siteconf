@@ -14,14 +14,19 @@ RdKw::WwW::GenLib - static web-site generation library
 
 =head1 SYNOPSIS
 
-    use RdKw::WwW::GenLib qw( load_state tt_vars location );
+    use RdKw::WwW::GenLib qw( load_state location locator );
 
-    # in a `render' script:
+    # in a `render' script: what the template sees is up to you
     my ($D, $O) = load_state($B);       # ${B}/MY/{config,option}.mk
-    my $vars = tt_vars($D, $O, location($D, $bpath));
+    my $where = location($D, $bpath);   # where in the site this page is
 
-    # [% D.b %], [% O.base_url %], [% O.location %], [% locate('x') %]
-    unless ($tt->process($if, $vars, $of)) {
+    my %O = (%$O, location => $where);  # [% O.location %]
+    my %V = (
+    	D => $D,                        # [% D.b %]
+    	O => \%O,                       # [% O.base_url %]
+    	locate => locator(\%O, $where), # [% locate('x') %]
+    );
+    unless ($tt->process($if, \%V, $of)) {
     	die "[TT] ", $tt->error();
     }
 
@@ -39,7 +44,6 @@ our @EXPORT_OK = qw(
 	read_make write_make update_file load_state
 	read_deps
 	location
-	tt_vars
 );
 
 =head1 ROUTINES
@@ -184,11 +188,11 @@ COMM:	while () {
 
 =item B<locator> \%O, I<location>
 
-Returns the TT2 function C<locate> for the page at I<location>
-(a path relative to the site root, i.e. the C<HAVE> of its source).
-Where I<base_url> is not absolute, a spec ending in a slash (or
-the empty string) is spelled out with C<index.html>, so that the
-result also works from C<file://>.
+Returns a function, to be handed to TT2 as C<locate>, that is B<locate>
+as seen from the page at I<location> (see B<location>), taking just
+I<spec>.  Nothing else is done to I<spec>; whatever else a site wants
+done to its URLs (such as spelling out C<index.html>) is for it to wrap
+around this.
 
 =cut
 
@@ -405,25 +409,6 @@ sub location
 		substr($path, 0, length($root) + 1) = '';
 	}
 	$path;
-}
-
-=item B<tt_vars> \%D, \%O, I<location>
-
-The variable stash for TT2, with the namespaces kept apart:
-C<D> are definitions, C<O> are options (with C<O.location> set to
-I<location> for this page only), and C<locate> is the function.
-
-=cut
-
-sub tt_vars
-{
-	my ($D, $O, $location) = @_;
-	my %O = (%$O, location => $location);
-	+{
-		D => { %$D },
-		O => \%O,
-		locate => locator(\%O, $location),
-	};
 }
 
 =item B<read_deps> I<file>

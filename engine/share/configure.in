@@ -218,7 +218,7 @@ my $Bhere = File::Spec->abs2rel($Babs, $start);
 my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);
 unless ($shutup) {
 	print STDERR "Done!\n";
-	print STDERR "Now run: @PROG@ -g$where\n";
+	print STDERR "To generate build script, run: @PROG@ -g$where\n";
 }
 
 exit 0;

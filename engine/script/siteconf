@@ -251,6 +251,11 @@ sub do_init
 		F => 'MANIFEST',
 		e => '.ok',
 	);
+	# Well-known options
+	my %OD = (
+		base_url => q{Host-relative base URL},
+		site_url => q{Absolute base URL},
+	);
 	my $A = delete $S{A};
 	$A = '.' unless defined $A;
 	for my $k (keys %S) {
@@ -293,9 +298,11 @@ sub do_init
 		$render = eval { share_file("presets/$opt->{P}.render") };
 	}
 	if (%Ox) {
-		$help = "\nOptions with defaults:\n\n"
-			. join '', map { sprintf "  -O%-9s (default: \$Od{%s})\n", $_, pK($Ox{$_}) }
-				sort keys %Ox;
+		$help = "\nOptions with defaults:\n\n" .
+			join '', map {
+				sprintf "  -O%-9s %s(default: \$Od{%s})\n",
+					$_, exists $OD{$_} ? "$OD{$_} " : "", pK($Ox{$_})
+			} sort keys %Ox;
 	}
 
 	my $text = slurp(share_file('configure.in'));

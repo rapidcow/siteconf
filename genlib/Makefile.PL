@@ -18,6 +18,7 @@ my %WriteMakefileArgs = (
 	},
 	PREREQ_PM => {
 		'Exporter' => '0',
+		'URI' => '0',
 		'URI::Escape' => '0',
 		# pragma
 		'parent' => '0',

@@ -24,9 +24,9 @@ siteconf - configurable incremental build script generator
     #   -SB=.       (default)
     #   -SB=build   (CMake style)
     #   -SB=/tmp/writable/build/dir  (read-only checkout)
-    # path to transformation rules relative to $A
+    # path to transformation rules
     #   -SR=Makefile.in (default)
-    # path to top-level manifest relative to $A
+    # path to top-level manifest
     #   -SF=MANIFEST  (default)
     # path to source tree relative to $A
     #   -Sa=html    (default, since we originate from SSG.)

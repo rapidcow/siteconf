@@ -11,6 +11,7 @@ Revision history of WwW-SiteConf
       They are not part of the source tree.  To keep the old meaning,
       write the path from where you run `siteconf -g' (e.g. ../MANIFEST).
       (But I mean, the old meaning wasn't even intentional; so...)
+    * everyone understands -q now
 
 
 0.01_00  2026-10-31  RC

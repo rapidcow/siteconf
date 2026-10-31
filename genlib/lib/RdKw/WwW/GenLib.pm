@@ -53,25 +53,25 @@ on demand.
 
 =over
 
-=item B<locate> \%D, I<base>, I<spec>
+=item B<locate> \%O, I<base>, I<spec>
 
 Implements the synonymous TT2 function.
 
 =cut
 
 sub locate {
-	my ($D, $base, $spec) = @_;
+	my ($O, $base, $spec) = @_;
 
 	if ($spec =~ s!^//!!) {
 		return join '', (
-			$D->{site_url},
-			$D->{base_url},
+			$O->{site_url},
+			$O->{base_url},
 			$spec);
 	}
 
 	if ($spec =~ s!^/!!) {
 		return join '', (
-			$D->{base_url},
+			$O->{base_url},
 			$spec);
 	}
 
@@ -194,9 +194,13 @@ I<spec>.  Nothing else is done to I<spec>; whatever else a site wants
 done to its URLs (such as spelling out C<index.html>) is for it to wrap
 around this.
 
+This is a convenience function.  Callers are encouraged to extend this
+and invoke B<locate> directly.
+
 =cut
 
-sub locator {
+sub locator
+{
 	my ($O, $location) = @_;
 	sub {
 		@_ == 1 or die "usage: [% locate PATH %]\n";

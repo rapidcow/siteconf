@@ -1,42 +1,18 @@
 #!perl
 #
-# t/e2e.t - siteconf -i, ./configure, siteconf -g, make; on t/fixture/web
+# t/e2e-make.t - siteconf -i, ./configure, siteconf -g, make; on t/fixture/web
+# (and, since nothing about it is particular to make, the diagnostics)
 
 use strict;
 use warnings;
 use Test::More;
-use Cwd qw( abs_path getcwd );
-use File::Basename qw( dirname );
-use File::Spec;
 use File::Temp qw( tempdir );
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use E2E;
 
-for my $m (qw( Template URI )) {
-	eval "require $m; 1" or plan skip_all => "$m is not installed";
-}
-my $make = $ENV{MAKE} || 'make';
-system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0 or plan skip_all => "no make";
-
-plan tests => 49;
-
-my $root = abs_path(File::Spec->catdir(dirname(__FILE__), File::Spec->updir));
-my $script = "$root/blib/script/siteconf";
--f $script or plan skip_all => "not built: perl Makefile.PL && make, in engine/ and genlib/";
-my $fixture = "$root/t/fixture/web";
-# Whatever lets us load our modules lets the children do so
-local $ENV{PERL5LIB} = join ':', map { abs_path($_) } grep { defined && -d } @INC;
-
-my $dir = tempdir(CLEANUP => 1);
-system('cp', '-R', "$fixture/.", $dir) == 0 or die "cp: $?";
-chdir $dir or die;
-
-sub run {
-	my ($desc, @cmd) = @_;
-	my $out = `@cmd 2>&1`;
-	my $ok = ok($? == 0, $desc);
-	diag $out unless $ok;
-	$out;
-}
-sub slurp { open my $fh, '<:utf8', $_[0] or return; local $/; <$fh> }
+my $script = E2E::setup();
+my $make = E2E::make();
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build ));
 ok(-x 'configure', 'configure is executable');
@@ -97,23 +73,6 @@ like(slurp('build/site/index.html'), qr/other\.test/, 'options reach the pages')
 run('make clean', $make, '-C', 'build', 'clean');
 ok(!-e 'build/site/index.html', 'clean');
 
-# ... and the same through ninja
-SKIP: {
-	my $ninja = $ENV{NINJA} || 'ninja';
-	system("$ninja --version >/dev/null 2>&1") == 0 or skip "no ninja", 9;
-
-	run('siteconf -g -G ninja', $^X, $script, qw( -g -q -G ninja -B build ));
-	run('ninja basic', $ninja, '-C', 'build', 'basic');
-	ok(-f 'build/site/sub/index.html', 'ninja basic: sub built');
-	ok(!-e 'build/site/robots.txt', 'ninja basic: only the subset');
-	like(slurp('build/site/sub/index.html'), qr/location=sub\/index\.html/, 'ninja: O.location');
-	like(run('ninja again', $ninja, '-C', 'build', 'basic'), qr/no work to do/, 'ninja: incremental');
-	run('ninja (default goal)', $ninja, '-C', 'build');
-	ok(-f 'build/site/robots.txt', 'ninja all');
-	run('ninja -t clean', $ninja, '-C', 'build', '-t', 'clean');
-	ok(!-e 'build/site/index.html', 'ninja clean');
-}
-
 # a NEED that cannot be had is fatal
 open my $fh, '>>', 'MANIFEST' or die;
 print $fh "MAKE broken\n\tNEED ghost.html\n\tNEED extra/index.html\n";
@@ -123,4 +82,4 @@ isnt($?, 0, 'NEED of the missing is fatal');
 like($bad, qr/goal `broken' needs `ghost\.html'.*\n.*goal `broken' needs `extra\/index\.html'.*\n.*2 problems/,
 	'all problems are reported at once');
 
-chdir '/';
+E2E::done();

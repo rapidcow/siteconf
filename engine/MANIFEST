@@ -10,7 +10,9 @@ share/configure.in
 share/presets/web.config
 share/presets/web.render
 t/00-load.t
-t/e2e.t
+t/e2e-make.t
+t/e2e-ninja.t
+t/lib/E2E.pm
 t/manifest.t
 t/graph.t
 t/ninja.t

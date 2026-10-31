@@ -53,6 +53,21 @@ BEGIN {
 
 use RdKw::WwW::GenGenLib qw(read_make write_make);
 
+#
+# How can ./configure work without siteconf -g afterwards
+# Anyways, let's just port this one function in the (very
+# weird) circumstance where SiteConf.pm is somehow missing.
+#
+sub shell_quote
+{
+	my ($s) = @_;
+	# Nothing in it for the shell to mangle?  Then leave it be.
+	return $s if $s =~ m!\A[A-Za-z0-9_./:@%+=,-]+\z!;
+	# otherwise: single quotes, and ' itself as '\''
+	$s =~ s!'!'\\''!g;
+	"'$s'";
+}
+
 my $prog = basename($0);
 
 # Baked in by `@PROG@ -i'.
@@ -203,7 +218,7 @@ for my $f ([ option => \%O ], [ config => \%D ]) {
 # Compute $B for siteconf -g, as seen from the current directory
 # (not from the source tree, which is where -DB is seen from)
 my $Bhere = File::Spec->abs2rel($Babs, $start);
-my $where = $Bhere eq '.' ? '' : " -B " . ($Bhere =~ m!\A[\w./:@%+=,-]+\z! ? $Bhere : "'$Bhere'");
+my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);
 print STDERR "Done!\n";
 print STDERR "Now run: @PROG@ -g$where\n";
 

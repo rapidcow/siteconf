@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Make - Makefile backend for RdKw::WwW::SiteConf
+RdKw::WwW::SiteConf::Make - Makefile backend for siteconf
 
 =head1 SYNOPSIS
 

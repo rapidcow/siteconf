@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Ninja - build.ninja backend for RdKw::WwW::SiteConf
+RdKw::WwW::SiteConf::Ninja - build.ninja backend for siteconf
 
 =head1 SYNOPSIS
 

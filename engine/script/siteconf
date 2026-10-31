@@ -294,7 +294,7 @@ sub do_init
 	}
 	if (%Ox) {
 		$help = "\nOptions with defaults:\n\n"
-			. join '', map { sprintf "  -O%-9s (default: %s)\n", $_, $Ox{$_} }
+			. join '', map { sprintf "  -O%-9s (default: \$Od{%s})\n", $_, pK($Ox{$_}) }
 				sort keys %Ox;
 	}
 

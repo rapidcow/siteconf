@@ -152,17 +152,15 @@ E: You have not configured!  (no $conf)
 E: You should ./configure first. ;)
 RUSH
 	my %D = read_make($conf);
-	# F and R overrides are paths from where we are, not from the
-	# project root; they are converted once we know where that is.
+	# F and R (the manifest and the rules) are external to the project:
+	# paths from where we are, not from the project root.  The overrides
+	# are noted so that we can credit them in the header.
 	my %fromhere;
 	if ($arg{D}) {
 		my $Doverrides = $arg{D};
 		foreach (keys %$Doverrides) {
-			if ($_ eq 'F' or $_ eq 'R') {
-				$fromhere{$_} = $Doverrides->{$_};
-			} else {
-				$D{$_} = $Doverrides->{$_};
-			}
+			$D{$_} = $Doverrides->{$_};
+			$fromhere{$_} = $Doverrides->{$_} if $_ eq 'F' or $_ eq 'R';
 		}
 	}
 	for my $k (qw( A B a b R F e )) {
@@ -179,10 +177,6 @@ RUSH
 	defined $self->{Babs} && defined $self->{Rabs}
 		or die "E: cannot find the build dir or the source tree: $!\n";
 	$self->{fromhere} = \%fromhere;
-	for my $k (sort keys %fromhere) {
-		length $fromhere{$k} or die "E: `$k' may not be empty.\n";
-		$D{$k} = File::Spec->abs2rel(File::Spec->rel2abs($fromhere{$k}), $self->{Rabs});
-	}
 	$self;
 }
 
@@ -392,8 +386,8 @@ sub _read_rules
 {
 	my ($self) = @_;
 	my $D = $self->{D};
-	my $file = File::Spec->canonpath("$D->{A}/$D->{R}");
-	open my $fh, '<:encoding(UTF-8)', $self->_fs($file)
+	my $file = File::Spec->canonpath($D->{R});
+	open my $fh, '<:encoding(UTF-8)', $file
 		or die "E: open <$file: $!\n";
 
 	my (%rule, @node, $stanza);
@@ -567,8 +561,7 @@ sub plan
 	$self->{stack} = [];
 	$self->{rules} = $self->_read_rules;
 
-	my $manifest = File::Spec->canonpath("$D->{A}/$D->{F}");
-	my @spec = $self->read_manifest($self->_fs($manifest));
+	my @spec = $self->read_manifest(File::Spec->canonpath($D->{F}));
 
 	my (@goal, @err, @order, %known);
 	# A file comes after what it takes to make it

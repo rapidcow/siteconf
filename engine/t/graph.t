@@ -26,7 +26,7 @@ sub project {
 	make_path("$dir/" . ($D{B} || '.') . "/MY");
 	write_make("$dir/" . ($D{B} || '.') . "/MY/config.mk", {
 		A => '.', B => '.', a => 'html', b => 'site',
-		R => 'Makefile.in', F => 'MANIFEST', e => '.ok', %D }, 'test');
+		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok', %D }, 'test');
 	$f->{x} = '' ;
 	open my $fh, '>', "$dir/x" or die; close $fh;
 	$dir;

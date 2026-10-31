@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf
 
 
-0.01_01
+0.01_01  2026-10-31  RC
     * siteconf -g can now -o-utput to a file different from the
       backend default (such as Makefile.proj instead of Makefile).
       It can also override manifest and ruleset with -F and -R.
@@ -11,7 +11,11 @@ Revision history of WwW-SiteConf
       They are not part of the source tree.  To keep the old meaning,
       write the path from where you run `siteconf -g' (e.g. ../MANIFEST).
       (But I mean, the old meaning wasn't even intentional; so...)
-    * everyone understands -q now
+    * everyone understands -q now!
+    * siteconf -g tooltip (similar to what ./configure does)
+    * siteconf -i now writes the options it received (similar to
+      how BIND 9 dig +cmd prints the options at the top).  should
+      be helpful to folks who need to re-generate it over updates.
 
 
 0.01_00  2026-10-31  RC

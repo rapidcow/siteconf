@@ -24,9 +24,9 @@ RdKw::WwW::GenLib - static web-site generation library
     my %F = ( locate => sub {
     	@_ == 1 or die Template::Exception->new(
     		"usage" => "[% locate PATH %]");
-    	my $where = $_[0];
+    	my ($where) = @_;
     	if ($O{base_url} !~ m{^https?://}i) {
-    		$_[0] .= 'index.html' if $_[0] =~ m{/$};
+    		$where .= 'index.html' if $where =~ m{/$};
     	}
     	locate(\%O, $O{location}, $where);
     } );

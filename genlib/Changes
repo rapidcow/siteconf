@@ -1,6 +1,11 @@
 Revision history of WwW-GenLib
 
 
+0.01_00  2026-10-31  RC
+    *** read_make write_make update_file load_state read_deps
+        MOVED to WwW-GenGenLib.  Please install separately.
+
+
 0.00_00  2026-10-31  RC
     !>! written with substantial help from Anthropic Claude !<!
 

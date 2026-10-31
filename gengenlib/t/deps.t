@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More;
+use Test::More tests => 11;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( read_deps );
@@ -61,5 +61,3 @@ HTML
 	my $f = spew('remark', "REMEMBER HAVE: a\n");
 	is_deeply({ read_deps($f) }, {}, 'REM is a word');
 }
-
-done_testing;

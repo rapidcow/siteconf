@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More;
+use Test::More tests => 14;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw(
@@ -50,5 +50,3 @@ my $dir = tempdir(CLEANUP => 1);
 	is($O->{base_url}, '/', 'O from option.mk');
 	ok(!exists $D->{base_url}, 'namespaces are separate');
 }
-
-done_testing;

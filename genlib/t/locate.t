@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 35;
 
 use RdKw::WwW::GenLib qw( relapath locator location );
 
@@ -88,5 +88,3 @@ is (relapath('trivnote///', $deep), '../', 'many slashes after dotdot');
 	ok(!eval { $l->(); 1 }, 'one argument');
 	like($@, qr/usage: \[% locate PATH %\]/, '... says how');
 }
-
-done_testing;

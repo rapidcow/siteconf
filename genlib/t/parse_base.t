@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More;
+use Test::More tests => 7;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenLib qw( parse_base );
@@ -26,5 +26,3 @@ use RdKw::WwW::GenLib qw( parse_base );
 	%O = (base_url => '/');
 	ok(!eval { parse_base(\%O); 1 }, 'missing site_url');
 }
-
-done_testing;

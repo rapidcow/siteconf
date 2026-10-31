@@ -100,6 +100,12 @@ run.
 C<make> (default), writing F<Makefile>, or C<ninja>, writing
 F<build.ninja>.
 
+=item B<-o> I<file>
+
+With C<-g>, write I<file> in the build directory instead of F<Makefile>
+(or F<build.ninja>); say C<make -f Makefile.proj> to use it.  Just a
+name, not a path.  (With C<-i>, this is where F<configure> goes.)
+
 =item B<-q>
 
 Do not whine about dropped C<WANT>s.
@@ -119,7 +125,7 @@ use RdKw::WwW::SiteConf;
 my $prog = basename($0);
 my $usage = <<EOM;
 usage: $prog -i [-P preset] [-o file] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
-       $prog -g [-B builddir] [-G make] [-q]
+       $prog -g [-B builddir] [-G make] [-o file] [-q]
        $prog -V [-V]
 EOM
 
@@ -180,7 +186,7 @@ if ($opt{mode} eq 'init') {
 	}
 	do_init(\%opt);
 } else {
-	for my $k (qw( P o )) {
+	for my $k (qw( P )) {
 		defined $opt{$k} and die "$prog: -$k is not for make\n";
 	}
 	@{ $opt{M} } and die "$prog: -M is not for make\n";
@@ -189,7 +195,7 @@ if ($opt{mode} eq 'init') {
 	}
 	my $sc = RdKw::WwW::SiteConf->new(
 		B => $opt{B}, quiet => $opt{q}, prog => $prog);
-	$sc->generate($opt{G});
+	$sc->generate($opt{G}, $opt{o});
 }
 exit;
 

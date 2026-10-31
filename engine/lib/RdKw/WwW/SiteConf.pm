@@ -646,10 +646,11 @@ sub manifest_text
 	$text;
 }
 
-=item B<generate> [ I<generator> ]
+=item B<generate> [ I<generator>, [ I<file> ] ]
 
 Writes F<MY/MANIFEST.I<goal>> for each goal, and the build file
-for I<generator> (C<make>, the default, or C<ninja>).
+for I<generator> (C<make>, the default, or C<ninja>), named I<file>
+in the build directory if given (else F<Makefile> or F<build.ninja>).
 The files that would not change are left alone, mtime and all.
 
 =cut
@@ -661,11 +662,17 @@ my %generator = (
 
 sub generate
 {
-	my ($self, $G) = @_;
+	my ($self, $G, $out) = @_;
 	$G = 'make' unless defined $G and length $G;
 	my $gen = $generator{$G} or die "E: unknown generator `$G'"
 		. ".  Choose one of: " . join(', ', sort keys %generator) . "\n";
 	my ($module, $outfile) = @$gen;
+	my $named = defined $out && length $out;
+	if ($named) {
+		$out =~ m!\A[^/\0]+\z! and $out !~ /\A\.\.?\z/
+			or die "E: bad output name `$out': a file in the build directory, please\n";
+		$outfile = $out;
+	}
 	(my $pm = "$module.pm") =~ s!::!/!g;
 	require $pm;
 
@@ -687,7 +694,7 @@ sub generate
 		};
 	}
 
-	$plan->{prog} = "$self->{prog} -g -G $G";
+	$plan->{prog} = "$self->{prog} -g -G $G" . ($named ? " -o " . shell_quote($out) : '');
 	my $text = $module->can('_emit')->($plan);
 	$self->_report($outfile, update_file("$self->{B}/$outfile", $text));
 	$plan;

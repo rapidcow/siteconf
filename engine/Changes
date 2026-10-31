@@ -14,6 +14,8 @@ Revision history of WwW-SiteConf
     *** the web preset now generates stock render-er.  it does
       not generate the Makefile.in that makes it useful though.
 
+    + patch-friendly siteconf -i -D and -O help text
+
 
 0.00_00  2026-10-31  RC
     !>! written with substantial help from Anthropic Claude !<!

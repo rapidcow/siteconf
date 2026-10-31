@@ -1,0 +1,55 @@
+#!perl
+
+use 5.006;
+use strict;
+use warnings;
+
+=head1 NAME
+
+siteconf - web-site configuration generation utility
+
+=head1 SYNOPSIS
+
+    siteconf -i [-Sopt=val ...]
+
+    #
+    # path to project root
+    #   -SA=.       (default)
+    #   -SA=..      (alternatively if we live in a subdirectory
+    # path to project build dir (default to -DB=.)
+    #   -SB=.       (default)
+    #   -SB=build   (CMake style)
+    #   -SB=/tmp/writable/build/dir  (read-only checkout)
+    # path to transformation rules relative to $A
+    #   -SR=Makefile.in (default)
+    # path to top-level manifest relative to $A
+    #   -SF=MANIFEST  (default)
+    # path to source tree relative to $A
+    #   -Sa=html    (default, since we originate from SSG.)
+    #   -Sa=.       (a sane alternative)
+    # path to output tree relative to $B
+    #   -Sb=site    (default)
+    # directory marker
+    #   -Se=.ok     (default)
+    #   -Se=.exists (mimics EU::MM)
+    #
+
+    ./configure [-DB=outdir] [-Db=reldir]
+    siteconf -g [-B=outdir] [-G make|ninja]
+    cd ${B} && [make|ninja]
+
+=cut
+
+use File::ShareDir qw(dist_file);
+
+my $web_txt = dist_file('www-siteconf', 'presets/web.txt');
+
+my $content;
+{
+	open my $fh, '<', $web_txt or die "open $web_txt: $!\n";
+	$content = do { local $/; readline $fh; };
+	$fh->error() and die "read $web_txt: $!\n";
+	close $fh or die "open $web_txt: $!\n";
+}
+print("Toot toot -- -- Here's yur webbie text!\n");
+print($content);

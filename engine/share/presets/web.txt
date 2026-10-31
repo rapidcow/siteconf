@@ -1,0 +1,494 @@
+#!/usr/bin/env perl
+
+use utf8;
+use 5.006;
+use strict;
+use open ':std', ':encoding(UTF-8)';
+
+BEGIN {
+	my $missing = 0;
+
+	for my $module (
+		'File::Which',
+		'Template',
+		'URI',
+	) {
+		unless (eval "require $module; 1") {
+			print STDERR "E: missing $module\n";
+			$missing++;
+		}
+	}
+
+	if ($missing) {
+		die ("E: $missing module@{['s' x ($missing != 1)]} missing. ",
+		     "Looks like you got some work to do...\n");
+		exit 1;
+	}
+}
+
+use File::Basename;
+use File::Compare;
+use File::Spec;
+use Cwd qw(getcwd);
+BEGIN { File::Which->import(); }
+my $prog = basename($0);
+my $mode = sprintf '%04o', 0666 &~ umask;
+
+use lib './lib';
+use RdKw::WwW::GenGenLib;
+
+my $estat = 0;
+
+# stuff that would be considered "null string"
+# by ${foo:-...}, including but not limited to
+# actually unset values ${foo-...} recognizes.
+#
+# this check is preferred to !length in case
+# that the warnings pragma is enabled;
+sub isnull
+{
+	!(defined $_[0]) || !(length $_[0]);
+}
+
+# Same idea as Python dict.setdefault, vectorized.
+sub setdefault (\%%)
+{
+	my ($H, %h) = @_;
+	while (my ($hk, $he) = each %h) {
+		$H->{$hk} = $he if isnull($H->{$hk});
+	}
+}
+
+sub parent
+{
+	my ($parent) = @_;
+	my (@parent);
+	while (( my $dotdot = dirname($parent) ) ne '.') {
+		push @parent, $parent = $dotdot;
+	}
+	@parent;
+}
+
+# (D)efinitions are just filesys routing.
+# They do not alter the state of the build.
+sub DD {
+	my ($D) = @_;
+
+	setdefault %$D, (
+		a => 'html',
+		b => 'site',
+	);
+
+	if (isnull($D->{tar_from_stdin})) {
+		my ($tar, $gnu) = find_tar();
+		print STDERR "Using tar program \`$tar'\n";
+		$D->{tar_from_stdin} = (
+			$gnu ? "$tar -T -" : "$tar -I -"
+		);
+	}
+}
+# What MY/ remembers is read only after the command line, since
+# -Dc may send us to a different directory (and so a different MY/).
+my %D;
+
+# (O)ptions alter the state of the build.
+# It is therefore independent of any file
+# that undergoes a transformation (i.e.,
+# any file that depends on "render").
+sub OO {
+	my ($O) = @_;
+
+	setdefault %$O, (
+		base_url => '/',
+		site_url => 'https://javadoc.rapidcow.org',
+		data => 'data',
+	);
+}
+my %O;
+my $reset;
+
+my $usage = <<EOM;
+usage: $prog [-Dvar=val ...] [-Ovar=val ...] [-h]
+
+The following variables may be defined:
+
+  -Da         Source directory (default: html)
+  -Db         Target directory (default: site)
+  -DB         Build base directory (default: .)
+  -Dtar_from_stdin   Implementation of "tar -T -", as in GNU tar.
+  -Obase_url  Host-relative relative base
+  -Osite_url  Absolute base
+  -Odata      Data directory (default: data)
+  -h          This help message
+  --reset     Clear all configuration at this point
+EOM
+
+# `use open' covers the standard handles and `use utf8' our source,
+# but not @ARGV: those arrive as raw bytes, and would be encoded a
+# second time on their way into MY/*.mk and the Makefile.  (Anything
+# that is not valid UTF-8 is left alone.)
+utf8::decode($_) for @ARGV;
+
+OPT:
+while (@ARGV) {
+for ($ARGV[0]) {
+	if (/^-/g and /\G[^-]/) {
+	while (/\G[^-]/) {
+		if (/\Gh/gc or /\G\?/gc) {
+			print $usage;
+			exit 0;
+		}
+		if (/\GD/gc or /\GO/gc) {
+			my $S = $&;  # name-space multiplexing!
+			my $s;
+			if (length $') {
+				$s = $';
+			} else {
+				shift;
+				@ARGV or die "$prog: -$S requires an argument.\n";
+				$s = $_;
+			}
+			my ($k, $v) = split(/=/, $s, 2);
+			($S eq 'D' ? $D{$k} : $O{$k}) = defined $v ? $v : "";
+			shift;
+			next OPT;
+		}
+		print STDERR "$prog: invalid option: \`-$&'\n";
+		die +( split(/^/, $usage, 2) )[0];
+	}
+	}
+	if (/\G-/g) {
+		last unless /\G./;
+		if (/\Gh(e(lp?)?)?$/n) {
+			print $usage;
+			exit 0;
+		}
+		if (/\Gr(e(s(et?)?)?)?$/) {
+			%D = ();
+			%O = ();
+			$reset = 1;
+			shift;
+			next OPT;
+		}
+		print STDERR "$prog: invalid long option: \`$ARGV[0]'\n";
+		die +( split(/^/, $usage, 2) )[0];
+	}
+}
+	shift;
+}
+
+# We *are* the source tree: that is where `./lib', Makefile.in and
+# MANIFEST are, and where we have been started from.
+my $srcdir = getcwd();
+
+exists $D{A} and die <<EUGH;
+E: `A' (the source tree, seen from the build directory) is derived
+E: from where we are standing, and cannot be set.
+EUGH
+
+# -DB is the build directory, seen from the source tree; like
+# `cmake -B' we go there.  It must already exist (and be writable),
+# and its spelling is kept as is -- absolute or not.  It is a
+# statement about *this* run: nothing about it is ever read back
+# from MY/config.mk, which is the very file it is about to choose.
+my $B = defined $D{B} ? $D{B} : '.';
+length $B or die "E: `B' must not be empty; use -DB=. for cwd.\n";
+chdir $B or die "E: cannot chdir to $B: $!\n";
+
+# Files first, command line over them -- unless --reset said otherwise.
+unless ($reset) {
+	my %Dcli = %D;
+	my %Ocli = %O;
+	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk") : ();
+	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk") : ();
+	@D{keys %Dcli} = values %Dcli;
+	@O{keys %Ocli} = values %Ocli;
+}
+
+# Both are facts about where we are standing right now, so we
+# clobber whatever MY/config.mk said.  They are still written out
+# (%D like the rest), so that whatever makes the Makefile need only
+# read MY/*.mk.  Once configured, they are fixed.
+#
+#   A  the source tree, seen from the build dir (`.' in-tree)
+#   B  the build dir, seen from the source tree (`.' in-tree)
+$D{B} = $B;
+$D{A} = File::Spec->abs2rel($srcdir, getcwd());
+
+DD \%D;
+OO \%O;
+
+parse_base \%O;
+$D{a} =~ s!/$!!g;
+$D{b} =~ s!/$!!g;
+
+# Security-ish: Deny empty paths, or $a/... becomes relative to root
+# doesn't help with directory traversal but it's something.
+length $D{a} or die "E: `a' prefix may not be empty.\n";
+length $D{b} or die "E: `b' prefix may not be empty.\n";
+
+# b is a directory we create rules under, one parent at a time (see
+# `parent'); that walk only ends at `.', so it must be relative.
+# (a, on the other hand, is free to be absolute: out-of-tree builds.)
+File::Spec->file_name_is_absolute($D{b})
+	and die "E: `b' prefix must be a relative path.\n";
+
+# a, as seen from the build dir.  A pure function of what is in %D;
+# `a' itself is relative to the sources, unless it is absolute.
+sub apath {
+	my ($path) = @_;
+	File::Spec->canonpath(
+		File::Spec->file_name_is_absolute($D{a})
+			? "$D{a}/$path"
+			: "$D{A}/$D{a}/$path");
+}
+
+sub find_tar {
+	my @tar;
+
+	# Prefer GNU tar
+	foreach (qw( gtar tar bsdtar )) {
+		if (my $tar = which($_)) {
+			my $tar_v = `$tar --version 2>/dev/null`;
+			push @tar, { binary => $tar, version => $tar_v };
+		}
+	}
+
+	# perl tar (ptar) from CPAN
+	# https://perldoc.perl.org/ptar
+	if (my $tar = which('ptar')) {
+		# We know ptar(1) can parse -T;
+		# fake a "GNU tar" string here.
+		my $tar_v = "tar (GNU tar)";
+		push @tar, { binary => $tar, version => $tar_v };
+	}
+
+	unless (@tar) {
+		print STDERR "W: I could not locate your local tar(1) program.\n";
+		print STDERR "W: Consider reconfiguring with -Dtar_with_stdin='...'?\n";
+		$estat = 1;
+		push @tar, { binary => 'tar', version => 'gnu' };
+	}
+
+	foreach (@tar) {
+		$_->{gnu} = (defined $_->{version} && $_->{version} =~ /GNU tar/);
+	}
+	@tar = sort { $b->{gnu} <=> $a->{gnu} } @tar;
+
+	return @{$tar[0]}{qw( binary gnu )}
+}
+
+# Write out MY/option.mk as soon as possible,
+# or this would be circular.
+-d 'MY' or mkdir 'MY' or die "mkdir MY: $!\n";
+open my $of, '>:encoding(UTF-8)', 'MY/tmp-option.mk'
+	or die "open >MY/tmp-option.mk: $!\n";
+print $of <<MYMAKE;
+#
+# configured by `$prog'
+#
+MYMAKE
+for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %O) {
+	print $of "$k=\t$O{$k}\n" or die "write >MY/tmp-option.mk: $!\n";
+}
+close $of or die "write >MY/tmp-option.mk: $!\n";
+
+# Preserving mtime so that a project-wide re-build
+# won't occur in the events of a reconfiguration...
+if (compare('MY/tmp-option.mk', 'MY/option.mk')) {
+	print STDERR (-e 'MY/option.mk' ? "Updating" : "Writing"), " MY/option.mk\n";
+	rename 'MY/tmp-option.mk', 'MY/option.mk'
+		or die "mv MY/{tmp => }option.mk: $!\n";
+} else {
+	unlink 'MY/tmp-option.mk';
+}
+
+open my $cf, '>:encoding(UTF-8)', 'MY/tmp-config.mk'
+	or die "open >MY/tmp-config.mk: $!\n";
+print $cf <<MYMAKE;
+#
+# configured by `$prog'
+#
+MYMAKE
+for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %D) {
+	print $cf "$k=\t$D{$k}\n" or die "write >MY/tmp-config.mk: $!\n";
+}
+close $cf or die "write >MY/tmp-config.mk: $!\n";
+
+if (compare('MY/tmp-config.mk', 'MY/config.mk')) {
+	print STDERR (-e 'MY/config.mk' ? "Updating" : "Writing"), " MY/config.mk\n";
+	rename 'MY/tmp-config.mk', 'MY/config.mk'
+		or die "mv MY/{tmp => }config.mk: $!\n";
+} else {
+	unlink 'MY/tmp-config.mk';
+}
+
+# the rulebook
+sub shell_quote
+{
+	my ($s) = @_;
+	# Nothing in it for the shell to mangle?  Then leave it be, so
+	# that a plain `.' stays a plain `.' (and `./x' can be tidied).
+	return $s if $s =~ m!\A[A-Za-z0-9_./:@%+=,-]+\z!;
+	# otherwise: single quotes, and ' itself as '\''
+	$s =~ s!'!'\\''!g;
+	"'$s'";
+}
+
+open my $rb, '<:encoding(UTF-8)', "$D{A}/Makefile.in"
+	or die "open <Makefile.in: $!\n";
+my %rule;
+my @node;
+my %deps;
+my $subst = sub {
+	my ($line, $node) = @_;
+	$line =~ s/\$(\{[^\}]+\}|.)/
+(my $x = $1) =~ s!^\{|\}$!!g;
+my $mod = $x =~ s!:(\w+)$!! ? $1 : "";
+my $val;
+if ($x eq "\$") {
+	$val = "\$";
+} elsif ($x eq "\@" or $x eq ".TARGET") {
+	defined $node or die "E: Makefile.in line $.: "
+		. "\${$x} outside of a recipe\n";
+	$val = $node;
+} elsif ($x eq '^X' or $x eq "\030") {
+	$val = $^X;
+} else {
+	defined $D{$x} or die "E: Makefile.in line $.: "
+		. "undefined variable: \${$x}\n";
+	$val = $D{$x};
+}
+if ($mod eq "Q") {
+	$val = shell_quote($val);
+} elsif (length $mod) {
+	die "E: Makefile.in line $.: unknown modifier :$mod\n";
+}
+$val;
+	/ge;
+	# An A or B of `.' would leave `./x' behind
+	# on every path it was joined to; spell those without it.
+	$line =~ s!(^|\s)\./(?=[^\s/])!$1!g;
+	$line;
+};
+while (<$rb>) {
+	next if /^\s*#/ or /^\s*$/;
+	if (/^\t/) {
+		@node or die (
+			"E: Makefile.in line $.: ",
+			"unexpected tabulation\n");
+		for my $node (@node) {
+			my $line = $_;
+			my $apath = apath($node);
+			my $bpath = "$D{b}/$node";
+			unless (defined $rule{$bpath}) {
+				$rule{$bpath} = "";
+				push @{$deps{$bpath}}, $apath;
+			}
+			$line = $subst->($line, $node);
+			$rule{$bpath} .= $line;
+		}
+		next;
+	}
+	if (/:/) {
+		my ($src, $dep) = split /:/, $_, 2;
+		$dep = $subst->($dep);
+		@node = split " ", $src or die (
+			"E: Makefile.in line $.: "
+			. " null source list\n");
+		if (my @dep = split " ", $dep) {
+			# Files that use `render' additionally
+			# depend on MY/option.mk.  This can't
+			# really be reflected via a "render:
+			# MY/option.mk" rule, so...
+			if (grep { $_ eq 'render' } @dep) {
+				push @dep, 'MY/option.mk';
+			}
+			for my $node (@node) {
+				my $bpath = "$D{b}/$node";
+				push @{$deps{$bpath}}, @dep;
+			}
+		}
+		next;
+	}
+	die "E: Makefile.in line $.: invalid line: $_";
+}
+close $rb;
+
+# a "MANIFEST" is the top-level wants of ALL
+# the files in the default target.
+open my $MF, '<:encoding(UTF-8)', "$D{A}/MANIFEST"
+	or die "open <MANIFEST: $!\n";
+my @all;
+my (@dir, %dir);
+my @rule;
+my @ball;
+while (<$MF>) {
+	next if /^\s*#/ or /^\s*$/;
+	# basically awk $1
+	my ($file) = split;
+	$file =~ s/\?$// and die <<NUHUH;
+E: MANIFEST line $.: Your file name should not
+E: end with `?'; that's for soft-deps in the future.
+NUHUH
+	my $apath = apath($file);
+	my $bpath = "$D{b}/$file";
+	my %I = read_deps($apath);
+	defined $I{HAVE} or die "E: $apath: missing HAVE declaration.\n";
+	$I{HAVE} eq $file or die "E: $apath: You have $I{HAVE}, but i have $file?\n";
+	$I{WANT} and die "E: $apath: soft-deps are not implemented.\n";
+	# NEED names source files, except for MY/, which is build state.
+	$I{NEED} = [ map {
+		m!^MY/! ? $_ : File::Spec->canonpath("$D{A}/$_")
+	} @{$I{NEED} || []} ];
+
+	for my $dep (@{$I{NEED}}) {
+		-e $dep or die "E: $file: You WANT $dep, which we don't seem to have.\n";
+	}
+	push @all, $file;
+	push @ball, $bpath;
+	my @parent = reverse parent($bpath);
+	for my $index (0 .. $#parent) {
+		my $dir = $parent[$index];
+		unless ($dir{$dir}++) {
+			my $dirok = "$dir/.ok";
+			my @deps = $index ? $parent[$index - 1] . "/.ok" : ();
+			if (exists $rule{$dirok} or exists $rule{$dirok}) {
+				die "E: reserved rule $dirok taken??!\n";
+			}
+			$deps{$dirok} = \@deps;
+			$rule{$dirok} = <<MAKE;
+	[ -d $dir ] || mkdir $dir
+	\@> $dirok
+MAKE
+			push @rule, $dirok;
+			push @{$I{NEED}}, $dirok;
+		}
+	}
+	exists $rule{$bpath} or die "E: no rule to make `$bpath'.\n";
+	push @rule, $bpath;
+	push @{$deps{$bpath}}, @{$I{NEED}};
+}
+close $MF;
+
+open my $Mf, '>:encoding(UTF-8)', 'Makefile' or die "open >Makefile: $!\n";
+print $Mf <<MAKE;
+#
+# Makefile!
+# (generated by `$0' :D)
+#
+include MY/config.mk
+.PHONY: site clean dist
+site: @ball
+clean:
+	rm -f @ball
+dist: site
+	{ cd @{[shell_quote($D{A})]} && awk -v bdir=@{[shell_quote($D{b})]} '{ print bdir "/" \$\$1 }' MANIFEST; } | \${tar_from_stdin} -cf site.tar.gz
+MAKE
+for (@rule) {
+	print $Mf "$_: @{$deps{$_}}\n";
+	print $Mf $rule{$_};
+}
+close $Mf;
+
+exit $estat;

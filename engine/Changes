@@ -4,6 +4,7 @@ Revision history of WwW-SiteConf
 0.01_01
     * siteconf -g can now -o-utput to a file different from the
       backend default (such as Makefile.proj instead of Makefile).
+      It can also override manifest and ruleset with -F and -R.
 
 
 0.01_00  2026-10-31  RC

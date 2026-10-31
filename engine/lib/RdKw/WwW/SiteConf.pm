@@ -129,11 +129,11 @@ use RdKw::WwW::GenGenLib qw( read_make read_deps update_file );
 # we write it, `clean' because it is ours, and `MY' is a directory.
 my %reserved_goal = map { $_ => 1 } qw( clean Makefile MY );
 
-=item B<new> B =E<gt> I<dir>, [ quiet =E<gt> 1 ]
+=item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, quiet =E<gt> 1 ]
 
 I<dir> is the build directory, as seen from the current directory.
 C<MY/config.mk> there must exist.  Warnings are not printed when
-I<quiet> is true.
+I<quiet> is true.  I<D> overrides C<MY/config.mk> parameters.
 
 =cut
 
@@ -152,6 +152,12 @@ E: You have not configured!
 E: (no $conf)  You should ./configure first. ;)
 RUSH
 	my %D = read_make($conf);
+	if ($arg{D}) {
+		my $Doverrides = $arg{D};
+		foreach (keys %$Doverrides) {
+			$D{$_} = $Doverrides->{$_};
+		}
+	}
 	for my $k (qw( A B a b R F e )) {
 		defined $D{$k} && length $D{$k}
 			or die "E: $conf: `$k' is missing.  Try reconfiguring.\n";

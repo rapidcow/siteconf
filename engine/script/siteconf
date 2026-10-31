@@ -110,6 +110,16 @@ name, not a path.  (With C<-i>, this is where F<configure> goes.)
 
 Do not whine about dropped C<WANT>s.
 
+=item B<-F> I<manifest>
+
+Specifies a different manifest to use.
+Overrides the configured C<-DF> value.
+
+=item B<-R> I<rulebook>
+
+Specifies a different rulebook to use.
+Overrides the configured C<-DR> value.
+
 =back
 
 =cut
@@ -125,7 +135,7 @@ use RdKw::WwW::SiteConf;
 my $prog = basename($0);
 my $usage = <<EOM;
 usage: $prog -i [-P preset] [-o file] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
-       $prog -g [-B builddir] [-G make] [-o file] [-q]
+       $prog -g [-B builddir] [-G make] [-F manifest] [-R rulebook] [-o file] [-q]
        $prog -V [-V]
 EOM
 
@@ -145,6 +155,8 @@ GetOptions(
 	'S=s%'     => $opt{S},
 	'D=s%'     => $opt{D},
 	'O=s%'     => $opt{O},
+	'F=s'      => \$opt{F},
+	'R=s'      => \$opt{R},
 	'h|help'   => sub { print $usage; exit 0 },
 	'V|version+' => \( my $vee ),
 ) or die $usage;
@@ -181,7 +193,7 @@ defined $opt{mode} or die $usage;
 @ARGV and die "$prog: too many arguments\n";
 
 if ($opt{mode} eq 'init') {
-	for my $k (qw( B G q )) {
+	for my $k (qw( B F G R q )) {
 		defined $opt{$k} and die "$prog: -$k is not for init\n";
 	}
 	do_init(\%opt);
@@ -193,8 +205,18 @@ if ($opt{mode} eq 'init') {
 	for my $S (qw( S D O )) {
 		%{ $opt{$S} } and die "$prog: -$S is not for make\n";
 	}
+	my %Doverrides;
+	foreach my $Dk (qw( F R )) {
+		if (defined $opt{$Dk}) {
+			$Doverrides{$Dk} = $opt{$Dk};
+		}
+	}
 	my $sc = RdKw::WwW::SiteConf->new(
-		B => $opt{B}, quiet => $opt{q}, prog => $prog);
+		%Doverrides ? ( D => \%Doverrides ) : (),
+		B => $opt{B},
+		quiet => $opt{q},
+		prog => $prog,
+	);
 	$sc->generate($opt{G}, $opt{o});
 }
 exit;

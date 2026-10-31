@@ -132,8 +132,8 @@ defined $srcdir or die "E: cannot find the project root ($A): $!\n";
 chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
 
 exists $D{A} and die <<EUGH;
-E: `A' (the source tree, seen from the build directory) is derived
-E: from where we are standing, and cannot be set.
+E: `A' (the source tree, seen from the build directory) is
+E: derived from a hard-coded root, and thus cannot be set.
 EUGH
 
 # -DB is the build directory, seen from the source tree; like

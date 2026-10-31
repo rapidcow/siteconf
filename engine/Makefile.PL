@@ -20,7 +20,11 @@ my %WriteMakefileArgs = (
 	},
 	PREREQ_PM => {
 		'File::ShareDir' => '0',
-		'RdKw::WwW::GenLib' => '0',
+		'RdKw::WwW::GenGenLib' => '0',
+		# RdKw::WwW::GenLib isn't a dependency, though
+		# for those who use the web preset it is when
+		# they run the render script (... which we don't
+		# seem to generate so it's likely known dep :v)
 	},
 	EXE_FILES => [
 		'script/siteconf',

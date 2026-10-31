@@ -23,7 +23,7 @@ use FindBin;
 @PRESET@
 # ---
 
-use RdKw::WwW::GenLib qw(read_make write_make);
+use RdKw::WwW::GenGenLib qw(read_make write_make);
 
 my $prog = basename($0);
 

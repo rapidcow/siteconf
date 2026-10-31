@@ -7,7 +7,7 @@ use warnings;
 use Test::More tests => 27;
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
-use RdKw::WwW::GenLib qw( write_make );
+use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
 
 # A project in a directory of its own.  %f is name => contents.

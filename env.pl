@@ -11,6 +11,7 @@ use Getopt::Long;
 
 my @modules = qw(
 	engine
+	gengenlib
 	genlib
 );
 

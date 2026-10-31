@@ -123,7 +123,7 @@ use File::Basename qw( dirname basename );
 use Cwd qw( abs_path );
 use File::Spec ();
 
-use RdKw::WwW::GenLib qw( read_make read_deps update_file );
+use RdKw::WwW::GenGenLib qw( read_make read_deps update_file );
 
 # Goals of the manifest cannot take these names; `Makefile' because
 # we write it, `clean' because it is ours, and `MY' is a directory.
@@ -697,7 +697,7 @@ sub _report
 {
 	my ($self, $name, $what) = @_;
 	return unless $what;
-	$self->_warn(($what eq 'created' ? "Writing" : "Updating"),
+	$self->_warn(($what > 1 ? "Writing" : "Updating"),
 		($name =~ /^MANIFEST\./ ? " MY/$name" : " $name"), "\n");
 }
 

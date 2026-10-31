@@ -1,4 +1,7 @@
 #!perl
+#
+# t/locate.t - locate and relapath
+# (XXX: there are no tests for locate, but there should be.)
 
 use 5.006;
 use strict;

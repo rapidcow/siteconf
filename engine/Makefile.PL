@@ -4,7 +4,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %WriteMakefileArgs = (
-	NAME             => 'siteconf',
+	NAME             => 'www-siteconf',
 	AUTHOR           => q{rapidcow},
 	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf.pm',
 	ABSTRACT         => q{Web site transformation rulebook configuration utilties},
@@ -19,7 +19,7 @@ my %WriteMakefileArgs = (
 	PREREQ_PM => {
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-	clean => { FILES => 'siteconf-*' },
+	clean => { FILES => 'www-siteconf-*' },
 	test => { TESTS => 't/*' },
 );
 

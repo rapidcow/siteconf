@@ -125,7 +125,7 @@ while (@ARGV) {
 		%D = ();
 		%O = ();
 		$reset = 1;
-	} elsif ($arg eq '-q') {
+	} elsif ($arg eq '-q' or $arg eq '--quiet') {
 		$shutup = 1;
 	} elsif ($arg =~ /^-([DO])(.*)$/s) {
 		my ($S, $s) = ($1, $2);

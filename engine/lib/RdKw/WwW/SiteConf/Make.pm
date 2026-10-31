@@ -52,7 +52,7 @@ MAKE
 	for my $dir (@{ $plan->{dirs} }) {
 		my $d = _quote($dir->{dir});
 		$out .= "$dir->{marker}: @{ $dir->{deps} }\n";
-		$out .= "\t[ -d $d ] || mkdir $d\n";
+		$out .= "\t[ -d $d ] || mkdir -- $d\n";
 		$out .= "\t\@> $dir->{marker}\n";
 	}
 

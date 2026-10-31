@@ -381,8 +381,8 @@ sub load_state
 	for my $f (qw( config option )) {
 		my $file = "$B/MY/$f.mk";
 		-f $file or die <<RUSH;
-error: You have not configured!
-error: (no $file)  You should ./configure first. ;)
+error: You have not configured! (no $file)
+error: You should ./configure first. ;)
 RUSH
 		push @h, { read_make($file) };
 	}

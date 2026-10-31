@@ -639,9 +639,9 @@ sub manifest_text
 	my ($self, $goal) = @_;
 	my $text = "#\n# resolved by `$self->{prog}'\n#\n";
 	$text .= "MAKE $goal->{name}\n";
-	$text .= "NEED $_\n" for @{ $goal->{files} };
+	$text .= "\tNEED $_\n" for @{ $goal->{files} };
 	for my $drop (@{ $goal->{dropped} }) {
-		$text .= "# WANT $drop->[0]: $drop->[1]\n";
+		$text .= "#\tWANT $drop->[0]: $drop->[1]\n";
 	}
 	$text;
 }

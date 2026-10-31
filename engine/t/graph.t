@@ -5,6 +5,7 @@
 use strict;
 use warnings;
 use Test::More tests => 27;
+use Cwd qw( getcwd );
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
@@ -26,14 +27,25 @@ sub project {
 	make_path("$dir/" . ($D{B} || '.') . "/MY");
 	write_make("$dir/" . ($D{B} || '.') . "/MY/config.mk", {
 		A => '.', B => '.', a => 'html', b => 'site',
-		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok', %D }, 'test');
+		R => 'Makefile.in', F => 'MANIFEST', e => '.ok', %D }, 'test');
 	$f->{x} = '' ;
 	open my $fh, '>', "$dir/x" or die; close $fh;
 	$dir;
 }
+# Planned from inside the project, which is where F and R are looked for.
 sub plan_of {
 	my ($dir, $B) = @_;
-	RdKw::WwW::SiteConf->new(B => $B || $dir, quiet => 1)->plan;
+	my $cwd = getcwd();
+	chdir $dir or die "chdir $dir: $!";
+	my $plan;
+	my $ok = eval {
+		$plan = RdKw::WwW::SiteConf->new(B => $B || $dir, quiet => 1)->plan;
+		1;
+	};
+	my $err = $@;
+	chdir $cwd or die "chdir $cwd: $!";
+	die $err unless $ok;
+	$plan;
 }
 
 my $manifest = "MAKE all\n\tNEED a.html\n";

@@ -25,9 +25,9 @@ my %WriteMakefileArgs = (
 	EXE_FILES => [
 		'script/siteconf',
 	],
-	MAN1POD => [
+	MAN1PODS => {
 		'script/siteconf' => 'blib/man1/siteconf.1',
-	],
+	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
 	clean => { FILES => 'www-siteconf-*' },
 	test => { TESTS => 't/*' },

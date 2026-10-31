@@ -2,20 +2,31 @@ Revision history of WwW-SiteConf
 
 
 0.00_00  2026-10-31  RC
-    First, informally-dev, release.
+    !>! written with substantial help from Anthropic Claude !<!
+
+    first release!
 
     * siteconf -i (init) writes ./configure from a template and
-      a preset (-P web).  The text is deterministic, so local
-      changes may be kept as a patch on top of it.
+      a preset (-P web).  This ./configure script has been based
+      on www-cellar (which was written by me, at least the core
+      of it), which was a re-design of the cooper-www experiment.
+
+      The text is deterministic, so local changes may be
+      kept as a patch on top of it.
+
     * ./configure writes MY/config.mk (definitions, the D
       namespace) and MY/option.mk (options, the O namespace).
+
     * siteconf -g (make) reads those and writes the build file,
-      -G make (Makefile) or -G ninja (build.ninja), and
-      MY/MANIFEST.<goal> for each goal.
+      -G make (Makefile) or -G ninja (build.ninja), and MY/
+      MANIFEST.<goal> for each goal (aka phony target).
+
     * MANIFEST is MAKE/NEED/WANT.  A WANT is resolved at
-      configuration time: dropped, with a warning, unless it
-      can be had.
-    * Headers (HAVE/NEED/WANT) name paths from the project root:
-      ${A}/${a}/index.html, ${B}/${b}/style.css, ${B}/MY/option.mk.
-      Depending on something in ${B}/${b} is an edge to that file,
-      which is made first (cycles are an error).
+      configuration time: dropped, with a warning, unless
+      it can be had.
+
+    * Headers (HAVE/NEED/WANT) name paths from the project
+      root: ${A}/${a}/index.html, ${B}/${b}/style.css, ${B}/
+      MY/option.mk.  Depending on something in ${B}/${b} is
+      an edge to that file, which is made first (cycles are
+      an error).

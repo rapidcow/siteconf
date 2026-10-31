@@ -192,7 +192,7 @@ sub pq
 sub pK
 {
 	my ($K) = @_;
-	($K !~ /[^A-Z0-9a-z]/) ? $K : pq($K);
+	($K !~ /[^0-9A-Z_a-z]/) ? $K : pq($K);
 }
 
 sub hash_lines

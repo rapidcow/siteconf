@@ -28,11 +28,11 @@ RdKw::WwW::GenLib - static web-site generation library
 
 =cut
 
-use URI ();
-use URI::Escape qw( uri_unescape );
 use File::Basename qw( dirname basename );
 use File::Compare ();
 use File::Spec ();
+use URI ();
+use URI::Escape qw( uri_unescape );
 
 our @EXPORT_OK = qw(
 	locate locator relapath

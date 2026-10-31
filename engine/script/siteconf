@@ -148,17 +148,20 @@ Getopt::Long::Configure(qw( bundling no_ignore_case ));
 utf8::decode($_) for @ARGV;
 
 my %opt = (S => {}, D => {}, O => {}, M => []);
+# What `-i' was told, in the order it was told, for the header of
+# configure.  (Leaving out what does not alter its text: -i, -o, -q.)
+my @written;
 GetOptions(
 	'i|init'   => sub { $opt{mode} = 'init' },
 	'g|make'   => sub { $opt{mode} = 'make' },
-	'P=s'      => \$opt{P},
+	'P=s'      => sub { $opt{P} = $_[1]; push @written, "-P", $_[1] },
 	'o=s'      => \$opt{o},
-	'M=s@'     => \@{ $opt{M} },
+	'M=s'      => sub { push @{ $opt{M} }, $_[1]; push @written, "-M$_[1]" },
 	'B=s'      => \$opt{B},
 	'G=s'      => \$opt{G},
-	'S=s%'     => $opt{S},
-	'D=s%'     => $opt{D},
-	'O=s%'     => $opt{O},
+	'S=s%'     => sub { $opt{S}{$_[1]} = $_[2]; push @written, "-S$_[1]=$_[2]" },
+	'D=s%'     => sub { $opt{D}{$_[1]} = $_[2]; push @written, "-D$_[1]=$_[2]" },
+	'O=s%'     => sub { $opt{O}{$_[1]} = $_[2]; push @written, "-O$_[1]=$_[2]" },
 	'F=s'      => \$opt{F},
 	'R=s'      => \$opt{R},
 	'h|help'   => sub { print $usage; exit 0 },
@@ -201,6 +204,7 @@ if ($opt{mode} eq 'init') {
 	for my $k (qw( B F G R )) {
 		defined $opt{$k} and die "$prog: -$k is not for init\n";
 	}
+	$opt{written} = \@written;
 	do_init(\%opt);
 } else {
 	for my $k (qw( P )) {
@@ -268,6 +272,16 @@ sub hash_lines
 	join "\n", map {
 		"\t@{[ pK($_) ]} => @{[ pq($H->{$_}) ]},"
 	} sort keys %$H;
+}
+
+# What `-i' was told, as comment lines (none, if it was told nothing)
+sub args_comment
+{
+	my ($args) = @_;
+	return '' unless @$args;
+	my $line = join ' ', map { RdKw::WwW::SiteConf::shell_quote($_) } @$args;
+	$line =~ s/\n/\n# /g;
+	"# options: $line\n#\n";
 }
 
 sub do_init
@@ -353,6 +367,7 @@ sub do_init
 	my %sub = (
 		PROG => $prog,
 		VERSION => $RdKw::WwW::SiteConf::VERSION,
+		ARGS => args_comment($opt->{written}),
 		A => pq($A),
 		DDEF => hash_lines(\%Dx),
 		ODEF => hash_lines(\%Ox),

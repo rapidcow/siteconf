@@ -7,7 +7,7 @@
 # patch keeps applying), rather than editing it in place and losing
 # them the next time `@PROG@ -i' is run.
 #
-use utf8;
+@ARGS@use utf8;
 use 5.006;
 use strict;
 use warnings;

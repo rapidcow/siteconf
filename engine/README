@@ -1,0 +1,27 @@
+siteconf -i [-Sopt=val ...]
+
+#
+# path to project root
+#   -SA=.       (default)
+#   -SA=..      (alternatively if we live in a subdirectory
+# path to project build dir (default to -DB=.)
+#   -SB=.       (default)
+#   -SB=build   (CMake style)
+#   -SB=/tmp/writable/build/dir  (read-only checkout)
+# path to transformation rules relative to $A
+#   -SR=Makefile.in (default)
+# path to top-level manifest relative to $A
+#   -SF=MANIFEST  (default)
+# path to source tree relative to $A
+#   -Sa=html    (default, since we originate from SSG.)
+#   -Sa=.       (a sane alternative)
+# path to output tree relative to $B
+#   -Sb=site    (default)
+# directory marker
+#   -Se=.ok     (default)
+#   -Se=.exists (mimics EU::MM)
+#
+
+./configure [-DB=outdir] [-Db=reldir]
+siteconf -g [-B=outdir] [-G make|ninja]
+cd ${B} && [make|ninja]

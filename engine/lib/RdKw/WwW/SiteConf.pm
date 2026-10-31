@@ -148,8 +148,8 @@ sub new
 
 	my $conf = "$self->{B}/MY/config.mk";
 	-f $conf or die <<RUSH;
-E: You have not configured!
-E: (no $conf)  You should ./configure first. ;)
+E: You have not configured!  (no $conf)
+E: You should ./configure first. ;)
 RUSH
 	my %D = read_make($conf);
 	# F and R overrides are paths from where we are, not from the

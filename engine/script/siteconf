@@ -75,6 +75,13 @@ see L<RdKw::WwW::GenLib/SYNOPSIS>.
 
 Write F<configure> (or whatever I<-o> says).
 
+=item B<-M> I<module>[=I<version>]
+
+Have F<configure> check that I<module> can be loaded (and is at
+least I<version>, if given) before doing anything else.  May be
+given more than once.  F<configure> always checks for
+L<RdKw::WwW::GenGenLib>, and so does the preset for what it needs.
+
 =item B<-g>, B<make>
 
 Write the build file, reading the configuration from C<-B>
@@ -109,19 +116,20 @@ use RdKw::WwW::SiteConf;
 
 my $prog = basename($0);
 my $usage = <<EOM;
-usage: $prog -i [-P preset] [-o file] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+usage: $prog -i [-P preset] [-o file] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
        $prog -g [-B builddir] [-G make] [-q]
 EOM
 
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 utf8::decode($_) for @ARGV;
 
-my %opt = (S => {}, D => {}, O => {});
+my %opt = (S => {}, D => {}, O => {}, M => []);
 GetOptions(
 	'i|init'   => sub { $opt{mode} = 'init' },
 	'g|make'   => sub { $opt{mode} = 'make' },
 	'P=s'      => \$opt{P},
 	'o=s'      => \$opt{o},
+	'M=s@'     => \@{ $opt{M} },
 	'B=s'      => \$opt{B},
 	'G=s'      => \$opt{G},
 	'q'        => \$opt{q},
@@ -150,6 +158,7 @@ if ($opt{mode} eq 'init') {
 	for my $k (qw( P o )) {
 		defined $opt{$k} and die "$prog: -$k is not for make\n";
 	}
+	@{ $opt{M} } and die "$prog: -M is not for make\n";
 	for my $S (qw( S D O )) {
 		%{ $opt{$S} } and die "$prog: -$S is not for make\n";
 	}
@@ -234,6 +243,16 @@ sub do_init
 	my %Dx = (%Dd, %{ $opt->{D} });
 	my %Ox = %{ $opt->{O} };
 
+	# -Mmodule or -Mmodule=version: configure must find it
+	my @mod;
+	for my $m (@{ $opt->{M} }) {
+		my ($module, $min) = split /=/, $m, 2;
+		$min = 0 unless defined $min;
+		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: -M$m: bad module name\n";
+		$min =~ /\A(?:v?[0-9][0-9._]*|0)\z/ or die "$prog: -M$m: bad version\n";
+		push @mod, "\t\t[ " . pq($module) . ", " . pq($min) . " ],";
+	}
+
 	my $preset = '';
 	my $help = '';
 	if (defined $opt->{P} and $opt->{P} ne 'none') {
@@ -255,6 +274,7 @@ sub do_init
 		A => pq($A),
 		DDEF => hash_lines(\%Dx),
 		ODEF => hash_lines(\%Ox),
+		MODULES => join("\n", @mod),
 		PRESET => $preset,
 		OPTHELP => $help,
 	);

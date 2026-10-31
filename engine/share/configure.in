@@ -19,9 +19,37 @@ use File::Path qw(make_path);
 use File::Spec;
 use FindBin;
 
-# --- the preset, if any (first, so it can check what we are about to load)
+# --- what we need: [ module, minimum version ], from `@PROG@ -i -M',
+# and the preset if any (which comes first, so it can add to the list)
+our @NEED;
+BEGIN {
+	@NEED = (
+		[ 'RdKw::WwW::GenGenLib', 0 ],
+@MODULES@
+	);
+}
 @PRESET@
 # ---
+
+# Look before we load: a missing module is reported by us, all of
+# them at once, and not by the first `use' to trip over it.
+BEGIN {
+	my @bad;
+	for my $need (@NEED) {
+		my ($module, $min) = @$need;
+		(my $file = "$module.pm") =~ s!::!/!g;
+		eval { require $file; 1 }
+			or do { push @bad, "missing $module"; next };
+		$min and !eval { $module->VERSION($min); 1 }
+			and push @bad, "$module: version $min required"
+				. " (this is " . (defined $module->VERSION ? $module->VERSION : '?') . ")";
+	}
+	if (@bad) {
+		print STDERR "E: $_\n" for @bad;
+		die "E: " . scalar(@bad) . " module" . (@bad == 1 ? '' : 's')
+			. " missing.  Looks like you got some work to do...\n";
+	}
+}
 
 use RdKw::WwW::GenGenLib qw(read_make write_make);
 
@@ -164,7 +192,7 @@ $D{e} =~ m!/! and die "E: `e' may not contain a slash.\n";
 for my $f ([ option => \%O ], [ config => \%D ]) {
 	my ($name, $H) = @$f;
 	my $what = write_make("MY/$name.mk", $H, $prog);
-	$what and print STDERR ($what > 1 ?"Writing" : "Updating"),
+	$what and print STDERR ($what > 1 ? "Writing" : "Updating"),
 		" MY/$name.mk\n";
 }
 

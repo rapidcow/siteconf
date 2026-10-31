@@ -1,12 +1,12 @@
 siteconf -i [-P web] [-SB=build] [-Osite_url=...]   # writes ./configure
 ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val]    # MY/config.mk, MY/option.mk
-siteconf -g [-B outdir] [-G make]                   # Makefile, MY/Manifest.*
+siteconf -g [-B outdir] [-G make]                   # Makefile, MY/MANIFEST.*
 cd ${B} && make [goal]
 
 MANIFEST:
     MAKE all
         NEED file1      # relative to ${a}; made as ${B}/${b}/file1
-        WANT file2      # soft: resolved into MY/Manifest.all
+        WANT file2      # soft: resolved into MY/MANIFEST.all
     MAKE small
         NEED file1
 

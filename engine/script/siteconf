@@ -57,7 +57,7 @@ state of the build, and which whatever is transformed may depend on).
 
 C<siteconf -g> reads those, along with the rules (F<Makefile.in>)
 and the F<MANIFEST> they were pointed at, and writes the build file
-in I<${B}>, and F<MY/Manifest.I<goal>> for each goal in the manifest.
+in I<${B}>, and F<MY/MANIFEST.I<goal>> for each goal in the manifest.
 See L<RdKw::WwW::SiteConf> for what those look like.
 
 With the C<web> preset (C<-P web>), F<configure> requires an

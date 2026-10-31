@@ -26,7 +26,7 @@ RdKw::WwW::SiteConf - read the build graph of a configured source tree
         }
     }
 
-    $sc->generate('make');      # MY/Manifest.* and the Makefile
+    $sc->generate('make');      # MY/MANIFEST.* and the Makefile
 
 =head1 DESCRIPTION
 
@@ -70,7 +70,7 @@ build directory for paths under F<MY/>.
 A C<WANT>ed file is resolved at configuration time: it is kept if
 there is a rule for it, its source exists, and everything it
 C<NEED>s exists.  The resolved goals are written to
-F<MY/Manifest.I<goal>> in the very same format (all C<NEED>, with
+F<MY/MANIFEST.I<goal>> in the very same format (all C<NEED>, with
 what was dropped left as comments).
 
 =head1 METHODS

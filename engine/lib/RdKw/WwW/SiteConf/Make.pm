@@ -68,7 +68,7 @@ MAKE
 sub _quote
 {
 	my ($s) = @_;
-	return $s if $s =~ m!\A[A-Za-z0-9_./:@%+=,-]+\z!;
+	return $s if $s !~ m![^A-Za-z0-9_./:@%+=,-]!;
 	$s =~ s!'!'\\''!g;
 	"'$s'";
 }

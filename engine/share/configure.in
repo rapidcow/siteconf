@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# configure -- written by `@PROG@ -i'.
+# configure -- written by `@PROG@ -i' version @VERSION@.
 #
 # Keep local changes as a patch on top of this file (it is generated
 # deterministically, so the same arguments give the same text and the

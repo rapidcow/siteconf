@@ -270,7 +270,8 @@ sub do_init
 
 	my $text = slurp(share_file('configure.in'));
 	my %sub = (
-		PROG => "$prog",
+		PROG => $prog,
+		VERSION => $RdKw::WwW::SiteConf::VERSION,
 		A => pq($A),
 		DDEF => hash_lines(\%Dx),
 		ODEF => hash_lines(\%Ox),

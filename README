@@ -2,3 +2,5 @@ siteconf is a configurable incremental build
 script generator.  with the web preset (-P),
 it is a very minimal static site generator
 (if it even deserves to be called one.)
+
+WWW: https://foss.rapidcow.org/project/siteconf/

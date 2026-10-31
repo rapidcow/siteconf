@@ -110,8 +110,8 @@ name, not a path.  (With C<-i>, this is where F<configure> goes.)
 =item B<-q>, B<--quiet>
 
 Say nothing but errors: not the C<WANT>s that were dropped, nor the
-files that are written, updated, or removed.  (F<configure> takes
-C<-q> too.)
+files that are written, updated, or removed, nor what to run to
+build.  (F<configure> takes C<-q> too.)
 
 =item B<-F> I<manifest>
 

@@ -715,6 +715,16 @@ sub generate
 	$plan->{prog} .= " -o " . shell_quote($out) if $named;
 	my $text = $module->can('_emit')->($plan);
 	$self->_report($outfile, update_file("$self->{B}/$outfile", $text));
+
+	# What to type next: the builder (named after the generator), with
+	# -C if we are not in the build directory, -f if the file is not
+	# the one it would look for, and the first goal of the manifest.
+	my $builder = $G eq 'ninja' ? 'ninja' : 'make';
+	my @cmd = ($builder);
+	push @cmd, '-C', shell_quote($self->{B}) unless $self->{B} eq '.';
+	push @cmd, '-f', shell_quote($outfile) if $named;
+	push @cmd, shell_quote($plan->{goals}[0]{name}) if @{ $plan->{goals} };
+	$self->_warn("To build, run: @cmd\n");
 	$plan;
 }
 

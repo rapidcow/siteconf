@@ -79,7 +79,6 @@ what was dropped left as comments).
 
 =cut
 
-use Carp qw( croak );
 use File::Basename qw( dirname basename );
 use File::Spec ();
 

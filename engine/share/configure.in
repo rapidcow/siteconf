@@ -88,15 +88,15 @@ sub isnull
 }
 
 my $usage = <<EOM;
-usage: $prog [-Dvar=val ...] [-Ovar=val ...] [--reset] [-h]
+usage: $prog [-Dvar=val ...] [-Ovar=val ...] [--reset] [-hq]
 
 The following variables may be defined:
 
   -DB         Build directory, seen from the source tree (default: $Dd{B})
   -Da         Source directory, seen from the source tree (default: $Dd{a})
   -Db         Target directory, seen from the build directory (default: $Dd{b})
-  -DR         Transformation rules, from where siteconf -g is run (default: $Dd{R})
-  -DF         Manifest, likewise (default: $Dd{F})
+  -DR         Transformation rules, from current directory (default: $Dd{R})
+  -DF         Manifest, from current directory (default: $Dd{F})
   -De         Directory marker (default: $Dd{e})
 @DEFHELP@@OPTHELP@
 Anything else you may -D or -O goes into MY/config.mk or MY/option.mk
@@ -104,6 +104,7 @@ respectively, for the rulebook or for the files being transformed.
 
   -h          This help message
   --reset     Clear all configuration at this point
+  -q          Disable tips
 EOM
 
 # `use open' covers the standard handles and `use utf8' our source,
@@ -112,7 +113,7 @@ EOM
 # valid UTF-8 is left alone.)
 utf8::decode($_) for @ARGV;
 
-my (%D, %O, $reset);
+my (%D, %O, $reset, $shutup);
 while (@ARGV) {
 	my $arg = shift;
 	if ($arg eq '--') {
@@ -124,6 +125,8 @@ while (@ARGV) {
 		%D = ();
 		%O = ();
 		$reset = 1;
+	} elsif ($arg eq '-q') {
+		$shutup = 1;
 	} elsif ($arg =~ /^-([DO])(.*)$/s) {
 		my ($S, $s) = ($1, $2);
 		unless (length $s) {
@@ -168,12 +171,12 @@ my $Babs = getcwd();
 
 # Files first, command line over them -- unless --reset said otherwise.
 unless ($reset) {
-	my %Dcli = %D;
-	my %Ocli = %O;
+	my %Dc = %D;   # cool times
+	my %Oc = %O;   # trade anyone?
 	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk") : ();
 	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk") : ();
-	@D{keys %Dcli} = values %Dcli;
-	@O{keys %Ocli} = values %Ocli;
+	@D{keys %Dc} = values %Dc;
+	@O{keys %Oc} = values %Oc;
 }
 
 # Both are facts about where we are standing right now, so we clobber
@@ -212,14 +215,16 @@ for my $f ([ option => \%O ], [ config => \%D ]) {
 	my ($name, $H) = @$f;
 	my $what = write_make("MY/$name.mk", $H, $prog);
 	$what and print STDERR ($what > 1 ? "Writing" : "Updating"),
-		" MY/$name.mk\n";
+		" MY/$name.mk\n" unless $shutup;
 }
 
 # Compute $B for siteconf -g, as seen from the current directory
 # (not from the source tree, which is where -DB is seen from)
 my $Bhere = File::Spec->abs2rel($Babs, $start);
 my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);
-print STDERR "Done!\n";
-print STDERR "Now run: @PROG@ -g$where\n";
+unless ($shutup) {
+	print STDERR "Done!\n";
+	print STDERR "Now run: @PROG@ -g$where\n";
+}
 
 exit 0;

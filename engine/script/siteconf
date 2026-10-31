@@ -298,6 +298,10 @@ sub do_init
 
 	# -D and -O set what defaults to have in addition.
 	exists $opt->{D}{A} and die "$prog: -DA: use -SA.\n";
+	for my $k (sort keys %{ $opt->{D} }) {
+		exists $opt->{S}{$k}
+			and die "$prog: -S$k and -D$k are the same thing; pick one.\n";
+	}
 	my %Dx = (%Dd, %{ $opt->{D} });
 	my %Ox = %{ $opt->{O} };
 

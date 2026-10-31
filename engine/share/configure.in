@@ -80,8 +80,8 @@ The following variables may be defined:
   -DB         Build directory, seen from the source tree (default: $Dd{B})
   -Da         Source directory, seen from the source tree (default: $Dd{a})
   -Db         Target directory, seen from the build directory (default: $Dd{b})
-  -DR         Transformation rules (default: $Dd{R})
-  -DF         Manifest (default: $Dd{F})
+  -DR         Transformation rules, from where siteconf -g is run (default: $Dd{R})
+  -DF         Manifest, likewise (default: $Dd{F})
   -De         Directory marker (default: $Dd{e})
 @DEFHELP@@OPTHELP@
 Anything else you may -D or -O goes into MY/config.mk or MY/option.mk

@@ -36,6 +36,8 @@ Three inputs make up a project, all found from F<MY/config.mk>:
 
 =item F<Makefile.in> (C<R>)
 
+(Found from the current directory, as is F<MANIFEST>.)
+
 Transformation rules from C<${a}/FILE> to C<${b}/FILE>.  Rules look
 like those of L<make(1)>, with C<${A}>, C<${B}>, C<${a}>, C<${b}>
 (and whatever else is in F<config.mk>) substituted, plus C<${@}> or
@@ -134,6 +136,8 @@ my %reserved_goal = map { $_ => 1 } qw( clean Makefile MY );
 I<dir> is the build directory, as seen from the current directory.
 C<MY/config.mk> there must exist.  Warnings are not printed when
 I<quiet> is true.  I<D> overrides C<MY/config.mk> parameters.
+(C<F> and C<R>, whether from here or from there, are paths from the
+current directory, not from the project root.)
 
 =cut
 

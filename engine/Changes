@@ -5,6 +5,12 @@ Revision history of WwW-SiteConf
     * siteconf -g can now -o-utput to a file different from the
       backend default (such as Makefile.proj instead of Makefile).
       It can also override manifest and ruleset with -F and -R.
+    *** the manifest (F) and the rules (R) are now paths from
+      the current directory, the same for -F, -R and the configured
+      -DF, -DR; they used to be relative to the project root (A).
+      They are not part of the source tree.  To keep the old meaning,
+      write the path from where you run `siteconf -g' (e.g. ../MANIFEST).
+      (But I mean, the old meaning wasn't even intentional; so...)
 
 
 0.01_00  2026-10-31  RC

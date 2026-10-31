@@ -24,9 +24,9 @@ siteconf - configurable incremental build script generator
     #   -SB=.       (default)
     #   -SB=build   (CMake style)
     #   -SB=/tmp/writable/build/dir  (read-only checkout)
-    # path to transformation rules
+    # path to transformation rules, relative to where `siteconf -g' is run
     #   -SR=Makefile.in (default)
-    # path to top-level manifest
+    # path to top-level manifest, likewise
     #   -SF=MANIFEST  (default)
     # path to source tree relative to $A
     #   -Sa=html    (default, since we originate from SSG.)
@@ -56,7 +56,8 @@ routing) and F<${B}/MY/option.mk> (I<options>, which alter the
 state of the build, and which whatever is transformed may depend on).
 
 C<siteconf -g> reads those, along with the rules (F<Makefile.in>)
-and the F<MANIFEST> they were pointed at, and writes the build file
+and the F<MANIFEST> they were pointed at (as seen from where you run
+it: they are not part of the source tree), and writes the build file
 in I<${B}>, and F<MY/MANIFEST.I<goal>> for each goal in the manifest.
 See L<RdKw::WwW::SiteConf> for what those look like.
 
@@ -113,12 +114,14 @@ Do not whine about dropped C<WANT>s.
 =item B<-F> I<manifest>
 
 Specifies a different manifest to use.
-Overrides the configured C<-DF> value.
+Overrides the configured C<F>.  Like it, this is a path from the
+current directory (not from C<${A}>, like everything else).
 
 =item B<-R> I<rulebook>
 
 Specifies a different rulebook to use.
-Overrides the configured C<-DR> value.
+Overrides the configured C<R>.  Like it, this is a path from the
+current directory.
 
 =back
 

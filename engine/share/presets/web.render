@@ -56,7 +56,7 @@ defined $I{HAVE} or die "E: $apath: HAVE declaration not found\n";
 # Define Template variables (see also Template::Stash
 # if you want access to these from a plugin/filter).
 #
-my %V = (
+my %v = (
 	D => $D,
 	O => $O,
 	locate => sub {
@@ -66,14 +66,25 @@ my %V = (
 	location => $L,
 );
 
+#
+# Specify UTF-8 on both ends of Template Toolkit's I/O:
+#
+#   * ENCODING for $apath (input), as well any fetched
+#     files via INCLUDE / INSERT / PROCESS / WRAPPER.
+#   * binmode for $bpath (output).
+#
+# By nature of UTF-8, files should be able to round-trip
+# as opaque octets... but it's nice to have text decoded
+# when you need to do cool stuff with it. ;D
+#
 my $tt = Template->new({
 	ENCODING => 'UTF-8',
 	INCLUDE_PATH => [ '.', $D->{a} ],
 })
 	or die "[TT] ", $Template::ERROR, "\n";
-unless ($tt->process($apath, \%V, $bpath)) {
-	unlink $bpath;
-	die "[TT] ", $tt->error(), "\n";
-}
+
+$tt->process($apath, \%v, $bpath,
+	{ binmode => ':encoding(UTF-8)' })
+	or die "[TT] ", $tt->error(), "\n";
 
 exit;  # goodbye!

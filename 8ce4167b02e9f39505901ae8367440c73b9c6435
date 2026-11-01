@@ -1,0 +1,48 @@
+i haven't even updated it locally lmao
+
+i just wanted to see chaos happen >:3c
+
+(and well.... the range diff of this.)
+
+$ ~/tree/utils/diff-range master 19 rpi/master
+ORIG = 46253009ee9970805989db8c54919e9483f38a7e (master)
+HEAD = 1ad4a4891c5aeeed6deecd0f29bf6483ce25bb5f (rpi/master)
+ 0:  4625300 =  0:  1ad4a48 write change log
+ 1:  1cd73d5 =  1:  847d581 fingerprint opts in the generated configure script
+ 2:  be4bb00 =  2:  256466b Add hint to siteconf -g too
+ 3:  e5b419e =  3:  4b84bf3 less imperative
+ 4:  eb7e58b =  4:  1b8bcca Split e2e.t into make and ninja tests
+ 5:  33443eb =  5:  42f6d7c make -v is an error on BSD
+ 6:  d4b6eb9 =  6:  31a0663 chg log
+ 7:  328acfa =  7:  06b91bb name the flag "alias" consistently
+ 8:  93c5d45 =  8:  57ebc5e let's just use Getopt::Long instead of hand-rolling this
+ 9:  d67a325 =  9:  2a51690 we already had q
+10:  3e39803 = 10:  da051dc -q can also be --quiet
+11:  0c8a926 = 11:  8b2bdd3 Add -q to siteconf command too
+12:  a2fc182 = 12:  93839c9 edit edit (and add a -q flag to silence most things)
+13:  ed13188 = 13:  1b751b0 just port the real shell_quote lmao
+14:  d348255 = 14:  9e2d36e Compute siteconf -gB directory correctly
+15:  a671832 = 15:  7f2b71b doc + changelog update
+16:  9d16ca7 ! 16:  4283f74 Revert "prefer chdir to pinned R/F path"
+--- a/9d16ca7692591f1cd8f119896c5eaa05e8cb8c13	2026-10-31 22:33:58.000000000 +0000
++++ b/4283f746dba9a056aa4b8ca1d744421ba727da15	2026-10-31 22:33:58.000000000 +0000
+@@ -4,7 +4,7 @@
+ committer Ethan Meng <rapidcow@RCs-T480s.local> 1793486038 -0500
+ 
+ Revert "prefer chdir to pinned R/F path"
+ 
+-This reverts commit cf8123e4d87060a05510a750d62c1a314b5c686f.
++This reverts commit 23c06627f2462405c5ba64f72b56230f7ebda782.
+ 
+ for aforementioned awkwardness...
+17:  cf8123e = 17:  23c0662 prefer chdir to pinned R/F path
+18:  8f52fcf ! 18:  1fef677 actually make -DR -DS not resolve weirdly
+--- a/8f52fcfe9466ad7b06ac932d3c16eba7b0087ea6	2026-10-31 22:27:59.000000000 +0000
++++ b/1fef6775519c0a225a110cae81a4f8eb20e6fbc3	2026-10-31 22:27:59.000000000 +0000
+@@ -8,5 +8,5 @@
+ it's a direct path!!!  yeah don't put it through
+ some weird fs resolution.... >:[
+ 
+ i thought 1c2cd6ae83b8d32a7ac5a36150b6996ca5296304
+-but well....
++already did it, but apparently not....

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 34;
+use Test::More tests => 48;
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
@@ -152,4 +152,31 @@ bad("# NEED: MY/option.mk\n", qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old 
 	is_deeply($plan->{node}{'a.html'}{deps},
 		[qw( ../html/a.html ../x site/b.css MY/config.mk site/.ok )],
 		'and so are the rest') or diag explain $plan->{node}{'a.html'}{deps};
+}
+
+# --- b is the build dir itself (-Db=.)
+{
+	my $dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "a.html b.css: \${A}/x\n\tcp \${a}/\${\@} \${B}/\${b}/\${\@}\n",
+		'html/a.html' => "# HAVE: \${A}/\${a}/a.html\n# NEED: \${B}/\${b}/b.css\n# NEED: \${B}/MY/config.mk\n",
+		'html/b.css' => '',
+	}, b => '.');
+	my $plan = eval { plan_of($dir) };
+	ok($plan, 'b = `.\': plans') or diag $@;
+	is_deeply($plan->{node}{'a.html'}{kids}, ['b.css'],
+		'b = `.\': what we make is an edge') if $plan;
+	ok(!$plan->{node}{'MY/config.mk'}, 'b = `.\': MY/config.mk is not ours to make') if $plan;
+}
+
+# --- _target, by b
+{
+	my $sc = sub { bless { D => { b => $_[0] }, rules => { x => 1, 'd/x' => 1 } }, 'RdKw::WwW::SiteConf' };
+	my $dot = $sc->('.');
+	is($dot->_target('x'), 'x', 'b = `.\': a file');
+	is($dot->_target('d/x'), 'd/x', 'b = `.\': a file in a directory');
+	ok(!defined $dot->_target('y'), 'b = `.\': no rule, not ours');
+	ok(!defined $dot->_target($_), "b = `.': `$_' is not ours") for '.', '..', '../x', '/x', 'MY/config.mk', 'MY/option.mk';
+	is($sc->('site')->_target('site/x'), 'x', 'b = site: a file');
+	ok(!defined $sc->('site')->_target('x'), 'b = site: outside');
 }

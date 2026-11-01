@@ -257,12 +257,16 @@ sub _dep
 }
 
 # `b'-relative name of what we make, if `path' (seen from the build
-# dir) is something we make
+# dir) is something we make: that is, if a rule makes it.  (With
+# b = `.' the build dir is also the source tree and where MY/ lives,
+# so the place alone says nothing.)
 sub _target
 {
 	my ($self, $path) = @_;
 	my $b = File::Spec->canonpath($self->{D}{b});
-	index($path, "$b/") == 0 ? substr($path, length($b) + 1) : undef;
+	my $name = $b eq '.' ? $path
+		: index($path, "$b/") == 0 ? substr($path, length($b) + 1) : return undef;
+	$self->{rules} && $self->{rules}{$name} ? $name : undef;
 }
 
 sub _bpath
@@ -537,7 +541,7 @@ sub _node
 		}
 		return 1 if -e $self->_fs($dep);
 		unless ($soft) {
-			my $hint = $said =~ m!\AMY/! ? " (is it \${B}/$said?)" : "";
+			my $hint = $said =~ m!\AMY/(?:config|option)\.mk\z! ? " (is it \${B}/$said?)" : "";
 			$fail->("needs `$dep', which we don't seem to have$hint");
 		}
 		0;

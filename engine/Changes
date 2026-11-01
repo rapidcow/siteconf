@@ -2,6 +2,9 @@ Revision history of WwW-SiteConf
 
 
 0.01_03  2026-11-01  RC
+    Template update. :[
+
+    * don't clobber %O with location
     * more transparent render script
 
 0.01_02  2026-11-01  RC

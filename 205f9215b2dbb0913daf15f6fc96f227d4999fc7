@@ -1,0 +1,13 @@
+there was a typo in the tag itself
+
+$ diff -u <(git cat-file tag 88096c2) <(git cat-file tag 84cdaa6)
+--- /dev/fd/63	2026-11-01 00:03:31.809397688 -0500
++++ /dev/fd/62	2026-11-01 00:03:31.811397699 -0500
+@@ -3,4 +3,4 @@
+ tag engine/v0.01_01
+ tagger Ethan Meng <rapidcow@RCs-T480s.local> 1793493750 -0500
+ 
+-siteconf version v0.01_01
++siteconf version 0.01_01
+
+as i have told you i cannot tolerate incorrectness :)

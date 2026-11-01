@@ -14,7 +14,10 @@
 # To invoke this, add to your Makefile.in (or whatever
 # you set your "R" path to):
 #
-#    cd -- $A && ${^X} render -B $B -- $a/$@ $B/$b/$@
+#    resource/location.html: render
+#       cd -- $A && ${^X} render -B $B -- $a/$@ $B/$b/$@
+#
+# (Multiple files are okay!)
 #
 # GenLib is used solely for implementing [% locate PATH %].
 # If you prefer not to use it, simply remove the module

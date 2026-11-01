@@ -46,7 +46,7 @@ sub html5_lines
 	my $what = "HAVE";
 	'<!DOCTYPE html>' . "\n" .
 	"<!--\n" .
-	join ("", map { my $s = " # $what: $_\n"; $what = "NEED"; $s } @_) .
+	join ("", map { my @s = defined ? (" # $what: $_\n") : (); $what = "NEED"; @s } @_) .
 	"  -->\n";
 }
 sub css_lines
@@ -54,7 +54,7 @@ sub css_lines
 	my $what = "HAVE";
 	'@charset "UTF-8";' . "\n" .
 	"/*\n" .
-	join ("", map { my $s = " * $what: $_\n"; $what = "NEED"; $s } @_) .
+	join ("", map { my @s = defined ? (" * $what: $_\n") : (); $what = "NEED"; @s } @_) .
 	" */\n";
 }
 

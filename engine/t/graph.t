@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 48;
+use Test::More tests => 51;
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
@@ -167,6 +167,19 @@ bad("# NEED: MY/option.mk\n", qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old 
 	is_deeply($plan->{node}{'a.html'}{kids}, ['b.css'],
 		'b = `.\': what we make is an edge') if $plan;
 	ok(!$plan->{node}{'MY/config.mk'}, 'b = `.\': MY/config.mk is not ours to make') if $plan;
+}
+
+# --- a is the root itself (-Da=.)
+{
+	my $dir = project({
+		MANIFEST => $manifest,
+		'a.html' => "# HAVE: \${A}/\${a}/a.html\n# NEED: \${B}/\${b}/b.css\n",
+		'b.css' => '',
+	}, a => '.');
+	my $plan = eval { plan_of($dir) };
+	ok($plan, 'a = `.\': plans') or diag $@;
+	is($plan->{node}{'a.html'}{apath}, 'a.html', 'a = `.\': apath') if $plan;
+	is_deeply($plan->{node}{'a.html'}{kids}, ['b.css'], 'a = `.\': HAVE agrees, and edges') if $plan;
 }
 
 # --- _target, by b

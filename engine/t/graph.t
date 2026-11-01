@@ -35,6 +35,28 @@ sub plan_of {
 	my ($dir, $B) = @_;
 	RdKw::WwW::SiteConf->new(B => $B || $dir, quiet => 1)->plan;
 }
+# Right now read_deps is kind of dumb: we have
+# to pad it with "something" before or it won't
+# see the declaration line. 6_6
+#
+# (I've been too spoiled by scripting languages,
+# so sorry....)
+sub html5_lines
+{
+	my $what = "HAVE";
+	'<!DOCTYPE html>' . "\n" .
+	"<!--\n" .
+	join ("", map { my $s = " # $what: $_\n"; $what = "NEED"; $s } @_) .
+	"  -->\n";
+}
+sub css_lines
+{
+	my $what = "HAVE";
+	'@charset "UTF-8";' . "\n" .
+	"/*\n" .
+	join ("", map { my $s = " * $what: $_\n"; $what = "NEED"; $s } @_) .
+	" */\n";
+}
 
 my $manifest = "MAKE all\n\tNEED a.html\n";
 
@@ -71,9 +93,9 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => "# HAVE: \${A}/\${a}/a.html\n# NEED: \${B}/\${b}/b.css\n",
-		'html/b.css' => "/*\n * HAVE: \${A}/\${a}/b.css\n * NEED: \${B}/\${b}/c.css\n */\n",
-		'html/c.css' => "/* HAVE: \$A/\$a/c.css */\n",
+		'html/a.html' => html5_lines( qw[ ${A}/${a}/a.html ${B}/${b}/b.css ] ),
+		'html/b.css' => css_lines( qw[ ${A}/${a}/b.css ${B}/${b}/c.css ] ),
+		'html/c.css' => css_lines( qw[ $A/$a/c.css ] ),
 	});
 	my $plan = plan_of($dir);
 	is_deeply($plan->{order}, [qw( c.css b.css a.html )],

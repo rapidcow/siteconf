@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 # HAVE: render
+# NEED: ${B}/MY/config.mk
+# NEED: ${B}/MY/option.mk
 
 use 5.006;
 use strict;

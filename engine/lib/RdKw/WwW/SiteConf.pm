@@ -724,6 +724,7 @@ sub generate
 	push @cmd, '-C', shell_quote($self->{B}) unless $self->{B} eq '.';
 	push @cmd, '-f', shell_quote($outfile) if $named;
 	push @cmd, shell_quote($plan->{goals}[0]{name}) if @{ $plan->{goals} };
+	$self->_warn("Done!\n");
 	$self->_warn("To build, run: @cmd\n");
 	$plan;
 }

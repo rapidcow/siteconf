@@ -111,8 +111,8 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED b.css\n",
-		'html/b.css' => "# NEED: \${B}/\${b}/c.css\n",
-		'html/c.css' => "# NEED: \${B}/\${b}/b.css\n",
+		'html/b.css' => css_lines( undef, qw[ ${B}/${b}/c.css ] ),
+		'html/c.css' => css_lines( undef, qw[ ${B}/${b}/b.css ] ),
 	});
 	ok(!eval { plan_of($dir); 1 }, 'cycle: dies');
 	like($@, qr/dependency cycle: b\.css -> c\.css -> b\.css/, '... showing it');
@@ -122,7 +122,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED a.html\n\tWANT b.css\n",
-		'html/a.html' => "# NEED: \${B}/\${b}/c.css\n",
+		'html/a.html' => html5_lines( undef, qw[ ${B}/${b}/c.css ] ),
 		'html/b.css' => "# WANT: \${B}/\${b}/c.css\n",
 		# no html/c.css
 	});
@@ -133,7 +133,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	$dir = project({
 		MANIFEST => "MAKE all\n\tNEED b.css\n\tWANT a.html\n",
 		'html/b.css' => "",
-		'html/a.html' => "# NEED: \${B}/\${b}/c.css\n",
+		'html/a.html' => html5_lines( undef, qw[ ${B}/${b}/c.css ] ),
 	});
 	my $plan = plan_of($dir);
 	is_deeply($plan->{goals}[0]{files}, ['b.css'], 'WANT of what needs the unmakeable: dropped');
@@ -146,18 +146,18 @@ sub bad {
 	ok(!eval { plan_of($dir); 1 }, "$what: dies");
 	like($@, $re, "$what: says why");
 }
-bad("# HAVE: a.html\n", qr/You have a\.html .* but I have html\/a\.html/, 'HAVE is the path from the root');
-bad("# HAVE: \${A}/\${a}/b.html\n", qr/but I have html\/a\.html/, 'HAVE of another file');
-bad("# NEED: \${b}/b.css\n", qr/\$\{b\} is relative to \$\{B\}/, 'bare ${b}');
-bad("# NEED: \$b/b.css\n", qr/\$\{b\} is relative to \$\{B\}/, 'bare $b');
-bad("# NEED: \${z}/b.css\n", qr/no such variable \$\{z\}/, 'no such variable');
-bad("# NEED: x\$/y\n", qr/stray \$/, 'stray dollar');
-bad("# NEED: MY/option.mk\n", qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old MY/');
+bad(html5_lines( qw[ a.html ] ), qr/You have a\.html .* but I have html\/a\.html/, 'HAVE is the path from the root');
+bad(html5_lines( qw[ ${A}/${a}/b.html ] ), qr/but I have html\/a\.html/, 'HAVE of another file');
+bad(html5_lines( undef, qw[ ${b}/b.css ] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare ${b}');
+bad(html5_lines( undef, qw[ $b/b.css ] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare $b');
+bad(html5_lines( undef, qw[ ${z}/b.css ] ), qr/no such variable \$\{z\}/, 'no such variable');
+bad(html5_lines( undef, qw[ x$/y ] ), qr/stray \$/, 'stray dollar');
+bad(html5_lines( undef, qw[ MY/option.mk ] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old MY/');
 
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => "# HAVE: \$A/\$a/a.html\n# NEED: \${A}/x\n# NEED: \${B}/MY/config.mk\n# NEED: x\n",
+		'html/a.html' => html5_lines( qw[ $A/$a/a.html ${A}/x ${B}/MY/config.mk x ] ),
 	});
 	ok(eval { plan_of($dir); 1 }, '${A}, ${B}/MY, and plain names are fine') or diag $@;
 }
@@ -166,7 +166,7 @@ bad("# NEED: MY/option.mk\n", qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old 
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => "# HAVE: \${A}/\${a}/a.html\n# NEED: \${B}/\${b}/b.css\n# NEED: x\n# NEED: \${B}/MY/config.mk\n",
+		'html/a.html' => html5_lines( qw[ ${A}/${a}/a.html ${B}/${b}/b.css x ${B}/MY/config.mk ] ),
 		'html/b.css' => "",
 	}, A => '..', B => 'build');
 	my $plan = plan_of($dir, "$dir/build");
@@ -181,7 +181,7 @@ bad("# NEED: MY/option.mk\n", qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old 
 	my $dir = project({
 		MANIFEST => $manifest,
 		'Makefile.in' => "a.html b.css: \${A}/x\n\tcp \${a}/\${\@} \${B}/\${b}/\${\@}\n",
-		'html/a.html' => "# HAVE: \${A}/\${a}/a.html\n# NEED: \${B}/\${b}/b.css\n# NEED: \${B}/MY/config.mk\n",
+		'html/a.html' => html5_lines( qw[ ${A}/${a}/a.html ${B}/${b}/b.css ${B}/MY/config.mk ] ),
 		'html/b.css' => '',
 	}, b => '.');
 	my $plan = eval { plan_of($dir) };
@@ -195,7 +195,7 @@ bad("# NEED: MY/option.mk\n", qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old 
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'a.html' => "# HAVE: \${A}/\${a}/a.html\n# NEED: \${B}/\${b}/b.css\n",
+		'a.html' => html5_lines( qw[ ${A}/${a}/a.html ${B}/${b}/b.css ] ),
 		'b.css' => '',
 	}, a => '.');
 	my $plan = eval { plan_of($dir) };

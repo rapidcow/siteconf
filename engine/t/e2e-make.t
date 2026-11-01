@@ -6,6 +6,8 @@
 use strict;
 use warnings;
 use Test::More;
+use File::Find;
+use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use FindBin;
 use lib "$FindBin::Bin/lib";
@@ -81,5 +83,50 @@ my $bad = `$^X $script -g -q -B build 2>&1`;
 isnt($?, 0, 'NEED of the missing is fatal');
 like($bad, qr/goal `broken' needs `ghost\.html'.*\n.*goal `broken' needs `extra\/index\.html'.*\n.*2 problems/,
 	'all problems are reported at once');
+
+# b = `.': the build dir is the target tree, the root is above it, and
+# MY goes in the build dir and nowhere else
+{
+# <top>/etc/nginx is the root (A) with sites-maker/ in it, where we are;
+# the build dir (B) is sites-available/, and sites/ (a) is made into it (b = .)
+my $top = tempdir(CLEANUP => 1);
+my $A = "$top/etc/nginx";
+my @conf = qw( ubuntu/www.conf ubuntu/ns1.conf rpi/default.conf );
+make_path("$A/sites-maker", "$A/sites-available", map { "$A/sites/" . s{/[^/]*\z}{}r } @conf);
+sub put
+{
+	my ($file, $text) = @_;
+	open my $fh, '>', $file or die "$file: $!";
+	print $fh $text;
+	close $fh or die;
+}
+put("$A/sites/$_", lines(HAVE => ["\${A}/\${a}/$_"], NEED => ['${A}/render']) . "server $_\n") for @conf;
+put("$A/render", <<'EOF');
+open my $in, '<', "sites/$ARGV[0]" or die "$ARGV[0]: $!";
+open my $out, '>', $ARGV[1] or die "$ARGV[1]: $!";
+print $out "rendered: $_" while <$in>;
+EOF
+put("$A/sites-maker/MANIFEST", "MAKE all\n" . join '', map { "\tNEED $_\n" } @conf);
+put("$A/sites-maker/Makefile.in", join(' ', @conf) . ": \${A}/render\n"
+	. "\tcd \${A:Q} && \${^X:Q} render \${\@:Q} \${B:Q}/\${b:Q}/\${\@:Q}\n");
+chdir "$A/sites-maker" or die;
+
+run('siteconf -i', $^X, $script, qw( -i -q -SA=.. -SB=sites-available -Sa=sites -Sb=. ));
+run('./configure', $^X, './configure', '-q');
+run('siteconf -g', $^X, $script, qw( -g -q -G make -B ../sites-available ));
+
+like(slurp("$A/sites-available/MY/config.mk"), qr/^b=\t\.$/m, 'b is the build dir');
+my @my;
+find({ wanted => sub { push @my, $File::Find::name if -d && m{/MY\z} }, no_chdir => 1 }, $top);
+is_deeply(\@my, ["$A/sites-available/MY"], 'MY is made in the build dir and nowhere else');
+ok(!-e "$A/MY" && !-e "$top/etc/MY" && !-e "$A/sites-maker/MY", '... not above it, not here');
+
+run('make', $make, '-C', "$A/sites-available");
+for my $f (@conf) {
+	like(slurp("$A/sites-available/$f"), qr/^rendered: server \Q$f\E$/m, "b = `.': $f made");
+}
+my $nothing = run('make again', $make, '-C', "$A/sites-available");
+unlike($nothing, qr/\brender\b|\bcp\b|\bmkdir\b/, '... and not made again');
+}
 
 E2E::done();

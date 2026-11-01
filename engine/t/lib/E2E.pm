@@ -12,7 +12,8 @@ use File::Spec;
 use File::Temp qw( tempdir );
 
 use parent qw( Exporter );
-our @EXPORT = qw( run slurp );
+our @EXPORT = qw( run slurp lines );
+our @EXPORT_OK = @EXPORT;
 
 my $dir;	# (it is removed when we are)
 
@@ -54,6 +55,20 @@ sub run
 	my $ok = ok($? == 0, $desc);
 	diag $out unless $ok;
 	$out;
+}
+
+# The header of a source: C<lines(HAVE => [...], NEED => [...], WANT => [...])>
+sub lines
+{
+	my (%what) = @_;
+	my @sb;
+	push @sb, "#\n";
+	foreach my $what (qw( HAVE NEED WANT )) {
+		foreach (@{ $what{$what} || [] }) {
+			push @sb, "# $what: $_\n";
+		}
+	}
+	join "", @sb;
 }
 
 sub slurp { open my $fh, '<:utf8', $_[0] or return; local $/; <$fh> }

@@ -5,6 +5,9 @@
 use strict;
 use warnings;
 use Test::More tests => 51;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use E2E qw( lines );
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
@@ -35,19 +38,6 @@ sub plan_of {
 	my ($dir, $B) = @_;
 	RdKw::WwW::SiteConf->new(B => $B || $dir, quiet => 1)->plan;
 }
-sub lines
-{
-	my (%what) = @_;
-	my @sb;
-	push @sb, "#\n";
-	foreach my $what (qw( HAVE NEED WANT )) {
-		foreach (@{ $what{$what} || [] }) {
-			push @sb, "# $what: $_\n";
-		}
-	}
-	join "", @sb;
-}
-
 my $manifest = "MAKE all\n\tNEED a.html\n";
 
 # --- continued target and dependency lists (including tab indentation)

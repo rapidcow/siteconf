@@ -2,6 +2,13 @@
 # HAVE: render
 # NEED: ${B}/MY/option.mk
 #
+# (Note that we do not "NEED" MY/config.mk; doing so
+# would declare an undesirable dependency edge that
+# undermines the very point of separating these two.
+#
+# We do depend on it to be very clear; it's just that
+# we don't need to re-render stuff when it changes.)
+#
 # render - Template Toolkit webpage renderer
 #
 # To invoke this, add to your Makefile.in (or whatever

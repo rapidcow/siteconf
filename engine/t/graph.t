@@ -35,27 +35,17 @@ sub plan_of {
 	my ($dir, $B) = @_;
 	RdKw::WwW::SiteConf->new(B => $B || $dir, quiet => 1)->plan;
 }
-# Right now read_deps is kind of dumb: we have
-# to pad it with "something" before or it won't
-# see the declaration line. 6_6
-#
-# (I've been too spoiled by scripting languages,
-# so sorry....)
-sub html5_lines
+sub lines
 {
-	my $what = "HAVE";
-	'<!DOCTYPE html>' . "\n" .
-	"<!--\n" .
-	join ("", map { my @s = defined ? (" # $what: $_\n") : (); $what = "NEED"; @s } @_) .
-	"  -->\n";
-}
-sub css_lines
-{
-	my $what = "HAVE";
-	'@charset "UTF-8";' . "\n" .
-	"/*\n" .
-	join ("", map { my @s = defined ? (" * $what: $_\n") : (); $what = "NEED"; @s } @_) .
-	" */\n";
+	my (%what) = @_;
+	my @sb;
+	push @sb, "#\n";
+	foreach my $what (qw( HAVE NEED WANT )) {
+		foreach (@{ $what{$what} || [] }) {
+			push @sb, "# $what: $_\n";
+		}
+	}
+	join "", @sb;
 }
 
 my $manifest = "MAKE all\n\tNEED a.html\n";
@@ -93,9 +83,9 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => html5_lines( qw[ ${A}/${a}/a.html ${B}/${b}/b.css ] ),
-		'html/b.css' => css_lines( qw[ ${A}/${a}/b.css ${B}/${b}/c.css ] ),
-		'html/c.css' => css_lines( qw[ $A/$a/c.css ] ),
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css ]] ),
+		'html/b.css' => lines( HAVE => [qw[ ${A}/${a}/b.css ]], NEED => [qw[ ${B}/${b}/c.css ]] ),
+		'html/c.css' => lines( HAVE => [qw[ $A/$a/c.css ]] ),
 	});
 	my $plan = plan_of($dir);
 	is_deeply($plan->{order}, [qw( c.css b.css a.html )],
@@ -111,8 +101,8 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED b.css\n",
-		'html/b.css' => css_lines( undef, qw[ ${B}/${b}/c.css ] ),
-		'html/c.css' => css_lines( undef, qw[ ${B}/${b}/b.css ] ),
+		'html/b.css' => lines( NEED => [qw[ ${B}/${b}/c.css ]] ),
+		'html/c.css' => lines( NEED => [qw[ ${B}/${b}/b.css ]] ),
 	});
 	ok(!eval { plan_of($dir); 1 }, 'cycle: dies');
 	like($@, qr/dependency cycle: b\.css -> c\.css -> b\.css/, '... showing it');
@@ -122,8 +112,8 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED a.html\n\tWANT b.css\n",
-		'html/a.html' => html5_lines( undef, qw[ ${B}/${b}/c.css ] ),
-		'html/b.css' => "# WANT: \${B}/\${b}/c.css\n",
+		'html/a.html' => lines( NEED => [qw[ ${B}/${b}/c.css ]] ),
+		'html/b.css' => lines( WANT => [qw[ ${B}/${b}/c.css ]] ),
 		# no html/c.css
 	});
 	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
@@ -133,7 +123,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	$dir = project({
 		MANIFEST => "MAKE all\n\tNEED b.css\n\tWANT a.html\n",
 		'html/b.css' => "",
-		'html/a.html' => html5_lines( undef, qw[ ${B}/${b}/c.css ] ),
+		'html/a.html' => lines( NEED => [qw[ ${B}/${b}/c.css ]] ),
 	});
 	my $plan = plan_of($dir);
 	is_deeply($plan->{goals}[0]{files}, ['b.css'], 'WANT of what needs the unmakeable: dropped');
@@ -146,18 +136,18 @@ sub bad {
 	ok(!eval { plan_of($dir); 1 }, "$what: dies");
 	like($@, $re, "$what: says why");
 }
-bad(html5_lines( qw[ a.html ] ), qr/You have a\.html .* but I have html\/a\.html/, 'HAVE is the path from the root');
-bad(html5_lines( qw[ ${A}/${a}/b.html ] ), qr/but I have html\/a\.html/, 'HAVE of another file');
-bad(html5_lines( undef, qw[ ${b}/b.css ] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare ${b}');
-bad(html5_lines( undef, qw[ $b/b.css ] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare $b');
-bad(html5_lines( undef, qw[ ${z}/b.css ] ), qr/no such variable \$\{z\}/, 'no such variable');
-bad(html5_lines( undef, qw[ x$/y ] ), qr/stray \$/, 'stray dollar');
-bad(html5_lines( undef, qw[ MY/option.mk ] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old MY/');
+bad(lines( HAVE => [qw[ a.html ]] ), qr/You have a\.html .* but I have html\/a\.html/, 'HAVE is the path from the root');
+bad(lines( HAVE => [qw[ ${A}/${a}/b.html ]] ), qr/but I have html\/a\.html/, 'HAVE of another file');
+bad(lines( NEED => [qw[ ${b}/b.css ]] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare ${b}');
+bad(lines( NEED => [qw[ $b/b.css ]] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare $b');
+bad(lines( NEED => [qw[ ${z}/b.css ]] ), qr/no such variable \$\{z\}/, 'no such variable');
+bad(lines( NEED => [qw[ x$/y ]] ), qr/stray \$/, 'stray dollar');
+bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old MY/');
 
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => html5_lines( qw[ $A/$a/a.html ${A}/x ${B}/MY/config.mk x ] ),
+		'html/a.html' => lines( HAVE => [qw[ $A/$a/a.html ]], NEED => [qw[ ${A}/x ${B}/MY/config.mk x ]] ),
 	});
 	ok(eval { plan_of($dir); 1 }, '${A}, ${B}/MY, and plain names are fine') or diag $@;
 }
@@ -166,7 +156,7 @@ bad(html5_lines( undef, qw[ MY/option.mk ] ), qr/\(is it \$\{B\}\/MY\/option\.mk
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => html5_lines( qw[ ${A}/${a}/a.html ${B}/${b}/b.css x ${B}/MY/config.mk ] ),
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css x ${B}/MY/config.mk ]] ),
 		'html/b.css' => "",
 	}, A => '..', B => 'build');
 	my $plan = plan_of($dir, "$dir/build");
@@ -181,7 +171,7 @@ bad(html5_lines( undef, qw[ MY/option.mk ] ), qr/\(is it \$\{B\}\/MY\/option\.mk
 	my $dir = project({
 		MANIFEST => $manifest,
 		'Makefile.in' => "a.html b.css: \${A}/x\n\tcp \${a}/\${\@} \${B}/\${b}/\${\@}\n",
-		'html/a.html' => html5_lines( qw[ ${A}/${a}/a.html ${B}/${b}/b.css ${B}/MY/config.mk ] ),
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css ${B}/MY/config.mk ]] ),
 		'html/b.css' => '',
 	}, b => '.');
 	my $plan = eval { plan_of($dir) };
@@ -195,7 +185,7 @@ bad(html5_lines( undef, qw[ MY/option.mk ] ), qr/\(is it \$\{B\}\/MY\/option\.mk
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'a.html' => html5_lines( qw[ ${A}/${a}/a.html ${B}/${b}/b.css ] ),
+		'a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css ]] ),
 		'b.css' => '',
 	}, a => '.');
 	my $plan = eval { plan_of($dir) };

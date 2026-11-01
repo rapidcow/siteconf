@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 27;
+use Test::More tests => 34;
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
@@ -37,6 +37,35 @@ sub plan_of {
 }
 
 my $manifest = "MAKE all\n\tNEED a.html\n";
+
+# --- continued target and dependency lists (including tab indentation)
+{
+	my $recipe = "\tcp \${a}/\${\@} \\\n\t  \${B}/\${b}/\${\@}\n";
+	my $dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "# rules\n\na.html \\\n\t b.css \\\n  c.css: \\\n\t\${A}/x \\\n  \${A}/y\n" . $recipe,
+		'html/a.html' => '', y => '',
+	});
+	my $sc = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1);
+	my $rules = $sc->_read_rules;
+	is_deeply([sort keys %$rules], [qw(a.html b.css c.css)], 'continued target list');
+	is_deeply($rules->{'b.css'}{deps}, [qw(x y)], 'continued dependencies and substitution');
+	is($rules->{'c.css'}{line}, 3, 'rule records its first physical line');
+	is($rules->{'a.html'}{recipe}, "\tcp html/a.html \\\n\t  site/a.html\n",
+		'recipe continuations are preserved');
+	my $plan = $sc->plan;
+	is_deeply($plan->{node}{'a.html'}{deps}, [qw(html/a.html x y site/.ok)],
+		'continued rule participates in the build graph');
+
+	for my $case (
+		["# rules\na.html \\\n  b.css: \${missing}\n", qr/line 2: undefined variable/],
+		["# rules\na.html: \\\n", qr/line 2: unfinished line continuation/],
+	) {
+		my $bad = project({ MANIFEST => $manifest, 'Makefile.in' => $case->[0] });
+		eval { plan_of($bad) };
+		like($@, $case->[1], 'continued-rule error identifies the starting line');
+	}
+}
 
 # --- an edge to what we make: it is made, and first
 {

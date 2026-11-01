@@ -1,6 +1,10 @@
 Revision history of WwW-SiteConf
 
 
+0.01_02
+    * Makefile.in target and dependency lists support backslash
+      continuations across multiple lines.
+
 0.01_01  2026-10-31  RC
     * siteconf -g can now -o-utput to a file different from the
       backend default (such as Makefile.proj instead of Makefile).

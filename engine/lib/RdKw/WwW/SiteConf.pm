@@ -46,6 +46,10 @@ the C<:Q> modifier to shell-quote (C<${A:Q}>).  Targets are named
 relative to C<${b}>.  A rule that depends on a file named F<render>
 also depends on F<MY/option.mk>.
 
+Target and dependency lists may span multiple lines: end each
+continued line with a backslash.  The backslash and newline, along
+with indentation on the next line, are replaced by a space.
+
 =item F<MANIFEST> (C<F>)
 
 The goals of the build, each a L<make(1)> target:
@@ -397,7 +401,19 @@ sub _read_rules
 	my (%rule, @node, $stanza);
 	while (<$fh>) {
 		next if /^\s*#/ or /^\s*$/;
-		my $where = "$D->{R} line $.";
+		my $line = $.;
+		my $where = "$D->{R} line $line";
+		# Fold rule headers before deciding whether an indented line
+		# is a recipe.  Recipe backslashes belong to make/the shell.
+		unless (/^\t/) {
+			while (/(?<!\\)(?:\\\\)*\\\r?\n\z/) {
+				s/[ \t]*\\\r?\n\z/ /;
+				my $next = <$fh>;
+				defined $next or die "E: $where: unfinished line continuation\n";
+				$next =~ s/^[ \t]+//;
+				$_ .= $next;
+			}
+		}
 		if (/^\t/) {
 			@node or die "E: $where: unexpected tabulation\n";
 			for my $node (@node) {
@@ -413,11 +429,11 @@ sub _read_rules
 		if (/:/) {
 			my ($src, $dep) = split /:/, $_, 2;
 			@node = split ' ', $src or die "E: $where: null target list\n";
-			$stanza = $.;
+			$stanza = $line;
 			$dep = $self->_subst($dep, undef, $where);
 			for my $node (@node) {
 				_check_file($node, $where);
-				my $rule = ($rule{$node} ||= { recipe => '', deps => [], line => $. });
+				my $rule = ($rule{$node} ||= { recipe => '', deps => [], line => $line });
 				push @{ $rule->{deps} }, split ' ', $dep;
 			}
 			next;

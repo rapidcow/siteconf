@@ -2,7 +2,7 @@
 # HAVE: $A/$a/sub/index.html
 # NEED: skel/HTML
 -%]
-[% WRAPPER "HTML" title = "sub" -%]
-<p>location=[% O.location %]</p>
+[% WRAPPER "skel/HTML" title = "sub" -%]
+<p>location=[% location %]</p>
 <a href="[% locate('index.html') | xml %]">up</a>
 [% END -%]

@@ -1,6 +1,13 @@
 Revision history of WwW-GenLib
 
 
+0.02_00  2026-11-01  RC
+    *** REMOVE locator and location.  The former is a useless
+        wrapper that offers no abstraction, and the latter is
+        a fundamental conflation of file path with HAVE decla-
+        rations.  Also [% O.location %] is still [% location %];
+        we don't want to shadow any real configured location.
+
 0.01_00  2026-10-31  RC
     *** read_make write_make update_file load_state read_deps
         MOVED to WwW-GenGenLib.  Please install separately.
@@ -29,7 +36,7 @@ Revision history of WwW-GenLib
       render via [% O.location %].
       (Not [% location %]!!! render can now access %D vars
         (${B}/MY/config.mk) as well because we want it to
-        know where its peers live.)
+        know where its peers live.)  [This is wrong; see 0.2]
 
     * read_make/write_make/update_file/load_state: MY/config.mk
       and MY/option.mk, written only if they changed (mtime

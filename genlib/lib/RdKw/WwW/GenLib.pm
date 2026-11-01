@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use parent qw( Exporter );
 
-our $VERSION = '0.01_00';
+our $VERSION = '0.02_00';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -14,23 +14,37 @@ RdKw::WwW::GenLib - static web-site generation library
 
 =head1 SYNOPSIS
 
-    use RdKw::WwW::GenGenLib qw( load_state );
-    use RdKw::WwW::GenLib qw( location locator );
-
     # in a `render' script...
-    my %S = load_state($Bdir);          # ${B}/MY/*.mk
-    my ($D, $O) = @S{qw( config option )};
-    my $O = $S{option};
-    my $where = location($D, $bpath);   # where in the site this page is
+    use RdKw::WwW::GenGenLib qw( read_deps load_state );
+    use RdKw::WwW::GenLib qw( locate );
+    use Template;
+    use Template::Exception;
 
-    my %O = (%$O, location => $where);  # [% O.location %]
+    my ($B, $apath, $bpath) = parse(@ARGV);
+
+    my %S = load_state($Bdir);
+    my ($D, $O) = @S{qw( config option )};
+
+    my %I = read_deps($apath);
+    (my $L = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}
+        or $D->{a} eq '.' or die "E: $apath: HAVE $I{HAVE} is not under \${a}\n";
+
     my %V = (
-    	D => $D,                        # [% D.b %]
-    	O => \%O,                       # [% O.base_url %]
-    	locate => locator(\%O, $where), # [% locate('x') %]
+        D => $D,
+        O => $O,
+        locate => {
+        @_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
+            locate($O, $L, @_);
+        },
+        location => $me,
     );
-    unless ($tt->process($if, \%V, $of)) {
-    	die "[TT] ", $tt->error();
+    $tt = Template->new({
+        ENCODING => 'UTF-8',
+        INCLUDE_PATH => [ '.', $D->{a} ],
+    )
+        or die "[TT] ", $Template::ERROR, "\n";
+    unless ($tt->process($apath, \%V, $bpath)) {
+        die "[TT] ", $tt->error();
     }
 
 =head1 DESCRIPTION
@@ -49,7 +63,6 @@ use URI::Escape qw( uri_unescape );
 
 our @EXPORT_OK = qw(
 	locate relapath
-	locator location
 	parse_base
 );
 
@@ -193,28 +206,6 @@ COMM:	while () {
 	join '/', ('..') x $upupup, @rest;
 }
 
-=item B<locator> \%O, I<location>
-
-Returns a function, to be handed to TT2 as C<locate>, that is B<locate>
-as seen from the page at I<location> (see B<location>), taking just
-I<spec>.  Nothing else is done to I<spec>; whatever else a site wants
-done to its URLs (such as spelling out C<index.html>) is for it to wrap
-around this.
-
-This is a convenience function.  Callers are encouraged to extend this
-and invoke B<locate> directly.
-
-=cut
-
-sub locator
-{
-	my ($O, $location) = @_;
-	sub {
-		@_ == 1 or die "usage: [% locate PATH %]\n";
-		locate($O, $location, @_);
-	};
-}
-
 =item B<parse_base> \%O
 
 Sanitize, normalize, and whine about user-supplied
@@ -290,28 +281,6 @@ EUGH
 	$D->{site_url} = "$site_url";
 	# All is well
 	1;
-}
-
-=item B<location> \%D, I<bpath>
-
-Where in the site the file I<bpath> is, i.e. its path relative to
-C<${B}/${b}>.  This is what C<O.location> is.  I<bpath> is spelled
-as the rules spell it, as seen from the source tree.
-
-=cut
-
-sub location
-{
-	my ($D, $bpath) = @_;
-	my $root = File::Spec->canonpath("$D->{B}/$D->{b}");
-	my $path = File::Spec->canonpath($bpath);
-	$root = '' if $root eq '.';
-	if (length $root) {
-		index($path, "$root/") == 0
-			or die "location: $bpath is not under $root\n";
-		substr($path, 0, length($root) + 1) = '';
-	}
-	$path;
 }
 
 =back

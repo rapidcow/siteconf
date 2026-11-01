@@ -2,40 +2,78 @@
 # HAVE: render
 # NEED: ${B}/MY/config.mk
 # NEED: ${B}/MY/option.mk
-
+#
+# render - Template Toolkit webpage renderer
+#
+# To invoke this, add to your Makefile.in (or whatever you
+# set your "R" path to):
+#
+#    cd -- $A && ${^X} render -B $B -- $a/$@ $B/$b/$@
+#
+# GenLib is used solely for implementing [% locate PATH %].
+# If you prefer not to use it, simply remove the module
+# import line and exclude it from %V.  The script works
+# fine without it. ;)
+#
+# More information about Template Toolkit here:
+# https://template-toolkit.org/
+#
 use 5.006;
 use strict;
 use warnings;
-use open ':std', ':encoding(UTF-8)';
 
 use Getopt::Std;
+use RdKw::WwW::GenGenLib qw( read_deps load_state );
+use RdKw::WwW::GenLib qw( locate );
 use Template;
-use RdKw::WwW::GenGenLib qw( load_state );
-use RdKw::WwW::GenLib qw( location locator );
+use Template::Exception;
 
 my %o;
 getopts('B:', \%o) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
+my $B = defined $o{B} ? $o{B} : '.';
 @ARGV == 2 or die "$0: need exactly two args\n";
 my ($apath, $bpath) = @ARGV;
 
-# D and O, each in a namespace of its own
-my %S = load_state(defined $o{B} ? $o{B} : '.');
+#
+# Load configuration parameters and build options, so
+# we can expose them to the template.
+#
+my %S = load_state($B);
 my ($D, $O) = @S{qw( config option )};
-my $where = location($D, $bpath);
-my %O = (%$O, location => $where);
+
+#
+# Find ourselves from the dependency graph declarations.
+# This pattern is purely symbolic, though we also accept
+# literal spelling, since some people like to treat ${a}
+# as a predefined constant (like how ${A} is).
+#
+my %I = read_deps($apath);
+defined $I{HAVE} or die "E: $apath: HAVE declaration not found\n";
+(my $L = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}
+	or $D->{a} eq '.' or die "E: $apath: HAVE `$I{HAVE}' not under \${a} ($D->{a})\n";
+
+#
+# Define Template variables (see also Template::Stash
+# if you want access to these from a plugin/filter).
+#
 my %V = (
 	D => $D,
-	O => \%O,
-	locate => locator(\%O, $where),
+	O => $O,
+	locate => sub {
+		@_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
+		locate($O, $L, @_);
+	},
+	location => $L,
 );
 
-my $tt = Template->new({ INCLUDE_PATH => [ 'skel', '.' ] })
+my $tt = Template->new({
+	ENCODING => 'UTF-8',
+	INCLUDE_PATH => [ '.', $D->{a} ],
+})
 	or die "[TT] ", $Template::ERROR, "\n";
-open my $if, '<:encoding(UTF-8)', $apath or die "open <$apath: $!\n";
-open my $of, '>:encoding(UTF-8)', $bpath or die "open >$bpath: $!\n";
-unless ($tt->process($if, \%V, $of)) {
-	close $of;
+unless ($tt->process($apath, \%V, $bpath)) {
 	unlink $bpath;
 	die "[TT] ", $tt->error(), "\n";
 }
-close $of or die "close >$bpath: $!\n";
+
+exit;  # goodbye!

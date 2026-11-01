@@ -5,9 +5,9 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 35;
+use Test::More tests => 29;
 
-use RdKw::WwW::GenLib qw( relapath locator location );
+use RdKw::WwW::GenLib qw( locate relapath );
 
 # From cooper-www, gen/t/02-url.t
 # relapath
@@ -67,24 +67,12 @@ is (relapath('archive///', $deep), '../../archive/', 'many slashes after a name'
 is (relapath('a//b/', $deep), '../../a//b/', 'inner empty segment is kept');
 is (relapath('trivnote///', $deep), '../', 'many slashes after dotdot');
 
-# --- location
-{
-	my %D = (B => '.', b => 'site');
-	is(location(\%D, 'site/a/b.html'), 'a/b.html', 'location, in-tree');
-	%D = (B => 'build', b => 'site');
-	is(location(\%D, 'build/site/a/b.html'), 'a/b.html', 'location, build dir');
-	is(location(\%D, 'build//site/./a.html'), 'a.html', 'location, canonical');
-	ok(!eval { location(\%D, 'site/a.html'); 1 }, 'location, not ours');
-}
-
 # --- locator
 {
-	my %O = (base_url => '/', site_url => 'https://example.test');
-	my $l = locator(\%O, 'a/b.html');
-	is($l->('c.html'), '../c.html', 'locate, relative');
-	is($l->('/c.html'), '/c.html', 'locate, host-relative');
-	is($l->('//c.html'), 'https://example.test/c.html', 'locate, absolute');
-	is($l->('c/'), '../c/', 'nothing is done to the spec');
-	ok(!eval { $l->(); 1 }, 'one argument');
-	like($@, qr/usage: \[% locate PATH %\]/, '... says how');
+	my %O = ( base_url => '/', site_url => 'https://example.test' );
+	my $L = 'a/b.html';
+	is(locate(\%O, $L, 'c.html'), '../c.html', 'locate, relative');
+	is(locate(\%O, $L, '/c.html'), '/c.html', 'locate, host-relative');
+	is(locate(\%O, $L, '//c.html'), 'https://example.test/c.html', 'locate, absolute');
+	is(locate(\%O, $L, 'c/'), '../c/', 'nothing is done to the spec');
 }

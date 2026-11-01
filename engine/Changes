@@ -1,6 +1,9 @@
 Revision history of WwW-SiteConf
 
 
+0.01_03  2026-11-01  RC
+    * more transparent render script
+
 0.01_02  2026-11-01  RC
     * Makefile.in target and dependency lists support backslash
       continuations across multiple lines.

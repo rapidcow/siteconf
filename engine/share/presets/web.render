@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
 # HAVE: render
-# NEED: ${B}/MY/config.mk
 # NEED: ${B}/MY/option.mk
 #
 # render - Template Toolkit webpage renderer

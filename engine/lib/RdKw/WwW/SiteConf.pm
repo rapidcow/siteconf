@@ -672,7 +672,7 @@ The goal, resolved, in the format of the manifest.
 sub manifest_text
 {
 	my ($self, $goal) = @_;
-	my $text = "#\n# resolved by `$self->{prog}'\n#\n";
+	my $text = "#\n# resolved by `$self->{prog} -g'\n#\n";
 	$text .= "MAKE $goal->{name}\n";
 	$text .= "\tNEED $_\n" for @{ $goal->{files} };
 	for my $drop (@{ $goal->{dropped} }) {

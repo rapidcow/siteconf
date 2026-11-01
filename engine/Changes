@@ -4,6 +4,8 @@ Revision history of WwW-SiteConf
 0.01_02  2026-11-01  RC
     * Makefile.in target and dependency lists support backslash
       continuations across multiple lines.
+    * BUG fix: -Db=. is now supported (though with degraded
+      diagnostic messages, it's better than completely broken)
 
 0.01_01  2026-10-31  RC
     * siteconf -g can now -o-utput to a file different from the

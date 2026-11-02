@@ -2,9 +2,25 @@ Revision history of WwW-SiteConf
 
 
 0.01_04
-    * init accepts repeatable -o configure:path and -o render:path
-      mappings; /dev/null suppresses an output.
+    + siteconf -i preset improvement!
+      For the Web preset you can suppress render script output
+      with -o render:/dev/null.  You can specify a different
+      names in general, e.g. say you organize utilities in a
+      directory, then you can use -o render:gen/render.
+
+      !!! Note that this file is (still) generated relative to
+          the project root, and (still) needs a sane name since
+          it needs to be accounted for in the dep graph.  I *try*
+          to be forgiving with this, but in general keep it ASCII,
+          URL-safe and free of whitespace (ESPECIALLY \x{20} and
+          any C0 controls).
+
+      *** The source file is omissible and defaults to configure
+          UNLESS your target file contains a colon, in which case
+          you must now write `-o configure:weird:path'.
+
     * general configure manual: RdKw::WwW::SiteConf::Configure.
+      Written by GPT-6 based on man/configure.pod from cooper-www.
 
 0.01_03  2026-11-01  RC
     Template update. :[

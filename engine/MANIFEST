@@ -15,6 +15,7 @@ t/init.t
 t/e2e-make.t
 t/e2e-ninja.t
 t/lib/E2E.pm
+t/lib/TestPaths.pm
 t/manifest.t
 t/graph.t
 t/ninja.t

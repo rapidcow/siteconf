@@ -6,9 +6,7 @@ package E2E;
 use strict;
 use warnings;
 use Test::More;
-use Cwd qw( abs_path );
-use File::Basename qw( dirname );
-use File::Spec;
+use TestPaths qw( project_root script_path perl5lib );
 use File::Temp qw( tempdir );
 
 use parent qw( Exporter );
@@ -25,12 +23,11 @@ sub setup
 		eval "require $m; 1" or plan skip_all => "$m is not installed";
 	}
 
-	my $root = abs_path(File::Spec->catdir(dirname(__FILE__), File::Spec->updir, File::Spec->updir));
-	my $script = "$root/blib/script/siteconf";
-	-f $script or plan skip_all => "not built: perl Makefile.PL && make, in engine/ and genlib/";
+	my $root = project_root();
+	my $script = script_path();
 	my $fixture = "$root/t/fixture/web";
 	# Whatever lets us load our modules lets the children do so
-	$ENV{PERL5LIB} = join ':', map { abs_path($_) } grep { defined && -d } @INC;
+	$ENV{PERL5LIB} = perl5lib();
 
 	$dir = tempdir(CLEANUP => 1);
 	system('cp', '-R', "$fixture/.", $dir) == 0 or die "cp: $?";

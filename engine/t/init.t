@@ -1,14 +1,16 @@
 use strict;
 use warnings;
 use Test::More;
-use Cwd qw(abs_path getcwd);
+use Cwd qw(getcwd);
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use TestPaths qw( script_path perl5lib );
 use File::Temp qw(tempdir);
 use File::Path qw(make_path);
 
 my $root = getcwd();
-my $script = abs_path('blib/script/siteconf');
--f $script or plan skip_all => 'run make first';
-local $ENV{PERL5LIB} = join ':', map { abs_path($_) } grep { !ref && -d } @INC;
+my $script = script_path();
+local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
 make_path('tools', 'bin', 'project');

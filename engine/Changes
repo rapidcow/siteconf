@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf
 
 
-0.01_04
+0.02_00
     + siteconf -i preset improvement!
       For the Web preset you can suppress render template output
       with -o render:/dev/null.  You can specify a different

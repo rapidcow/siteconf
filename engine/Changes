@@ -62,6 +62,10 @@ Revision history of WwW-SiteConf
         absolute paths to certify that it is safe and probably
         shorter for cd -- ${A:Q} too.
 
+      * BUG fix: ${A}/... in a header is now really the same as without
+        it, even when ${a} is absolute; and a tool's HAVE agrees with a
+        rule's ${A}/... when A is absolute.  (Thanks Claude)
+
     *** ./configure no longer resolves the project root (A, from
         -SA) relative to itself.  You must change into configure's
         own directory or override -DA; i.e., do `cd /my/proj &&

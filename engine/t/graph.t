@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 56;
+use Test::More tests => 64;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -218,6 +218,40 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\
 	$plan = eval { plan_of($dir) };
 	ok($plan && !grep({ $_ eq 'nowhere' } @{ $plan->{node}{'a.html'}{deps} }),
 		'tools: a binary is not read') or diag $@;
+}
+
+# --- with or without ${A}, absolute or not: the same file
+{
+	my %f = (
+		MANIFEST => $manifest,
+		'Makefile.in' => "a.html: \${A}/gen/tool\n\tgen/tool\n",
+		'gen/tool' => '',
+	);
+	for my $A ('..', 'abs') {
+		for my $have ('gen/tool', '${A}/gen/tool', '$A/./gen//tool') {
+			my $dir = project({ %f, 'gen/tool' => lines( HAVE => [ $have ] ),
+				'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]] ) }, B => 'build');
+			write_make("$dir/build/MY/config.mk", {
+				A => $A eq 'abs' ? $dir : $A, B => 'build', a => 'html', b => 'site',
+				R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
+			my $plan = eval { plan_of($dir, "$dir/build") };
+			ok($plan, "A = $A: tool HAVE $have") or diag $@;
+		}
+	}
+
+	# a is absolute (out of tree): ${A}/${a} is still ${a}
+	my $src = tempdir(CLEANUP => 1);
+	for my $f ('a.html', 'b.css') {
+		open my $fh, '>', "$src/$f" or die;
+		print $fh lines( HAVE => [ $f eq 'a.html' ? '${A}/${a}/a.html' : '${a}/b.css' ],
+			NEED => $f eq 'a.html' ? [qw[ ${A}/${a}/b.css ]] : [] );
+		close $fh or die;
+	}
+	my $dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html:\n\tcp\n" }, a => $src);
+	my $plan = eval { plan_of($dir) };
+	ok($plan, 'absolute a: HAVE with or without ${A}') or diag $@;
+	ok($plan && grep({ $_ eq "$src/b.css" } @{ $plan->{node}{'a.html'}{deps} }),
+		'absolute a: ${A}/${a}/x NEEDs the right file') or diag explain $plan->{node}{'a.html'}{deps};
 }
 
 # --- _target, by b

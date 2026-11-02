@@ -236,6 +236,9 @@ sub _expand
 	$spec =~ /(?<!\$\{B\}\/)(?<!\$B\/)\$(?:\{b\}|b)/
 		and die "E: $where: `$spec': \${b} is relative to \${B};"
 			. " write \${B}/\${b}\n";
+	# ${A} is `.', so ${A}/x is just x -- even when x is absolute
+	# (as ${a} may be), which `./' in front of it would not be.
+	$spec =~ s{\A\$(?:\{A\}|A)(?:/+|\z)}{} and !length $spec and $spec = '.';
 	$spec =~ s{\$(?:\{(\w+)\}|(\w))}{
 		my $x = defined $1 ? $1 : $2;
 		exists $var{$x} or die "E: $where: `$spec': no such variable \${$x}"
@@ -568,6 +571,23 @@ sub _node
 	$done->();
 }
 
+# Whether two paths seen from the build dir are spelled alike, once
+# an absolute one is made relative too.  (The rules spell ${A}/x as
+# config.mk spells A, which may be absolute.)
+sub _same
+{
+	my ($self, @path) = @_;
+	for my $p (@path) {
+		$p = File::Spec->canonpath($p);
+		next unless File::Spec->file_name_is_absolute($p);
+		# Babs has no symlinks in it, so neither may this
+		my $dir = abs_path(dirname($p));
+		$p = File::Spec->catfile($dir, basename($p)) if defined $dir;
+		$p = File::Spec->abs2rel($p, $self->{Babs});
+	}
+	$path[0] eq $path[1];
+}
+
 # The NEEDs and WANTs in the header of a rule's prerequisite `dep'
 # (seen from the build dir), as [ said, dep ] pairs; `file' and `rule'
 # are who asked, for telling the user.  A tool need not
@@ -582,7 +602,7 @@ sub _tool
 			? read_deps($fs) : ();
 		if (defined $I{HAVE}) {
 			my $have = $self->_dep($I{HAVE}, "$dep: HAVE");
-			$have eq File::Spec->canonpath($dep)
+			$self->_same($have, $dep)
 				or die "E: $dep: You HAVE `$I{HAVE}'"
 					. ($have eq $I{HAVE} ? "" : " (which is `$have')")
 					. ",\n"

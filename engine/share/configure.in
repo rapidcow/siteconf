@@ -143,9 +143,10 @@ GetOptions(
 my $start = getcwd();
 
 # We are in the source tree, wherever we have been started from;
-# that is where $A says it is.
-my $srcdir = abs_path(File::Spec->rel2abs($D{A}, $FindBin::RealBin));
-defined $srcdir or die "E: cannot find the project root ($D{A}): $!\n";
+# that is where A says it is.
+my $A = isnull($D{A}) ? $Dd{A} : $D{A};
+my $srcdir = abs_path(File::Spec->rel2abs($A, $FindBin::RealBin));
+defined $srcdir or die "E: cannot find the project root ($A): $!\n";
 chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
 
 # -DB is the build directory, seen from the source tree; like

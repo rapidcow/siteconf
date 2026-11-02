@@ -26,6 +26,15 @@ Revision history of WwW-SiteConf
     * general configure manual: RdKw::WwW::SiteConf::Configure.
       Written by GPT-6 based on man/configure.pod from cooper-www.
 
+    *** A file named `render' in the project directory no longer
+        depends on ${B}/MY/option.mk implicitly.  This was already
+        the case in www-cellar 87aa96e7ace3f96d1595ad26b1b71a175f746abe
+        (Un-bake MY/option.mk as a dependency of render, on Aug 21)
+        so i'm not sure where Claude got that from when it generated
+        commit 0f20f3f31c51af9d0725a0e12c6c6c3f4fb12a67 (Oct 30)....
+        It is "breaking" nonetheless if you had an older render script
+        but I think it is for the better. :v
+
 0.01_03  2026-11-01  RC
     Template update. :[
 

@@ -78,22 +78,29 @@ assignments after it:
 C<B> is special: the build directory comes from this invocation's C<-DB>
 or the generated default, never from a saved file.  Specify C<-DB> again
 on subsequent runs when using a directory other than the default.
-C<A> is recomputed each time and cannot be set with C<-DA>.
+Likewise C<A>: it comes from C<-DA> or the generated default, and what
+F<MY/config.mk> says about it is never read back.
 
 =head1 PATHS
 
-The project root is fixed relative to the location of F<configure> by
-C<siteconf init -SA=path> (default C<.>).  Running F<configure> from another
-directory does not change that root.  Moving the script may require
-regenerating it with a different C<-SA>.
+The project root is seen from the directory F<configure> is run in, not
+from where F<configure> itself lives.  Its default is baked in by
+C<siteconf init -SA=path> (default C<.>), and C<-DA> overrides it:
+
+    /my/proj/configure -DA=/my/proj
+
+Every other relative path that F<configure> takes is seen from the project
+root, except as noted below.
 
 The standard definitions are:
 
 =over
 
-=item C<A>
+=item C<A> (default C<.>)
 
-The project root as seen from the build directory.  Derived automatically.
+The project root, as seen from the directory F<configure> is run in, or an
+absolute path.  What F<MY/config.mk> records as C<A> is something else: the
+project root as seen from the build directory, derived each time.
 
 =item C<B> (default C<.>)
 
@@ -158,26 +165,23 @@ L<RdKw::WwW::GenLib> for URL handling and template usage.
 At generation time, repeatable C<-o name:path> mappings choose where
 F<configure> and the preset's F<render> are written:
 
-    siteconf init -P web -SA=.. -o configure:tools/configure \
+    siteconf init -P web -o configure:tools/configure \
         -o render:bin/render
 
-Explicit destinations are relative to the current directory; their parent
-directories must already exist.  Bare C<-o path> names the configure output.
-Without mappings, F<configure> goes here and F<render> goes in the project
-root determined by the configure destination and C<-SA>.
+The configure destination is seen from the current directory; the
+renderer's is a name within the project root (C<-SA>), which it also uses
+as its C<HAVE>.  Parent directories must already exist.  Bare C<-o path>
+names the configure output.  Without mappings, F<configure> goes here and
+F<render> goes in the project root as F<render>.
 
-C<-o render:/dev/null> suppresses writing the renderer.  Likewise,
-C<-o configure:/dev/null> suppresses F<configure>; in that case the default
-renderer location is calculated as though F<configure> were written here.
-Existing configure and renderer files are skipped unless C<siteconf init -f>
-is used.  With C<-f>, keep local modifications as a patch to apply after
-regeneration.  Suppressed outputs remain suppressed even with C<-f>.
+C<-o render:/dev/null> suppresses writing the renderer, and
+C<-o configure:/dev/null> suppresses F<configure>.  Existing configure and
+renderer files are skipped unless C<siteconf init -f> is used.  With
+C<-f>, keep local modifications as a patch to apply after regeneration.
+Suppressed outputs remain suppressed even with C<-f>.
 
-If no files are written, init prints C<No files changed.> and, when existing
-files prevented writing, explains that C<-f> allows overwriting.  C<-q>
-silences this message.  Init exits with status 1 whenever the configure
-file is not written, even if explicitly suppressed.  Skipping the renderer
-alone does not affect the exit status.
+Init fails if F<configure> already exists and so was not written.
+Suppressing it, or skipping the renderer, is not a failure.
 
 Mappings do not update the rulebook's commands or dependencies.  If you
 rename the renderer to something other than F<render>, explicitly add

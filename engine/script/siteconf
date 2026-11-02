@@ -17,10 +17,10 @@ siteconf - configurable incremental build script generator
     #
     # -S: where things are, baked into ./configure as defaults
     #
-    # path to project root, seen from ./configure
+    # path to project root, seen from where ./configure is run
     #   -SA=.       (default)
     #   -SA=..      (alternatively if we live in a subdirectory
-    # path to project build dir (default to -SB=.)
+    # path to build dir, seen from the project root $A, or absolute
     #   -SB=.       (default)
     #   -SB=build   (CMake style)
     #   -SB=/tmp/writable/build/dir  (read-only checkout)
@@ -111,20 +111,24 @@ name, not a path.
 
 With C<-i>, may be repeated as C<-o name:path>, where I<name> is
 C<configure> or C<render>.  Bare C<-o path> means C<-o configure:path>.
-The last mapping for each name wins.  Explicit paths are relative to the
-current directory (absolute paths work too); parent directories must exist.
-Only the first colon separates name from path.  Prefix a bare filename
-containing a colon with C<./>.  Unknown names and empty paths are errors.
+The last mapping for each name wins.  Only the first colon separates
+name from path.  Prefix a bare filename containing a colon with C<./>.
+Unknown names and empty paths are errors.  Parent directories must exist.
 
-Without a mapping, F<configure> goes in the current directory and
-F<render> goes in the project root relative to F<configure> (C<-SA>).
+F<configure> goes in the current directory, or wherever its mapping says
+(seen from here, or absolute).  F<render> goes in the project root
+(C<-SA>), and a mapping for it names it as seen from there -- the same
+name that it declares as its C<HAVE> and that the rulebook uses.  Since
+that name ends up in a C<HAVE>, it may not contain whitespace, begin with
+C<">, or end with C<"> or C<?>.
+
 A destination of F</dev/null> suppresses that output.  Mapping C<render>
-requires a preset that supplies it.  Existing files are left alone unless C<-f> is passed, including at
-explicitly mapped destinations.
+requires a preset that supplies it.  Existing files are left alone unless
+C<-f> is passed, including at explicitly mapped destinations.
 
 For example:
 
-    siteconf init -P web -o configure:tools/configure -SA=.. \
+    siteconf init -P web -o configure:tools/configure \
         -o render:bin/render-page
 
 This does not rewrite your rulebook.  Update its renderer path in both
@@ -144,10 +148,10 @@ existing files are skipped, and processing continues.  F</dev/null> still
 suppresses an output even with C<-f>.  New files are reported as C<Wrote>,
 and replaced files as C<Overwrote>.
 
-If no files were written, report that fact (unless C<-q>), and suggest
-C<-f> when existing files prevented writing.  Init exits with status 1 if
-the configure file was not written, including when it was suppressed;
-a skipped renderer alone does not affect the exit status.
+An existing file that is skipped is reported as C<Not changing>.  Init
+fails (status 1) if F<configure> already exists and was therefore not
+written; suppressing it with F</dev/null> is not a failure, and neither
+is a skipped renderer.
 
 =item B<-q>, B<--quiet>
 

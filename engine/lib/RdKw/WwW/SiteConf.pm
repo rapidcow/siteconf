@@ -48,8 +48,8 @@ the C<:Q> modifier to shell-quote (C<${A:Q}>).  Targets are named
 relative to C<${b}>.  A prerequisite of a rule (a tool, such as the
 renderer) may have a header too: if it does, its C<NEED>s and C<WANT>s
 are the rule's as well, and its C<HAVE>, if any, must be its name as the
-rule spells it.  It needs no header, though.  (A rule that depends on a
-file named F<render> also depends on F<MY/option.mk>, header or not.)
+rule spells it.  It needs no header, though.  (This is how the renderer
+of C<-P web> comes to depend on F<MY/option.mk>.)
 
 Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along

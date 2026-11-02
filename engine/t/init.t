@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 97;
 use Cwd qw(getcwd);
 use FindBin;
 use lib "$FindBin::Bin/lib";

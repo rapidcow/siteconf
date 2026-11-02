@@ -5,8 +5,11 @@ Revision history of WwW-SiteConf
     + siteconf -i preset improvement!
       For the Web preset you can suppress render template output
       with -o render:/dev/null.  You can specify a different
-      names in general, e.g. say you organize utilities in a
+      name in general, e.g. say you organize utilities in a
       directory, then you can use -o render:gen/render.
+
+      The render template will adapt to the name you choose,
+      so it would read `# HAVE: gen/render' in the header.
 
       !!! Note that this file is (still) generated relative to
           the project root, and (still) needs a sane name since
@@ -34,6 +37,29 @@ Revision history of WwW-SiteConf
         commit 0f20f3f31c51af9d0725a0e12c6c6c3f4fb12a67 (Oct 30)....
         It is "breaking" nonetheless if you had an older render script
         but I think it is for the better. :v
+
+    + Prerequisites of a rule (the renderer or anything outside
+      ${a} in general) may join the dep graph too!  Their NEEDs
+      and WANTs are also parsed.  (This is how the Web preset's
+      render still depends on ${B}/MY/option.mk, in spite of the
+      removal of special-casing above.)
+
+    *** ./configure finds the project root from where you run it,
+        not from where it lives.  ./configure from its own directory
+        is unchanged; otherwise say where with the new -DA, as in
+        `/my/proj/configure -DA=/my/proj'.  (siteconf -i -DA is the
+        same as -SA; pick one.)
+
+    + ${A} is no longer special.  You can now ./configure -DA=...
+      to use a different project root (though that project should
+      contain all the files you NEED in your MANIFEST, obviously!)
+
+      * An absolute A is kept as is in MY/config.mk, like B is.
+        Only a *relative* A remains computed as a path relative
+        to the build directory.  This is so that people can use
+        absolute paths to certify that it is safe and probably
+        shorter for cd -- ${A:Q} too.)
+
 
 0.01_03  2026-11-01  RC
     Template update. :[

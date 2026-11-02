@@ -572,18 +572,30 @@ sub _node
 }
 
 # Whether two paths seen from the build dir are spelled alike, once
-# an absolute one is made relative too.  (The rules spell ${A}/x as
-# config.mk spells A, which may be absolute.)
+# the root in front of an absolute one is spelled as seen from the
+# build dir too.  (The rules spell ${A}/x as config.mk spells A, which
+# may be absolute.)  Only the root is ever resolved -- what is under
+# it, symlinks and all, is taken as it is written.
 sub _same
 {
 	my ($self, @path) = @_;
+	my $root = File::Spec->abs2rel($self->{Rabs}, $self->{Babs});
+	my %iHaz;
+	my @abs = grep { File::Spec->file_name_is_absolute($_) && !$iHaz{$_}++ }
+		map { File::Spec->canonpath($_) } $self->{D}{A}, $self->{Rabs};
 	for my $p (@path) {
 		$p = File::Spec->canonpath($p);
-		next unless File::Spec->file_name_is_absolute($p);
-		# Babs has no symlinks in it, so neither may this
-		my $dir = abs_path(dirname($p));
-		$p = File::Spec->catfile($dir, basename($p)) if defined $dir;
-		$p = File::Spec->abs2rel($p, $self->{Babs});
+		for my $r (@abs) {
+			if ($p eq $r) {
+				$p = $root;
+				last;
+			}
+			if (index($p, "$r/") == 0) {
+				$p = File::Spec->canonpath(File::Spec->catfile($root,
+					substr($p, length($r) + 1)));
+				last;
+			}
+		}
 	}
 	$path[0] eq $path[1];
 }

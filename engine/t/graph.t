@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 64;
+use Test::More tests => 66;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -236,6 +236,30 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\
 				R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
 			my $plan = eval { plan_of($dir, "$dir/build") };
 			ok($plan, "A = $A: tool HAVE $have") or diag $@;
+		}
+	}
+
+	# Absolute A, logically: a symlink under the root (say, to an annex)
+	# is not followed, and neither is a root reached through one.
+SKIP:	{
+		eval { symlink("",""); 1 } or skip "No symlink", 2;
+
+		my $ext = tempdir(CLEANUP => 1);
+		my $link = tempdir(CLEANUP => 1) . '/root';
+		my $dir = project({ %f, 'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]] ) },
+			B => 'build');
+		unlink "$dir/gen/tool"; rmdir "$dir/gen" or die "rmdir: $!";
+		open my $fh, '>', "$ext/tool" or die;
+		print $fh lines( HAVE => [qw[ gen/tool ]] );
+		close $fh or die;
+		symlink($ext, "$dir/gen") && symlink($dir, $link) or die "symlink: $!";
+		for my $A ($dir, $link) {
+			write_make("$dir/build/MY/config.mk", {
+				A => $A, B => 'build', a => 'html', b => 'site',
+				R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
+			my $plan = eval { plan_of($dir, "$dir/build") };
+			ok($plan, ($A eq $dir ? 'absolute A' : 'A through a symlink')
+				. ': symlinked gen/ is not resolved') or diag $@;
 		}
 	}
 

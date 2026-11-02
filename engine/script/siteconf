@@ -402,7 +402,6 @@ sub do_init
 			or die "$prog: no such preset: $opt->{P}\n";
 		$preset = slurp($file);
 		$preset =~ s/\n*\z/\n/;
-		# The web preset comes with a `render' script.
 		$render = eval { share_file("presets/$opt->{P}.render") };
 	}
 	exists $opt->{output}{render} && !defined $render
@@ -434,7 +433,7 @@ sub do_init
 		DEFHELP => $dhelp,
 		OPTHELP => $help,
 	);
-	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: template: \@$1\@?\n"/ge;
+	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: config template: \@$1\@?\n"/ge;
 
 	my $out = exists $opt->{output}{configure} ? $opt->{output}{configure} : 'configure';
 	my %out = ( configure => $out );
@@ -455,7 +454,14 @@ out:	while (my ($name, $dest) = each %out) {
 		if ($exists && !(-l $dest || unlink $dest)) {
 			print STDERR "$prog: unlink $dest: $!\n" unless $opt->{q};
 		}
-		my $contents = $name eq 'configure' ? $text : slurp($render);
+		my $contents;
+		if ($name eq 'configure') {
+			$contents = $text;
+		} elsif ($name eq 'render') {
+			$contents = render_text($opt, $render);
+		} else {
+			die "Unreachable\n";
+		}
 		open my $fh, '>:encoding(UTF-8)', $dest or die "$prog: open >$dest: $!\n";
 		print $fh $contents or die "$prog: write >$dest: $!\n";
 		close $fh or die "$prog: write >$dest: $!\n";
@@ -476,4 +482,33 @@ out:	while (my ($name, $dest) = each %out) {
 		return 1;
 	}
 	return 0;
+}
+
+# Generates <preset>.render.
+sub render_text
+{
+	my ($opt, $render) = @_;
+	my ($path, $name, $path_q);
+	if (defined $opt->{output}{render}) {
+		$path = $opt->{output}{render};
+		# Dangerous characters
+		if ($path eq '' || $path =~ /^"/ || $path =~ /\s/) {
+			die "E: Sorry, I cannot create render under "
+				. "the dangerous name @{[pq($path)]}.";
+		}
+		$name = basename($path) eq 'render'
+			? 'render' : "$path (render)";
+	} else {
+		$path = 'render';
+		$name = 'render';
+	}
+	$path_q = RdKw::WwW::SiteConf::shell_quote($path);
+	my $text = slurp($render);
+	my %sub = (
+		PATH => $path,
+		PATH_Q => $path_q,
+		NAME => $name,
+	);
+	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: $opt->{P}.render template: \@$1\@?\n"/ge;
+	$text;
 }

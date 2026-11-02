@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# HAVE: render
+# HAVE: @PATH@
 # NEED: ${B}/MY/option.mk
 #
 # (Note that we do not "NEED" MY/config.mk; doing so
@@ -9,13 +9,13 @@
 # We do depend on it to be very clear; it's just that
 # we don't need to re-render stuff when it changes.)
 #
-# render - Template Toolkit webpage renderer
+# @NAME@ - Template Toolkit webpage renderer
 #
 # To invoke this, add to your Makefile.in (or whatever
 # you set your "R" path to):
 #
-#    resource/location.html: render
-#       cd -- $A && ${^X} render -B $B -- $a/$@ $B/$b/$@
+#    resource/location.html: @PATH@
+#       cd -- $A && ${^X} @PATH_Q@ -B $B -- $a/$@ $B/$b/$@
 #
 # (Multiple files are okay!)
 #

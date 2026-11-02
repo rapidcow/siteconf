@@ -3,7 +3,7 @@ Revision history of WwW-SiteConf
 
 0.01_04
     + siteconf -i preset improvement!
-      For the Web preset you can suppress render script output
+      For the Web preset you can suppress render template output
       with -o render:/dev/null.  You can specify a different
       names in general, e.g. say you organize utilities in a
       directory, then you can use -o render:gen/render.
@@ -15,9 +15,13 @@ Revision history of WwW-SiteConf
           URL-safe and free of whitespace (ESPECIALLY \x{20} and
           any C0 controls).
 
-      *** The source file is omissible and defaults to configure
+      *** The template name is omissible and defaults to configure
           UNLESS your target file contains a colon, in which case
           you must now write `-o configure:weird:path'.
+
+      *** siteconf -i also no longer clobbers configure by default.
+          You must pass -f, or (in a script) pass -q and read the
+          exit status to see if configure was ever updated.
 
     * general configure manual: RdKw::WwW::SiteConf::Configure.
       Written by GPT-6 based on man/configure.pod from cooper-www.

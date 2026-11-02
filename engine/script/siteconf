@@ -406,6 +406,14 @@ sub do_init
 	}
 	exists $opt->{output}{render} && !defined $render
 		and die "$prog: preset does not supply a render output\n";
+	# render names itself in a HAVE, and read_deps cannot take just
+	# anything there (" is reserved for an escape mechanism, and ?
+	# is for soft-deps).
+	if (defined(my $path = $opt->{output}{render})) {
+		$path eq '' || $path =~ /\A"/ || $path =~ /[?"]\z/ || $path =~ /\s/
+			and die "$prog: dangerous name for render: @{[pq($path)]} "
+				. "is not supported (yet)\n";
+	}
 	# -D beyond B a b R F e (which configure already describes)
 	my @Dextra = grep { !exists $Dd{$_} } sort keys %Dx;
 	if (@Dextra) {
@@ -490,11 +498,6 @@ sub render_text
 	my ($path, $name, $path_q);
 	if (defined $opt->{output}{render}) {
 		$path = $opt->{output}{render};
-		# Dangerous characters
-		if ($path eq '' || $path =~ /^"/ || $path =~ /\s/) {
-			die "E: Sorry, I cannot create render under "
-				. "the dangerous name @{[pq($path)]}.";
-		}
 		$name = basename($path) eq 'render'
 			? 'render' : "$path (render)";
 	} else {

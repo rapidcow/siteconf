@@ -1,6 +1,11 @@
 Revision history of WwW-SiteConf
 
 
+0.01_04
+    * init accepts repeatable -o configure:path and -o render:path
+      mappings; /dev/null suppresses an output.
+    * general configure manual: RdKw::WwW::SiteConf::Configure.
+
 0.01_03  2026-11-01  RC
     Template update. :[
 

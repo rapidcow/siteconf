@@ -4,12 +4,14 @@ Makefile.PL
 README
 script/siteconf
 lib/RdKw/WwW/SiteConf.pm
+lib/RdKw/WwW/SiteConf/Configure.pod
 lib/RdKw/WwW/SiteConf/Make.pm
 lib/RdKw/WwW/SiteConf/Ninja.pm
 share/configure.in
 share/presets/web.config
 share/presets/web.render
 t/00-load.t
+t/init.t
 t/e2e-make.t
 t/e2e-ninja.t
 t/lib/E2E.pm

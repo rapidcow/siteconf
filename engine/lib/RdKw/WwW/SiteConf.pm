@@ -30,6 +30,8 @@ RdKw::WwW::SiteConf - read the build graph of a configured source tree
 
 =head1 DESCRIPTION
 
+For the generated configure script, see L<RdKw::WwW::SiteConf::Configure>.
+
 Three inputs make up a project, all found from F<MY/config.mk>:
 
 =over

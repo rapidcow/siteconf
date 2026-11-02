@@ -1,0 +1,229 @@
+=encoding UTF-8
+
+=head1 NAME
+
+RdKw::WwW::SiteConf::Configure - configuring a SiteConf project
+
+=head1 SYNOPSIS
+
+    # Project author: generate the script, with defaults.
+    siteconf init -SB=build -Sa=html -Sb=site
+
+    # Project user: configure, generate build rules, build.
+    ./configure -Otitle='My site'
+    siteconf make -B build
+    cd build && make
+
+    # A web project needs a site URL.
+    siteconf init -P web -SB=build
+    ./configure -Osite_url=https://example.org -Obase_url=/pages/
+    siteconf make -B build -G ninja
+    cd build && ninja
+
+=head1 RATIONALE
+
+A project may need to build in different places, with different options.
+For a web site, that includes the domain and URL prefix: the same sources
+should work on more than one server.  The generated F<configure> script
+records those choices so that the rulebook and the files being transformed
+can use them consistently.
+
+Filesystem routing and build options are stored separately.  Moving a
+build directory is not the same as changing the content of a page.  A
+renderer can depend on the options without rebuilding its output whenever
+an unrelated filesystem definition changes.
+
+=head1 DESCRIPTION
+
+L<siteconf> writes F<configure> with C<siteconf init> (or C<siteconf -i>).
+Run that script to write F<MY/config.mk> and F<MY/option.mk> in the chosen
+build directory.  Then run C<siteconf make> (or C<siteconf -g>) to generate
+the build file.  Configuring alone does not generate or run it.
+
+F<configure> checks its required Perl modules before configuring anything.
+The project author can add requirements with C<siteconf init -MModule>
+or C<-MModule=version>; a preset can supply its own requirements too.
+
+=head1 DEFINITIONS AND OPTIONS
+
+C<-Dname=value> sets a I<definition>, stored in F<MY/config.mk>.
+Definitions describe filesystem routing and are available for substitution
+in the rulebook.  C<-Oname=value> sets an I<option>, stored in
+F<MY/option.mk>.  Options affect the content or behavior of the build;
+the web renderer exposes them to templates as C<O>.
+
+Both switches may be repeated.  Names are case-sensitive, and splitting
+is at the first equals sign, so values can contain equals signs.  Quote
+values containing spaces or shell metacharacters:
+
+    ./configure -Otitle='A small garden' -Oquery='a=b'
+
+Unknown names are accepted for the project to interpret.  A preset may
+validate particular options.  C<-Dname> or C<-Oname> supplies an empty
+value; this is not a way to delete a saved key.
+
+=head2 Saved values and defaults
+
+Each invocation reads the existing configuration in the selected build
+directory.  Command-line values override saved values.  Generated defaults
+fill in missing or empty values; consequently an empty value restores a
+nonempty default when one exists.
+
+C<--reset> ignores saved configuration and clears the command-line
+assignments made before that switch.  Defaults still apply.  Put new
+assignments after it:
+
+    ./configure --reset -DB=build -Otitle='A new garden'
+
+C<B> is special: the build directory comes from this invocation's C<-DB>
+or the generated default, never from a saved file.  Specify C<-DB> again
+on subsequent runs when using a directory other than the default.
+C<A> is recomputed each time and cannot be set with C<-DA>.
+
+=head1 PATHS
+
+The project root is fixed relative to the location of F<configure> by
+C<siteconf init -SA=path> (default C<.>).  Running F<configure> from another
+directory does not change that root.  Moving the script may require
+regenerating it with a different C<-SA>.
+
+The standard definitions are:
+
+=over
+
+=item C<A>
+
+The project root as seen from the build directory.  Derived automatically.
+
+=item C<B> (default C<.>)
+
+The build directory, as seen from the project root, or an absolute path.
+F<configure> creates it if needed.  For example, C<-DB=build> selects a
+subdirectory of the project root, wherever the script is invoked from.
+
+=item C<a> (default C<html>)
+
+The source directory, relative to the project root, or an absolute path.
+
+=item C<b> (default C<site>)
+
+The output directory, relative to the build directory.  Must be relative;
+C<.> is allowed.
+
+=item C<R> (default C<Makefile.in>)
+
+The transformation rulebook, relative to the directory from which you run
+C<siteconf make>.  It is not relative to F<configure> or the project root.
+C<siteconf make -R path> overrides it for that generation.
+
+=item C<F> (default C<MANIFEST>)
+
+The manifest, using the same path base as C<R>.
+C<siteconf make -F path> overrides it for that generation.
+
+=item C<e> (default C<.ok>)
+
+The directory marker filename.  Must not contain a slash.
+
+=back
+
+The project author sets these defaults with C<siteconf init -Sname=value>.
+Additional definition defaults use C<-Dname=value>, and option defaults use
+C<-Oname=value>.  Run C<./configure -h> to see the generated script's defaults.
+
+Note that C<siteconf make -B path> is relative to the current directory,
+whereas C<./configure -DB=path> is relative to the project root.
+F<configure> prints a generation command with the appropriate C<-B>.
+
+=head1 WEB PRESET
+
+C<siteconf init -P web> adds the web preset's checks to F<configure> and
+writes a Template Toolkit renderer if one is not already present.
+The preset requires Template, URI, and RdKw::WwW::GenLib in addition to
+RdKw::WwW::GenGenLib, which every generated configure script needs.
+
+C<site_url> is required and C<base_url> defaults to C</>.  The preset uses
+L<RdKw::WwW::GenLib> to validate and normalize these URL options.  They are
+ordinary saved options, so changing C<site_url> alone does not discard a
+previously saved C<base_url>.
+
+    ./configure -Osite_url=https://example.org -Obase_url=/notes/
+
+The renderer exposes definitions as C<D>, options as C<O>, the current
+page's location as C<location>, and the C<locate> function.  See
+L<RdKw::WwW::GenLib> for URL handling and template usage.
+
+=head1 OUTPUT LOCATIONS
+
+At generation time, repeatable C<-o name:path> mappings choose where
+F<configure> and the preset's F<render> are written:
+
+    siteconf init -P web -SA=.. -o configure:tools/configure \
+        -o render:bin/render
+
+Explicit destinations are relative to the current directory; their parent
+directories must already exist.  Bare C<-o path> names the configure output.
+Without mappings, F<configure> goes here and F<render> goes in the project
+root determined by the configure destination and C<-SA>.
+
+C<-o render:/dev/null> suppresses writing the renderer.  Likewise,
+C<-o configure:/dev/null> suppresses F<configure>; in that case the default
+renderer location is calculated as though F<configure> were written here.
+An existing renderer is never overwritten.  F<configure> is regenerated,
+so keep local modifications as a patch to apply after generation.
+
+Mappings do not update the rulebook's commands or dependencies.  If you
+rename the renderer to something other than F<render>, explicitly add
+F<MY/option.mk> to the dependencies of rules using it.  See L<siteconf>.
+
+=head1 OPTIONS
+
+=over
+
+=item C<-Dname=value>, C<-Oname=value>
+
+Set a definition or option as described above.
+
+=item C<--reset>
+
+Ignore saved configuration and clear earlier command-line assignments.
+
+=item C<-h>, C<--help>, C<-?>
+
+Show help and the defaults compiled into this script.
+
+=item C<-q>, C<--quiet>
+
+Suppress progress messages and the suggested generation command.
+Errors are still reported.
+
+=back
+
+=head1 FILES
+
+=over
+
+=item F<configure>
+
+The generated script.  Usually committed with the project so its users
+can configure it without regenerating the script.
+
+=item F<${B}/MY/config.mk>
+
+Saved filesystem definitions.  C<A> and C<B> are recalculated on every run.
+
+=item F<${B}/MY/option.mk>
+
+Saved build options.  Rules depending on a file whose basename is F<render>
+automatically depend on this file too.  Other option consumers should
+declare that dependency explicitly.  Unchanged configuration is not
+rewritten, preserving timestamps for incremental builds.
+
+=back
+
+=head1 SEE ALSO
+
+L<siteconf>, L<RdKw::WwW::SiteConf>, L<RdKw::WwW::GenGenLib>,
+L<RdKw::WwW::GenLib>.
+
+=cut

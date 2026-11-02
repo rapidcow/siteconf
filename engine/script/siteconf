@@ -10,7 +10,7 @@ siteconf - configurable incremental build script generator
 
 =head1 SYNOPSIS
 
-    siteconf -i [-P preset] [-o configure] [-Sopt=val ...]
+    siteconf -i [-P preset] [-o [name:]path ...] [-Sopt=val ...]
              [-Dvar=val ...] [-Ovar=val ...]
     siteconf init ...                         # same
 
@@ -66,9 +66,11 @@ F<render> script next to the rules (in C<-SA>, which is the current directory
 by default), unless one is already there.  F<configure> requires an
 C<-Osite_url>, and sees to it that C<base_url> agrees.  The files
 are rendered through Template Toolkit; by convention with the
-namespaces C<D> and C<O> (including C<O.location>), and the function
+namespaces C<D> and C<O>, the variable C<location>, and the function
 C<locate>, though it is each F<render> that decides;
 see L<RdKw::WwW::GenLib/SYNOPSIS>.
+
+For the generated script, see L<RdKw::WwW::SiteConf::Configure>.
 
 =head1 OPTIONS
 
@@ -105,7 +107,35 @@ F<build.ninja>.
 
 With C<-g>, write I<file> in the build directory instead of F<Makefile>
 (or F<build.ninja>); say C<make -f Makefile.proj> to use it.  Just a
-name, not a path.  (With C<-i>, this is where F<configure> goes.)
+name, not a path.
+
+With C<-i>, may be repeated as C<-o name:path>, where I<name> is
+C<configure> or C<render>.  Bare C<-o path> means C<-o configure:path>.
+The last mapping for each name wins.  Explicit paths are relative to the
+current directory (absolute paths work too); parent directories must exist.
+Only the first colon separates name from path.  Prefix a bare filename
+containing a colon with C<./>.  Unknown names and empty paths are errors.
+
+Without a mapping, F<configure> goes in the current directory and
+F<render> goes in the project root relative to F<configure> (C<-SA>).
+A destination of F</dev/null> suppresses that output.  Mapping C<render>
+requires a preset that supplies it.  An existing renderer is left alone,
+even at an explicitly mapped destination.
+
+For example:
+
+    siteconf init -P web -o configure:tools/configure -SA=.. \
+        -o render:bin/render-page
+
+This does not rewrite your rulebook.  Update its renderer path in both
+the dependency and the recipe.  If the filename is no longer C<render>,
+add C<MY/option.mk> explicitly to the rule's dependencies so that option
+changes rebuild its targets:
+
+    index.html: ${A}/bin/render-page MY/option.mk
+        cd ${A:Q} && ${^X} bin/render-page -B ${B:Q} ${a}/index.html ${B:Q}/${b}/index.html
+
+Named mappings are only for C<-i>.
 
 =item B<-q>, B<--quiet>
 
@@ -139,7 +169,7 @@ use RdKw::WwW::SiteConf;
 
 my $prog = basename($0);
 my $usage = <<EOM;
-usage: $prog -i [-P preset] [-o file] [-q] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+usage: $prog -i [-P preset] [-o [name:]path ...] [-q] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
        $prog -g [-B builddir] [-G make] [-F manifest] [-R rulebook] [-o file] [-q]
        $prog -V [-V]
 EOM
@@ -147,7 +177,7 @@ EOM
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 utf8::decode($_) for @ARGV;
 
-my %opt = (S => {}, D => {}, O => {}, M => []);
+my %opt = (S => {}, D => {}, O => {}, M => [], outputs => []);
 # What `-i' was told, in the order it was told, for the header of
 # configure.  (Leaving out what does not alter its text: -i, -o, -q.)
 my @written;
@@ -155,7 +185,7 @@ GetOptions(
 	'i|init'   => sub { $opt{mode} = 'init' },
 	'g|make'   => sub { $opt{mode} = 'make' },
 	'P=s'      => sub { $opt{P} = $_[1]; push @written, "-P", $_[1] },
-	'o=s'      => \$opt{o},
+	'o=s'      => sub { push @{ $opt{outputs} }, $_[1] },
 	'M=s'      => sub { push @{ $opt{M} }, $_[1]; push @written, "-M$_[1]" },
 	'B=s'      => \$opt{B},
 	'G=s'      => \$opt{G},
@@ -199,6 +229,20 @@ if (@ARGV and $ARGV[0] =~ /\A(?:init|make)\z/) {
 }
 defined $opt{mode} or die $usage;
 @ARGV and die "$prog: too many arguments\n";
+
+# Keep output routing separate from the defaults written into configure.
+for my $output (@{ $opt{outputs} }) {
+	my ($name, $path) = ('configure', $output);
+	if ($output =~ m!\A([^/:]+):(.*)\z!s) {
+		($name, $path) = ($1, $2);
+		$opt{mode} eq 'init'
+			or die "$prog: named outputs are only for init\n";
+		$name eq 'configure' || $name eq 'render'
+			or die "$prog: unknown output name: $name\n";
+	}
+	length $path or die "$prog: empty output path\n";
+	$opt{mode} eq 'init' ? ($opt{output}{$name} = $path) : ($opt{o} = $path);
+}
 
 if ($opt{mode} eq 'init') {
 	for my $k (qw( B F G R )) {
@@ -345,10 +389,11 @@ sub do_init
 		$preset = slurp($file);
 		$preset =~ s/\n*\z/\n/;
 		# The web preset comes with a `render' script.
-		# Its name is not overrideable with -o...
 		# (though we won't clobber any existing `render' script.)
 		$render = eval { share_file("presets/$opt->{P}.render") };
 	}
+	exists $opt->{output}{render} && !defined $render
+		and die "$prog: preset does not supply a render output\n";
 	# -D beyond B a b R F e (which configure already describes)
 	my @Dextra = grep { !exists $Dd{$_} } sort keys %Dx;
 	if (@Dextra) {
@@ -378,18 +423,21 @@ sub do_init
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: template: \@$1\@?\n"/ge;
 
-	my $out = defined $opt->{o} ? $opt->{o} : 'configure';
-	open my $fh, '>:encoding(UTF-8)', $out or die "$prog: open >$out: $!\n";
-	print $fh $text or die "$prog: write >$out: $!\n";
-	close $fh or die "$prog: write >$out: $!\n";
-	chmod 0777 & ~umask, $out or die "$prog: chmod $out: $!\n";
-	print STDERR "Wrote $out\n" unless $opt->{q};
+	my $out = exists $opt->{output}{configure} ? $opt->{output}{configure} : 'configure';
+	if ($out ne '/dev/null') {
+		open my $fh, '>:encoding(UTF-8)', $out or die "$prog: open >$out: $!\n";
+		print $fh $text or die "$prog: write >$out: $!\n";
+		close $fh or die "$prog: write >$out: $!\n";
+		chmod 0777 & ~umask, $out or die "$prog: chmod $out: $!\n";
+		print STDERR "Wrote $out\n" unless $opt->{q};
+	}
 
 	# `render' goes in the project root, next to the rules that run it;
 	# one that is already there is yours, and is left alone.
 	if (defined $render) {
-		my $dest = File::Spec->catfile(dirname($out), $A, 'render');
-		if (!-e $dest) {
+		my $dest = exists $opt->{output}{render} ? $opt->{output}{render}
+			: File::Spec->catfile(dirname($out eq '/dev/null' ? 'configure' : $out), $A, 'render');
+		if ($dest ne '/dev/null' && !-e $dest && !-l $dest) {
 			my $text = slurp($render);
 			open my $rh, '>:encoding(UTF-8)', $dest or die "$prog: open >$dest: $!\n";
 			print $rh $text or die "$prog: write >$dest: $!\n";

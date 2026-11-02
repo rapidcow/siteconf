@@ -181,7 +181,8 @@ use RdKw::WwW::SiteConf;
 
 my $prog = basename($0);
 my $usage = <<EOM;
-usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
+                [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
        $prog -g [-B builddir] [-G make] [-F manifest] [-R rulebook] [-o file] [-q]
        $prog -V [-V]
 EOM

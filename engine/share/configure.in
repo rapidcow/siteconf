@@ -106,7 +106,7 @@ respectively, for the rulebook or for the files being transformed.
   --reset     Clear all configuration at this point
   -q          Disable tips (alias: --quiet)
 
-General manual: perldoc RdKw::WwW::SiteConf::Configure
+See also `perldoc RdKw::WwW::SiteConf::Configure'.
 EOM
 
 # `use open' covers the standard handles and `use utf8' our source,

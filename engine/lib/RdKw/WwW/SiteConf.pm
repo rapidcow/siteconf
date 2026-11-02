@@ -521,7 +521,7 @@ sub _node
 	# What the rule's own prerequisites (the tools) say they need, if
 	# they say anything at all
 	for my $dep (@{ $rule->{deps} }) {
-		my ($need, $want) = $self->_tool($dep);
+		my ($need, $want) = $self->_tool($dep, $file, $rule);
 		push @hneed, @$need;
 		push @hwant, @$want;
 	}
@@ -567,12 +567,13 @@ sub _node
 }
 
 # The NEEDs and WANTs in the header of a rule's prerequisite `dep'
-# (seen from the build dir), as [ said, dep ] pairs.  A tool need not
+# (seen from the build dir), as [ said, dep ] pairs; `file' and `rule'
+# are who asked, for telling the user.  A tool need not
 # have a header (or be text, or be a plain file); then it has none.
 # What we make has its own node, so it is not a tool.
 sub _tool
 {
-	my ($self, $dep) = @_;
+	my ($self, $dep, $file, $rule) = @_;
 	my $tool = $self->{tool}{$dep} ||= do {
 		my $fs = $self->_fs($dep);
 		my %I = !defined $self->_target($dep) && -f $fs && -T _
@@ -581,7 +582,8 @@ sub _tool
 			my $have = $self->_dep($I{HAVE}, "$dep: HAVE");
 			$have eq File::Spec->canonpath($dep)
 				or die "E: $dep: You HAVE $I{HAVE} (which is $have),"
-					. " but I need $dep?\n";
+					. " but I need $dep (for the rule for `$file',"
+					. " $self->{D}{R} line $rule->{line})?\n";
 		}
 		my $where = $dep;
 		{

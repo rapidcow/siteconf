@@ -132,11 +132,10 @@ For example:
         -o render:bin/render-page
 
 This does not rewrite your rulebook.  Update its renderer path in both
-the dependency and the recipe.  If the filename is no longer C<render>,
-add C<MY/option.mk> explicitly to the rule's dependencies so that option
-changes rebuild its targets:
+the dependency and the recipe.  (The renderer's own header C<NEED>s
+F<MY/option.mk>, so option changes still rebuild its targets.)
 
-    index.html: ${A}/bin/render-page MY/option.mk
+    index.html: ${A}/bin/render-page
         cd ${A:Q} && ${^X} bin/render-page -B ${B:Q} ${a}/index.html ${B:Q}/${b}/index.html
 
 Named mappings are only for C<-i>.

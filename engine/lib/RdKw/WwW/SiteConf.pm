@@ -45,8 +45,11 @@ like those of L<make(1)>, with C<${A}>, C<${B}>, C<${a}>, C<${b}>
 (and whatever else is in F<config.mk>) substituted, plus C<${@}> or
 C<${.TARGET}> for the file being made, C<${^X}> for our perl, and
 the C<:Q> modifier to shell-quote (C<${A:Q}>).  Targets are named
-relative to C<${b}>.  A rule that depends on a file named F<render>
-also depends on F<MY/option.mk>.
+relative to C<${b}>.  A prerequisite of a rule (a tool, such as the
+renderer) may have a header too: if it does, its C<NEED>s and C<WANT>s
+are the rule's as well, and its C<HAVE>, if any, must be its name as the
+rule spells it.  It needs no header, though.  (A rule that depends on a
+file named F<render> also depends on F<MY/option.mk>, header or not.)
 
 Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along
@@ -524,6 +527,13 @@ sub _node
 	my @hneed = map { [ $_, $self->_dep($_, $where) ] } @{ $I{NEED} || [] };
 	my @hwant = map { [ $_, $self->_dep($_, $where) ] } @{ $I{WANT} || [] };
 	my @rdep = map { [ $_, $_ ] } @{ $rule->{deps} };
+	# What the rule's own prerequisites (the tools) say they need, if
+	# they say anything at all
+	for my $dep (@{ $rule->{deps} }) {
+		my ($need, $want) = $self->_tool($dep);
+		push @hneed, @$need;
+		push @hwant, @$want;
+	}
 
 	my @deps = ($apath);
 	my $bdir = File::Spec->canonpath($D->{b});
@@ -565,6 +575,32 @@ sub _node
 	$done->();
 }
 
+# The NEEDs and WANTs in the header of a rule's prerequisite `dep'
+# (seen from the build dir), as [ said, dep ] pairs.  A tool need not
+# have a header (or be text, or be a plain file); then it has none.
+# What we make has its own node, so it is not a tool.
+sub _tool
+{
+	my ($self, $dep) = @_;
+	my $tool = $self->{tool}{$dep} ||= do {
+		my $fs = $self->_fs($dep);
+		my %I = !defined $self->_target($dep) && -f $fs && -T _
+			? read_deps($fs) : ();
+		if (defined $I{HAVE}) {
+			my $have = $self->_dep($I{HAVE}, "$dep: HAVE");
+			$have eq File::Spec->canonpath($dep)
+				or die "E: $dep: You have $I{HAVE} (which is $have),"
+					. " but the rules call it $dep?\n";
+		}
+		my $where = $dep;
+		{
+			need => [ map { [ $_, $self->_dep($_, $where) ] } @{ $I{NEED} || [] } ],
+			want => [ map { [ $_, $self->_dep($_, $where) ] } @{ $I{WANT} || [] } ],
+		};
+	};
+	($tool->{need}, $tool->{want});
+}
+
 =item B<plan>
 
 Reads everything, resolves what is C<WANT>ed, and returns the build
@@ -585,6 +621,7 @@ sub plan
 	my $D = $self->{D};
 	$self->{node} = {};
 	$self->{stack} = [];
+	$self->{tool} = {};
 	$self->{rules} = $self->_read_rules;
 
 	my @spec = $self->read_manifest(File::Spec->canonpath($D->{F}));

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 51;
+use Test::More tests => 56;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -182,6 +182,42 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\
 	ok($plan, 'a = `.\': plans') or diag $@;
 	is($plan->{node}{'a.html'}{apath}, 'a.html', 'a = `.\': apath') if $plan;
 	is_deeply($plan->{node}{'a.html'}{kids}, ['b.css'], 'a = `.\': HAVE agrees, and edges') if $plan;
+}
+
+# --- what the rule's prerequisites (tools) say in their headers
+{
+	my $rules = "a.html: \${A}/gen/tool \${A}/plain\n\tgen/tool \${a}/\${\@} \${B}/\${b}/\${\@}\n";
+	my %f = (
+		MANIFEST => $manifest,
+		'Makefile.in' => $rules,
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]] ),
+		'gen/tool' => lines( HAVE => [qw[ gen/tool ]], NEED => [qw[ gen/lib/Mod.pm ${B}/MY/option.mk ]],
+			WANT => [qw[ gen/maybe ]] ) . "print 1;\n",
+		'gen/lib/Mod.pm' => "1;\n",
+		'MY/option.mk' => '',
+		plain => "no header here\n",
+	);
+	my $dir = project({ %f });
+	my $plan = eval { plan_of($dir) };
+	ok($plan, 'tools: plans') or diag $@;
+	is_deeply($plan->{node}{'a.html'}{deps},
+		[qw( html/a.html gen/tool plain gen/lib/Mod.pm MY/option.mk site/.ok )],
+		'tools: a header NEED is an edge, a missing WANT is not, no header is fine') if $plan;
+
+	my %g = %f;
+	delete $g{'gen/lib/Mod.pm'};
+	$dir = project(\%g);
+	eval { plan_of($dir) };
+	like($@, qr/needs `gen\/lib\/Mod\.pm', which we don't seem to have/, 'tools: a missing NEED is fatal');
+
+	$dir = project({ %f, 'gen/tool' => lines( HAVE => [qw[ gen/other ]] ) });
+	eval { plan_of($dir) };
+	like($@, qr/gen\/tool: You have gen\/other .* but the rules call it gen\/tool/, 'tools: HAVE must agree');
+
+	$dir = project({ %f, 'gen/tool' => "\x00\x01\x02# NEED: nowhere\n" x 4 });
+	$plan = eval { plan_of($dir) };
+	ok($plan && !grep({ $_ eq 'nowhere' } @{ $plan->{node}{'a.html'}{deps} }),
+		'tools: a binary is not read') or diag $@;
 }
 
 # --- _target, by b

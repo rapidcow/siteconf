@@ -185,9 +185,9 @@ Suppressed outputs remain suppressed even with C<-f>.
 Init fails if F<configure> already exists and so was not written.
 Suppressing it, or skipping the renderer, is not a failure.
 
-Mappings do not update the rulebook's commands or dependencies.  If you
-rename the renderer to something other than F<render>, explicitly add
-F<MY/option.mk> to the dependencies of rules using it.  See L<siteconf>.
+Mappings do not update the rulebook's commands or dependencies; see
+L<siteconf>.  A renamed renderer still depends on F<MY/option.mk>, since
+its header says so.
 
 =head1 OPTIONS
 

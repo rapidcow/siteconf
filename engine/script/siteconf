@@ -484,10 +484,10 @@ out:	while (my ($name, $dest) = each %out) {
 	unless ($written{configure} || $out{configure} eq '/dev/null') {
 		print STDERR
 			"E: You already have configure"
-			.  ($out{configure} eq 'configure' ? "," : " at \`$out{configure}',\nE: ")
-			. "so I did not generate one.\n"
-			. "E: Pass -o /dev/null if you did mean to not generate\n"
-			. "E: configure, or -f to overwrite the existing one.\n"
+			.  ($out{configure} eq 'configure' ? "" : " at \`$out{configure}'")
+			. ".\n"
+			. "E: Pass -o /dev/null if you did mean to not generate configure,\n"
+			. "E: or -f to overwrite the existing one.\n"
 			unless $opt->{q};
 		return 1;
 	}

@@ -39,16 +39,18 @@ Revision history of WwW-SiteConf
         but I think it is for the better. :v
 
     + Prerequisites of a rule (the renderer or anything outside
-      ${a} in general) may join the dep graph too!  Their NEEDs
+      ${a} in general*) may join the dep graph too!  Their NEEDs
       and WANTs are also parsed.  (This is how the Web preset's
       render still depends on ${B}/MY/option.mk, in spite of the
       removal of special-casing above.)
+          * any prerequisite that `siteconf' does not build
+            is processed; they don't have to be outside ${a}
+            specifically.  Thanks Claude for the correction
 
-    *** ./configure finds the project root from where you run it,
-        not from where it lives.  ./configure from its own directory
-        is unchanged; otherwise say where with the new -DA, as in
-        `/my/proj/configure -DA=/my/proj'.  (siteconf -i -DA is the
-        same as -SA; pick one.)
+        *** The HAVE line is still checked for consistency;
+            this was previously ignored so you have to fix it
+            for any script generated like -o render:other-path
+            (or perhaps remove the line, but well... your choice.)
 
     + ${A} is no longer special.  You can now ./configure -DA=...
       to use a different project root (though that project should
@@ -58,7 +60,15 @@ Revision history of WwW-SiteConf
         Only a *relative* A remains computed as a path relative
         to the build directory.  This is so that people can use
         absolute paths to certify that it is safe and probably
-        shorter for cd -- ${A:Q} too.)
+        shorter for cd -- ${A:Q} too.
+
+    *** ./configure no longer resolves -DA relative to itself.
+        You must change into to the same directory or override
+        -DA; i.e., do `cd /my/proj && ./configure' or
+        `/my/proj/configure -DA=/my/proj'.  (A nice way to
+        convince yourself is to see if configure could still
+        be run if you run `perl -</path/to/configure'; it
+        wouldn't (and frankly should not) know where it is. :)
 
 
 0.01_03  2026-11-01  RC

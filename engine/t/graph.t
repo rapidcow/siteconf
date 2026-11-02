@@ -126,8 +126,8 @@ sub bad {
 	ok(!eval { plan_of($dir); 1 }, "$what: dies");
 	like($@, $re, "$what: says why");
 }
-bad(lines( HAVE => [qw[ a.html ]] ), qr/You HAVE a\.html .*\nE: but I need html\/a\.html/, 'HAVE is the path from the root');
-bad(lines( HAVE => [qw[ ${A}/${a}/b.html ]] ), qr/but I need html\/a\.html/, 'HAVE of another file');
+bad(lines( HAVE => [qw[ a.html ]] ), qr/You HAVE `a\.html' .*\nE: but I need `html\/a\.html'/, 'HAVE is the path from the root');
+bad(lines( HAVE => [qw[ ${A}/${a}/b.html ]] ), qr/but I need `html\/a\.html'/, 'HAVE of another file');
 bad(lines( NEED => [qw[ ${b}/b.css ]] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare ${b}');
 bad(lines( NEED => [qw[ $b/b.css ]] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare $b');
 bad(lines( NEED => [qw[ ${z}/b.css ]] ), qr/no such variable \$\{z\}/, 'no such variable');
@@ -212,7 +212,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\
 
 	$dir = project({ %f, 'gen/tool' => lines( HAVE => [qw[ gen/other ]] ) });
 	eval { plan_of($dir) };
-	like($@, qr/gen\/tool: You HAVE gen\/other .*\nE: but I need gen\/tool \(for the rule for `a\.html', \S*Makefile\.in line 1\)\?/, 'tools: HAVE must agree');
+	like($@, qr/gen\/tool: You HAVE `gen\/other' .*\nE: but I need `gen\/tool' \(for the rule for `a\.html', \S*Makefile\.in line 1\)\?/, 'tools: HAVE must agree');
 
 	$dir = project({ %f, 'gen/tool' => "\x00\x01\x02# NEED: nowhere\n" x 4 });
 	$plan = eval { plan_of($dir) };

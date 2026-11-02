@@ -100,7 +100,9 @@ The standard definitions are:
 
 The project root, as seen from the directory F<configure> is run in, or an
 absolute path.  What F<MY/config.mk> records as C<A> is something else: the
-project root as seen from the build directory, derived each time.
+project root as seen from the build directory, derived each time -- unless
+C<A> is absolute, in which case it is recorded as given.  (So is an
+absolute C<B>.)
 
 =item C<B> (default C<.>)
 

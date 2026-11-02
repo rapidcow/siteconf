@@ -176,8 +176,10 @@ unless ($reset) {
 #
 #   A  the source tree, seen from the build dir (`.' in-tree)
 #   B  the build dir, seen from the source tree (`.' in-tree)
+# An absolute A or B is spelled as it was given.
 $D{B} = $B;
-$D{A} = File::Spec->abs2rel($srcdir, $Babs);
+$D{A} = File::Spec->file_name_is_absolute($A) ? $A
+	: File::Spec->abs2rel($srcdir, $Babs);
 
 # What was not said, is the default (even if it was said to be empty).
 for my $k (keys %Dd) {

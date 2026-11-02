@@ -51,7 +51,7 @@ unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
 	my $other = tempdir(CLEANUP => 1);
 	system('cp', 'configure', "$other/configure") == 0 or die "cp: $?";
 	run('configure -DA', $^X, "$other/configure", '-q', "-DA=$src", '-DB=build-da');
-	like(slurp("$src/build-da/MY/config.mk"), qr/^A=\t\.\.$/m, '-DA: A seen from build');
+	like(slurp("$src/build-da/MY/config.mk"), qr/^A=\t\Q$src\E$/m, 'absolute -DA is recorded as is');
 	ok(!-e "$other/MY" && !-e "$other/build-da", '-DA: nothing made next to that configure');
 	run('elsewhere/configure', $^X, "$other/configure", '-q', '-DB=build-cwd');
 	ok(-f "$src/build-cwd/MY/config.mk", 'default A is the current directory');
@@ -60,6 +60,11 @@ unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
 	run('configure -DA relative', $^X, './configure', '-q', '-DA=' . File::Spec->abs2rel($src), '-DB=build-rel');
 	chdir $src or die;
 	ok(-f "$src/build-rel/MY/config.mk", 'relative -DA is seen from the current directory');
+	like(slurp("$src/build-rel/MY/config.mk"), qr/^A=\t\.\.$/m, '... and recorded as seen from build');
+	my $abs = tempdir(CLEANUP => 1);
+	run('configure -DB absolute', $^X, './configure', '-q', "-DA=$src", "-DB=$abs");
+	like(slurp("$abs/MY/config.mk"), qr/^B=\t\Q$abs\E$/m, 'absolute -DB is recorded as is');
+	like(slurp("$abs/MY/config.mk"), qr/^A=\t\Q$src\E$/m, '... and so is absolute -DA');
 }
 
 my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build ));

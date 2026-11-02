@@ -1,0 +1,10 @@
+$ sh -c 'set -x; . ./bootstrap'
++ . ./bootstrap
+++ set -e
+++ ./nw-conf
+Done!
+To generate build script, run: siteconf -g
+++ siteconf -g -G ninja
+E: gen/mkpub: You HAVE gen/render (which is gen/render), but I need gen/mkpub (for the rule for `index.html', Makefile.in line 4)?
+
+seems good!

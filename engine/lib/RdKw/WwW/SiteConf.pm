@@ -450,15 +450,6 @@ sub _read_rules
 		die "E: $where: invalid line: $_";
 	}
 	close $fh;
-
-	# Files that use `render' additionally depend on MY/option.mk.
-	# This can't really be reflected via a "render: MY/option.mk"
-	# rule, so...
-	for my $rule (values %rule) {
-		if (grep { basename($_) eq 'render' } @{ $rule->{deps} }) {
-			push @{ $rule->{deps} }, 'MY/option.mk';
-		}
-	}
 	\%rule;
 }
 

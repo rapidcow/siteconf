@@ -10,7 +10,7 @@ siteconf - configurable incremental build script generator
 
 =head1 SYNOPSIS
 
-    siteconf -i [-P preset] [-o [name:]path ...] [-Sopt=val ...]
+    siteconf -i [-P preset] [-o [name:]path ...] [-f] [-Sopt=val ...]
              [-Dvar=val ...] [-Ovar=val ...]
     siteconf init ...                         # same
 
@@ -63,7 +63,7 @@ See L<RdKw::WwW::SiteConf> for what those look like.
 
 With the C<web> preset (C<-P web>), F<siteconf -i> also writes a plain
 F<render> script next to the rules (in C<-SA>, which is the current directory
-by default), unless one is already there.  F<configure> requires an
+by default), unless one is already there (use C<-f> to overwrite).  F<configure> requires an
 C<-Osite_url>, and sees to it that C<base_url> agrees.  The files
 are rendered through Template Toolkit; by convention with the
 namespaces C<D> and C<O>, the variable C<location>, and the function
@@ -119,8 +119,8 @@ containing a colon with C<./>.  Unknown names and empty paths are errors.
 Without a mapping, F<configure> goes in the current directory and
 F<render> goes in the project root relative to F<configure> (C<-SA>).
 A destination of F</dev/null> suppresses that output.  Mapping C<render>
-requires a preset that supplies it.  An existing renderer is left alone,
-even at an explicitly mapped destination.
+requires a preset that supplies it.  Existing files are left alone unless C<-f> is passed, including at
+explicitly mapped destinations.
 
 For example:
 
@@ -136,6 +136,18 @@ changes rebuild its targets:
         cd ${A:Q} && ${^X} bin/render-page -B ${B:Q} ${a}/index.html ${B:Q}/${b}/index.html
 
 Named mappings are only for C<-i>.
+
+=item B<-f>
+
+With C<-i>, overwrite existing configure and renderer files.  Without it,
+existing files are skipped, and processing continues.  F</dev/null> still
+suppresses an output even with C<-f>.  New files are reported as C<Wrote>,
+and replaced files as C<Overwrote>.
+
+If no files were written, report that fact (unless C<-q>), and suggest
+C<-f> when existing files prevented writing.  Init exits with status 1 if
+the configure file was not written, including when it was suppressed;
+a skipped renderer alone does not affect the exit status.
 
 =item B<-q>, B<--quiet>
 
@@ -169,7 +181,7 @@ use RdKw::WwW::SiteConf;
 
 my $prog = basename($0);
 my $usage = <<EOM;
-usage: $prog -i [-P preset] [-o [name:]path ...] [-q] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
        $prog -g [-B builddir] [-G make] [-F manifest] [-R rulebook] [-o file] [-q]
        $prog -V [-V]
 EOM
@@ -179,7 +191,7 @@ utf8::decode($_) for @ARGV;
 
 my %opt = (S => {}, D => {}, O => {}, M => [], outputs => []);
 # What `-i' was told, in the order it was told, for the header of
-# configure.  (Leaving out what does not alter its text: -i, -o, -q.)
+# configure.  (Leaving out what does not alter its text: -i, -o, -f, -q.)
 my @written;
 GetOptions(
 	'i|init'   => sub { $opt{mode} = 'init' },
@@ -197,6 +209,7 @@ GetOptions(
 	'h|help'   => sub { print $usage; exit 0 },
 	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
+	'f'        => \$opt{f},
 ) or die $usage;
 
 if ($vee) {
@@ -249,9 +262,9 @@ if ($opt{mode} eq 'init') {
 		defined $opt{$k} and die "$prog: -$k is not for init\n";
 	}
 	$opt{written} = \@written;
-	do_init(\%opt);
+	exit do_init(\%opt);
 } else {
-	for my $k (qw( P )) {
+	for my $k (qw( P f )) {
 		defined $opt{$k} and die "$prog: -$k is not for make\n";
 	}
 	@{ $opt{M} } and die "$prog: -M is not for make\n";
@@ -389,7 +402,6 @@ sub do_init
 		$preset = slurp($file);
 		$preset =~ s/\n*\z/\n/;
 		# The web preset comes with a `render' script.
-		# (though we won't clobber any existing `render' script.)
 		$render = eval { share_file("presets/$opt->{P}.render") };
 	}
 	exists $opt->{output}{render} && !defined $render
@@ -424,26 +436,34 @@ sub do_init
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: template: \@$1\@?\n"/ge;
 
 	my $out = exists $opt->{output}{configure} ? $opt->{output}{configure} : 'configure';
-	if ($out ne '/dev/null') {
-		open my $fh, '>:encoding(UTF-8)', $out or die "$prog: open >$out: $!\n";
-		print $fh $text or die "$prog: write >$out: $!\n";
-		close $fh or die "$prog: write >$out: $!\n";
-		chmod 0777 & ~umask, $out or die "$prog: chmod $out: $!\n";
-		print STDERR "Wrote $out\n" unless $opt->{q};
-	}
-
-	# `render' goes in the project root, next to the rules that run it;
-	# one that is already there is yours, and is left alone.
+	my @outputs = ([ configure => $out ]);
 	if (defined $render) {
 		my $dest = exists $opt->{output}{render} ? $opt->{output}{render}
 			: File::Spec->catfile(dirname($out eq '/dev/null' ? 'configure' : $out), $A, 'render');
-		if ($dest ne '/dev/null' && !-e $dest && !-l $dest) {
-			my $text = slurp($render);
-			open my $rh, '>:encoding(UTF-8)', $dest or die "$prog: open >$dest: $!\n";
-			print $rh $text or die "$prog: write >$dest: $!\n";
-			close $rh or die "$prog: write >$dest: $!\n";
-			chmod 0777 & ~umask, $dest or die "$prog: chmod $dest: $!\n";
-			print STDERR "Wrote $dest\n" unless $opt->{q};
-		}
+		push @outputs, [ render => $dest ];
 	}
+
+	my (%written, $existing);
+	for my $output (@outputs) {
+		my ($name, $dest) = @$output;
+		next if $dest eq '/dev/null';
+		my $exists = -e $dest || -l $dest;
+		if (!$opt->{f} && $exists) {
+			$existing = 1;
+			next;
+		}
+		my $contents = $name eq 'configure' ? $text : slurp($render);
+		open my $fh, '>:encoding(UTF-8)', $dest or die "$prog: open >$dest: $!\n";
+		print $fh $contents or die "$prog: write >$dest: $!\n";
+		close $fh or die "$prog: write >$dest: $!\n";
+		chmod 0777 & ~umask, $dest or die "$prog: chmod $dest: $!\n";
+		$written{$name} = 1;
+		print STDERR ($exists ? "Overwrote" : "Wrote"), " $dest\n" unless $opt->{q};
+	}
+	unless (%written || $opt->{q}) {
+		print STDERR $existing
+			? "No files changed since target files already exist. To overwrite, pass -f.\n"
+			: "No files changed.\n";
+	}
+	return $written{configure} ? 0 : 1;
 }

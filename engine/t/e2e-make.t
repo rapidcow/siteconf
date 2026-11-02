@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 62;
+use Test::More;
 use Cwd ();
 use File::Spec;
 use File::Find;
@@ -17,6 +17,8 @@ use E2E;
 
 my $script = E2E::setup();
 my $make = E2E::make();
+# (only now: we may have skipped all)
+plan tests => 62;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build ));
 ok(-x 'configure', 'configure is executable');

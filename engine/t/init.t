@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 97;
+use Test::More;
 use Cwd qw(getcwd);
 use FindBin;
 use lib "$FindBin::Bin/lib";
@@ -10,6 +10,7 @@ use File::Path qw(make_path);
 
 my $root = getcwd();
 my $script = script_path();
+plan tests => 97;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 13;
+use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E;
@@ -12,6 +12,7 @@ use E2E;
 my $script = E2E::setup();
 my $ninja = $ENV{NINJA} || 'ninja';
 system("$ninja --version >/dev/null 2>&1") == 0 or plan skip_all => "no ninja";
+plan tests => 13;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q ));
 run('./configure', $^X, './configure', '-q');

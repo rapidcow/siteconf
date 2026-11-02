@@ -72,10 +72,8 @@ sub shell_quote
 my $prog = basename($0);
 
 # Baked in by `@PROG@ -i'.
-#   A   the project root, as seen from this script
 #   D   definitions, which are filesystem routing and nothing else
 #   O   options, which alter the state of the build
-my $A = @A@;
 my %Dd = (
 @DDEF@
 );
@@ -93,6 +91,7 @@ usage: $prog [-Dvar=val ...] [-Ovar=val ...] [--reset] [-hq]
 
 The following variables may be defined:
 
+  -DA         Project root, seen from current directory (default: $Dd{A})
   -DB         Build directory, seen from the source tree (default: $Dd{B})
   -Da         Source directory, seen from the source tree (default: $Dd{a})
   -Db         Target directory, seen from the build directory (default: $Dd{b})

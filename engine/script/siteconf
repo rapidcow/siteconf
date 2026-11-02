@@ -347,8 +347,9 @@ sub do_init
 	my ($opt) = @_;
 	my %S = %{ $opt->{S} };
 
-	# What -S sets: where we are, and the defaults for B a b R F e.
+	# What -S sets: where we are, and the defaults for A B a b R F e.
 	my %Dd = (
+		A => '.',
 		B => '.',
 		a => 'html',
 		b => 'site',
@@ -361,20 +362,18 @@ sub do_init
 		base_url => q{Host-relative base URL},
 		site_url => q{Absolute base URL},
 	);
-	my $A = delete $S{A};
-	$A = '.' unless defined $A;
 	for my $k (keys %S) {
 		exists $Dd{$k} or die "$prog: -S$k: no such thing"
-			. " (A B a b R F e)\n";
+			. " (valid: A B a b R F e)\n";
 		$Dd{$k} = $S{$k};
 		length $Dd{$k} or die "$prog: -S$k may not be empty.\n";
 	}
+	my $A = $Dd{A};
 	length $A or die "$prog: -SA may not be empty.\n";
 	File::Spec->file_name_is_absolute($Dd{b})
 		and die "$prog: -Sb must be a relative path.\n";
 
 	# -D and -O set what defaults to have in addition.
-	exists $opt->{D}{A} and die "$prog: -DA: use -SA.\n";
 	for my $k (sort keys %{ $opt->{D} }) {
 		exists $opt->{S}{$k}
 			and die "$prog: -S$k and -D$k are the same thing; pick one.\n";
@@ -425,7 +424,6 @@ sub do_init
 		PROG => $prog,
 		VERSION => $RdKw::WwW::SiteConf::VERSION,
 		ARGS => args_comment($opt->{written}),
-		A => pq($A),
 		DDEF => hash_lines(\%Dx),
 		ODEF => hash_lines(\%Ox),
 		MODULES => join("\n", @mod),

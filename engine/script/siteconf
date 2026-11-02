@@ -438,8 +438,8 @@ sub do_init
 	my $out = exists $opt->{output}{configure} ? $opt->{output}{configure} : 'configure';
 	my %out = ( configure => $out );
 	if (defined $render) {
-		my $dest = exists $opt->{output}{render} ? $opt->{output}{render}
-			: File::Spec->catfile(($out eq '/dev/null' ? () : dirname($out)), $A, 'render');
+		my $name = defined $opt->{output}{render} ? $opt->{output}{render} : 'render';
+		my $dest = File::Spec->catfile($A, $name);
 		$out{render} = $dest;
 	}
 

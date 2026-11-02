@@ -509,8 +509,8 @@ sub _node
 		my $where = "$apath: HAVE";
 		my $have = $self->_expand($I{HAVE}, $where);
 		my $want = File::Spec->canonpath("$D->{a}/$file");
-		$have eq $want or die "E: $apath: You have $I{HAVE} (which is $have),"
-			. " but I have $want?\n";
+		$have eq $want or die "E: $apath: You HAVE $I{HAVE} (which is $have),"
+			. " but I need $want?\n";
 	}
 
 	# What the headers say they need, and what the rules do
@@ -580,8 +580,8 @@ sub _tool
 		if (defined $I{HAVE}) {
 			my $have = $self->_dep($I{HAVE}, "$dep: HAVE");
 			$have eq File::Spec->canonpath($dep)
-				or die "E: $dep: You have $I{HAVE} (which is $have),"
-					. " but the rules call it $dep?\n";
+				or die "E: $dep: You HAVE $I{HAVE} (which is $have),"
+					. " but I need $dep?\n";
 		}
 		my $where = $dep;
 		{

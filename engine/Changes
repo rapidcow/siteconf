@@ -47,10 +47,10 @@ Revision history of WwW-SiteConf
             is processed; they don't have to be outside ${a}
             specifically.  Thanks Claude for the correction
 
-        *** The HAVE line is still checked for consistency;
-            this was previously ignored so you have to fix it
-            for any script generated like -o render:other-path
-            (or perhaps remove the line, but well... your choice.)
+        *** If such a file says what it HAVEs, that must agree
+            with what the rules call it.  A render you moved or
+            renamed by hand still says `HAVE: render'; fix that
+            line (or perhaps remove it, but well... your choice.)
 
     + ${A} is no longer special.  You can now ./configure -DA=...
       to use a different project root (though that project should
@@ -62,13 +62,13 @@ Revision history of WwW-SiteConf
         absolute paths to certify that it is safe and probably
         shorter for cd -- ${A:Q} too.
 
-    *** ./configure no longer resolves -DA relative to itself.
-        You must change into to the same directory or override
-        -DA; i.e., do `cd /my/proj && ./configure' or
-        `/my/proj/configure -DA=/my/proj'.  (A nice way to
-        convince yourself is to see if configure could still
-        be run if you run `perl -</path/to/configure'; it
-        wouldn't (and frankly should not) know where it is. :)
+    *** ./configure no longer resolves the project root (A, from
+        -SA) relative to itself.  You must change into configure's
+        own directory or override -DA; i.e., do `cd /my/proj &&
+        ./configure' or `/my/proj/configure -DA=/my/proj'.  (A
+        nice way to convince yourself is to see if configure could
+        still make sense if you run `perl </path/to/configure';
+        it wouldn't (and frankly should not) know where it is. :)
 
 
 0.01_03  2026-11-01  RC

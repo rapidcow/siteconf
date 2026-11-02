@@ -144,14 +144,9 @@ my $start = getcwd();
 
 # We are in the source tree, wherever we have been started from;
 # that is where $A says it is.
-my $srcdir = abs_path(File::Spec->rel2abs($A, $FindBin::RealBin));
-defined $srcdir or die "E: cannot find the project root ($A): $!\n";
+my $srcdir = abs_path(File::Spec->rel2abs($D{A}, $FindBin::RealBin));
+defined $srcdir or die "E: cannot find the project root ($D{A}): $!\n";
 chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
-
-exists $D{A} and die <<EUGH;
-E: `A' (the source tree, seen from the build directory) is
-E: derived from a hard-coded root, and thus cannot be set.
-EUGH
 
 # -DB is the build directory, seen from the source tree; like
 # `cmake -B' we go there, and make it if it is not there.  Its

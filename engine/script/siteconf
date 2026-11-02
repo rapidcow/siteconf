@@ -368,8 +368,6 @@ sub do_init
 		$Dd{$k} = $S{$k};
 		length $Dd{$k} or die "$prog: -S$k may not be empty.\n";
 	}
-	my $A = $Dd{A};
-	length $A or die "$prog: -SA may not be empty.\n";
 	File::Spec->file_name_is_absolute($Dd{b})
 		and die "$prog: -Sb must be a relative path.\n";
 
@@ -379,6 +377,9 @@ sub do_init
 			and die "$prog: -S$k and -D$k are the same thing; pick one.\n";
 	}
 	my %Dx = (%Dd, %{ $opt->{D} });
+	# -SA or -DA: where render goes, too
+	my $A = $Dx{A};
+	length $A or die "$prog: -DA may not be empty.\n";
 	my %Ox = %{ $opt->{O} };
 
 	# -Mmodule or -Mmodule=version: configure must find it
@@ -437,7 +438,7 @@ sub do_init
 	my %out = ( configure => $out );
 	if (defined $render) {
 		my $name = defined $opt->{output}{render} ? $opt->{output}{render} : 'render';
-		my $dest = File::Spec->catfile($A, $name);
+		my $dest = $name eq '/dev/null' ? $name : File::Spec->catfile($A, $name);
 		$out{render} = $dest;
 	}
 

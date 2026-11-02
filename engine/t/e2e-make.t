@@ -6,6 +6,8 @@
 use strict;
 use warnings;
 use Test::More;
+use Cwd ();
+use File::Spec;
 use File::Find;
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -42,6 +44,23 @@ unlike($quiet, qr/Writing|Updating/, 'reconfiguring changes nothing');
 like(slurp('build/MY/config.mk'), qr/^A=\t\.\.$/m, 'A seen from build');
 like(slurp('build/MY/option.mk'), qr/^site_url=\thttps:\/\/example\.test$/m, 'O');
 unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
+
+# A is seen from where configure is run, not from where it lives
+{
+	my $src = Cwd::getcwd();
+	my $other = tempdir(CLEANUP => 1);
+	system('cp', 'configure', "$other/configure") == 0 or die "cp: $?";
+	run('configure -DA', $^X, "$other/configure", '-q', "-DA=$src", '-DB=build-da');
+	like(slurp("$src/build-da/MY/config.mk"), qr/^A=\t\.\.$/m, '-DA: A seen from build');
+	ok(!-e "$other/MY" && !-e "$other/build-da", '-DA: nothing made next to that configure');
+	run('elsewhere/configure', $^X, "$other/configure", '-q', '-DB=build-cwd');
+	ok(-f "$src/build-cwd/MY/config.mk", 'default A is the current directory');
+	ok(!-e "$other/build-cwd", '... not where configure is');
+	chdir $other or die;
+	run('configure -DA relative', $^X, './configure', '-q', '-DA=' . File::Spec->abs2rel($src), '-DB=build-rel');
+	chdir $src or die;
+	ok(-f "$src/build-rel/MY/config.mk", 'relative -DA is seen from the current directory');
+}
 
 my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build ));
 like($err, qr/dropping WANT `extra\/index\.html'/, 'WANT with a missing need is dropped');

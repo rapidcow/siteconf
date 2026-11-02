@@ -410,7 +410,7 @@ sub do_init
 	# anything there (" is reserved for an escape mechanism, and ?
 	# is for soft-deps).
 	if (defined(my $path = $opt->{output}{render})) {
-		$path eq '' || $path =~ /\A"/ || $path =~ /[?"]\z/ || $path =~ /[[:space:]]/
+		$path eq '' || $path =~ /\A"/ || $path =~ /[?"]\z/ || $path =~ /\s/a
 			and die "$prog: dangerous name for render: @{[pq($path)]} "
 				. "is not supported (yet)\n";
 	}

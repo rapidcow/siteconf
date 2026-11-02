@@ -153,10 +153,10 @@ for my $bad ('a b', '"quoted', "tab\there", 'what?', 'quoted"', 'bin/"x"') {
     ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
         '-o', 'configure:bad-name', '-o', "render:$bad");
     isnt($status, 0, "reject render name <$bad>");
-    like($out, qr/^siteconf: bad name for render: /, 'useful diagnostic');
+    like($out, qr/^siteconf: dangerous name for render: .* is not supported/, 'useful diagnostic');
     ok(!-e "project/$bad" && !-e 'bad-name', 'nothing written');
 }
-for my $ok ('what?.pl', 'a"b') {
+for my $ok ('what?.pl', 'a"b', "non\xc2\xa0break") {
     ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
         '-o', 'configure:/dev/null', '-o', "render:$ok");
     is($status, 0, "accept render name <$ok>") or diag $out;

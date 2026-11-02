@@ -1,0 +1,17 @@
+seems like we not only have that but also
+have a static generation-time check
+
+$ sh -c 'set -x; . ./bootstrap'
++ . ./bootstrap
+++ set -e
+++ ./nw-conf
+Done!
+To generate build script, run: siteconf -g
+++ siteconf -g -G ninja
+E: MANIFEST.new line 2: goal `public' needs `index.html': needs `gen/lib/Local/WWW/Cooper.pm', which we don't seem to have
+E: 1 problem; no Makefile for you.
+
+(i have intentionally removed the file to
+produce this example.)
+
+so this is nice :D

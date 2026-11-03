@@ -181,7 +181,11 @@ RUSH
 			$fromhere{$_} = $Doverrides->{$_} if $_ eq 'F' or $_ eq 'R';
 		}
 	}
-	for my $k (qw( A B a b R F e )) {
+	# For ancient builds
+	defined $D{e} && length $D{e} or $D{e} = '.ok';
+	defined $D{F} && length $D{F} or $D{F} = 'MANIFEST';
+	defined $D{R} && length $D{R} or $D{R} = 'Makefile.in';
+	for my $k (qw( A B a b )) {
 		defined $D{$k} && length $D{$k}
 			or die "E: $conf: `$k' is missing.  Try reconfiguring.\n";
 	}

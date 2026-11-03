@@ -108,7 +108,7 @@ Return 2 if the file is created, 1 if updated, and 0 if not modified.
 
 This function is not compatible with the original B<update_file>
 in genlib 0.00_00; use
-C<< $r > 1 ? "created" : $r ? "updated" : "unchanged" >>.
+C<< $r > 1 ? 'created' : $r ? 'updated' : 'unchanged' >>.
 
 =cut
 

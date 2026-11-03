@@ -13,7 +13,8 @@ Revision history of WwW-SiteConf
       directory is not a suffix: ${a.b/c:R} is a.b/c.
 
     + ${@} and ${.TARGET} now work in the prerequisites of a rule,
-      so targets that share a rule can name their sources:
+      so targets that share a rule can name sources (additional to
+      the $A/$a/$@ file that has been implied up until this point):
 
         a.md.html b.md.html: ${A}/${a}/${@:R}
 

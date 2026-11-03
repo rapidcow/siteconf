@@ -158,6 +158,12 @@ chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
 # which is the very file it is about to choose.
 my $B = isnull($D{B}) ? $Dd{B} : $D{B};
 unless (-d $B) {
+	# Please don't --mkpath unless you absolutely need to.
+	# This is only a flag if you ABSOLUTELY depend on the
+	# old behavior.  Consider running the mkdir -p equivalent
+	# on your system and setting the approrpiate permission
+	# or ACL bits, and at MOST leave the leaf directory to
+	# us to create it.
 	if ($mkpath) {
 		require File::Path;
 		# make_path croaks, with its own position, on failure
@@ -166,9 +172,13 @@ unless (-d $B) {
 			die "E: cannot create $B: $err\n";
 		};
 	} else {
-		mkdir $B or die "E: cannot mkdir $B" . ($!{ENOENT}
-			? " due to missing non-leaf components\n"
-			: ": $!\n");
+		mkdir $B or $!{EEXIST}   # Forgive race condition...
+			or die "E: cannot mkdir $B: $!" . ($!{ENOENT}
+			# Provide a plausible explanation for ENOENT.
+			# There might be weirder cases with symlinks,
+			# but I'm not gonna investigate further lol.
+			? " (missing non-leaf components?)\n"
+			: "\n");
 	}
 }
 chdir $B or die "E: cannot chdir to $B: $!\n";

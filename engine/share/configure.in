@@ -98,8 +98,7 @@ The following variables may be defined:
   -DR         Transformation rules, from current directory (default: $Dd{R})
   -DF         Manifest, from current directory (default: $Dd{F})
   -De         Directory marker (default: $Dd{e})
-  -Dclean     Name of the cleaning rule, where & is a goal's name for one
-              rule per goal; just & for none (default: clean)
+  -Dclean     Clean rule template (default: $Dd{clean})
 @DEFHELP@@OPTHELP@
 Anything else you may -D or -O goes into MY/config.mk or MY/option.mk
 respectively, for the rulebook or for the files being transformed.

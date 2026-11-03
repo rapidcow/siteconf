@@ -1,6 +1,22 @@
 Revision history of WwW-SiteConf
 
 
+0.02_01  2026-11-03
+    + Makefile.in: more modifiers, in a module of their own
+      (RdKw::WwW::SiteConf::Modifiers).  As in bmake(1):
+
+        :E :H :R :T   suffix, dirname, all but suffix, basename
+        :S/old/new/   with ^old, old$, &, and the flags 1, g, W;
+                      not a regex.  old and new may have ${...}.
+
+      Modifiers chain (${@:R:Q}).  Unlike bmake, a dot in a
+      directory is not a suffix: ${a.b/c:R} is a.b/c.
+
+    + ${@} and ${.TARGET} now work in the prerequisites of a rule,
+      so targets that share a rule can name their sources:
+
+        a.md.html b.md.html: ${A}/${a}/${@:R}
+
 0.02_00  2026-11-02  RC
     + siteconf -i preset improvement!
       For the Web preset you can suppress render template output

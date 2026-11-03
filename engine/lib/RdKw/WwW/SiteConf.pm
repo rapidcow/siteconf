@@ -4,7 +4,9 @@ use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.02_00';
+use RdKw::WwW::SiteConf::Modifiers;
+
+our $VERSION = '0.02_01';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -43,8 +45,11 @@ Three inputs make up a project, all found from F<MY/config.mk>:
 Transformation rules from C<${a}/FILE> to C<${b}/FILE>.  Rules look
 like those of L<make(1)>, with C<${A}>, C<${B}>, C<${a}>, C<${b}>
 (and whatever else is in F<config.mk>) substituted, plus C<${@}> or
-C<${.TARGET}> for the file being made, C<${^X}> for our perl, and
-the C<:Q> modifier to shell-quote (C<${A:Q}>).  Targets are named
+C<${.TARGET}> for the file being made (in prerequisites too, each
+target of a rule having its own), C<${^X}> for our perl, and the
+modifiers C<:Q> to shell-quote (C<${A:Q}>), C<:E>, C<:H>, C<:R>, C<:T>
+and C<:S/old/new/> to take names apart (C<${@:R}>); see
+L<RdKw::WwW::SiteConf::Modifiers>.  Targets are named
 relative to C<${b}>.  A prerequisite of a rule (a tool, such as the
 renderer) may have a header too: if it does, its C<NEED>s and C<WANT>s
 are the rule's as well, and its C<HAVE>, if any, must be its name as the
@@ -365,17 +370,38 @@ sub read_manifest
 	@goal;
 }
 
-# What a single `${...}' (or `$x') of Makefile.in turns into.
+# Makefile.in with the `${...}'s (and `$x's) in `line' replaced.  The
+# modifiers (see RdKw::WwW::SiteConf::Modifiers) come after the name.
 sub _subst
 {
 	my ($self, $line, $node, $where) = @_;
 	my $D = $self->{D};
-	# `${A}/x' with an A of `.' would leave `./x' behind, so
-	# it takes its slash with it.
-	$line =~ s{\$(\{[^\}]+\}|.)(/?)}{
-		my ($x, $slash) = ($1, $2);
-		$x =~ s!^\{|\}$!!g;
-		my $mod = $x =~ s!:(\w+)$!! ? $1 : "";
+	my $out = '';
+	my $pos = 0;
+	while ((my $i = index($line, '$', $pos)) >= 0) {
+		$out .= substr($line, $pos, $i - $pos);
+		my $end = eval { RdKw::WwW::SiteConf::Modifiers::_expr_end($line, $i) };
+		defined $end or do {
+			# a `$' at the very end, or before a newline, is a `$'
+			$@ and die "E: $where: $@";
+			$out .= '$';
+			$pos = $i + 1;
+			next;
+		};
+		if (substr($line, $i + 1, 1) eq "\n") {
+			$out .= '$';
+			$pos = $i + 1;
+			next;
+		}
+		my $body = substr($line, $i + 1, $end - $i - 1);
+		my ($x, $mods) = ($body, undef);
+		if ($body =~ s!\A\{(.*)\}\z!$1!s) {
+			($x, $mods) = $body =~ /\A([^:]*)(?::(.*))?\z/s;
+		}
+		# `${A}/x' with an A of `.' would leave `./x' behind, so
+		# it takes its slash with it.
+		my $slash = substr($line, $end, 1) eq '/' ? '/' : '';
+		$pos = $end + length $slash;
 		my $val;
 		if ($x eq '$') {
 			$val = '$';
@@ -388,17 +414,21 @@ sub _subst
 			defined $D->{$x} or die "E: $where: undefined variable: \${$x}\n";
 			$val = $D->{$x};
 		}
-		length $mod and $mod ne 'Q'
-			and die "E: $where: unknown modifier :$mod\n";
+		if (defined $mods) {
+			$val = eval {
+				RdKw::WwW::SiteConf::Modifiers::_apply($val, $mods,
+					quote => \&shell_quote,
+					expand => sub { $self->_subst($_[0], $node, $where) });
+			};
+			defined $val or die $@ =~ /\AE: / ? $@ : "E: $where: $@";
+		}
 		if ($val eq '.' && length $slash) {
 			# `./' is no use to anyone
 			($val, $slash) = ('', '');
-		} elsif ($mod eq 'Q') {
-			$val = shell_quote($val);
 		}
-		$val . $slash;
-	}ge;
-	$line;
+		$out .= $val . $slash;
+	}
+	$out . substr($line, $pos);
 }
 
 # Makefile.in => { target => { recipe, deps, line } }
@@ -442,11 +472,11 @@ sub _read_rules
 			my ($src, $dep) = split /:/, $_, 2;
 			@node = split ' ', $src or die "E: $where: null target list\n";
 			$stanza = $line;
-			$dep = $self->_subst($dep, undef, $where);
 			for my $node (@node) {
 				_check_file($node, $where);
 				my $rule = ($rule{$node} ||= { recipe => '', deps => [], line => $line });
-				push @{ $rule->{deps} }, split ' ', $dep;
+				push @{ $rule->{deps} },
+					split ' ', $self->_subst($dep, $node, $where);
 			}
 			next;
 		}

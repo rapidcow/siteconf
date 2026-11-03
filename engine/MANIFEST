@@ -6,6 +6,7 @@ script/siteconf
 lib/RdKw/WwW/SiteConf.pm
 lib/RdKw/WwW/SiteConf/Configure.pod
 lib/RdKw/WwW/SiteConf/Make.pm
+lib/RdKw/WwW/SiteConf/Modifiers.pm
 lib/RdKw/WwW/SiteConf/Ninja.pm
 share/configure.in
 share/presets/web.config
@@ -17,6 +18,7 @@ t/e2e-ninja.t
 t/lib/E2E.pm
 t/lib/TestPaths.pm
 t/manifest.t
+t/modifiers.t
 t/graph.t
 t/ninja.t
 t/fixture/web/MANIFEST

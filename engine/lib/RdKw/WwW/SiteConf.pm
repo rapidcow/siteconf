@@ -4,8 +4,6 @@ use 5.006;
 use strict;
 use warnings;
 
-use RdKw::WwW::SiteConf::Modifiers;
-
 our $VERSION = '0.02_01';
 $VERSION = eval $VERSION;
 
@@ -140,6 +138,7 @@ use Cwd qw( abs_path );
 use File::Spec ();
 
 use RdKw::WwW::GenGenLib qw( read_make read_deps update_file );
+use RdKw::WwW::SiteConf::Modifiers;
 
 # Goals of the manifest cannot take these names; `Makefile' because
 # we write it, `clean' because it is ours, and `MY' is a directory.

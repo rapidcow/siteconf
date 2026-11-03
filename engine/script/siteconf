@@ -350,7 +350,7 @@ sub do_init
 	my ($opt) = @_;
 	my %S = %{ $opt->{S} };
 
-	# What -S sets: where we are, and the defaults for A B a b R F e.
+	# What -S sets: where we are, and the defaults for A B a b R F e clean.
 	my %Dd = (
 		A => '.',
 		B => '.',
@@ -359,6 +359,7 @@ sub do_init
 		R => 'Makefile.in',
 		F => 'MANIFEST',
 		e => '.ok',
+		clean => 'clean',
 	);
 	# Well-known options
 	my %OD = (
@@ -367,7 +368,7 @@ sub do_init
 	);
 	for my $k (keys %S) {
 		exists $Dd{$k} or die "$prog: -S$k: no such thing"
-			. " (valid: A B a b R F e)\n";
+			. " (valid: A B a b R F e clean)\n";
 		$Dd{$k} = $S{$k};
 		length $Dd{$k} or die "$prog: -S$k may not be empty.\n";
 	}
@@ -417,7 +418,7 @@ sub do_init
 			and die "$prog: dangerous name for render: @{[pq($path)]} "
 				. "is not supported (yet)\n";
 	}
-	# -D beyond B a b R F e (which configure already describes)
+	# -D beyond B a b R F e clean (which configure already describes)
 	my @Dextra = grep { !exists $Dd{$_} } sort keys %Dx;
 	if (@Dextra) {
 		$dhelp = join '', map { sprintf "  -D%-9s (default: \$Dd{%s})\n", $_, pK($_) }

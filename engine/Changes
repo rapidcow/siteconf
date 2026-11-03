@@ -25,6 +25,10 @@ Revision history of WwW-SiteConf
 
         a.md.html b.md.html: ${A}/${a}/${@:R}
 
+    *** configure only creates the leaf directory of ${B}
+        if missing.  To create intermediates use mkdir -p
+        or pass --mkpath.
+
 0.02_00  2026-11-02  RC
     + siteconf -i preset improvement!
       For the Web preset you can suppress render template output

@@ -15,7 +15,6 @@ use open ':std', ':encoding(UTF-8)';
 
 use Cwd qw(getcwd abs_path);
 use File::Basename;
-use File::Path qw(make_path);
 use File::Spec;
 use FindBin;
 use Getopt::Long qw( GetOptions );
@@ -106,6 +105,7 @@ respectively, for the rulebook or for the files being transformed.
   -h          This help message (alias: --help, -?)
   --reset     Clear all configuration at this point
   -q          Disable tips (alias: --quiet)
+  --mkpath    Create non-leaf build directories
 
 See also `perldoc RdKw::WwW::SiteConf::Configure'.
 EOM
@@ -134,6 +134,7 @@ GetOptions(
 	'h|help|?' => sub { print $usage; exit 0 },
 	'reset'    => sub { %D = (); %O = (); $reset = 1 },
 	'q|quiet'  => \$shutup,
+	'mkpath'   => \$mkpath,
 	'D=s'      => setter(D => \%D),
 	'O=s'      => setter(O => \%O),
 ) or die +( split(/^/, $usage, 2) )[0];
@@ -156,7 +157,14 @@ chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
 # *this* run: nothing about it is ever read back from MY/config.mk,
 # which is the very file it is about to choose.
 my $B = isnull($D{B}) ? $D{B} : $Dd{B};
--d $B or make_path($B);
+unless (-d $B) {
+	if (!$mkpath) {
+		mkdir $B or die "E: cannot mkdir $B: $!\n";
+	} else {
+		require File::Path;
+		File::Path::make_path($B);
+	}
+}
 chdir $B or die "E: cannot chdir to $B: $!\n";
 my $Babs = getcwd();
 

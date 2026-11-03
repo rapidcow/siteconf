@@ -166,8 +166,9 @@ unless (-d $B) {
 			die "E: cannot create $B: $err\n";
 		};
 	} else {
-		mkdir $B or die "E: cannot mkdir $B: $!"
-			. ($!{ENOENT} ? " (--mkpath makes the directories above it too)" : "") . "\n";
+		mkdir $B or die "E: cannot mkdir $B" . ($!{ENOENT}
+			? " due to missing non-leaf components\n"
+			: ": $!\n");
 	}
 }
 chdir $B or die "E: cannot chdir to $B: $!\n";

@@ -21,7 +21,7 @@
 #
 # GenLib is used solely for implementing [% locate PATH %].
 # If you prefer not to use it, simply remove the module
-# import line and exclude it from %V.  The script works
+# import line and exclude it from %v.  The script works
 # fine without it. ;)
 #
 # More information about Template Toolkit here:

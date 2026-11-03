@@ -2,6 +2,13 @@ Revision history of WwW-SiteConf
 
 
 0.02_01  2026-11-03
+    + -Dclean names the cleaning rule(s) of the Makefile.
+      The default is `clean', as before.  With an & in it, say
+      -Dclean='clean-&', each goal has a rule of its own (make
+      clean-all) which removes only what that goal needs.
+      A lone -Dclean='&' means no cleaning rules at all, and
+      `clean' is then free for you to use as a goal.
+
     + Makefile.in: more modifiers, in a module of their own
       (RdKw::WwW::SiteConf::Modifiers).  As in bmake(1):
 

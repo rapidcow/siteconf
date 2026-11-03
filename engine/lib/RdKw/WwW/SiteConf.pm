@@ -141,8 +141,9 @@ use RdKw::WwW::GenGenLib qw( read_make read_deps update_file );
 use RdKw::WwW::SiteConf::Modifiers;
 
 # Goals of the manifest cannot take these names; `Makefile' because
-# we write it, `clean' because it is ours, and `MY' is a directory.
-my %reserved_goal = map { $_ => 1 } qw( clean Makefile MY );
+# we write it, and `MY' is a directory.  (`clean', or whatever -Dclean
+# makes of it, is reserved too: see _clean_pattern.)
+my %reserved_goal = map { $_ => 1 } qw( Makefile MY );
 
 =item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, quiet =E<gt> 1 ]
 
@@ -187,6 +188,8 @@ RUSH
 	File::Spec->file_name_is_absolute($D{b})
 		and die "E: `b' prefix must be a relative path.\n";
 	$D{e} =~ m!/! and die "E: `e' (directory marker) may not contain a slash.\n";
+	defined $D{clean} && length $D{clean} and $D{clean} !~ /\A[A-Za-z0-9&][-\w.+&]*\z/
+		and die "E: `clean' may be made of letters, digits and -_.+& only: $D{clean}\n";
 	$self->{D} = \%D;
 	# The build directory and the project root, as they really are
 	$self->{Babs} = abs_path($self->{B});
@@ -325,6 +328,26 @@ You can also give a scalar reference instead of a file name.
 
 =cut
 
+# What -Dclean says the cleaning rules are called: a name, in which `&'
+# is the name of a goal (and then there is a rule for each), and `clean'
+# if it is not said.  A lone `&' (a rule that would be named like the
+# goal itself) means there are none; then this is undef.
+sub _clean_pattern
+{
+	my ($self) = @_;
+	my $c = $self->{D} ? $self->{D}{clean} : undef;
+	$c = 'clean' unless defined $c && length $c;
+	$c eq '&' ? undef : $c;
+}
+
+# Whether `name' is the one cleaning rule that is not for a goal
+sub _is_clean
+{
+	my ($self, $name) = @_;
+	my $pat = $self->_clean_pattern;
+	defined $pat && $pat !~ /&/ && $name eq $pat;
+}
+
 sub read_manifest
 {
 	my ($self, $file) = @_;
@@ -348,7 +371,7 @@ sub read_manifest
 			my $name = $arg[0];
 			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
 				or die "E: $where: bad goal name `$name'\n";
-			$reserved_goal{$name}
+			$reserved_goal{$name} || $self->_is_clean($name)
 				and die "E: $where: `$name' is a reserved goal name\n";
 			$seen{$name}++ and die "E: $where: goal `$name' is already made\n";
 			push @goal, $goal = { name => $name, need => [], want => [], line => $. };
@@ -669,6 +692,7 @@ that is C<NEED>ed cannot be had.
   node    { FILE => { file, apath, bpath, deps, recipe } }
   order   [ FILE ... ]    all files, in order of appearance
   dirs    [ { dir, marker, deps => [ MARKER ] } ]   parents first
+  clean   [ { name, files => [ BPATH ], markers => [ MARKER ] } ]
   D       the definitions, as in MY/config.mk
 
 =cut
@@ -740,13 +764,53 @@ sub plan
 		}
 	}
 
+	my @clean = $self->_clean_rules(\@goal, \@order, \@dir);
+
 	+{
 		goals => \@goal,
 		node => { map { $_ => $self->{node}{$_} } @order },
 		order => \@order,
 		dirs => \@dir,
+		clean => \@clean,
 		D => $D,
 	};
+}
+
+# The cleaning rules, as { name, files => [ BPATH ], markers => [ ... ] }
+# (see _clean_pattern).  The only rule that is not for a goal removes
+# everything we made, directory markers too; one that is takes what the
+# goal needs, and leaves the markers, which other goals may be using.
+sub _clean_rules
+{
+	my ($self, $goal, $order, $dir) = @_;
+	my $pat = $self->_clean_pattern;
+	defined $pat or return;
+	my $node = $self->{node};
+	my @rule;
+	if ($pat =~ /&/) {
+		my %pos; @pos{@$order} = 0 .. $#$order;
+		for my $g (@$goal) {
+			(my $name = $pat) =~ s/&/$g->{name}/g;
+			my %have;
+			my $walk; $walk = sub {
+				$have{$_[0]}++ and return;
+				$walk->($_) for @{ $node->{$_[0]}{kids} };
+			};
+			$walk->($_) for @{ $g->{files} };
+			push @rule, { name => $name, markers => [],
+				files => [ map { $node->{$_}{bpath} } sort { $pos{$a} <=> $pos{$b} } keys %have ] };
+		}
+	} else {
+		push @rule, { name => $pat, markers => [ map { $_->{marker} } @$dir ],
+			files => [ map { $node->{$_}{bpath} } @$order ] };
+	}
+	my %taken = (%reserved_goal, map { $_->{name} => 1 } @$goal);
+	for my $rule (@rule) {
+		my $name = $rule->{name};
+		$taken{$name}++ and die "E: -Dclean=$self->{D}{clean}: `$name' is"
+			. " also the name of a goal or another rule\n";
+	}
+	@rule;
 }
 
 # parents('a/b/c') => ('a/b', 'a')

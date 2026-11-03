@@ -134,6 +134,24 @@ C<siteconf make -F path> overrides it for that generation.
 
 The directory marker filename.  Must not contain a slash.
 
+=item C<clean> (default C<clean>)
+
+What the cleaning rules of the Makefile are called.  Without an
+C<&>, this is the name of the one rule that removes everything that was
+made.  With C<&>, each goal has a rule of its own, with the goal's name
+in place of C<&>, which removes what that goal needs (but not the
+directory markers, as they may be needed by another goal):
+
+    ./configure -Dclean=clean          # make clean (the default)
+    ./configure -Dclean='clean-&'      # make clean-all, make clean-small
+    ./configure -Dclean='&'            # none
+
+A lone C<&> would name each rule after its goal, which cannot be, so it
+means there are none.  Such a name is no longer reserved: you may
+have a goal called C<clean> then.  It is an error for a rule to have
+the name of a goal, or of C<Makefile> or C<MY>.  This only matters to
+the Makefile backend.
+
 =back
 
 The project author sets these defaults with C<siteconf init -Sname=value>.

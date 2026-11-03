@@ -19,6 +19,7 @@ t/lib/E2E.pm
 t/lib/TestPaths.pm
 t/manifest.t
 t/modifiers.t
+t/clean.t
 t/graph.t
 t/ninja.t
 t/fixture/web/MANIFEST

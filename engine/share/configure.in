@@ -166,11 +166,11 @@ unless (-d $B) {
 	# us to create it.
 	if ($mkpath) {
 		require File::Path;
-		# make_path croaks, with its own position, on failure
-		eval { File::Path::make_path($B); 1 } or do {
-			(my $err = $@) =~ s/ at \S+ line \d+\.?\n\z//;
-			die "E: cannot create $B: $err\n";
-		};
+		File::Path::make_path($B, { error => \my $err });
+		if (@$err) {
+			my ($path, $why) = %{ $err->[0] };
+			die "E: cannot create " . (length $path ? $path : $B) . ": $why\n";
+		}
 	} else {
 		mkdir $B or $!{EEXIST}   # Forgive race condition...
 			or die "E: cannot mkdir $B: $!" . ($!{ENOENT}

@@ -20,6 +20,7 @@ t/lib/TestPaths.pm
 t/manifest.t
 t/modifiers.t
 t/clean.t
+t/configure.t
 t/graph.t
 t/ninja.t
 t/fixture/web/MANIFEST

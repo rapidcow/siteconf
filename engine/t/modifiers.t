@@ -12,7 +12,7 @@ use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
 
-my %D = ( A => '.', B => '.', a => 'html', b => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b' );
+my %D = ( A => '.', B => '.', a => 'html', b => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Y => 'xa$ xa$$ xa', md => '.md', html => '.html', F => 'a.md b.md.md c.mdx' );
 my $sc = bless { D => \%D }, 'RdKw::WwW::SiteConf';
 sub s_ { $sc->_subst($_[0], $_[1], 'test') }
 
@@ -53,6 +53,17 @@ my @ok = (
 	['${W:S/a/\&/}',    '&a b&'],
 	['${@:S/.html$//}', 'x/y.md', 'x/y.md.html'],
 	['${@:S/^x\///}',  'y.md.html', 'x/y.md.html'],
+	# dollars: `$$' is a `$', and only a lone one before the delimiter anchors
+	['${Y:S/a$$//}',       'x x$ xa'],
+	['${Y:S/a$$$//}',      'x xa$$ xa'],
+	['${Y:S/a\$$//}',      'x xa$$ xa'],
+	['${Y:S/a$$$$//}',     'xa$ x xa'],
+	['${Y:S/a$$$$$/X/}',   'xa$ xX xa'],
+	['${Y:S/a$//}',        'xa$ xa$$ x'],
+	['${Y:S/a/$$/}',       'x$$ x$$$ x$'],
+	['${Y:S/a/&$/}',       'xa$$ xa$$$ xa$'],
+	['${F:S/${md}$/${html}/}', 'a.html b.md.html c.mdx'],
+	['${F:S/${md}/${html}/}',  'a.html b.html.md c.htmlx'],
 	['${W:S/a/b/:S/b/c/g}', 'ca cc'],
 	['${W:S,a,/,}',     '/a b/'],
 	['${W:S/a/\//}',    '/a b/'],
@@ -68,7 +79,7 @@ my @ok = (
 	['${W:S/a/X\}/}',   'X}a bX}'],
 	['$$ ${A:Q}/b $',   '$ b $'],
 );
-plan tests => @ok + 11 + 3;
+plan tests => @ok + 12 + 3;
 
 for my $c (@ok) {
 	my ($in, $want, $node) = @$c;
@@ -87,6 +98,7 @@ for my $c (
 	['${W:S}',         qr/unterminated :S/],
 	['${W:S:a:b:}',    qr/bad delimiter/],
 	['${W:S/a/b/',     qr/unterminated `\$\{W/],
+	['${Y:S/a/b$}',    qr/unterminated :S/],
 ) {
 	my ($in, $re) = @$c;
 	eval { s_($in) };

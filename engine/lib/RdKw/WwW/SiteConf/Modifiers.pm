@@ -44,6 +44,18 @@ C<new> is C<old>.  The delimiter may be any character; it, C<^>, C<$>,
 C<&> and C<\> are literal after a backslash.  Both parts may have
 C<${...}> in them.  This is I<not> a regular expression.
 
+Dollar signs are read as everywhere else in F<Makefile.in>: C<$$> is a
+C<$>, and C<${x}> or C<$x> is a variable.  The only C<$> that is not
+expanded is the last one, if it comes right before the delimiter, in
+C<old>: that one anchors.  (In C<new> it is just a C<$>.)  So C<a$$/>
+is the text C<a$>, C<a$$$/> is that text at the end of a word (as is
+C<a\$$/>), and C<a$$$$/> is C<a$$>.  A C<$> that is left over with
+nothing after it is an error.
+
+!!! L<bmake(1)> differs here: any run of C<$> before the delimiter
+only anchors, and a literal C<$> must be C<\$>.  That works here too,
+but C<$$> is a C<$> as well.
+
 The flags are C<1> (stop after the first word that matched), C<g> (every
 occurrence in a word) and C<W> (the value is a single word).
 

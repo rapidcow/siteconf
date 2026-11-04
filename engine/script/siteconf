@@ -374,8 +374,9 @@ sub do_init
 	}
 	File::Spec->file_name_is_absolute($Dd{b})
 		and die "$prog: -Sb must be a relative path.\n";
-	# (c is not in %Dd unless said: if not, configure makes it b)
-	exists $Dd{c} && File::Spec->file_name_is_absolute($Dd{c})
+	# c is always there; the same as b means it goes where b goes
+	exists $Dd{c} or $Dd{c} = $Dd{b};
+	File::Spec->file_name_is_absolute($Dd{c})
 		and die "$prog: -Sc must be a relative path.\n";
 
 	# -D and -O set what defaults to have in addition.
@@ -384,6 +385,8 @@ sub do_init
 			and die "$prog: -S$k and -D$k are the same thing; pick one.\n";
 	}
 	my %Dx = (%Dd, %{ $opt->{D} });
+	# (-Db here moves c too, unless c is said)
+	exists $S{c} || exists $opt->{D}{c} or $Dx{c} = $Dx{b};
 	# -SA or -DA: where render goes, too
 	my $A = $Dx{A};
 	length $A or die "$prog: -DA may not be empty.\n";

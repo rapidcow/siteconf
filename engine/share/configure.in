@@ -94,8 +94,7 @@ The following variables may be defined:
   -DB         Build directory, seen from the source tree (default: $Dd{B})
   -Da         Source directory, seen from the source tree (default: $Dd{a})
   -Db         Target directory, seen from the build directory (default: $Dd{b})
-  -Dc         Cache directory, seen from the build directory (default: the
-              -Sc of siteconf -i, if given; else the value of -Db)
+  -Dc         Cache directory, seen from the build directory (default: @{[ $Dd{c} ne $Dd{b} ? $Dd{c} : '-Db' ]})
   -DR         Transformation rules, from current directory (default: $Dd{R})
   -DF         Manifest, from current directory (default: $Dd{F})
   -De         Directory marker (default: $Dd{e})
@@ -212,7 +211,9 @@ $D{A} = File::Spec->file_name_is_absolute($A) ? $A
 	: File::Spec->abs2rel($srcdir, $Babs);
 
 # What was not said, is the default (even if it was said to be empty).
+# (c is below: if it is b by default, it is whatever b is now)
 for my $k (keys %Dd) {
+	next if $k eq 'c';
 	$D{$k} = $Dd{$k} if isnull($D{$k});
 }
 for my $k (keys %Od) {
@@ -233,7 +234,7 @@ File::Spec->file_name_is_absolute($D{b})
 # c, the cache: -Dc, or else -Sc (which made it a default above), or
 # else b.  It is always written, so that it is never taken to be b by
 # something that reads MY/config.mk.
-isnull($D{c}) and $D{c} = $D{b};
+isnull($D{c}) and $D{c} = !isnull($Dd{c}) && $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
 length $D{c} or die "E: `c' may not be empty.\n";
 File::Spec->file_name_is_absolute($D{c})

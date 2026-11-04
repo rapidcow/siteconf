@@ -129,7 +129,9 @@ L<RdKw::WwW::SiteConf>).  Must be relative.  It is, in this order:
     -Sc to siteconf -i (a default, as -Dc is to it)
     -Db, as it is configured
 
-If it is only the same as C<b> from having been left out, it follows
+In the script that C<siteconf -i> writes, C<c> is always there, and
+the same as C<b> means "whatever C<b> is": no distinction between the
+build and the cache.  Likewise, if it is only the same as C<b> from having been left out, it follows
 a C<-Db> that changes it; one that was said stays.  Either way
 F<MY/config.mk> always has a C<c>, even when it is the same as C<b>,
 and what reads it (siteconf itself) refuses one without.  So that

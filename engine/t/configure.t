@@ -10,7 +10,7 @@ use Cwd ();
 my $script = script_path();
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
-plan tests => 34;
+plan tests => 36;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -57,6 +57,12 @@ unlike($out, qr/ at \S+ line \d+/, 'and has no position');
 
 ($status, $out) = run('configure', '-q', '-DB=');
 is($status, 0, 'an empty -DB is the default') or diag $out;
+
+mkdir "$tmp/abs" or die "mkdir: $!";
+($status, $out) = run('configure', "-DB=$tmp/abs");
+is($status, 0, 'an absolute -DB') or diag $out;
+like($out, qr/^To generate build script, run: \S+ -g -B \Q$tmp\E\/abs$/m,
+	'... is told to the user as it was given');
 
 ($status, $out) = run('configure', '-h');
 like($out, qr/\[--mkpath\]/, 'usage mentions it');

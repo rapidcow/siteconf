@@ -252,8 +252,10 @@ for my $f ([ option => \%O ], [ config => \%D ]) {
 }
 
 # Compute $B for siteconf -g, as seen from the current directory
-# (not from the source tree, which is where -DB is seen from)
-my $Bhere = File::Spec->abs2rel($Babs, $start);
+# (not from the source tree, which is where -DB is seen from);
+# an absolute one is spelled as it was given, like in config.mk
+my $Bhere = File::Spec->file_name_is_absolute($B) ? $B
+	: File::Spec->abs2rel($Babs, $start);
 my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);
 unless ($shutup) {
 	print STDERR "Done!\n";

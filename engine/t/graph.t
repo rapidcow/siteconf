@@ -4,10 +4,11 @@
 
 use strict;
 use warnings;
-use Test::More tests => 100;
+use Test::More tests => 102;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
+use Cwd ();
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
@@ -106,6 +107,23 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		'a.html needs site/b.css') or diag explain $plan->{node}{'a.html'}{deps};
 	is_deeply($plan->{node}{'b.css'}{deps}[2], 'site/c.css', 'and so on');
 	ok(!grep({ /^MY\// } @{ $plan->{node}{'a.html'}{deps} }), 'no MY/ in it');
+}
+
+# --- an absolute B: ${B}/${b}/x is still something we make
+{
+	my $dir = project({
+		MANIFEST => $manifest,
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css ]] ),
+		'html/b.css' => lines( HAVE => [qw[ ${A}/${a}/b.css ]] ),
+	}, B => 'build');
+	for my $B ("$dir/build", Cwd::abs_path("$dir/build")) {
+		write_make("$dir/build/MY/config.mk", {
+			A => '..', B => $B, a => 'html', b => 'site', c => 'site',
+			R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
+		my $plan = eval { plan_of($dir, "$dir/build") };
+		ok($plan && $plan->{order} && "@{ $plan->{order} }" eq 'b.css a.html',
+			"B = $B: its own files are made first") or diag $@;
+	}
 }
 
 # --- a cycle

@@ -269,11 +269,24 @@ sub _fs
 # Paths come in two frames: the project root (what headers say, see
 # _expand), and the build directory (what the Makefile says, and what
 # we can open from here).  This is the way over.  Whatever is absolute
-# stays that way.
+# stays that way, unless it is in the build directory (as ${B}/${b}/x
+# is when B is absolute, whether spelled as configured or as it really
+# is); then it is seen from there like the rest, or we would not know
+# it for something we make.
 sub _to_build
 {
 	my ($self, $path) = @_;
-	return File::Spec->canonpath($path) if File::Spec->file_name_is_absolute($path);
+	if (File::Spec->file_name_is_absolute($path)) {
+		$path = File::Spec->canonpath($path);
+		my @root = ($self->{Babs});
+		File::Spec->file_name_is_absolute($self->{D}{B})
+			and unshift @root, File::Spec->canonpath($self->{D}{B});
+		for my $root (@root) {
+			$root eq File::Spec->rootdir and next;
+			index($path, "$root/") == 0 and return substr($path, length($root) + 1);
+		}
+		return $path;
+	}
 	File::Spec->abs2rel(File::Spec->rel2abs($path, $self->{Rabs}), $self->{Babs});
 }
 

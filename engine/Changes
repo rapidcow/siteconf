@@ -9,10 +9,8 @@ Revision history of WwW-SiteConf
       removes only what that goal needs.  A lone -Dclean='&'
       suppresses generation of any clean rules.
 
-    + Comments in the headers of Makefile.in rules: from a # that
-      starts a line or follows whitespace, as in make (but not in
-      recipes).  Comment lines may also sit inside a continued
-      header, between the backslashed lines; they are skipped.
+    + Comment lines may sit inside a continued rule header of
+      Makefile.in, between the backslashed lines; they are skipped.
 
     + More modifiers for Makefile.in!  (Modifiers.pm)
       Borrowed from BSD make(1):

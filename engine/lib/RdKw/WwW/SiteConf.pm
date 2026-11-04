@@ -93,13 +93,10 @@ something needs them.
 
 Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along
-with indentation on the next line, are replaced by a space.  A C<#> at
-the start of a line or after whitespace, and followed by whitespace or
-the end of the line, begins a comment, to the end of the line (but not
-in a recipe, which is the shell's); any other C<#> is just that.  So a
-backslash before a comment continues nothing.  Lines that are only a
-comment in between are skipped, and do not end the list -- unlike in
-L<make(1)>, where one would take the rest of the list with it:
+with indentation on the next line, are replaced by a space.  Lines
+that are only a comment (C<#> after any indentation) in between are
+skipped, and do not end the list -- unlike in L<make(1)>, where one
+would take the rest of the list with it:
 
     ${b}/index.html \
     ${b}/about.html \
@@ -564,18 +561,6 @@ sub _source_of
 	$dep =~ s!\A\s*(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)/+!! ? $dep : undef;
 }
 
-# A line of a rule header without its comment: a `#' that begins the
-# line or follows whitespace, and is followed by whitespace or the end
-# of the line (so `#foo' is a word), and all after it (but the newline, which
-# a backslash before the comment no longer reaches).  A `#' inside a
-# word, or in a `${...}', is just a `#'.
-sub _uncomment
-{
-	my ($line) = @_;
-	$line =~ s/(\$(?:\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})?)|(?:^|(?<=\s))#(?=\s|\z)[^\n]*/defined $1 ? $1 : ''/ge;
-	$line;
-}
-
 # Makefile.in => { target => { recipe, deps, src, line } }
 #
 # The first prerequisite of a rule, if it is in ${a} (see _source_of),
@@ -591,21 +576,20 @@ sub _read_rules
 
 	my (%rule, @node, $stanza);
 	while (<$fh>) {
-		next if /^\s*#(?:\s|\z)/ or /^\s*$/;
+		next if /^\s*#/ or /^\s*$/;
 		my $line = $.;
 		my $where = "$D->{R} line $line";
 		# Fold rule headers before deciding whether an indented line
 		# is a recipe.  Recipe backslashes belong to make/the shell.
 		unless (/^\t/) {
-			$_ = _uncomment($_);
 			while (/(?<!\\)(?:\\\\)*\\\r?\n\z/) {
 				s/[ \t]*\\\r?\n\z/ /;
 				my $next = <$fh>;
 				# a comment line does not end the header (nor is it in it)
-				$next = <$fh> while defined $next and $next =~ /^\s*#(?:\s|\z)/;
+				$next = <$fh> while defined $next and $next =~ /^\s*#/;
 				defined $next or die "E: $where: unfinished line continuation\n";
 				$next =~ s/^[ \t]+//;
-				$_ .= _uncomment($next);
+				$_ .= $next;
 			}
 		}
 		if (/^\t/) {

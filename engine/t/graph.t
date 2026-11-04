@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 104;
+use Test::More tests => 99;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -68,22 +68,6 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
 	is_deeply([sort keys %$rules], [qw(a.html b.css)], 'comments inside a continued target list');
 	is_deeply($rules->{'b.css'}{deps}, ['x'], 'comments before the dependencies');
-
-	# a trailing comment starts at a # after whitespace; one in a word is no comment
-	$dir = project({
-		MANIFEST => $manifest,
-		'Makefile.in' => "a.html b.css \\\n  : x#y # d\n\techo hi # for the shell\n" . $recipe,
-	});
-	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
-	is_deeply([sort keys %$rules], [qw(a.html b.css)], 'a continued target list, then a comment');
-	is_deeply($rules->{'a.html'}{deps}, ['x#y'], 'trailing comment on a dependency line; # in a word stays');
-	like($rules->{'a.html'}{recipe}, qr/^\techo hi # for the shell\n/, 'a # in a recipe is the shell\'s');
-	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: #x y #\n#\n" });
-	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
-	is_deeply($rules->{'a.html'}{deps}, [qw(#x y)], 'a # needs a space after it to be a comment');
-	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: x \\ # no more\n y\n" });
-	eval { plan_of($dir) };
-	like($@, qr/line 2: invalid line/, 'a backslash before a comment continues nothing');
 
 	for my $case (
 		["# rules\na.html \\\n  b.css: \${missing}\n", qr/line 2: undefined variable/],

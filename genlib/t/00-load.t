@@ -15,3 +15,4 @@ BEGIN {
 		use_ok( $module ) or BAIL_OUT;
 	}
 }
+diag( "Testing RdKw::WwW::GenLib $RdKw::WwW::GenLib::VERSION, Perl $], $^X" );

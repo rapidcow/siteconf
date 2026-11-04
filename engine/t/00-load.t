@@ -17,3 +17,4 @@ BEGIN {
 		use_ok( $module ) or BAIL_OUT;
 	}
 }
+diag( "Testing RdKw::WwW::SiteConf $RdKw::WwW::SiteConf::VERSION, Perl $], $^X" );

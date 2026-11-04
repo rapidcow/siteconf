@@ -107,7 +107,7 @@ print $fh "MAKE broken\n\tNEED ghost.html\n\tNEED extra/index.html\n";
 close $fh;
 my $bad = `$^X $script -g -q -B build 2>&1`;
 isnt($?, 0, 'NEED of the missing is fatal');
-like($bad, qr/goal `broken' needs `ghost\.html'.*\n.*goal `broken' needs `extra\/index\.html'.*\n.*2 problems/,
+like($bad, qr/goal `broken' needs `ghost\.html'.*\n(?:.*\n)*?.*goal `broken' needs `extra\/index\.html'.*\n(?:.*\n)*?.*2 problems/,
 	'all problems are reported at once');
 
 # b = `.': the build dir is the target tree, the root is above it, and

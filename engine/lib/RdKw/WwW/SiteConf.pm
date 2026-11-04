@@ -608,6 +608,11 @@ sub _read_rules
 					$rule->{decided} = 1;
 					# the first word (a ${...} may hold spaces, in :S/ /_/)
 					my ($first) = $dep =~ /\A\s*((?:[^\s\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+)/;
+					# (${a:Q}/x is no quoted ${a}/x: prerequisites are not for the
+					# shell, and it would silently not be the source)
+					defined $first and $first =~ m!\A(?:\$\{A(?::[^{}]*)?\}/+)?\$\{a:[^{}]*\}/!
+						and die "E: $where: `$first': no modifiers on the \${a} that"
+							. " names the source (prerequisites are not quoted; write \${a}/...)\n";
 					if (defined $first and defined(my $from = _source_of($first))) {
 						my $name_of = $self->_subst($from, $name, $where);
 						$name_of =~ /\S/ and $name_of !~ /\s/
@@ -681,7 +686,8 @@ sub _node
 		return $done->();
 	}
 	unless (-f $self->_fs($apath)) {
-		$fail->("source `$apath' is missing");
+		$fail->("source `$apath' is missing"
+			. ($rule->{line} ? " (rule at $D->{R} line $rule->{line})" : ""));
 		return $done->();
 	}
 	$node->{recipe} = $rule->{recipe};

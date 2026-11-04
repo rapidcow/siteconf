@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 95;
+use Test::More tests => 97;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -418,4 +418,15 @@ SKIP:	{
 	open $fh, '>', "$dir/MY/config.mk" or die; print $fh $t; close $fh;
 	eval { plan_of($dir) };
 	like($@, qr/config\.mk: `c' is missing\.  Try reconfiguring/, 'no c, no plan');
+}
+
+# --- a modified ${a} is not a source prefix, and the error says where
+{
+	my $dir = project({ MANIFEST => "MAKE all\n\tNEED s.css\n",
+		'Makefile.in' => "# c\ns.css: \\\n \${a:Q}/s.scss\n\ttrue\n" });
+	eval { plan_of($dir) };
+	like($@, qr/line 2: `\$\{a:Q\}\/s\.scss': no modifiers on the \$\{a\}/, '${a:Q}/ is refused');
+	$dir = project({ MANIFEST => "MAKE all\n\tNEED s.css\n", 'Makefile.in' => "\n\ns.css:\n\ttrue\n" });
+	eval { plan_of($dir) };
+	like($@, qr/source `html\/s\.css' is missing \(rule at \S*Makefile\.in line 3\)/, 'missing source names the rule');
 }

@@ -119,6 +119,13 @@ The source directory, relative to the project root, or an absolute path.
 The output directory, relative to the build directory.  Must be relative;
 C<.> is allowed.
 
+=item C<c> (default: C<b>)
+
+The cache directory, relative to the build directory, for what is
+made along the way but does not go into the site (see
+L<RdKw::WwW::SiteConf>).  Must be relative.  Unless it is said, it is
+C<b>, and there is only the one.
+
 =item C<R> (default C<Makefile.in>)
 
 The transformation rulebook, relative to the directory from which you run

@@ -48,11 +48,43 @@ target of a rule having its own), C<${^X}> for our perl, and the
 modifiers C<:Q> to shell-quote (C<${A:Q}>), C<:E>, C<:H>, C<:R>, C<:T>
 and C<:S/old/new/> to take names apart (C<${@:R}>); see
 L<RdKw::WwW::SiteConf::Modifiers>.  Targets are named
-relative to C<${b}>.  A prerequisite of a rule (a tool, such as the
+relative to C<${b}>, or to C<${c}> if they say so (below).  A prerequisite of a rule (a tool, such as the
 renderer) may have a header too: if it does, its C<NEED>s and C<WANT>s
 are the rule's as well, and its C<HAVE>, if any, must be its name as the
 rule spells it.  It needs no header, though.  (This is how the renderer
 of C<-P web> comes to depend on F<MY/option.mk>.)
+
+Unless it says otherwise, a rule makes C<${B}/${b}/FILE> from
+C<${A}/${a}/FILE>: that source is implied.  A rule may say otherwise
+by naming the source first.  If the first prerequisite is in C<${a}>
+(it starts with C<${A}/${a}/> or C<${a}/>, which is read as it is
+written, before anything is expanded) it is the source, and the implied
+one is not there:
+
+    blog/a.md.html blog/b.md.html: ${a}/${@:R}
+            cd ${A:Q} && pandoc -o ${B:Q}/${b:Q}/${@:Q} ${a:Q}/${<:Q}
+
+    styles.css: ${a}/styles.scss
+
+needs no F<html/a.md.html>.  Spelled out, C<${a}/${@}> brings the
+implied source back.  In a recipe, C<${<}> (or C<${.IMPSRC}>) is the
+source, relative to C<${a}> as C<${@}> is to the target tree.
+
+What is made but does not go into the site -- the intermediate files
+-- may be put in the cache, C<${c}>, which is relative to C<${B}> like
+C<${b}> is and is C<${b}> unless configured otherwise (C<-Dc>).  A
+target is named after C<${c}/> then (or C<${b}/>, which is what none
+says); C<${@}> is still the name after it, and nothing else under
+C<${B}> may be a target:
+
+    ${c}/blog/a.md.html: ${a}/${@:R}
+            cd ${A:Q} && pandoc -o ${B:Q}/${c:Q}/${@:Q} ${a:Q}/${<:Q}
+
+    blog/a.html: ${B}/${c}/blog/a.md.html
+
+Directories are made as for C<${b}>.  Only files made in C<${b}> can
+be goals of the manifest; those in the cache are made because
+something needs them.
 
 Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along
@@ -187,6 +219,12 @@ RUSH
 	}
 	File::Spec->file_name_is_absolute($D{b})
 		and die "E: `b' prefix must be a relative path.\n";
+	# c, the cache (what we make but do not ship), is b unless said
+	defined $D{c} && length $D{c} or $D{c} = $D{b};
+	File::Spec->file_name_is_absolute($D{c})
+		and die "E: `c' prefix must be a relative path.\n";
+	grep { $_ eq '..' } split m!/!, $D{c}
+		and die "E: `c' prefix may not climb out of the build directory.\n";
 	$D{e} =~ m!/! and die "E: `e' (directory marker) may not contain a slash.\n";
 	defined $D{clean} && length $D{clean} and $D{clean} !~ /\A[A-Za-z0-9&][-\w.+&]*\z/
 		and die "E: `clean' may be made of letters, digits and -_.+& only: $D{clean}\n";
@@ -239,17 +277,17 @@ sub _expand
 {
 	my ($self, $spec, $where) = @_;
 	my $D = $self->{D};
-	my %var = ( A => '.', a => $D->{a}, B => $D->{B}, b => $D->{b} );
-	$spec =~ /(?<!\$\{B\}\/)(?<!\$B\/)\$(?:\{b\}|b)/
-		and die "E: $where: `$spec': \${b} is relative to \${B};"
-			. " write \${B}/\${b}\n";
+	my %var = ( A => '.', a => $D->{a}, B => $D->{B}, b => $D->{b}, c => $D->{c} );
+	$spec =~ /(?<!\$\{B\}\/)(?<!\$B\/)\$(?:\{([bc])\}|([bc]))/
+		and die "E: $where: `$spec': \${@{[ defined $1 ? $1 : $2 ]}} is relative to \${B};"
+			. " write \${B}/\${@{[ defined $1 ? $1 : $2 ]}}\n";
 	# ${A} is `.', so ${A}/x is just x -- even when x is absolute
 	# (as ${a} may be), which `./' in front of it would not be.
 	$spec =~ s{\A\$(?:\{A\}|A)(?:/+|\z)}{} and !length $spec and $spec = '.';
 	$spec =~ s{\$(?:\{(\w+)\}|(\w))}{
 		my $x = defined $1 ? $1 : $2;
 		exists $var{$x} or die "E: $where: `$spec': no such variable \${$x}"
-			. " (there are A a B b)\n";
+			. " (there are A a B b c)\n";
 		$var{$x};
 	}ge;
 	$spec =~ /\$/ and die "E: $where: stray \$ in `$spec'\n";
@@ -271,23 +309,48 @@ sub _dep
 	$self->_to_build($self->_expand($path, $where));
 }
 
-# `b'-relative name of what we make, if `path' (seen from the build
-# dir) is something we make: that is, if a rule makes it.  (With
-# b = `.' the build dir is also the source tree and where MY/ lives,
-# so the place alone says nothing.)
+# What a file we make is called in the graph (its key): its name, if
+# it is made in `b', or `${c}/name' if in `c' (which is `b' unless
+# said otherwise, and then it is all the same).  A `$' cannot be in a
+# name, so the one is never mistaken for the other.
+sub _key
+{
+	my ($self, $tree, $name) = @_;
+	$tree eq 'c' && defined $self->{D}{c} && File::Spec->canonpath($self->{D}{c}) ne File::Spec->canonpath($self->{D}{b})
+		? "\${c}/$name" : $name;
+}
+
+# A key as (tree, name)
+sub _unkey
+{
+	my ($key) = @_;
+	$key =~ m!\A\$\{c\}/(.*)\z!s ? ('c', $1) : ('b', $key);
+}
+
+# The key of what we make, if `path' (seen from the build dir) is
+# something we make: that is, if a rule makes it.  (With b = `.' the
+# build dir is also the source tree and where MY/ lives, so the place
+# alone says nothing.)
 sub _target
 {
 	my ($self, $path) = @_;
-	my $b = File::Spec->canonpath($self->{D}{b});
-	my $name = $b eq '.' ? $path
-		: index($path, "$b/") == 0 ? substr($path, length($b) + 1) : return undef;
-	$self->{rules} && $self->{rules}{$name} ? $name : undef;
+	for my $tree (qw( b c )) {
+		defined $self->{D}{$tree} or next;
+		my $dir = File::Spec->canonpath($self->{D}{$tree});
+		my $name = $dir eq '.' ? $path
+			: index($path, "$dir/") == 0 ? substr($path, length($dir) + 1) : next;
+		my $key = $self->_key($tree, $name);
+		return $key if $self->{rules} && $self->{rules}{$key};
+	}
+	undef;
 }
 
+# Where the file of this key is, seen from the build dir
 sub _bpath
 {
-	my ($self, $path) = @_;
-	File::Spec->canonpath("$self->{D}{b}/$path");
+	my ($self, $key) = @_;
+	my ($tree, $name) = _unkey($key);
+	File::Spec->canonpath("$self->{D}{$tree}/$name");
 }
 
 =item B<shell_quote> I<string>
@@ -394,9 +457,12 @@ sub read_manifest
 
 # Makefile.in with the `${...}'s (and `$x's) in `line' replaced.  The
 # modifiers (see RdKw::WwW::SiteConf::Modifiers) come after the name.
+# `node' is the name of the target (relative to its tree), and `src'
+# that of its source (relative to `a'); the latter is only known
+# once all prerequisites have been read, so those may not say it.
 sub _subst
 {
-	my ($self, $line, $node, $where) = @_;
+	my ($self, $line, $node, $where, $src) = @_;
 	my $D = $self->{D};
 	my $out = '';
 	my $pos = 0;
@@ -430,6 +496,10 @@ sub _subst
 		} elsif ($x eq '@' or $x eq '.TARGET') {
 			defined $node or die "E: $where: \${$x} outside of a recipe\n";
 			$val = $node;
+		} elsif ($x eq '<' or $x eq '.IMPSRC') {
+			defined $src or die "E: $where: \${$x} is not known here"
+				. " (the source is what the prerequisites say)\n";
+			$val = $src;
 		} elsif ($x eq '^X' or $x eq "\030") {
 			$val = $^X;
 		} else {
@@ -440,7 +510,7 @@ sub _subst
 			$val = eval {
 				RdKw::WwW::SiteConf::Modifiers::_apply($val, $mods,
 					quote => \&shell_quote,
-					expand => sub { $self->_subst($_[0], $node, $where) });
+					expand => sub { $self->_subst($_[0], $node, $where, $src) });
 			};
 			defined $val or die $@ =~ /\AE: / ? $@ : "E: $where: $@";
 		}
@@ -453,7 +523,35 @@ sub _subst
 	$out . substr($line, $pos);
 }
 
-# Makefile.in => { target => { recipe, deps, line } }
+# A target as Makefile.in spells it: `name' (in b), `${b}/name' or
+# `${c}/name', or those with ${B}/ in front.  Returns its key (see
+# _key) and its name; the name is what ${@} is.
+sub _read_target
+{
+	my ($self, $spec, $where) = @_;
+	my $tree = 'b';
+	if ($spec =~ s!\A(?:\$(?:\{B\}|B)/)?\$(?:\{([bc])\}|([bc]))(?:/+|\z)!!) {
+		$tree = defined $1 ? $1 : $2;
+	}
+	$spec =~ /\$/ and die "E: $where: `$spec': a target is a name,"
+		. " optionally after \${b}/ or \${c}/; nowhere else under \${B}\n";
+	_check_file($spec, $where);
+	($self->_key($tree, $spec), $spec);
+}
+
+# Whether this (raw) prerequisite says where in ${a} the target comes
+# from: it begins with ${A}/${a}/ or ${a}/.  Returns what follows, or undef.
+sub _source_of
+{
+	my ($dep) = @_;
+	$dep =~ s!\A\s*(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)/+!! ? $dep : undef;
+}
+
+# Makefile.in => { target => { recipe, deps, src, line } }
+#
+# The first prerequisite of a rule, if it is in ${a} (see _source_of),
+# is its source, and then (as `src', named from ${a}) it takes the
+# place of the one we would otherwise suppose: ${a}/${@}.
 sub _read_rules
 {
 	my ($self) = @_;
@@ -481,30 +579,53 @@ sub _read_rules
 		if (/^\t/) {
 			@node or die "E: $where: unexpected tabulation\n";
 			for my $node (@node) {
-				my $rule = $rule{$node};
+				my $rule = $rule{$node->[0]};
 				if (defined $rule->{stanza} && $rule->{stanza} != $stanza) {
-					die "E: $where: more than one recipe for `$node'\n";
+					die "E: $where: more than one recipe for `$node->[0]'\n";
 				}
 				$rule->{stanza} = $stanza;
-				$rule->{recipe} .= $self->_subst($_, $node, $where);
+				# (not yet: ${<} may be said further down)
+				push @{ $rule->{raw} }, [ $_, $where ];
 			}
 			next;
 		}
 		if (/:/) {
 			my ($src, $dep) = split /:/, $_, 2;
-			@node = split ' ', $src or die "E: $where: null target list\n";
+			@node = map { [ $self->_read_target($_, $where) ] } split ' ', $src
+				or die "E: $where: null target list\n";
 			$stanza = $line;
 			for my $node (@node) {
-				_check_file($node, $where);
-				my $rule = ($rule{$node} ||= { recipe => '', deps => [], line => $line });
+				my ($key, $name) = @$node;
+				my $rule = ($rule{$key} ||= { recipe => '', raw => [], deps => [],
+					name => $name, line => $line });
+				my $dep = $dep;
+				if (!$rule->{decided} && $dep =~ /\S/) {
+					$rule->{decided} = 1;
+					# the first word (a ${...} may hold spaces, in :S/ /_/)
+					my ($first) = $dep =~ /\A\s*((?:[^\s\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+)/;
+					if (defined $first and defined(my $from = _source_of($first))) {
+						my $name_of = $self->_subst($from, $name, $where);
+						$name_of =~ /\S/ and $name_of !~ /\s/
+							or die "E: $where: `$first' must be one name in \${a}\n";
+						_check_file($name_of, $where);
+						$rule->{src} = $name_of;
+						$dep =~ s/\A\s*\Q$first\E//;
+					}
+				}
 				push @{ $rule->{deps} },
-					split ' ', $self->_subst($dep, $node, $where);
+					split ' ', $self->_subst($dep, $name, $where);
 			}
 			next;
 		}
 		die "E: $where: invalid line: $_";
 	}
 	close $fh;
+	for my $rule (values %rule) {
+		my $src = defined $rule->{src} ? $rule->{src} : $rule->{name};
+		$rule->{recipe} .= $self->_subst($_->[0], $rule->{name}, $_->[1], $src)
+			for @{ $rule->{raw} };
+		delete $rule->{raw};
+	}
 	\%rule;
 }
 
@@ -527,7 +648,10 @@ sub _node
 	}
 
 	my $rule = $self->{rules}{$file};
-	my $apath = $self->_apath($file);
+	# Its source: what the rule says, or ${a}/${@} if it says nothing
+	my (undef, $name) = _unkey($file);
+	my $src = $rule && defined $rule->{src} ? $rule->{src} : $name;
+	my $apath = $self->_apath($src);
 	my $bpath = $self->_bpath($file);
 	basename($bpath) eq $D->{e}
 		and die "E: $file: `$D->{e}' is reserved for directory markers.\n";
@@ -563,7 +687,7 @@ sub _node
 		# the rule says it is: ${A}/${a}/FILE.
 		my $where = "$apath: HAVE";
 		my $have = $self->_expand($I{HAVE}, $where);
-		my $want = File::Spec->canonpath("$D->{a}/$file");
+		my $want = File::Spec->canonpath("$D->{a}/$src");
 		$have eq $want or die "E: $apath: You HAVE `$I{HAVE}'"
 			. ($have eq $I{HAVE} ? "" : " (which is `$have')")
 			. ",\n"
@@ -584,10 +708,10 @@ sub _node
 	}
 
 	my @deps = ($apath);
-	my $bdir = File::Spec->canonpath($D->{b});
+	my %tree = map { File::Spec->canonpath($D->{$_}) => 1 } qw( b c );
 	my $check = sub {
 		my ($said, $dep, $soft) = @_;
-		return 1 if $dep eq $bdir;
+		return 1 if $tree{$dep};
 		if (defined(my $made = $self->_target($dep))) {
 			my $kid = $self->_node($made);
 			unless ($kid->{ok}) {

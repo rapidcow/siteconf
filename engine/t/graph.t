@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 66;
+use Test::More tests => 94;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -288,4 +288,123 @@ SKIP:	{
 	ok(!defined $dot->_target($_), "b = `.': `$_' is not ours") for '.', '..', '../x', '/x', 'MY/config.mk', 'MY/option.mk';
 	is($sc->('site')->_target('site/x'), 'x', 'b = site: a file');
 	ok(!defined $sc->('site')->_target('x'), 'b = site: outside');
+}
+
+# --- the first prerequisite, if in ${a}, is the source: nothing is implied
+{
+	my @form = ('${A}/${a}/${@:R}', '${a}/${@:R}', '$A/$a/${@:R}', '$a/${@:R}');
+	for my $form (@form) {
+		my $dir = project({
+			MANIFEST => "MAKE all\n\tNEED p/x.md.html\n",
+			'Makefile.in' => "p/x.md.html: $form \${A}/x\n\tconv \${<} \${.IMPSRC} \${\@}\n",
+			'html/p/x.md' => '',
+		});
+		my $plan = plan_of($dir);
+		is_deeply($plan->{node}{'p/x.md.html'}{deps}, [qw(html/p/x.md x site/p/.ok)],
+			"source named first: $form (no html/p/x.md.html needed)");
+		is($plan->{node}{'p/x.md.html'}{recipe}, "\tconv p/x.md p/x.md p/x.md.html\n",
+			'${<} is the source, relative to ${a}') if $form eq $form[0];
+	}
+
+	# not first: an ordinary prerequisite, and the implied source stays
+	my $dir = project({
+		MANIFEST => "MAKE all\n\tNEED a.html\n",
+		'Makefile.in' => "a.html: \${A}/x \${a}/b.css\n\ttrue\n",
+		'html/a.html' => '', 'html/b.css' => '',
+	});
+	is_deeply(plan_of($dir)->{node}{'a.html'}{deps}, [qw(html/a.html x html/b.css site/.ok)],
+		'a source that is not first is a prerequisite');
+
+	# ${a}/${@} is the implied source, spelled out
+	$dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "a.html: \${a}/\${\@} \${A}/x\n\ttrue\n",
+		'html/a.html' => '',
+	});
+	is_deeply(plan_of($dir)->{node}{'a.html'}{deps}, [qw(html/a.html x site/.ok)],
+		'${a}/${@} is the implied source');
+
+	# its header HAVE is checked against the source it has
+	$dir = project({
+		MANIFEST => "MAKE all\n\tNEED s.css\n",
+		'Makefile.in' => "s.css: \${a}/s.scss\n\ttrue\n",
+		'html/s.scss' => lines( HAVE => [qw[ ${A}/${a}/s.scss ]] ),
+	});
+	is_deeply(plan_of($dir)->{node}{'s.css'}{deps}, [qw(html/s.scss site/.ok)],
+		'a HAVE of the source it has');
+	$dir = project({
+		MANIFEST => "MAKE all\n\tNEED s.css\n",
+		'Makefile.in' => "s.css: \${a}/s.scss\n\ttrue\n",
+		'html/s.scss' => lines( HAVE => [qw[ ${A}/${a}/s.css ]] ),
+	});
+	eval { plan_of($dir) };
+	like($@, qr/You HAVE .*s\.css.*need `html\/s\.scss'/s, 'a HAVE of another');
+
+	# the source is missing
+	$dir = project({
+		MANIFEST => "MAKE all\n\tNEED s.css\n",
+		'Makefile.in' => "s.css: \${a}/s.scss\n\ttrue\n",
+	});
+	eval { plan_of($dir) };
+	like($@, qr/source `html\/s\.scss' is missing/, 'missing source is named');
+
+	# ${<} cannot be in a prerequisite
+	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${<}\n\ttrue\n" });
+	eval { plan_of($dir) };
+	like($@, qr/line 1: \$\{<\} is not known here/, '${<} in prerequisites');
+}
+
+# --- the cache: ${c}
+{
+	my $rules = "\${c}/x.md.html: \${a}/\${\@:R}\n\tpandoc -o \${B}/\${c}/\${\@} \${<}\n"
+		. "x.html: \${B}/\${c}/x.md.html\n\tcp \${B}/\${c}/x.md.html \${B}/\${b}/\${\@}\n";
+	my %f = (
+		MANIFEST => "MAKE all\n\tNEED x.html\n",
+		'Makefile.in' => $rules,
+		'html/x.md' => '',
+		'html/x.html' => lines( NEED => [qw[ ${B}/${c}/x.md.html ]] ),
+	);
+	my $dir = project({%f}, c => 'cache/deep');
+	my $plan = plan_of($dir);
+	is_deeply($plan->{order}, ['${c}/x.md.html', 'x.html'], 'the cache is made first');
+	my $c = $plan->{node}{'${c}/x.md.html'};
+	is($c->{bpath}, 'cache/deep/x.md.html', 'cache target is in ${c}');
+	is_deeply($c->{deps}, [qw(html/x.md cache/deep/.ok)], 'no implied html/x.md.html');
+	is($c->{recipe}, "\tpandoc -o cache/deep/x.md.html x.md\n"
+		=> '${@} is the name after ${c}/; ${B}/${c} too');
+	is_deeply($plan->{node}{'x.html'}{kids}, ['${c}/x.md.html'], 'the site depends on the cache');
+	is($plan->{node}{'x.html'}{bpath}, 'site/x.html', 'and is still in ${b}');
+	is_deeply([map { $_->{dir} } @{ $plan->{dirs} }], [qw(cache cache/deep site)],
+		'all of ${c} gets a marker, the parents first');
+	is_deeply($plan->{goals}[0]{files}, ['x.html'], 'only the site is a goal');
+	is_deeply($plan->{clean}[0]{files}, ['cache/deep/x.md.html', 'site/x.html'],
+		'clean takes the cache too');
+
+	# c defaults to b: then ${c}/x is x, the same node
+	$dir = project({%f});
+	$plan = plan_of($dir);
+	is_deeply($plan->{order}, [qw(x.md.html x.html)], 'with no ${c}, it is ${b}');
+	is($plan->{node}{'x.md.html'}{bpath}, 'site/x.md.html', 'in the site');
+
+	# ${b}/ is a spelling of the default
+	$dir = project({ MANIFEST => $manifest,
+		'Makefile.in' => "\${b}/a.html: \${A}/x\n\ttrue\n", 'html/a.html' => '' });
+	is_deeply(plan_of($dir)->{node}{'a.html'}{deps}, [qw(html/a.html x site/.ok)], '${b}/ target');
+
+	# nowhere else under ${B}
+	for my $bad ('${B}/other/a.html', 'other/${@}', '${a}/a.html') {
+		$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "$bad: \${A}/x\n\ttrue\n" });
+		eval { plan_of($dir) };
+		like($@, qr/nowhere else|bad file name/, "target $bad is refused");
+	}
+
+	# the manifest cannot name what is in the cache alone
+	$dir = project({ MANIFEST => "MAKE all\n\tNEED x.md.html\n",
+		'Makefile.in' => $rules, 'html/x.md' => '', 'html/x.html' => '' }, c => 'cache');
+	eval { plan_of($dir) };
+	like($@, qr/needs `x\.md\.html': no rule/, 'cache files are not goals');
+
+	$dir = project({%f}, c => '/abs');
+	eval { plan_of($dir) };
+	like($@, qr/`c' prefix must be a relative path/, 'c is relative');
 }

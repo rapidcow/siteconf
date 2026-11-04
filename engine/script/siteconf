@@ -419,7 +419,7 @@ sub do_init
 				. "is not supported (yet)\n";
 	}
 	# -D beyond B a b R F e clean (which configure already describes)
-	my @Dextra = grep { !exists $Dd{$_} } sort keys %Dx;
+	my @Dextra = grep { !exists $Dd{$_} && $_ ne 'c' } sort keys %Dx;
 	if (@Dextra) {
 		$dhelp = join '', map { sprintf "  -D%-9s (default: \$Dd{%s})\n", $_, pK($_) }
 			@Dextra;

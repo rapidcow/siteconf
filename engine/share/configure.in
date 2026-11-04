@@ -94,6 +94,7 @@ The following variables may be defined:
   -DB         Build directory, seen from the source tree (default: $Dd{B})
   -Da         Source directory, seen from the source tree (default: $Dd{a})
   -Db         Target directory, seen from the build directory (default: $Dd{b})
+  -Dc         Cache directory, for what is made but not shipped (default: -Db)
   -DR         Transformation rules, from current directory (default: $Dd{R})
   -DF         Manifest, from current directory (default: $Dd{F})
   -De         Directory marker (default: $Dd{e})
@@ -224,6 +225,13 @@ for my $k (qw( a b R F )) {
 # hand, is free to be absolute: out-of-tree builds.)
 File::Spec->file_name_is_absolute($D{b})
 	and die "E: `b' prefix must be a relative path.\n";
+# c, the cache, is b if it is not said; the same goes for it.
+if (!isnull($D{c})) {
+	$D{c} =~ s!/+$!!;
+	length $D{c} or die "E: `c' may not be empty.\n";
+	File::Spec->file_name_is_absolute($D{c})
+		and die "E: `c' prefix must be a relative path.\n";
+}
 $D{e} =~ m!/! and die "E: `e' may not contain a slash.\n";
 
 # MY/option.mk first, or this would be circular.

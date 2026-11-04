@@ -106,10 +106,11 @@ for my $c (
 }
 
 # --- one rule for several targets, each with a source of its own
+# (no html/blog/a.md.html: naming a source first means there is no other)
 {
 	my $dir = tempdir(CLEANUP => 1);
 	make_path("$dir/html/blog", "$dir/MY");
-	for my $f (qw( html/blog/a.md html/blog/b.md html/blog/a.md.html html/blog/b.md.html )) {
+	for my $f (qw( html/blog/a.md html/blog/b.md )) {
 		open my $fh, '>', "$dir/$f" or die; close $fh;
 	}
 	open my $fh, '>', "$dir/Makefile.in" or die;
@@ -122,7 +123,7 @@ for my $c (
 	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site',
 		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
 	my $plan = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->plan;
-	is_deeply($plan->{node}{'blog/b.md.html'}{deps}[1], 'html/blog/b.md', 'a prerequisite spelled with ${@:R}')
+	is_deeply($plan->{node}{'blog/b.md.html'}{deps}, ['html/blog/b.md', 'site/blog/.ok'], 'a first prerequisite spelled with ${@:R} is the source')
 		or diag explain $plan->{node}{'blog/b.md.html'}{deps};
 	like($plan->{node}{'blog/a.md.html'}{recipe}, qr!conv html/blog/a\.md -o site/blog/a\.md\.html!, 'recipe for the first');
 	like($plan->{node}{'blog/b.md.html'}{recipe}, qr!conv html/blog/b\.md -o site/blog/b\.md\.html!, 'recipe for the second');

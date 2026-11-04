@@ -20,10 +20,21 @@ Revision history of WwW-SiteConf
       directory is not a suffix: ${a.b/c:R} is a.b/c.
 
     + ${@} and ${.TARGET} now work in the prerequisites of a rule,
-      so targets that share a rule can name sources (additional to
-      the $A/$a/$@ file that has been implied up until this point):
+      so targets that share a rule can name their sources:
 
         a.md.html b.md.html: ${A}/${a}/${@:R}
+
+    + Makefile.in: a first prerequisite in ${a} (${A}/${a}/... or
+      ${a}/..., as written) now IS the source of the target, and
+      then ${a}/${@} is no longer implied.  So a.md.html needs no
+      dummy html/a.md.html, and `styles.css: ${a}/styles.scss'
+      says it all.  (Spell out ${a}/${@} for it back.)  In a
+      recipe, ${<} and ${.IMPSRC} are the source, relative to ${a}.
+
+    + The cache, ${c} (-Dc; the default is ${b}): a rule may make a
+      file there rather than in the site, by naming it ${c}/FILE.
+      ${b}/FILE is FILE.  Targets are in one or the other, and
+      nowhere else under ${B}.
 
     *** configure only creates the leaf directory of ${B}
         if missing.  To create intermediates use mkdir -p

@@ -702,8 +702,8 @@ sub _node
 
 	# What the headers say they need, and what the rules do
 	my $where = "$apath";
-	my @hneed = map { [ $_, $self->_dep($_, $where), "NEED in the header of $apath" ] } @{ $I{NEED} || [] };
-	my @hwant = map { [ $_, $self->_dep($_, $where), "WANT in the header of $apath" ] } @{ $I{WANT} || [] };
+	my @hneed = map { [ $_, $self->_dep($_, $where), "in header of `$apath'" ] } @{ $I{NEED} || [] };
+	my @hwant = map { [ $_, $self->_dep($_, $where), "in header of `$apath'" ] } @{ $I{WANT} || [] };
 	my @rdep = map { [ $_, $_, "a prerequisite in $D->{R} line $rule->{line}" ] } @{ $rule->{deps} };
 	# What the rule's own prerequisites (the tools) say they need, if
 	# they say anything at all
@@ -723,7 +723,7 @@ sub _node
 			unless ($kid->{ok}) {
 				return 0 if $soft;
 				# (a cause per line, each cause deeper than what it breaks)
-				$fail->("needs `$dep' ($from), which cannot be made:",
+				$fail->("NEEDs `$dep' ($from), but cannot be made:",
 					map { "  $_" } @{ $kid->{why} });
 				return 0;
 			}
@@ -733,7 +733,7 @@ sub _node
 		return 1 if -e $self->_fs($dep);
 		unless ($soft) {
 			my $hint = $said =~ m!\AMY/(?:config|option)\.mk\z! ? " (is it \${B}/$said?)" : "";
-			$fail->("needs `$dep' ($from), which we don't seem to have$hint");
+			$fail->("NEEDs `$dep' ($from), which we don't seem to have$hint");
 		}
 		0;
 	};
@@ -745,7 +745,7 @@ sub _node
 			push @deps, $d->[1];
 		} else {
 			$self->_warn("W: $file: WANT `$d->[1]' is missing;",
-				" going on without it\n");
+				" going on without it :(\n");
 		}
 	}
 
@@ -806,8 +806,8 @@ sub _tool
 		}
 		my $where = $dep;
 		{
-			need => [ map { [ $_, $self->_dep($_, $where), "NEED in the header of $dep" ] } @{ $I{NEED} || [] } ],
-			want => [ map { [ $_, $self->_dep($_, $where), "WANT in the header of $dep" ] } @{ $I{WANT} || [] } ],
+			need => [ map { [ $_, $self->_dep($_, $where), "in header of `$dep'" ] } @{ $I{NEED} || [] } ],
+			want => [ map { [ $_, $self->_dep($_, $where), "in header of `$dep'" ] } @{ $I{WANT} || [] } ],
 		};
 	};
 	($tool->{need}, $tool->{want});
@@ -864,12 +864,12 @@ sub plan
 				my $causes = sub { my $p = shift; join '', map { "$p   $_\n" } @{ $node->{why} } };
 				if ($kind eq 'need') {
 					push @err, "E: $D->{F} line $ent->{line}: goal"
-						. " `$spec->{name}' needs `$file', which cannot be made:\n"
+						. " `$spec->{name}' NEEDs `$file', but cannot be made:\n"
 						. $causes->('E:');
 				} else {
 					push @dropped, [ $file, $why ];
-					$self->_warn("W: goal `$spec->{name}': dropping WANT",
-						" `$file', which cannot be made:\n", $causes->('W:'));
+					$self->_warn("W: goal `$spec->{name}' WANTs",
+						" `$file', but cannot be made:\n", $causes->('W:'));
 				}
 			}
 		}

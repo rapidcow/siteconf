@@ -107,7 +107,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		# no html/c.css
 	});
 	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
-	like($@, qr/goal `all' needs `a\.html', which cannot be made:\nE: {3}needs `site\/c\.css' \(NEED in the header of html\/a\.html\), which cannot be made:\nE: {5}source `html\/c\.css' is missing \(rule at \S*Makefile\.in line 1\)/,
+	like($@, qr/goal `all' NEEDs `a\.html', but cannot be made:\nE: {3}NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE: {5}source `html\/c\.css' is missing \(rule at \S*Makefile\.in line 1\)/,
 		'... and why, a cause per line, deeper as it goes');
 
 	$dir = project({
@@ -208,7 +208,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\
 	delete $g{'gen/lib/Mod.pm'};
 	$dir = project(\%g);
 	eval { plan_of($dir) };
-	like($@, qr/needs `gen\/lib\/Mod\.pm' \(NEED in the header of gen\/tool\), which we don't seem to have/, 'tools: a missing NEED is fatal');
+	like($@, qr/NEEDs `gen\/lib\/Mod\.pm' \(in header of `gen\/tool'\), which we don't seem to have/, 'tools: a missing NEED is fatal');
 
 	$dir = project({ %f, 'gen/tool' => lines( HAVE => [qw[ gen/other ]] ) });
 	eval { plan_of($dir) };
@@ -402,7 +402,7 @@ SKIP:	{
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED x.md.html\n",
 		'Makefile.in' => $rules, 'html/x.md' => '', 'html/x.html' => '' }, c => 'cache');
 	eval { plan_of($dir) };
-	like($@, qr/needs `x\.md\.html', which cannot be made:\nE: {3}no rule to make it/, 'cache files are not goals');
+	like($@, qr/NEEDs `x\.md\.html', but cannot be made:\nE: {3}no rule to make it/, 'cache files are not goals');
 
 	$dir = project({%f}, c => '/abs');
 	eval { plan_of($dir) };

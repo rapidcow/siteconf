@@ -70,8 +70,8 @@ unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
 }
 
 my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build ));
-like($err, qr/dropping WANT `extra\/index\.html'/, 'WANT with a missing need is dropped');
-like($err, qr/dropping WANT `ghost\.html'/, 'WANT without a rule is dropped');
+like($err, qr/WANTs `extra\/index\.html', but cannot be made/, 'WANT with a missing need is dropped');
+like($err, qr/WANTs `ghost\.html', but cannot be made/, 'WANT without a rule is dropped');
 like(slurp('build/MY/MANIFEST.all'), qr/\A.*^MAKE all\n\tNEED index\.html\n\tNEED sub\/index\.html\n\tNEED robots\.txt\n/ms,
 	'MY/MANIFEST.all');
 like(slurp('build/MY/MANIFEST.basic'), qr/NEED sub\/index\.html/, 'WANT that can be had is kept');
@@ -107,7 +107,7 @@ print $fh "MAKE broken\n\tNEED ghost.html\n\tNEED extra/index.html\n";
 close $fh;
 my $bad = `$^X $script -g -q -B build 2>&1`;
 isnt($?, 0, 'NEED of the missing is fatal');
-like($bad, qr/goal `broken' needs `ghost\.html'.*\n(?:.*\n)*?.*goal `broken' needs `extra\/index\.html'.*\n(?:.*\n)*?.*2 problems/,
+like($bad, qr/goal `broken' NEEDs `ghost\.html'.*\n(?:.*\n)*?.*goal `broken' NEEDs `extra\/index\.html'.*\n(?:.*\n)*?.*2 problems/,
 	'all problems are reported at once');
 
 # b = `.': the build dir is the target tree, the root is above it, and

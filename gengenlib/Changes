@@ -1,6 +1,11 @@
 Revision history of WwW-GenGenLib
 
 
+0.00_01  2026-11-04  RC
+    * read_deps learns to give up on the first malformed UTF-8
+      line, so binary files like image assets, fonts, etc. are
+      not scanned (erroneously) for a header.
+
 0.00_00  2026-10-31  RC
     Migration from WwW-GenLib?  I'll copy the change log
     from there:

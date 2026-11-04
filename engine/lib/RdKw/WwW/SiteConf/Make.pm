@@ -41,9 +41,8 @@ MAKE
 		$out .= "$goal->{name}: @target\n";
 	}
 	for my $rule (@{ $plan->{clean} }) {
-		my @rm = (@{ $rule->{files} }, @{ $rule->{markers} });
 		$out .= "$rule->{name}:\n";
-		$out .= "\trm -f @rm\n" if @{ $rule->{files} };
+		$out .= "\trm -f @{ $rule->{files} }\n" if @{ $rule->{files} };
 	}
 
 	for my $dir (@{ $plan->{dirs} }) {

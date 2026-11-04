@@ -9,6 +9,8 @@ Revision history of WwW-SiteConf
       removes only what that goal needs.  A lone -Dclean='&'
       suppresses generation of any clean rules.
 
+      *** The `clean' rule no longer removes .ok (-De).
+
     + Comment lines may sit inside a continued rule header of
       Makefile.in, between the backslashed lines; they are skipped.
 

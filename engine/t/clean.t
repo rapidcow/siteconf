@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 24;
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
@@ -40,7 +40,7 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make::_emit($_[0]) }
 	is(names($plan), 'clean', 'default: one rule, clean');
 	my $mk = makefile($plan);
 	like($mk, qr/^\.PHONY: all small clean$/m, 'default: phony');
-	like($mk, qr!^clean:\n\trm -f site/a\.css site/d/b\.css site/\.ok site/d/\.ok\n!m, 'default: removes all and the markers');
+	like($mk, qr!^clean:\n\trm -f site/a\.css site/d/b\.css\n!m, 'default: removes all, not the markers');
 	is(names(plan_of(project($manifest, clean => '', ))), 'clean', 'empty: the default too');
 }
 
@@ -58,11 +58,10 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make::_emit($_[0]) }
 	is(names($plan), 'clean-all clean-small', 'a rule for each goal');
 	is_deeply($plan->{clean}[0]{files}, [qw( site/a.css site/d/b.css )], 'all: what it makes');
 	is_deeply($plan->{clean}[1]{files}, ['site/a.css'], 'small: what it makes');
-	is_deeply($plan->{clean}[1]{markers}, [], 'no markers');
 	my $mk = makefile($plan);
 	like($mk, qr/^\.PHONY: all small clean-all clean-small$/m, 'phony');
 	like($mk, qr!^clean-small:\n\trm -f site/a\.css\n!m, 'recipe');
-	unlike($mk, qr/\.ok\n.*\brm\b/, 'no marker removed');
+	unlike($mk, qr/\.ok\b.*\n.*\brm\b|\brm\b.*\.ok/, 'no marker removed');
 	is(names(plan_of(project($manifest, clean => '&-x-&'))), 'all-x-all small-x-small', 'every & is the goal');
 }
 

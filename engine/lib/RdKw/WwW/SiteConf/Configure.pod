@@ -162,9 +162,9 @@ The directory marker filename.  Must not contain a slash.
 
 What the cleaning rules of the Makefile are called.  Without an
 C<&>, this is the name of the one rule that removes everything that was
-made.  With C<&>, each goal has a rule of its own, with the goal's name
-in place of C<&>, which removes what that goal needs (but not the
-directory markers, as they may be needed by another goal):
+made (but not the directory markers).  With C<&>, each goal has a rule
+of its own, with the goal's name in place of C<&>, which removes what
+that goal needs:
 
     ./configure -Dclean=clean          # make clean (the default)
     ./configure -Dclean='clean-&'      # make clean-all, make clean-small

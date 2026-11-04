@@ -834,7 +834,7 @@ that is C<NEED>ed cannot be had.
   node    { FILE => { file, apath, bpath, deps, recipe } }
   order   [ FILE ... ]    all files, in order of appearance
   dirs    [ { dir, marker, deps => [ MARKER ] } ]   parents first
-  clean   [ { name, files => [ BPATH ], markers => [ MARKER ] } ]
+  clean   [ { name, files => [ BPATH ] } ]
   D       the definitions, as in MY/config.mk
 
 =cut
@@ -921,10 +921,10 @@ sub plan
 	};
 }
 
-# The cleaning rules, as { name, files => [ BPATH ], markers => [ ... ] }
-# (see _clean_pattern).  The only rule that is not for a goal removes
-# everything we made, directory markers too; one that is takes what the
-# goal needs, and leaves the markers, which other goals may be using.
+# The cleaning rules, as { name, files => [ BPATH ] } (see
+# _clean_pattern).  The only rule that is not for a goal removes
+# everything we made; one that is takes what the goal needs.  The
+# directory markers are left in either case.
 sub _clean_rules
 {
 	my ($self, $goal, $order, $dir) = @_;
@@ -942,11 +942,11 @@ sub _clean_rules
 				$walk->($_) for @{ $node->{$_[0]}{kids} };
 			};
 			$walk->($_) for @{ $g->{files} };
-			push @rule, { name => $name, markers => [],
+			push @rule, { name => $name,
 				files => [ map { $node->{$_}{bpath} } sort { $pos{$a} <=> $pos{$b} } keys %have ] };
 		}
 	} else {
-		push @rule, { name => $pat, markers => [ map { $_->{marker} } @$dir ],
+		push @rule, { name => $pat,
 			files => [ map { $node->{$_}{bpath} } @$order ] };
 	}
 	my %taken = (%reserved_goal, map { $_->{name} => 1 } @$goal);

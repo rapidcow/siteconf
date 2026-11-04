@@ -93,7 +93,16 @@ something needs them.
 
 Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along
-with indentation on the next line, are replaced by a space.
+with indentation on the next line, are replaced by a space.  Lines
+that are only a comment (C<#> after any indentation) in between are
+skipped, and do not end the list -- unlike in L<make(1)>, where one
+would take the rest of the list with it:
+
+    ${b}/index.html \
+    ${b}/about.html \
+        : \
+    # why this is spelled out
+        ${a}/site/${.TARGET}
 
 =item F<MANIFEST> (C<F>)
 
@@ -576,6 +585,8 @@ sub _read_rules
 			while (/(?<!\\)(?:\\\\)*\\\r?\n\z/) {
 				s/[ \t]*\\\r?\n\z/ /;
 				my $next = <$fh>;
+				# a comment line does not end the header (nor is it in it)
+				$next = <$fh> while defined $next and $next =~ /^\s*#/;
 				defined $next or die "E: $where: unfinished line continuation\n";
 				$next =~ s/^[ \t]+//;
 				$_ .= $next;

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 97;
+use Test::More tests => 99;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -58,6 +58,16 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	my $plan = $sc->plan;
 	is_deeply($plan->{node}{'a.html'}{deps}, [qw(html/a.html x y site/.ok)],
 		'continued rule participates in the build graph');
+
+	# comment lines between the pieces of a header are skipped
+	$dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "a.html \\\n  # one\n b.css \\\n\t: \\\n# two\n    # three\n\t\${A}/x\n" . $recipe,
+		'html/a.html' => '',
+	});
+	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
+	is_deeply([sort keys %$rules], [qw(a.html b.css)], 'comments inside a continued target list');
+	is_deeply($rules->{'b.css'}{deps}, ['x'], 'comments before the dependencies');
 
 	for my $case (
 		["# rules\na.html \\\n  b.css: \${missing}\n", qr/line 2: undefined variable/],

@@ -2,15 +2,15 @@ Revision history of WwW-SiteConf
 
 
 0.02_01  2026-11-03
-    + -Dclean names the cleaning rule(s) of the Makefile.
-      The default is `clean', as before.  With an & in it, say
-      -Dclean='clean-&', each goal has a rule of its own (make
-      clean-all) which removes only what that goal needs.
-      A lone -Dclean='&' means no cleaning rules at all, and
-      `clean' is then free for you to use as a goal.
+    + -Dclean now names the cleaning rule(s) of the Makefile.
+      The default is `clean', which generates one merged clean
+      rule as before.  With an & in it, say -Dclean='clean-&',
+      each goal has a rule of its own (make clean-<goal>) which
+      removes only what that goal needs.  A lone -Dclean='&'
+      suppresses generation of any clean rules.
 
-    + Makefile.in: more modifiers, in a module of their own
-      (RdKw::WwW::SiteConf::Modifiers).  As in bmake(1):
+    + More modifiers for Makefile.in!  (Modifiers.pm)
+      Borrowed from BSD make(1):
 
         :E :H :R :T   suffix, dirname, all but suffix, basename
         :S/old/new/   with ^old, old$, &, and the flags 1, g, W;
@@ -24,25 +24,48 @@ Revision history of WwW-SiteConf
 
         a.md.html b.md.html: ${A}/${a}/${@:R}
 
-    + Makefile.in: a first prerequisite in ${a} (${A}/${a}/... or
-      ${a}/..., as written) now IS the source of the target, and
-      then ${a}/${@} is no longer implied.  So a.md.html needs no
-      dummy html/a.md.html, and `styles.css: ${a}/styles.scss'
-      says it all.  (Spell out ${a}/${@} for it back.)  In a
-      recipe, ${<} and ${.IMPSRC} are the source, relative to ${a}.
+      This depends each Markdown-derived HTML file in ${b} on
+      its Markdown source (a.md and b.md) in ${a} respectively.
 
-    + The cache, ${c} (-Dc; the default is ${b}): a rule may make a
-      file there rather than in the site, by naming it ${c}/FILE.
-      ${b}/FILE is FILE.  Targets are in one or the other, and
-      nowhere else under ${B}.
-      configure always writes c to MY/config.mk: -Dc, else -Sc
-      of siteconf -i (now allowed), else -Db.  Config without a c
-      is an error.  Nothing checks that a, b and c differ; that is
-      for whoever needs it, with the same names.
+    *** Makefile.in: a first prerequisite in ${a} (${A}/${a}/...
+        or ${a}/..., as written) now IS the source of the target,
+        So writing `styles.css: ${a}/styles.scss' depends on the
+        SaSS source, without demanding ${a}/styles.css to exist.
+
+        In cases like these the implicit ${a}/${@} dependency
+        must be named explicitly.
+
+    + Added ${<} or ${.IMPSRC} as the source version of ${@} or
+      ${.TARGET}.  This path is relative to ${a}.  (Ironically
+      this IMPSRC is not so implicit given the above mechanism,
+      but I gotta pay homage to where I got the name from. :/)
 
     *** configure only creates the leaf directory of ${B}
         if missing.  To create intermediates use mkdir -p
-        or pass --mkpath.
+        or pass --mkpath (for old behavior).
+
+    + An alternative to ${b} is added: the cache, ${c} (-Dc).
+      A rule may make an intermediary fragment there which the
+      site comprises, but does not include directly, by naming
+      it ${c}/FILE.  Targets are still limited to one of these
+      two prefixes.  Targets without a prefix default to ${b},
+      retaining backward-compatibility.
+
+      (It is also okay to explicitly specify ${B}/${b} and
+      ${B}/${c}, but we won't ask for that here. ;)
+
+      Trying to `siteconf -g' on a project without a `c' is
+      an error (though you could just duplicate the `b' line
+      and change it to `c'.)
+
+    ! ${b} and ${c} may collide (like before with ${a} and ${b})
+      and there are no checks for it.  Please use names in ${c}
+      sparingly without treating it as a separate namespace! :(
+
+      In fact, the value of -Dc is "glued" to -Db by default,
+      so that you should feel comfortable using them as semantic
+      indicators without fear of creating an unwanted parallel
+      build tree.  More power to us! :P
 
 0.02_00  2026-11-02  RC
     + siteconf -i preset improvement!

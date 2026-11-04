@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 99;
+use Test::More tests => 100;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -68,6 +68,14 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
 	is_deeply([sort keys %$rules], [qw(a.html b.css)], 'comments inside a continued target list');
 	is_deeply($rules->{'b.css'}{deps}, ['x'], 'comments before the dependencies');
+
+	# ... but a # that is not followed by a space is not a comment
+	$dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "a.html: x \\\n  #y \\\n  # c\n  z\n" . $recipe,
+	});
+	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
+	is_deeply($rules->{'a.html'}{deps}, [qw(x #y z)], '#y is a word, "# c" a comment');
 
 	for my $case (
 		["# rules\na.html \\\n  b.css: \${missing}\n", qr/line 2: undefined variable/],

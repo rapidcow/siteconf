@@ -190,9 +190,10 @@ unless ($reset) {
 	my %Dc = %D;   # cool times
 	my %Oc = %O;   # trade anyone?
 	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk") : ();
-	# A c that was only b (as it was last time) follows b, if b is now
-	# said to be something else -- unless c is said too.
-	delete $D{c} if !exists $Dc{c} && exists $Dc{b} && !isnull($D{c})
+	# A c that was the same as b (as it was last time: no distinction
+	# between build and cache, however it came to be) follows b, if b is
+	# now said to be something else -- unless c is said too.
+	$D{c} = $Dc{b} if !exists $Dc{c} && exists $Dc{b} && !isnull($D{c})
 		&& !isnull($D{b}) && $D{c} eq $D{b};
 	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk") : ();
 	@D{keys %Dc} = values %Dc;

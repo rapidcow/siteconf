@@ -10,7 +10,7 @@ use Cwd ();
 my $script = script_path();
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
-plan tests => 33;
+plan tests => 34;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -109,5 +109,8 @@ sub cof {
 	is(cof('.'), 'dd', '-Dc over -Sc');
 	($status, $out) = run($script, 'init', '-Sc=/abs');
 	isnt($status, 0, '-Sc is relative too');
+	run('configure', '-q', '--reset', '-Db=site', '-Dc=site');
+	run('configure', '-q', '-Db=other');
+	is(cof('.'), 'other', 'an explicit c equal to b still means no distinction');
 	chdir $here or die;
 }

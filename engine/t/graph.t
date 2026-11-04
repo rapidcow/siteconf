@@ -75,7 +75,10 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		'Makefile.in' => "a.html: x \\\n  #y \\\n  # c\n  z\n" . $recipe,
 	});
 	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
-	is_deeply($rules->{'a.html'}{deps}, [qw(x #y z)], '#y is a word, "# c" a comment');
+	{
+		no warnings 'qw';
+		is_deeply($rules->{'a.html'}{deps}, [qw(x #y z)], '#y is a word, "# c" a comment');
+	}
 
 	for my $case (
 		["# rules\na.html \\\n  b.css: \${missing}\n", qr/line 2: undefined variable/],

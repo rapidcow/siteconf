@@ -677,11 +677,11 @@ sub _node
 	my $done = sub { delete $node->{visiting}; pop @{ $self->{stack} }; $node };
 
 	unless ($rule) {
-		$fail->("no rule to make it ($D->{R})");
+		$fail->("No rule to make it ($D->{R})");
 		return $done->();
 	}
 	unless (-f $self->_fs($apath)) {
-		$fail->("source `$apath' is missing"
+		$fail->("Source `$apath' is missing"
 			. ($rule->{line} ? " (rule at $D->{R} line $rule->{line})" : ""));
 		return $done->();
 	}

@@ -107,7 +107,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		# no html/c.css
 	});
 	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
-	like($@, qr/goal `all' NEEDs `a\.html', but cannot be made:\nE: {3}NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE: {5}source `html\/c\.css' is missing \(rule at \S*Makefile\.in line 1\)/,
+	like($@, qr/goal `all' NEEDs `a\.html', but cannot be made:\nE: {3}NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE: {5}Source `html\/c\.css' is missing \(rule at \S*Makefile\.in line 1\)/,
 		'... and why, a cause per line, deeper as it goes');
 
 	$dir = project({
@@ -346,7 +346,7 @@ SKIP:	{
 		'Makefile.in' => "s.css: \${a}/s.scss\n\ttrue\n",
 	});
 	eval { plan_of($dir) };
-	like($@, qr/source `html\/s\.scss' is missing/, 'missing source is named');
+	like($@, qr/Source `html\/s\.scss' is missing/, 'missing source is named');
 
 	# ${<} cannot be in a prerequisite
 	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${<}\n\ttrue\n" });
@@ -402,7 +402,7 @@ SKIP:	{
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED x.md.html\n",
 		'Makefile.in' => $rules, 'html/x.md' => '', 'html/x.html' => '' }, c => 'cache');
 	eval { plan_of($dir) };
-	like($@, qr/NEEDs `x\.md\.html', but cannot be made:\nE: {3}no rule to make it/, 'cache files are not goals');
+	like($@, qr/NEEDs `x\.md\.html', but cannot be made:\nE: {3}No rule to make it/, 'cache files are not goals');
 
 	$dir = project({%f}, c => '/abs');
 	eval { plan_of($dir) };

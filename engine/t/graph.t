@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 95;
+use Test::More tests => 97;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -418,4 +418,32 @@ SKIP:	{
 	open $fh, '>', "$dir/MY/config.mk" or die; print $fh $t; close $fh;
 	eval { plan_of($dir) };
 	like($@, qr/config\.mk: `c' is missing\.  Try reconfiguring/, 'no c, no plan');
+}
+
+# --- a WANT that is missing: said once, with where it was said
+{
+	my $warn = sub {
+		my ($dir) = @_;
+		my $err = '';
+		open my $save, '>&', \*STDERR or die;
+		close STDERR; open STDERR, '>', \$err or die;
+		eval { RdKw::WwW::SiteConf->new(B => $dir)->plan };
+		close STDERR; open STDERR, '>&', $save or die;
+		$err;
+	};
+	my $dir = project({
+		MANIFEST => $manifest,
+		'html/a.html' => lines( WANT => [qw[ ${B}/${b}/c.css ]] ),
+	});
+	is($warn->($dir), "W: `a.html' WANTs `site/c.css' (in header of `html/a.html'), but it is missing; going on without it :(\n",
+		'a missing WANT in a source header');
+
+	$dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "a.html: \${A}/tool\n\ttrue\n",
+		'html/a.html' => '',
+		'tool' => lines( WANT => [qw[ gen/Mod.pm ]] ),
+	});
+	is($warn->($dir), "W: `a.html' WANTs `gen/Mod.pm' (in header of `tool'), but it is missing; going on without it :(\n",
+		'... and in the header of a tool');
 }

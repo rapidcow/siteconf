@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 94;
+use Test::More tests => 95;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -28,7 +28,7 @@ sub project {
 	}
 	make_path("$dir/" . ($D{B} || '.') . "/MY");
 	write_make("$dir/" . ($D{B} || '.') . "/MY/config.mk", {
-		A => '.', B => '.', a => 'html', b => 'site',
+		A => '.', B => '.', a => 'html', b => 'site', c => $D{c} || $D{b} || 'site',
 		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok', %D }, 'test');
 	$f->{x} = '' ;
 	open my $fh, '>', "$dir/x" or die; close $fh;
@@ -232,7 +232,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\
 			my $dir = project({ %f, 'gen/tool' => lines( HAVE => [ $have ] ),
 				'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]] ) }, B => 'build');
 			write_make("$dir/build/MY/config.mk", {
-				A => $A eq 'abs' ? $dir : $A, B => 'build', a => 'html', b => 'site',
+				A => $A eq 'abs' ? $dir : $A, B => 'build', a => 'html', b => 'site', c => 'site',
 				R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
 			my $plan = eval { plan_of($dir, "$dir/build") };
 			ok($plan, "A = $A: tool HAVE $have") or diag $@;
@@ -255,7 +255,7 @@ SKIP:	{
 		symlink($ext, "$dir/gen") && symlink($dir, $link) or die "symlink: $!";
 		for my $A ($dir, $link) {
 			write_make("$dir/build/MY/config.mk", {
-				A => $A, B => 'build', a => 'html', b => 'site',
+				A => $A, B => 'build', a => 'html', b => 'site', c => 'site',
 				R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
 			my $plan = eval { plan_of($dir, "$dir/build") };
 			ok($plan, ($A eq $dir ? 'absolute A' : 'A through a symlink')
@@ -407,4 +407,15 @@ SKIP:	{
 	$dir = project({%f}, c => '/abs');
 	eval { plan_of($dir) };
 	like($@, qr/`c' prefix must be a relative path/, 'c is relative');
+}
+
+# --- c is always configured
+{
+	my $dir = project({ MANIFEST => $manifest, 'html/a.html' => '' });
+	open my $fh, '<', "$dir/MY/config.mk" or die;
+	my $t = do { local $/; <$fh> }; close $fh;
+	$t =~ s/^c=.*\n//m;
+	open $fh, '>', "$dir/MY/config.mk" or die; print $fh $t; close $fh;
+	eval { plan_of($dir) };
+	like($@, qr/config\.mk: `c' is missing\.  Try reconfiguring/, 'no c, no plan');
 }

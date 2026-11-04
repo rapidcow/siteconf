@@ -123,8 +123,23 @@ C<.> is allowed.
 
 The cache directory, relative to the build directory, for what is
 made along the way but does not go into the site (see
-L<RdKw::WwW::SiteConf>).  Must be relative.  Unless it is said, it is
-C<b>, and there is only the one.
+L<RdKw::WwW::SiteConf>).  Must be relative.  It is, in this order:
+
+    -Dc to configure
+    -Sc to siteconf -i (a default, as -Dc is to it)
+    -Db, as it is configured
+
+If it is only the same as C<b> from having been left out, it follows
+a C<-Db> that changes it; one that was said stays.  Either way
+F<MY/config.mk> always has a C<c>, even when it is the same as C<b>,
+and what reads it (siteconf itself) refuses one without.  So that
+whoever relies on C<${b}> and C<${c}> being two places can tell,
+and is not surprised when they turn out to be one.
+
+Nothing checks that C<a>, C<b> and C<c> are different directories, nor
+that none is inside another: with explicit C<${b}/> and C<${c}/>
+targets, they may be the same.  Whoever must have them apart should
+check the names in F<MY/config.mk> and stop (or warn) if they are not.
 
 =item C<R> (default C<Makefile.in>)
 

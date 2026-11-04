@@ -12,7 +12,7 @@ use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
 
-my %D = ( A => '.', B => '.', a => 'html', b => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Y => 'xa$ xa$$ xa', md => '.md', html => '.html', F => 'a.md b.md.md c.mdx' );
+my %D = ( A => '.', B => '.', a => 'html', b => 'site', c => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Y => 'xa$ xa$$ xa', md => '.md', html => '.html', F => 'a.md b.md.md c.mdx' );
 my $sc = bless { D => \%D }, 'RdKw::WwW::SiteConf';
 sub s_ { $sc->_subst($_[0], $_[1], 'test') }
 
@@ -120,7 +120,7 @@ for my $c (
 	open $fh, '>', "$dir/MANIFEST" or die;
 	print $fh "MAKE all\n\tNEED blog/a.md.html\n\tNEED blog/b.md.html\n";
 	close $fh or die;
-	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site',
+	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
 		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
 	my $plan = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->plan;
 	is_deeply($plan->{node}{'blog/b.md.html'}{deps}, ['html/blog/b.md', 'site/blog/.ok'], 'a first prerequisite spelled with ${@:R} is the source')

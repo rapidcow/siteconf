@@ -25,7 +25,7 @@ sub project {
 	open $fh, '>', "$dir/MANIFEST" or die;
 	print $fh $manifest;
 	close $fh or die;
-	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site',
+	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
 		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok', %D }, 'test');
 	$dir;
 }

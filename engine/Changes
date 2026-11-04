@@ -35,6 +35,10 @@ Revision history of WwW-SiteConf
       file there rather than in the site, by naming it ${c}/FILE.
       ${b}/FILE is FILE.  Targets are in one or the other, and
       nowhere else under ${B}.
+      configure always writes c to MY/config.mk: -Dc, else -Sc
+      of siteconf -i (now allowed), else -Db.  Config without a c
+      is an error.  Nothing checks that a, b and c differ; that is
+      for whoever needs it, with the same names.
 
     *** configure only creates the leaf directory of ${B}
         if missing.  To create intermediates use mkdir -p

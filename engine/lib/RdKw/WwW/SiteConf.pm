@@ -82,7 +82,12 @@ C<${B}> may be a target:
 
     blog/a.html: ${B}/${c}/blog/a.md.html
 
-Directories are made as for C<${b}>.  Only files made in C<${b}> can
+Directories are made as for C<${b}>.  We do not check that C<${a}>,
+C<${b}> and C<${c}> are different directories (C<${c}> is C<${b}>
+unless configured, and C<${a}> may be C<${b}> with explicit prefixes):
+whoever cares about that should check, using the names in
+F<MY/config.mk>.  The file must have a C<c>, as configure writes it.
+Only files made in C<${b}> can
 be goals of the manifest; those in the cache are made because
 something needs them.
 
@@ -213,14 +218,14 @@ RUSH
 			$fromhere{$_} = $Doverrides->{$_} if $_ eq 'F' or $_ eq 'R';
 		}
 	}
-	for my $k (qw( A B a b R F e )) {
+	for my $k (qw( A B a b c R F e )) {
 		defined $D{$k} && length $D{$k}
 			or die "E: $conf: `$k' is missing.  Try reconfiguring.\n";
 	}
 	File::Spec->file_name_is_absolute($D{b})
 		and die "E: `b' prefix must be a relative path.\n";
-	# c, the cache (what we make but do not ship), is b unless said
-	defined $D{c} && length $D{c} or $D{c} = $D{b};
+	# c, the cache (what we make but do not ship), is written by
+	# configure even when it is b; we do not guess it.
 	File::Spec->file_name_is_absolute($D{c})
 		and die "E: `c' prefix must be a relative path.\n";
 	grep { $_ eq '..' } split m!/!, $D{c}

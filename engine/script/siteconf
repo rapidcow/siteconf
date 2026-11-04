@@ -350,7 +350,7 @@ sub do_init
 	my ($opt) = @_;
 	my %S = %{ $opt->{S} };
 
-	# What -S sets: where we are, and the defaults for A B a b R F e clean.
+	# What -S sets: where we are, and the defaults for A B a b c R F e clean.
 	my %Dd = (
 		A => '.',
 		B => '.',
@@ -367,13 +367,16 @@ sub do_init
 		site_url => q{Absolute base URL},
 	);
 	for my $k (keys %S) {
-		exists $Dd{$k} or die "$prog: -S$k: no such thing"
-			. " (valid: A B a b R F e clean)\n";
+		exists $Dd{$k} || $k eq 'c' or die "$prog: -S$k: no such thing"
+			. " (valid: A B a b c R F e clean)\n";
 		$Dd{$k} = $S{$k};
 		length $Dd{$k} or die "$prog: -S$k may not be empty.\n";
 	}
 	File::Spec->file_name_is_absolute($Dd{b})
 		and die "$prog: -Sb must be a relative path.\n";
+	# (c is not in %Dd unless said: if not, configure makes it b)
+	exists $Dd{c} && File::Spec->file_name_is_absolute($Dd{c})
+		and die "$prog: -Sc must be a relative path.\n";
 
 	# -D and -O set what defaults to have in addition.
 	for my $k (sort keys %{ $opt->{D} }) {

@@ -29,6 +29,7 @@ L<RdKw::WwW::GenLib>.
 
 =cut
 
+use Encode ();
 use File::Basename qw( basename dirname );
 use File::Compare ();
 use File::Spec;
@@ -226,6 +227,8 @@ becomes
 The header is found within the first few lines, and ends at the
 first line that is not another header line.  For this reason,
 you won't see my evil desires following the TT2 closing tag...
+A file that is not UTF-8 (an image, say) has no header; reading stops
+at the first line that is malformed, without a word.
 
 =cut
 
@@ -236,9 +239,13 @@ sub read_deps {
 	my $I = {};
 
 	open my $fh, '<', $file or die "read_deps: open $file: $!\n";
-	binmode $fh, ':encoding(UTF-8)';
 
 	while (<$fh>) {
+		# Not UTF-8 is not text, and so has no header: give up on the
+		# spot, and quietly (the :encoding layer would warn per line).
+		# A line break is never inside a character, so this is safe.
+		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
+			or last;
 		chomp;
 		# Common comment chars:
 		#   #  (UNIX sh, scripting languages)

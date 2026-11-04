@@ -704,7 +704,7 @@ sub _node
 	my $where = "$apath";
 	my @hneed = map { [ $_, $self->_dep($_, $where), "in header of `$apath'" ] } @{ $I{NEED} || [] };
 	my @hwant = map { [ $_, $self->_dep($_, $where), "in header of `$apath'" ] } @{ $I{WANT} || [] };
-	my @rdep = map { [ $_, $_, "a prerequisite in $D->{R} line $rule->{line}" ] } @{ $rule->{deps} };
+	my @rdep = map { [ $_, $_, "prerequisite in $D->{R} line $rule->{line}" ] } @{ $rule->{deps} };
 	# What the rule's own prerequisites (the tools) say they need, if
 	# they say anything at all
 	for my $dep (@{ $rule->{deps} }) {

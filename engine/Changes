@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf
 
 
-0.02_01  2026-11-03
+0.02_01  2026-11-04
     + -Dclean now names the cleaning rule(s) of the Makefile.
       The default is `clean', which generates one merged clean
       rule as before.  With an & in it, say -Dclean='clean-&',

@@ -350,14 +350,10 @@ SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 				next SSS;
 			}
 			unless (defined ($value = $D->{$name})) {
-				# Undefined!  But we persevere...
-				$out .= '$';
-				$out .= '{' if $curly;
-				$out .= $name;
-				$out .= '}' if $curly;
-				next SSS;
+				# Undefined = empty to us.
+				$value = '';
 			}
-			if ($value eq '.' && $spec =~ m{\G(?:/|\z)}gc) {
+			if (($value eq '' || $value eq '.') && $spec =~ m{\G(?:/|\z)}gc) {
 				# Skip useless "./" prefix
 				next SSS;
 			}

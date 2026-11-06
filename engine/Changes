@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf
 
 
-0.02_01  2026-11-04
+0.02_01  2026-11-05
     + -Dclean now names the cleaning rule(s) of the Makefile.
       The default is `clean', which generates one merged clean
       rule as before.  With an & in it, say -Dclean='clean-&',
@@ -71,6 +71,12 @@ Revision history of WwW-SiteConf
       so that you should feel comfortable using them as semantic
       indicators without fear of creating an unwanted parallel
       build tree.  More power to us! :P
+
+    + The header of a source file that a header NEEDs (or WANTs) is
+      read as well, and so on, much as gcc -MM lists the headers of
+      headers: what NEEDs a template NEEDs what the template does.
+      What we make ourselves is not followed (that is for its own
+      rule, and the build tool's ordering, to say).
 
 0.02_00  2026-11-02  RC
     + siteconf -i preset improvement!

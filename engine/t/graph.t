@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 102;
+use Test::More tests => 107;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -485,4 +485,26 @@ SKIP:	{
 	});
 	is($warn->($dir), "W: `a.html' WANTs `gen/Mod.pm' (in header of `tool'), but it is missing; going on without it :(\n",
 		'... and in the header of a tool');
+}
+
+# --- headers of source files we NEED are read, too (like gcc -MM);
+# what we make is not: its prerequisites are for the rules to say
+{
+	my $dir = project({
+		MANIFEST => $manifest,
+		'html/a.html' => lines( NEED => [qw[ ${A}/html/t/outer ]] ),
+		'html/t/outer' => lines( NEED => [qw[ ${B}/${b}/b.css ${A}/html/t/inner ]],
+			WANT => [qw[ ${A}/html/t/gone ]] ),
+		'html/t/inner' => lines( NEED => [qw[ ${A}/html/t/outer ${A}/html/t/leaf ]] ),
+		'html/t/leaf' => '',
+		'html/b.css' => lines( NEED => [qw[ ${A}/html/bdep ]] ), 'html/bdep' => '',
+	});
+	my $plan = eval { plan_of($dir) };
+	is($@, '', 'headers of headers: cycles and soft files are fine');
+	my $deps = $plan->{node}{'a.html'}{deps};
+	ok((grep { $_ eq 'html/t/leaf' } @$deps), 'a NEED of a NEED is a dependency');
+	ok((grep { $_ eq 'site/b.css' } @$deps), '... including what is made');
+	is_deeply($plan->{node}{'a.html'}{kids}, ['b.css'], '... and it is a kid of the page');
+	ok(!(grep { $_ eq 'html/bdep' } @$deps),
+		'what we make is not read: its NEEDs are none of the page\'s business');
 }

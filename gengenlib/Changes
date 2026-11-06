@@ -1,6 +1,10 @@
 Revision history of WwW-GenGenLib
 
 
+0.00_02  2026-11-05
+    + norm_deps: HAVE NEED WANT header normalization
+    + subs_deps: basic permissive variable expansion
+
 0.00_01  2026-11-04  RC
     * read_deps learns to give up on the first malformed UTF-8
       line, so binary files like image assets, fonts, etc. are

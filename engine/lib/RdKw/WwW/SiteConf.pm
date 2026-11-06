@@ -729,6 +729,27 @@ sub _node
 	my @hneed = map { [ $_, $self->_dep($_, $where), "in header of `$apath'" ] } @{ $I{NEED} || [] };
 	my @hwant = map { [ $_, $self->_dep($_, $where), "in header of `$apath'" ] } @{ $I{WANT} || [] };
 	my @rdep = map { [ $_, $_, "prerequisite in $D->{R} line $rule->{line}" ] } @{ $rule->{deps} };
+	# What the source files we NEED (or WANT) say they need, and so on:
+	# like gcc -MM, which lists the headers of headers.
+	{
+		my %seen = ($apath => 1);
+		my (@more_need, @more_want);
+		my $follow; $follow = sub {
+			my ($list, $soft) = @_;
+			for my $d (@$list) {
+				$seen{$d->[1]}++ and next;
+				my ($need, $want) = $self->_inherit($d->[1]);
+				push @{ $soft ? \@more_want : \@more_need }, @$need;
+				push @more_want, @$want;
+				$follow->($need, $soft);
+				$follow->($want, 1);
+			}
+		};
+		$follow->(\@hneed, 0);
+		$follow->(\@hwant, 1);
+		push @hneed, @more_need;
+		push @hwant, @more_want;
+	}
 	# What the rule's own prerequisites (the tools) say they need, if
 	# they say anything at all
 	for my $dep (@{ $rule->{deps} }) {
@@ -776,6 +797,26 @@ sub _node
 	my %iHaz;
 	$node->{deps} = [ grep { !$iHaz{$_}++ } @deps ];
 	$done->();
+}
+
+# The NEEDs and WANTs in the header of `dep' (seen from the build dir),
+# as in _tool, if `dep' is a source file: something we make is not
+# followed (what it takes to make it is the rule's business, and the
+# build tool's order).
+sub _inherit
+{
+	my ($self, $dep) = @_;
+	my $got = $self->{inherit}{$dep} ||= do {
+		my $fs = $self->_fs($dep);
+		my %I = !defined $self->_target($dep) && -f $fs && -T _
+			? read_deps($fs) : ();
+		my $where = $dep;
+		[
+			[ map { [ $_, $self->_dep($_, $where), "in header of `$dep'" ] } @{ $I{NEED} || [] } ],
+			[ map { [ $_, $self->_dep($_, $where), "in header of `$dep'" ] } @{ $I{WANT} || [] } ],
+		];
+	};
+	@$got;
 }
 
 # Whether two paths seen from the build dir are spelled alike, once

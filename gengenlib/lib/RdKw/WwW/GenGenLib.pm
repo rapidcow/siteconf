@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use parent qw( Exporter );
 
-our $VERSION = '0.00_01';
+our $VERSION = '0.00_02';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -37,7 +37,8 @@ use File::Spec;
 our @EXPORT_OK = qw(
 	read_make write_make
 	update_file load_state
-	read_deps
+	read_deps norm_deps
+	subs_deps
 );
 
 =head1 ROUTINES
@@ -284,6 +285,89 @@ sub read_deps {
 
 	close $fh;
 	%$I;
+}
+
+=item B<norm_deps> I<spec>, ...
+
+Symbolically normalize dependency specification,
+as read by B<read_deps>.  Variables are demarcated
+with braces, and the C<'${A}/'> prefix is stripped.
+
+In the case that I<spec> is literally C<'${A}'>,
+return the empty string.
+
+In list context; in scalar context, normalize just
+the first argument.
+
+=cut
+
+sub norm_deps
+{
+	my (@ret);
+	foreach (@_) {
+		my $spec = $_;
+		$spec =~ s/\$([^{])/\${$1}/g;
+		$spec =~ s{\A\$\{A\}(?:/|\z)}{};
+		return $spec unless wantarray;
+		push @ret, $spec;
+	}
+	@ret;
+}
+
+=item B<subs_deps> \%D, I<spec>, ...
+
+Substitute dependency specifications with
+the given definitions.  C<norm_deps> is
+called to normalize the specification, and
+path prefixes that expand to C<"./"> are
+collapsed.
+
+=cut
+
+sub subs_deps
+{
+	my $D = shift;
+	my @ret;
+	foreach my $spec (norm_deps(@_)) {
+		my $out = '';
+		pos($spec) = 0;
+SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
+			$out .= $1;
+			my ($name, $curly, $value);
+			if ($curly = ($spec =~ /\G\{([^\}]+)\}/gc)) {
+				$name = $1;
+			} elsif (/\G(.)/gc) {
+				$name = $1;
+			}
+			unless (defined $name) {
+				# "$" at EOF
+				$out = '$';
+				next SSS;
+			}
+			if ($name eq '$') {
+				# "$$" escapes "$"
+				$out .= $name;
+				next SSS;
+			}
+			unless (defined ($value = $D->{$name})) {
+				# Undefined!  But we persevere...
+				$out .= '$';
+				$out .= '{' if $curly;
+				$out .= $name;
+				$out .= '}' if $curly;
+				next SSS;
+			}
+			if ($value eq '.' && $spec =~ m{\G(?:/|\z)}gc) {
+				# Skip useless "./" prefix
+				next SSS;
+			}
+			$out .= $value;
+		}
+		$out .= substr($spec, pos($spec));
+		return $out unless wantarray;
+		push @ret, $out;
+	}
+	@ret;
 }
 
 =back

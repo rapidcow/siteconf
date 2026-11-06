@@ -4,10 +4,19 @@ Revision history of WwW-GenGenLib
 0.00_02  2026-11-05
     + norm_deps: HAVE NEED WANT header normalization
     + subs_deps: basic permissive variable expansion
-    + split_dep, walk_deps: the symbolic root of a dependency, and
-      the dependencies of dependencies.  A build dependent (${B}), a
-      path that leaves its root (..), and a bare absolute path are
-      listed but never opened.
+    + split_dep: return a pair of (symbolic root, path).
+    + walk_deps: list pooled dependencies, hard or soft,
+      recursively.  The default behavior implements some
+      sane protection against possibly malicious project
+      file headers, such as requiring that the relative
+      path segment to not contain ../.. chains.  On top
+      of that a dependency in the build directory (${B})
+      is not followed, not out of precaution but because
+      it'd be wrong to conflate *project* file headers
+      with header-resembling output in the build tree. ;)
+      This behavior may be fine-tuned with the { follow }
+      keyword argument: override completely or fall back
+      to &follow_ok, the default implementation.
     - Remove dependency on parent.pm.
 
 0.00_01  2026-11-04  RC

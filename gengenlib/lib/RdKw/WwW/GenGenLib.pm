@@ -40,7 +40,7 @@ our @EXPORT_OK = qw(
 	update_file load_state
 	read_deps norm_deps
 	subs_deps split_dep
-	walk_deps
+	walk_deps follow_ok
 );
 
 =head1 ROUTINES
@@ -422,9 +422,13 @@ are returned without their dependents.
 Note that build dependents are solely identified
 symbolically by the C<${B}> prefix.
 
+=item B<follow_ok> \%D, I<spec>
+
+Default implementation of the C<follow> option.
+
 =cut
 
-sub _walk_ok
+sub follow_ok
 {
 	my ($D, $spec) = @_;
 	my ($root, $path) = split_dep($spec);
@@ -432,8 +436,11 @@ sub _walk_ok
 	return if $root =~ /\A\$\{B\}(?:\/|\z)/;
 	# Nor does an absolute path outside any variable lead anywhere safe
 	return if $root eq '' && $path =~ m{\A/};
+	# Directory traversal is bad: this part we must
+	# expand fully ahead of time, since it may be
+	# concatenated from seemingly innocent components
+	# (e.g. ${A}${A} when ${A} is (almost) always ".")
 	my $name = subs_deps($D, $path);
-	# Directory traversal is bad
 	return if $name =~ /(?:\A|\/)\.\.(?:\/|\z)/;
 	1;
 }
@@ -443,7 +450,7 @@ sub walk_deps
 	my $D = shift;
 	my %opt = ref($_[-1]) eq 'HASH' ? %{ pop() } : ();
 	my $G = $opt{graph} || +{};
-	my $ok = $opt{follow} || \&_walk_ok;
+	my $ok = $opt{follow} || \&follow_ok;
 
 	my (@pool, %pool);
 	my @todo = reverse @_;

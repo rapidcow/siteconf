@@ -793,16 +793,17 @@ sub _node
 sub _inherit
 {
 	my ($self, $dep) = @_;
-	my $none = [];
-	return ($none, $none) if defined $self->_target($dep);
-	my $fs = $self->_fs($dep);
-	return ($none, $none) unless -f $fs && -T _;
-	my %I = read_deps($fs);
-	my $where = $dep;
-	(
-		[ map { [ $_, $self->_dep($_, $where), "in header of `$dep'" ] } @{ $I{NEED} || [] } ],
-		[ map { [ $_, $self->_dep($_, $where), "in header of `$dep'" ] } @{ $I{WANT} || [] } ],
-	);
+	my $got = $self->{inherit}{$dep} ||= do {
+		my $fs = $self->_fs($dep);
+		my %I = !defined $self->_target($dep) && -f $fs && -T _
+			? read_deps($fs) : ();
+		my $where = $dep;
+		[
+			[ map { [ $_, $self->_dep($_, $where), "in header of `$dep'" ] } @{ $I{NEED} || [] } ],
+			[ map { [ $_, $self->_dep($_, $where), "in header of `$dep'" ] } @{ $I{WANT} || [] } ],
+		];
+	};
+	@$got;
 }
 
 # Whether two paths seen from the build dir are spelled alike, once

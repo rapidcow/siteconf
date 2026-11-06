@@ -1,6 +1,9 @@
 Revision history of WwW-GenLib
 
 
+0.02_01  2026-11-06
+    - Remove dependency on parent.pm.
+
 0.02_00  2026-11-01  RC
     *** REMOVE locator and location.  The former is a useless
         wrapper that offers no abstraction, and the latter is

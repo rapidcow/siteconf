@@ -18,8 +18,6 @@ my %WriteMakefileArgs = (
 	},
 	PREREQ_PM => {
 		'Exporter' => '0',
-		# pragma
-		'parent' => '0',
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
 	clean => { FILES => 'WwW-GenGenLib-*' },

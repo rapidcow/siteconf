@@ -3,7 +3,7 @@ package RdKw::WwW::GenLib;
 use 5.006;
 use strict;
 use warnings;
-use parent qw( Exporter );
+use Exporter ();
 
 our $VERSION = '0.02_00';
 $VERSION = eval $VERSION;
@@ -61,6 +61,7 @@ use File::Spec ();
 use URI ();
 use URI::Escape qw( uri_unescape );
 
+our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
 	locate relapath
 	parse_base

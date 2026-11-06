@@ -8,6 +8,7 @@ Revision history of WwW-GenGenLib
       the dependencies of dependencies.  A build dependent (${B}), a
       path that leaves its root (..), and a bare absolute path are
       listed but never opened.
+    - Remove dependency on parent.pm.
 
 0.00_01  2026-11-04  RC
     * read_deps learns to give up on the first malformed UTF-8

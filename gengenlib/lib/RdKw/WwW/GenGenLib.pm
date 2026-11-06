@@ -3,7 +3,7 @@ package RdKw::WwW::GenGenLib;
 use 5.006;
 use strict;
 use warnings;
-use parent qw( Exporter );
+use Exporter ();
 
 our $VERSION = '0.00_02';
 $VERSION = eval $VERSION;
@@ -34,6 +34,7 @@ use File::Basename qw( basename dirname );
 use File::Compare ();
 use File::Spec;
 
+our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
 	read_make write_make
 	update_file load_state

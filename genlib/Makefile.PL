@@ -20,8 +20,6 @@ my %WriteMakefileArgs = (
 		'Exporter' => '0',
 		'URI' => '0',
 		'URI::Escape' => '0',
-		# pragma
-		'parent' => '0',
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
 	clean => { FILES => 'WwW-GenLib-*' },

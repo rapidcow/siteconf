@@ -38,6 +38,7 @@ our @EXPORT_OK = qw(
 	read_make write_make
 	update_file load_state
 	read_deps norm_deps
+	subst_deps
 );
 
 =head1 ROUTINES
@@ -309,6 +310,62 @@ sub norm_deps
 		$spec =~ s{\A\$\{A\}(?:/|\z)}{};
 		return $spec unless wantarray;
 		push @ret, $spec;
+	}
+	@ret;
+}
+
+=item B<subst_deps> \%D, I<spec>, ...
+
+Substitute dependency specifications with
+the given definitions.  C<norm_deps> is
+called to normalize the specification, and
+path prefixes that expand to C<"./"> are
+collapsed.
+
+=cut
+
+sub subst_deps
+{
+	my $D = shift;
+	my @ret;
+	foreach my $spec (norm_deps(@_)) {
+		my $out = '';
+		pos($spec) = 0;
+SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
+			$out .= $1;
+			my ($name, $curly, $value);
+			if ($curly = ($spec =~ /\G\{([^\}]+)\}/gc)) {
+				$name = $1;
+			} elsif (/\G(.)/gc) {
+				$name = $1;
+			}
+			unless (defined $name) {
+				# "$" at EOF
+				$out = '$';
+				next SSS;
+			}
+			if ($name eq '$') {
+				# "$$" escapes "$"
+				$out .= $name;
+				next SSS;
+			}
+			unless (defined ($value = $D->{$name})) {
+				# Undefined!  But we persevere...
+				$out .= '$';
+				$out .= '{' if $curly;
+				$out .= $name;
+				$out .= '}' if $curly;
+				next SSS;
+			}
+			if ($value eq '.' && $spec =~ m{\G(?:/|\z)}gc) {
+				# Skip useless "./" prefix
+				next SSS;
+			}
+			$out .= $value;
+		}
+		$out .= substr($spec, pos($spec));
+		return $out unless wantarray;
+		push @ret, $out;
 	}
 	@ret;
 }

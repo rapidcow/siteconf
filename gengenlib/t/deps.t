@@ -6,10 +6,10 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 18;
+use Test::More tests => 22;
 use File::Temp qw( tempdir );
 
-use RdKw::WwW::GenGenLib qw( read_deps norm_deps );
+use RdKw::WwW::GenGenLib qw( read_deps norm_deps subst_deps );
 
 my $dir = tempdir(CLEANUP => 1);
 sub spew {
@@ -77,3 +77,9 @@ is(norm_deps('${a}/x'), '${a}/x', 'idempotence');
 is(norm_deps('${A}/${a}//x/./y'), '${a}//x/./y', '${A}/ dropped, no path normalization');
 is(norm_deps('$A'), '', 'project root');
 is(norm_deps('$B/$b/z'), '${B}/${b}/z', 'more than once');
+
+# --- subst_deps
+is(subst_deps({ a => '.' }, '${a}/x'), 'x', 'useless dot dropped');
+is(subst_deps({ a => '.' }, '${A}/${a}/x'), 'x', '${A} not consulted');
+is(subst_deps({ a => 'site' }, '${a}/x'), 'site/x', 'not useless ${a} is expanded');
+is(subst_deps({ a => 'site' }, '${a}/Main$$Inner.class'), 'site/Main$Inner.class', 'double dollar sign preserved');

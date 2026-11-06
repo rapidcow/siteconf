@@ -33,9 +33,9 @@ RdKw::WwW::GenLib - static web-site generation library
         D => $D,
         O => $O,
         locate => {
-        @_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
-            locate($O, $L, @_);
-        },
+            @_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
+                locate($O, $L, @_);
+            },
         location => $me,
     );
     $tt = Template->new({

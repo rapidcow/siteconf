@@ -152,9 +152,10 @@ is an error.
 
 =item whatever else is in F<config.mk>
 
-C<-Dtem=temple> at configuration makes C<${tem}/head.html> the path
-F<temple/head.html> (from the root, like any other).  A variable that
-is not there is an error.
+For example, a custom-defined variable via C<-Dtem=template>
+makes C<${tem}/head.html> expand to F<template/head.html>.
+
+If the variable is still not found here then it is an error.
 
 =back
 

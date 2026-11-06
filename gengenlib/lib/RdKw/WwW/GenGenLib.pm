@@ -37,7 +37,7 @@ use File::Spec;
 our @EXPORT_OK = qw(
 	read_make write_make
 	update_file load_state
-	read_deps
+	read_deps norm_deps
 );
 
 =head1 ROUTINES
@@ -284,6 +284,33 @@ sub read_deps {
 
 	close $fh;
 	%$I;
+}
+
+=item B<norm_deps> I<spec>, ...
+
+Symbolically normalize dependency specification,
+as read by B<read_deps>.  Variables are demarcated
+with braces, and the C<'${A}/'> prefix is stripped.
+
+In the case that I<spec> is literally C<'${A}'>,
+return the empty string.
+
+In list context; in scalar context, normalize just
+the first argument.
+
+=cut
+
+sub norm_deps
+{
+	my (@ret);
+	foreach (@_) {
+		my $spec = $_;
+		$spec =~ s/\$([^{])/\${$1}/g;
+		$spec =~ s{\A\$\{A\}(?:/|\z)}{};
+		return $spec unless wantarray;
+		push @ret, $spec;
+	}
+	@ret;
 }
 
 =back

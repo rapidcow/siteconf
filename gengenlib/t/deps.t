@@ -6,10 +6,10 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 13;
+use Test::More tests => 18;
 use File::Temp qw( tempdir );
 
-use RdKw::WwW::GenGenLib qw( read_deps );
+use RdKw::WwW::GenGenLib qw( read_deps norm_deps );
 
 my $dir = tempdir(CLEANUP => 1);
 sub spew {
@@ -70,3 +70,10 @@ HTML
 	my $f = spew('remark', "REMEMBER HAVE: a\n");
 	is_deeply({ read_deps($f) }, {}, 'REM is a word');
 }
+
+# --- norm_deps
+is(norm_deps('$a/x'), '${a}/x', 'demarcating works');
+is(norm_deps('${a}/x'), '${a}/x', 'idempotence');
+is(norm_deps('${A}/${a}//x/./y'), '${a}//x/./y', '${A}/ dropped, no path normalization');
+is(norm_deps('$A'), '', 'project root');
+is(norm_deps('$B/$b/z'), '${B}/${b}/z', 'more than once');

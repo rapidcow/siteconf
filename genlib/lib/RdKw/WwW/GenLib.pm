@@ -43,9 +43,8 @@ RdKw::WwW::GenLib - static web-site generation library
         INCLUDE_PATH => [ '.', $D->{a} ],
     )
         or die "[TT] ", $Template::ERROR, "\n";
-    unless ($tt->process($apath, \%V, $bpath)) {
-        die "[TT] ", $tt->error();
-    }
+    $tt->process($apath, \%V, $bpath)
+        or die "[TT] ", $tt->error();
 
 =head1 DESCRIPTION
 

@@ -237,7 +237,7 @@ sub read_deps {
 	local ($_, $.);
 	my ($file) = @_;
 	my $onit = 0;
-	my $I = {};
+	my %I = ();
 
 	open my $fh, '<', $file or die "read_deps: open $file: $!\n";
 
@@ -270,10 +270,10 @@ sub read_deps {
 
 			if ($type eq 'HAVE') {
 				die "read_deps: $file line $.: You HAVE too many.\n"
-					if @list > 1 or exists $I->{$type};
-				$I->{HAVE} = $list[0];
+					if @list > 1 or exists $I{$type};
+				$I{HAVE} = $list[0];
 			} else {
-				push @{$I->{$type}}, @list;
+				push @{$I{$type}}, @list;
 			}
 			next;
 		}
@@ -283,8 +283,12 @@ sub read_deps {
 		last if $onit or $. >= 32;
 	}
 
+	if ($fh->error()) {
+		die "read_deps: read $file: $!\n";
+	}
+
 	close $fh;
-	%$I;
+	%I;
 }
 
 =item B<norm_deps> I<spec>, ...

@@ -374,7 +374,7 @@ SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 			}
 			$out .= $value;
 		}
-		$out .= substr($spec, pos($spec));
+		$out .= substr($spec, pos($spec) || 0);
 		return $out unless wantarray;
 		push @ret, $out;
 	}
@@ -399,7 +399,7 @@ sub split_dep
 		$root .= '/' if length($root);
 		$root .= $1;
 	}
-	my $rest = substr($spec, pos($spec));
+	my $rest = substr($spec, pos($spec) || 0);
 	($root, $rest);
 }
 
@@ -429,6 +429,8 @@ sub _walk_ok
 	my ($root, $path) = split_dep($spec);
 	# Build dependents are terminal
 	return if $root =~ /\A\$\{B\}(?:\/|\z)/;
+	# Nor does an absolute path outside any variable lead anywhere safe
+	return if $root eq '' && $path =~ m{\A/};
 	my $name = subs_deps($D, $path);
 	# Directory traversal is bad
 	return if $name =~ /(?:\A|\/)\.\.(?:\/|\z)/;
@@ -440,7 +442,7 @@ sub walk_deps
 	my $D = shift;
 	my %opt = ref($_[-1]) eq 'HASH' ? %{ pop() } : ();
 	my $G = $opt{graph} || +{};
-	my $ok = $opt{follow} || \&walk_ok;
+	my $ok = $opt{follow} || \&_walk_ok;
 
 	my (@pool, %pool);
 	my @todo = reverse @_;
@@ -453,9 +455,9 @@ sub walk_deps
 		if ($G->{$spec}) {
 			$Imap = $G->{$spec};
 		} elsif ($ok->($D, $spec)) {
-			$Imap = $G->{$spec} = read_deps(
-				subs_deps($spec),
-				{ forgive_missing => 1 });
+			$Imap = $G->{$spec} = +{ read_deps(
+				subs_deps($D, $spec),
+				{ forgive_missing => 1 }) };
 		}
 		push @todo, reverse @{ $Imap->{WANT} || [] };
 		push @todo, reverse @{ $Imap->{NEED} || [] };

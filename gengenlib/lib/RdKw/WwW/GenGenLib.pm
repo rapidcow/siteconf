@@ -38,7 +38,8 @@ our @EXPORT_OK = qw(
 	read_make write_make
 	update_file load_state
 	read_deps norm_deps
-	subs_deps
+	subs_deps split_dep
+	walk_deps
 );
 
 =head1 ROUTINES
@@ -334,7 +335,7 @@ sub subs_deps
 	my @ret;
 	foreach my $spec (norm_deps(@_)) {
 		my $out = '';
-		pos($spec) = 0;
+	#	pos($spec) = 0;
 SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 			$out .= $1;
 			my ($name, $curly, $value);
@@ -368,6 +369,73 @@ SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 		push @ret, $out;
 	}
 	@ret;
+}
+
+=item B<split_dep> I<spec>
+
+Split a dependency specification into its symbolic
+root and the remainder of the path.  The symbolic
+root consists of C</>-separated segments entirely
+derived from a variable.
+
+=cut
+
+sub split_dep
+{
+	my $spec = norm_deps(@_);
+#	pos($spec) = 0;
+	my $root = '';
+	while ($spec =~ /\G(\$\{[^}]+\})(\/|\z)?/) {
+		$root .= '/' if length($root);
+		$root .= $1;
+	}
+	my $rest = substr($spec, pos($spec));
+	($root, $rest);
+}
+
+=item B<walk_deps> \%D, I<spec>, ... [\%G]
+
+Enumerate all dependencies of a path specification.
+C<\%D> is a required map of for variable definitions.
+C<\%G> is an optional map for normalized path
+specifications associated with their header values.
+
+Return the dependencies of NEEDs and WANTs of the
+given path specifications pooled, recursively with
+the dependents of all visible non-build dependents,
+and update C<\%G> as a side-effect.  This list is
+deduplicated symbolically, and files that are either
+not readable, are build dependents, or lack headers
+are returned without their dependents.
+
+Note that build dependents are solely identified
+symbolically by the C<${B}> prefix.
+
+=cut
+
+sub walk_deps
+{
+	my $D = shift;
+	my $G = ref($_[-1]) eq 'HASH' ? pop : +{};
+	my (@pool, %pool);
+	my @todo = reverse @_;
+
+	while (@todo) {
+		my $spec = pop @todo;
+		next if $pool{$spec}++;
+		push @pool, $spec;
+		my $Imap;
+		if ($G->{$spec}) {
+			$Imap = $G->{$spec};
+		}
+		elsif ($spec !~ /\A\$\{B\}(?:\/|\z)/) {
+			$Imap = +{ eval { read_deps(subs_deps($spec)) } };
+		}
+		push @todo, reverse @{ $Imap->{WANT} || [] };
+		push @todo, reverse @{ $Imap->{NEED} || [] };
+	}
+
+	@pool;
 }
 
 =back

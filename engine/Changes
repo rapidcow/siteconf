@@ -78,6 +78,10 @@ Revision history of WwW-SiteConf
       What we make ourselves is not followed (that is for its own
       rule, and the build tool's ordering, to say).
 
+    * Expansion of names in dependency headers is no longer limited
+      to A a B b c (so that it's consistent with the (new) subs_deps
+      function in GenGenLib 0.00_02. :)
+
 0.02_00  2026-11-02  RC
     + siteconf -i preset improvement!
       For the Web preset you can suppress render template output

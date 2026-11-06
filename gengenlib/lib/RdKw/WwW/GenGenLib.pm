@@ -167,7 +167,7 @@ RUSH
 	%S;
 }
 
-=item B<read_deps> I<file>
+=item B<read_deps> I<file>, { forgive_missing => 0 }
 
 This is an ambitious one.  Essentially, we're trying
 to propose a framework for a lean, but robust build
@@ -229,18 +229,28 @@ becomes
 The header is found within the first few lines, and ends at the
 first line that is not another header line.  For this reason,
 you won't see my evil desires following the TT2 closing tag...
-A file that is not UTF-8 (an image, say) has no header; reading stops
-at the first line that is malformed, without a word.
+
+A file that is not UTF-8 (an image, say) has no header;
+reading stops at the first line that is malformed, without
+a word.
+
+C<forgive_missing> is an optional boolean that decides whether
+a file that cannot be opened to begin with can be forgiven.
+Defaults to 0 (false; do not forgive).
 
 =cut
 
-sub read_deps {
+sub read_deps
+{
 	local ($_, $.);
-	my ($file) = @_;
+	my ($file, $opt) = @_;
+	my $missing_ok = $opt && $opt->{forgive_missing};
 	my $onit = 0;
 	my %I = ();
 
-	open my $fh, '<', $file or die "read_deps: open $file: $!\n";
+	open (my $fh, '<', $file) or ($missing_ok
+		? return ()
+		: die "read_deps: open $file: $!\n");
 
 	while (<$fh>) {
 		# Not UTF-8 is not text, and so has no header: give up on the
@@ -385,7 +395,7 @@ sub split_dep
 	my $spec = norm_deps(@_);
 #	pos($spec) = 0;
 	my $root = '';
-	while ($spec =~ /\G(\$\{[^}]+\})(\/|\z)?/) {
+	while ($spec =~ /\G(\$\{[^}]+\})(\/|\z)/gc) {
 		$root .= '/' if length($root);
 		$root .= $1;
 	}
@@ -393,7 +403,7 @@ sub split_dep
 	($root, $rest);
 }
 
-=item B<walk_deps> \%D, I<spec>, ... [\%G]
+=item B<walk_deps> \%D, I<spec>, ... { graph => \%G, follow => \&ok }
 
 Enumerate all dependencies of a path specification.
 C<\%D> is a required map of for variable definitions.
@@ -402,7 +412,7 @@ specifications associated with their header values.
 
 Return the dependencies of NEEDs and WANTs of the
 given path specifications pooled, recursively with
-the dependents of all visible non-build dependents,
+the dependents of all relative non-build dependents,
 and update C<\%G> as a side-effect.  This list is
 deduplicated symbolically, and files that are either
 not readable, are build dependents, or lack headers
@@ -413,10 +423,25 @@ symbolically by the C<${B}> prefix.
 
 =cut
 
+sub _walk_ok
+{
+	my ($D, $spec) = @_;
+	my ($root, $path) = split_dep($spec);
+	# Build dependents are terminal
+	return if $root =~ /\A\$\{B\}(?:\/|\z)/;
+	my $name = subs_deps($D, $path);
+	# Directory traversal is bad
+	return if $name =~ /(?:\A|\/)\.\.(?:\/|\z)/;
+	1;
+}
+
 sub walk_deps
 {
 	my $D = shift;
-	my $G = ref($_[-1]) eq 'HASH' ? pop : +{};
+	my %opt = ref($_[-1]) eq 'HASH' ? %{ pop() } : ();
+	my $G = $opt{graph} || +{};
+	my $ok = $opt{follow} || \&walk_ok;
+
 	my (@pool, %pool);
 	my @todo = reverse @_;
 
@@ -424,12 +449,13 @@ sub walk_deps
 		my $spec = pop @todo;
 		next if $pool{$spec}++;
 		push @pool, $spec;
-		my $Imap;
+		my $Imap = {};
 		if ($G->{$spec}) {
 			$Imap = $G->{$spec};
-		}
-		elsif ($spec !~ /\A\$\{B\}(?:\/|\z)/) {
-			$Imap = +{ eval { read_deps(subs_deps($spec)) } };
+		} elsif ($ok->($D, $spec)) {
+			$Imap = $G->{$spec} = read_deps(
+				subs_deps($spec),
+				{ forgive_missing => 1 });
 		}
 		push @todo, reverse @{ $Imap->{WANT} || [] };
 		push @todo, reverse @{ $Imap->{NEED} || [] };

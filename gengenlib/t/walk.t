@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 55;
 use File::Temp qw( tempdir );
 use File::Path qw( make_path );
 use Cwd qw( getcwd );
@@ -141,4 +141,3 @@ spew('tem/head.html', hdr(NEED => '${a}/part.html', WANT => '${a}/index.html'));
 }
 
 chdir $cwd;
-done_testing;

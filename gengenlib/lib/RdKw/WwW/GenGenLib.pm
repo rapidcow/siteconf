@@ -38,7 +38,7 @@ our @EXPORT_OK = qw(
 	read_make write_make
 	update_file load_state
 	read_deps norm_deps
-	subst_deps
+	subs_deps
 );
 
 =head1 ROUTINES
@@ -314,7 +314,7 @@ sub norm_deps
 	@ret;
 }
 
-=item B<subst_deps> \%D, I<spec>, ...
+=item B<subs_deps> \%D, I<spec>, ...
 
 Substitute dependency specifications with
 the given definitions.  C<norm_deps> is
@@ -324,7 +324,7 @@ collapsed.
 
 =cut
 
-sub subst_deps
+sub subs_deps
 {
 	my $D = shift;
 	my @ret;

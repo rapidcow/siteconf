@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 107;
+use Test::More tests => 108;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -170,6 +170,16 @@ bad(lines( HAVE => [qw[ ${A}/${a}/b.html ]] ), qr/but I need `html\/a\.html'/, '
 bad(lines( NEED => [qw[ ${b}/b.css ]] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare ${b}');
 bad(lines( NEED => [qw[ $b/b.css ]] ), qr/\$\{b\} is relative to \$\{B\}/, 'bare $b');
 bad(lines( NEED => [qw[ ${z}/b.css ]] ), qr/no such variable \$\{z\}/, 'no such variable');
+{
+	my $dir = project({
+		MANIFEST => $manifest,
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${tem}/base/head.html ]] ),
+		'temple/base/head.html' => '',
+	}, tem => 'temple');
+	my $plan = eval { plan_of($dir) };
+	ok($plan && grep({ $_ eq 'temple/base/head.html' } @{ $plan->{node}{'a.html'}{deps} }),
+		'any configured variable: ${tem}') or diag $@;
+}
 bad(lines( NEED => [qw[ x$/y ]] ), qr/stray \$/, 'stray dollar');
 bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old MY/');
 

@@ -150,6 +150,12 @@ The target tree, as configured -- which is relative to C<${B}>, so
 it is only good after it: C<${B}/${b}/style.css>.  A bare C<${b}/...>
 is an error.
 
+=item whatever else is in F<config.mk>
+
+C<-Dtem=temple> at configuration makes C<${tem}/head.html> the path
+F<temple/head.html> (from the root, like any other).  A variable that
+is not there is an error.
+
 =back
 
 A single letter may drop its braces (C<$a>).  A name with none of
@@ -299,12 +305,14 @@ sub _to_build
 #   ${b}  the target tree, but relative to ${B}!  It is only good after
 #         one: ${B}/${b}/x.  On its own it names the wrong place.
 #
+# as well as anything else configured (${c}, ${inc}, ...),
 # and a single letter spelled as $a is as good as ${a}.
 sub _expand
 {
 	my ($self, $spec, $where) = @_;
 	my $D = $self->{D};
-	my %var = ( A => '.', a => $D->{a}, B => $D->{B}, b => $D->{b}, c => $D->{c} );
+	# anything configured (-Dinc=include, say), but A is not config.mk's
+	my %var = ( %$D, A => '.' );
 	$spec =~ /(?<!\$\{B\}\/)(?<!\$B\/)\$(?:\{([bc])\}|([bc]))/
 		and die "E: $where: `$spec': \${@{[ defined $1 ? $1 : $2 ]}} is relative to \${B};"
 			. " write \${B}/\${@{[ defined $1 ? $1 : $2 ]}}\n";
@@ -313,8 +321,7 @@ sub _expand
 	$spec =~ s{\A\$(?:\{A\}|A)(?:/+|\z)}{} and !length $spec and $spec = '.';
 	$spec =~ s{\$(?:\{(\w+)\}|(\w))}{
 		my $x = defined $1 ? $1 : $2;
-		exists $var{$x} or die "E: $where: `$spec': no such variable \${$x}"
-			. " (there are A a B b c)\n";
+		defined $var{$x} or die "E: $where: `$spec': no such variable \${$x}\n";
 		$var{$x};
 	}ge;
 	$spec =~ /\$/ and die "E: $where: stray \$ in `$spec'\n";

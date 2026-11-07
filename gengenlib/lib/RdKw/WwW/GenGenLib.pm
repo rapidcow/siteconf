@@ -3,7 +3,6 @@ package RdKw::WwW::GenGenLib;
 use 5.006;
 use strict;
 use warnings;
-use Carp ();
 use Exporter ();
 
 our $VERSION = '0.00_02';
@@ -327,8 +326,8 @@ sub norm_deps
 {
 	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
 	my $errors = defined $opt->{errors} ? $opt->{errors} : 'croak';
-	Carp::croak("norm_deps: errors must be \"croak\" or \"replace\"")
-		unless $errors eq 'croak' || $errors eq 'replace';
+	$errors eq 'croak' || $errors eq 'replace'
+		or die "norm_deps: errors must be `croak' or `replace'\n";
 
 	my (@ret);
 	foreach (@_) {
@@ -343,11 +342,11 @@ sub norm_deps
 				# includes "$$"
 				$out .= "\${$1}";
 			} elsif ($spec =~ /\G\$\z/gc) {
-				Carp::croak("norm_deps: trailing \"\$\" in \"$_\"")
+				die "norm_deps: trailing \$ in `$_'\n"
 					if $errors eq 'croak';
 				$out .= '${$}';
 			} elsif ($spec =~ /\G\$\{/gc) {
-				Carp::croak("norm_deps: unterminated \"\${\" in \"$_\"")
+				die "norm_deps: unterminated \${ in `$_'\n"
 					if $errors eq 'croak';
 				$out .= '${$}{';
 			} else {

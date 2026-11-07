@@ -369,9 +369,6 @@ sub enroot
 sub uproot
 {
 	my ($base, $path) = @_;
-	use Data::Dumper;
-	my ($pkg, $file, $line) = caller;
-	print STDERR "$pkg $file $line CALL ", Dumper \@_ if $pkg eq 'main';
 	if ($base eq '' || $base eq '.') {
 		return $path unless $path =~ /\A\//;
 		return;
@@ -379,15 +376,13 @@ sub uproot
 	$base =~ s/\/\z//;
 	# The lone root slash "/" may be mistaken for a
 	# courteous trailing slash, but it's really not.
-	print STDERR "HERE base=`$base' path=`$path'\n" if $pkg eq 'main';
-	if ($base eq '' && $path =~ /\A\//) {
+	if ($base eq '' && $path !~ /\A\//) {
 		return;
 	}
 	return "" if ($path eq $base);
 	if ($path =~ s/\A\Q$base\E\///) {
 		return $path;
 	}
-	print STDERR "FAIL base=`$base' path=`$path'\n" if $pkg eq 'main';
 	return;
 }
 

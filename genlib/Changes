@@ -1,6 +1,9 @@
 Revision history of WwW-GenLib
 
 
+0.02_02  2026-11-07  RC
+    + locate now preserves relative paths!
+
 0.02_01  2026-11-06  RC
     - Remove dependency on parent.pm.
 

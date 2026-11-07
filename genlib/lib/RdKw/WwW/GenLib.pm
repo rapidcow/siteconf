@@ -75,24 +75,37 @@ on demand.
 
 =item B<locate> \%O, I<base>, I<spec>
 
-Implements the synonymous TT2 function.
+Implements the synonymous TT function.
 
 =cut
 
 sub locate {
 	my ($O, $base, $spec) = @_;
 
-	if ($spec =~ s!^//!!) {
+	if ($spec =~ s!\A//!!) {
 		return join '', (
 			$O->{site_url},
 			$O->{base_url},
 			$spec);
 	}
 
-	if ($spec =~ s!^/!!) {
+	if ($spec =~ s!\A/!!) {
 		return join '', (
 			$O->{base_url},
 			$spec);
+	}
+
+	# Relative path passthrough
+	if ($spec eq '.' or $spec =~ /\A\.\.(?:\/|\z)/) {
+		return $spec;
+	}
+	# Here "./" is stripped as a prefix, since
+	# without it the path would be mistaken for
+	# the full URL path.  You should pass "./"
+	# twice if you want it preserved literally.
+	# For example, "././run.cgi" => "./run.cgi".
+	if ($spec =~ s!\A\.(?:/|\z)!!) {
+		return $spec;
 	}
 
 	relapath($spec => $base);

@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 29;
+use Test::More tests => 32;
 
 use RdKw::WwW::GenLib qw( locate relapath );
 
@@ -75,4 +75,7 @@ is (relapath('trivnote///', $deep), '../', 'many slashes after dotdot');
 	is(locate(\%O, $L, '/c.html'), '/c.html', 'locate, host-relative');
 	is(locate(\%O, $L, '//c.html'), 'https://example.test/c.html', 'locate, absolute');
 	is(locate(\%O, $L, 'c/'), '../c/', 'nothing is done to the spec');
+	is(locate(\%O, $L, './c.html'), 'c.html', 'manual "./" relative path');
+	is(locate(\%O, $L, '././c.html'), './c.html', 'relative path with literal "./"');
+	is(locate(\%O, $L, '../c.html'), '../c.html', 'manual "../" relative path');
 }

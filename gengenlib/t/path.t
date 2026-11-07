@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 30;
+use Test::More tests => 39;
 
 use RdKw::WwW::GenGenLib qw(enroot uproot);
 
@@ -42,5 +42,16 @@ is(uproot('site//', 'site///'), '/');
 foreach my $ident ('', '.') {
 	is(uproot($ident, 'index.html'), 'index.html');
 	is(uproot($ident, '../secret'), '../secret');
-	is(uproot($ident, '/etc/passwd'), '/etc/passwd');
+	is(uproot($ident, '/etc/passwd'), undef, "'$ident' cannot become absolute");
 }
+
+# The leading slash belongs to the root
+is(uproot('/', '/etc'), 'etc');
+is(uproot('/', '/'), '');
+is(uproot('/', '//x'), '/x');
+is(uproot('/', 'etc'), undef);
+is(uproot('/', ''), undef);
+is(uproot('/prefix', 'prefix'), undef);
+is(uproot('prefix', '/prefix'), undef);
+is(uproot('/prefix', '/prefix/x'), 'x');
+is(uproot('a', 'a//x'), '/x');

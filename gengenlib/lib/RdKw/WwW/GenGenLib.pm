@@ -338,7 +338,11 @@ most one trailing slash, undef if I<root> and
 I<path> are unrelated, and a non-empty string if
 I<root> is a prefix of I<path> such that
 C<enroot(root, uproot(root, path))> equals
-C<path>.
+C<path>.  A leading slash is part of the root: a
+relative root never contains an absolute path, nor
+the other way around.  (What is returned is merely
+the rest, and may begin with a slash itself, as in
+C<uproot('a', 'a//x')>.)
 
 Added in 0.0002.
 
@@ -362,6 +366,10 @@ sub enroot
 sub uproot
 {
 	my ($base, $path) = @_;
+	# A leading slash belongs to the root (it is not a trailing one that
+	# may be dropped), so both must have it, or neither: enroot('', 'x')
+	# and enroot('/', 'x') could never rebuild each other's path.
+	return if ($base =~ m{\A/}) != ($path =~ m{\A/});
 	if ($base eq '' || $base eq '.') {
 		return $path;
 	}

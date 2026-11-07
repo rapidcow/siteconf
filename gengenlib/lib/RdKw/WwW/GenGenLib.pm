@@ -466,6 +466,8 @@ sub walk_deps
 			$Imap = $G->{$spec} = +{ read_deps(
 				subs_deps($D, $spec),
 				{ forgive_missing => 1 }) };
+		} else {
+			$Imap = {};
 		}
 		push @todo, reverse @{ $Imap->{WANT} || [] };
 		push @todo, reverse @{ $Imap->{NEED} || [] };

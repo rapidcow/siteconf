@@ -461,7 +461,8 @@ SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 			}
 			if (($out eq '' || $out =~ m{/\z})
 				&& ($value eq '' || $value eq '.')
-				&& $spec =~ m{\G(?:/|\z)}gc) {
+				&& $spec =~ m{\G(?:/|\z)}gc)
+			{
 				# Skip useless "./" segment (only if the variable
 				# makes up the whole segment: good-${a}/x is not x)
 				next SSS;

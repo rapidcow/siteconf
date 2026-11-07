@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 23;
+use Test::More tests => 32;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( read_deps norm_deps subs_deps );
@@ -79,8 +79,19 @@ is(norm_deps('$A'), '', 'project root');
 is(norm_deps('$B/$b/z'), '${B}/${b}/z', 'more than once');
 is(norm_deps('$A//surprise'), '/surprise', 'lazy strip');
 
+# --- norm_deps: malformed
+ok(!eval { norm_deps('a$'); 1 }, 'trailing $ croaks');
+like($@, qr/trailing/, '... says so');
+ok(!eval { norm_deps('${a'); 1 }, 'unterminated ${ croaks');
+like($@, qr/unterminated/, '... says so');
+is(norm_deps('a$', { errors => 'replace' }), 'a${$}', 'trailing $ replaced');
+is(norm_deps('${a/b', { errors => 'replace' }), '${$}{a/b', 'unterminated ${ replaced');
+is(norm_deps('$$', { errors => 'replace' }), '${$}', '$$ is fine');
+
 # --- subst_deps
 is(subs_deps({ a => '.' }, '${a}/x'), 'x', 'useless dot dropped');
 is(subs_deps({ a => '.' }, '${A}/${a}/x'), 'x', '${A} not consulted');
 is(subs_deps({ a => 'site' }, '${a}/x'), 'site/x', 'not useless ${a} is expanded');
 is(subs_deps({ a => 'site' }, '${a}/Main$$Inner.class'), 'site/Main$Inner.class', 'double dollar sign preserved');
+is(subs_deps({ stuff => '.' }, 'good-${stuff}/times.html'), 'good-./times.html', 'dot in the middle of a segment kept');
+is(subs_deps({ a => '.' }, 'x/${a}/y'), 'x/y', 'useless dot dropped mid-path');

@@ -2,8 +2,15 @@ Revision history of WwW-GenGenLib
 
 
 0.00_02  2026-11-06  RC
-    + norm_deps: HAVE NEED WANT header normalization
-    + subs_deps: basic permissive variable expansion
+    + norm_deps: HAVE NEED WANT header normalization.  It
+      accepts an { errors } option deciding how it should
+      handle stray "$" characters, lenient (replace) or
+      strict (croak).  (This is similar to str.encode in
+      Python, for those of you who know. ;)
+    + subs_deps: basic permissive variable expansion.  Only
+      a whole path segment that is "." or empty is collapsed
+      (For example, good-${a}/times.html is naively replaced
+      with good-./ times.html, not good-times.html.)
     + split_dep: return a pair of (symbolic root, path).
     + walk_deps: list pooled dependencies, hard or soft,
       recursively.  The default behavior implements some

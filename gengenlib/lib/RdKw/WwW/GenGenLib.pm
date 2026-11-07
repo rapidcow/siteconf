@@ -3,6 +3,7 @@ package RdKw::WwW::GenGenLib;
 use 5.006;
 use strict;
 use warnings;
+use Carp ();
 use Exporter ();
 
 our $VERSION = '0.00_02';
@@ -303,7 +304,7 @@ sub read_deps
 	%I;
 }
 
-=item B<norm_deps> I<spec>, ...
+=item B<norm_deps> I<spec>, ... { errors => "croak" }
 
 Symbolically normalize dependency specification,
 as read by B<read_deps>.  Variables are demarcated
@@ -315,36 +316,70 @@ return the empty string.
 In list context; in scalar context, normalize just
 the first argument.
 
+A trailing C<$> and an unterminated C<${> are malformed.
+The optional C<errors> option decides what to do about
+them: C<"croak"> (the default) dies, and C<"replace">
+treats the offending C<$> as a literal one (C<$$>).
+
 =cut
 
 sub norm_deps
 {
+	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
+	my $errors = defined $opt->{errors} ? $opt->{errors} : 'croak';
+	Carp::croak("norm_deps: errors must be \"croak\" or \"replace\"")
+		unless $errors eq 'croak' || $errors eq 'replace';
+
 	my (@ret);
 	foreach (@_) {
 		my $spec = $_;
-		$spec =~ s/\$([^{])/\${$1}/g;
-		$spec =~ s{\A\$\{A\}(?:/|\z)}{};
-		return $spec unless wantarray;
-		push @ret, $spec;
+		my $out = '';
+		for (;;) {
+			if ($spec =~ /\G([^\$]+)/gc) {
+				$out .= $1;
+			} elsif ($spec =~ /\G\$\{([^}]*)\}/gc) {
+				$out .= "\${$1}";
+			} elsif ($spec =~ /\G\$([^{])/gcs) {
+				# includes "$$"
+				$out .= "\${$1}";
+			} elsif ($spec =~ /\G\$\z/gc) {
+				Carp::croak("norm_deps: trailing \"\$\" in \"$_\"")
+					if $errors eq 'croak';
+				$out .= '${$}';
+			} elsif ($spec =~ /\G\$\{/gc) {
+				Carp::croak("norm_deps: unterminated \"\${\" in \"$_\"")
+					if $errors eq 'croak';
+				$out .= '${$}{';
+			} else {
+				last;
+			}
+		}
+		$out =~ s{\A\$\{A\}(?:/|\z)}{};
+		return $out unless wantarray;
+		push @ret, $out;
 	}
 	@ret;
 }
 
-=item B<subs_deps> \%D, I<spec>, ...
+=item B<subs_deps> \%D, I<spec>, ... { errors => "croak" }
 
 Substitute dependency specifications with
 the given definitions.  C<norm_deps> is
-called to normalize the specification, and
-path prefixes that expand to C<"./"> are
-collapsed.
+called to normalize the specification (and
+is given the options, if any), and path
+segments that consist solely of a variable
+expanding to C<"."> or nothing are collapsed
+(so C<${a}/x> may become C<x>, but C<x-${a}/y>
+is left alone).
 
 =cut
 
 sub subs_deps
 {
 	my $D = shift;
+	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
 	my @ret;
-	foreach my $spec (norm_deps(@_)) {
+	foreach my $spec (norm_deps(@_, $opt)) {
 		my $out = '';
 	#	pos($spec) = 0;
 SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
@@ -369,8 +404,11 @@ SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 				# Undefined = empty to us.
 				$value = '';
 			}
-			if (($value eq '' || $value eq '.') && $spec =~ m{\G(?:/|\z)}gc) {
-				# Skip useless "./" prefix
+			if (($out eq '' || $out =~ m{/\z})
+				&& ($value eq '' || $value eq '.')
+				&& $spec =~ m{\G(?:/|\z)}gc) {
+				# Skip useless "./" segment (only if the variable
+				# makes up the whole segment: good-${a}/x is not x)
 				next SSS;
 			}
 			$out .= $value;

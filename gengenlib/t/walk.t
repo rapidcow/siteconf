@@ -5,12 +5,12 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 65;
+use Test::More tests => 69;
 use File::Temp qw( tempdir );
 use File::Path qw( make_path );
 use Cwd qw( getcwd );
 
-use RdKw::WwW::GenGenLib qw( split_dep walk_deps follow_ok );
+use RdKw::WwW::GenGenLib qw( split_dep walk_deps follow_ok norm_deps );
 
 # --- split_dep (no side effects; no warnings)
 {
@@ -86,11 +86,12 @@ spew('must-not-be-read', '');
 {
 	my $bad = sub {
 		my ($spec) = @_;
+		my $norm = norm_deps($spec);
 		my %G;
 		spew('src/evil.html', hdr(NEED => $spec));
 		my @got = walk_deps(\%D, '${a}/evil.html', { graph => \%G });
-		is_deeply(\@got, [ '${a}/evil.html', $spec ], "listed: $spec");
-		ok(!defined $G{$spec}, "not read: $spec");
+		is_deeply(\@got, [ '${a}/evil.html', $norm ], "listed: $spec");
+		ok(exists $G{$norm} && !defined $G{$norm}, "not read: $spec");
 		ok(!grep({ $_ eq 'leaked' } @got), "nothing it leads to: $spec");
 	};
 	$bad->($_) for (
@@ -111,6 +112,20 @@ spew('must-not-be-read', '');
 	my @got = walk_deps(\%D, '../secret', { graph => \%G });
 	is_deeply(\@got, ['../secret'], 'the entry itself may not be traversal');
 	ok(!grep({ defined } values %G), '... and is not read');
+}
+
+# --- spellings are one node; a directory is not a header to read
+{
+	spew('src/dup.html', hdr(NEED => '$a/part.html ${a}/part.html tem/../x'));
+	make_path('src/adir');
+	spew('src/dir.html', hdr(NEED => '${a}/adir ${a}/adir/'));
+	my %G;
+	my @got = walk_deps(\%D, '$a/dup.html', { graph => \%G });
+	is_deeply([ grep { /part/ } @got ], [ '${a}/part.html' ], 'dollar-a and braces: one entry');
+	ok(exists $G{'${a}/dup.html'}, '... keyed by the normalized spec');
+	my @dir = eval { walk_deps(\%D, '${a}/dir.html') };
+	is($@, '', 'a directory dependency does not die');
+	is_deeply(\@dir, [ '${a}/dir.html', '${a}/adir', '${a}/adir/' ], '... and is listed without dependents');
 }
 
 # --- a variable's own value may climb: it is the host's, not the source's

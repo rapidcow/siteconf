@@ -531,17 +531,21 @@ sub split_dep
 =item B<walk_deps> \%D, I<spec>... { graph => \%G, follow => \&ok }
 
 Enumerate all dependencies of a path specification.
-C<\%D> is a required map of for variable definitions.
+C<\%D> is a required map of variable definitions.
 C<\%G> is an optional map for normalized path
 specifications associated with their header values.
+Every specification is normalized (see B<norm_deps>)
+on its way in, so the list returned and the keys of
+C<\%G> are normalized too, and C<$a/x> and C<${a}/x>
+are the same entry.
 
 Return the dependencies of NEEDs and WANTs of the
 given path specifications pooled, recursively with
 the dependents of all relative non-build dependents,
 and update C<\%G> as a side-effect.  This list is
 deduplicated symbolically, and files that are either
-not readable, are build dependents, or lack headers
-are returned without their dependents.
+not regular files, are build dependents, or lack
+headers are returned without their dependents.
 
 Note that build dependents are solely identified
 symbolically by the C<${B}> prefix.
@@ -583,8 +587,10 @@ sub walk_deps
 	my $G = $opt{graph} || +{};
 	my $ok = $opt{follow} || \&follow_ok;
 
+	# Everything is kept in normalized form, so that $a/x and ${a}/x
+	# are one and the same node, whichever way a header spells it
 	my (@pool, %pool);
-	my @todo = reverse @_;
+	my @todo = reverse norm_deps(@_);
 
 	while (@todo) {
 		my $spec = pop @todo;
@@ -594,16 +600,19 @@ sub walk_deps
 			if (exists $G->{$spec}) {
 				$G->{$spec};
 			} elsif ($ok->($D, $spec)) {
-				$G->{$spec} = +{ read_deps(
-					subs_deps($D, $spec),
-					{ forgive_missing => 1 }) };
+				# Only a regular file has a header to read: a directory
+				# opens fine but cannot be read, and a FIFO would hang
+				my $file = subs_deps($D, $spec);
+				$G->{$spec} = -f $file
+					? { read_deps($file, { forgive_missing => 1 }) }
+					: {};
 			} else {
 				$G->{$spec} = undef;
 			}
 		};
 		if (defined $Imap) {
-			push @todo, reverse @{ $Imap->{WANT} || [] };
-			push @todo, reverse @{ $Imap->{NEED} || [] };
+			push @todo, reverse norm_deps(@{ $Imap->{WANT} || [] });
+			push @todo, reverse norm_deps(@{ $Imap->{NEED} || [] });
 		}
 	}
 

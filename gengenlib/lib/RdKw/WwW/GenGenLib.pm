@@ -354,8 +354,11 @@ sub enroot
 	@path or @path = ("");
 	foreach my $comp (@path) {
 		if ($path eq '' || $path eq '.') {
-			$path = $comp;
-			next;
+			unless ($comp =~ /\A\//) {
+				$path = $comp;
+				next;
+			}
+			$path = '.';
 		}
 		$path =~ s/\/\z//;
 		$path .= '/' . $comp;
@@ -366,20 +369,25 @@ sub enroot
 sub uproot
 {
 	my ($base, $path) = @_;
-	# A leading slash belongs to the root (it is not a trailing one that
-	# may be dropped), so both must have it, or neither: enroot('', 'x')
-	# and enroot('/', 'x') could never rebuild each other's path.
-	return if ($base =~ m{\A/}) != ($path =~ m{\A/});
+	use Data::Dumper;
+	my ($pkg, $file, $line) = caller;
+	print STDERR "$pkg $file $line CALL ", Dumper \@_ if $pkg eq 'main';
 	if ($base eq '' || $base eq '.') {
-		return $path;
+		return $path unless $path =~ /\A\//;
+		return;
 	}
 	$base =~ s/\/\z//;
-	if ($path eq $base) {
-		return "";
+	# The lone root slash "/" may be mistaken for a
+	# courteous trailing slash, but it's really not.
+	print STDERR "HERE base=`$base' path=`$path'\n" if $pkg eq 'main';
+	if ($base eq '' && $path =~ /\A\//) {
+		return;
 	}
-	if ($path =~ s{\A\Q$base\E/}{}) {
+	return "" if ($path eq $base);
+	if ($path =~ s/\A\Q$base\E\///) {
 		return $path;
 	}
+	print STDERR "FAIL base=`$base' path=`$path'\n" if $pkg eq 'main';
 	return;
 }
 

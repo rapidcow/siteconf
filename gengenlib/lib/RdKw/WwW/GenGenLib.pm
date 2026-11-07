@@ -550,14 +550,14 @@ sub follow_ok
 	my ($root, $path) = split_dep($spec);
 	# Build dependents are terminal
 	return if $root =~ /\A\$\{B\}(?:\/|\z)/;
+	my $name = subs_deps($D, $path);
 	# Nor does a path that has left the root lead anywhere safe,
 	# however it got there: not just "/etc" but also ${a}//etc
 	return if $name =~ m{\A/};
 	# Directory traversal is bad: this part we must
-	# expand fully ahead of time, since it may be
+	# also expand fully ahead of time, since it may be
 	# concatenated from seemingly innocent components
 	# (e.g. ${A}${A} when ${A} is (almost) always ".")
-	my $name = subs_deps($D, $path);
 	return if $name =~ /(?:\A|\/)\.\.(?:\/|\z)/;
 	1;
 }

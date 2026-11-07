@@ -69,8 +69,8 @@ spew('must-not-be-read', '');
 	is_deeply(\@got, [ '${a}/index.html', 'tem/head.html', '${a}/part.html', 'leaf',
 		'${B}/${b}/base.css', '${a}/gone.html' ],
 		'depth first, NEED before WANT, symbolic, cycles stop');
-	ok(!exists $G{'${B}/${b}/base.css'}, 'a build dependent is listed, not read');
-	ok(!exists $G{'must-not-be-read'}, '... nor what it names');
+	ok(!defined $G{'${B}/${b}/base.css'}, 'a build dependent is listed, not read');
+	ok(!defined $G{'must-not-be-read'}, '... nor what it names');
 	is_deeply($G{'${a}/gone.html'}, {}, 'a missing file is forgiven');
 
 	# the cache is trusted: no file is read twice
@@ -90,7 +90,7 @@ spew('must-not-be-read', '');
 		spew('src/evil.html', hdr(NEED => $spec));
 		my @got = walk_deps(\%D, '${a}/evil.html', { graph => \%G });
 		is_deeply(\@got, [ '${a}/evil.html', $spec ], "listed: $spec");
-		ok(!exists $G{$spec}, "not read: $spec");
+		ok(!defined $G{$spec}, "not read: $spec");
 		ok(!grep({ $_ eq 'leaked' } @got), "nothing it leads to: $spec");
 	};
 	$bad->($_) for (
@@ -108,7 +108,7 @@ spew('must-not-be-read', '');
 	my %G;
 	my @got = walk_deps(\%D, '../secret', { graph => \%G });
 	is_deeply(\@got, ['../secret'], 'the entry itself may not be traversal');
-	ok(!%G, '... and is not read');
+	ok(!grep({ defined } values %G), '... and is not read');
 }
 
 # --- a variable's own value may climb: it is the host's, not the source's
@@ -122,7 +122,7 @@ spew('must-not-be-read', '');
 	spew('buildx/y', hdr(NEED => 'leaf'));
 	my %G;
 	walk_deps(\%D, '${B}x/y', { graph => \%G });
-	ok(exists $G{'${B}x/y'}, '${B}x is not a build dependent');
+	ok(defined $G{'${B}x/y'}, '${B}x is not a build dependent');
 }
 
 # --- follow: the caller says what may be read
@@ -134,8 +134,8 @@ spew('tem/head.html', hdr(NEED => '${a}/part.html', WANT => '${a}/index.html'));
 		push @asked, $spec;
 		return $spec =~ m{\Atem/} || $spec eq '${a}/index.html' ? 1 : 0;
 	} });
-	ok(!exists $G{'${a}/part.html'}, 'follow: refused is not read');
-	ok(exists $G{'tem/head.html'}, 'follow: allowed is read');
+	ok(!defined $G{'${a}/part.html'}, 'follow: refused is not read');
+	ok(defined $G{'tem/head.html'}, 'follow: allowed is read');
 	ok((grep { $_ eq '${a}/part.html' } @got), 'follow: refused is still listed');
 	is($asked[0], '${a}/index.html', 'follow gets the symbolic spec');
 }

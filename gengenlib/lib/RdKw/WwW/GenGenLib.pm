@@ -425,6 +425,8 @@ symbolically by the C<${B}> prefix.
 =item B<follow_ok> \%D, I<spec>
 
 Default implementation of the C<follow> option.
+Entries denied this way are permanently cached
+as C<undef> in the graph.
 
 =cut
 
@@ -460,18 +462,20 @@ sub walk_deps
 		next if $pool{$spec}++;
 		push @pool, $spec;
 		my $Imap = do {
-			if ($G->{$spec}) {
+			if (exists $G->{$spec}) {
 				$G->{$spec};
 			} elsif ($ok->($D, $spec)) {
 				$G->{$spec} = +{ read_deps(
 					subs_deps($D, $spec),
 					{ forgive_missing => 1 }) };
 			} else {
-				$G->{$spec} = {};
+				$G->{$spec} = undef;
 			}
 		};
-		push @todo, reverse @{ $Imap->{WANT} || [] };
-		push @todo, reverse @{ $Imap->{NEED} || [] };
+		if (defined $Imap) {
+			push @todo, reverse @{ $Imap->{WANT} || [] };
+			push @todo, reverse @{ $Imap->{NEED} || [] };
+		}
 	}
 
 	@pool;

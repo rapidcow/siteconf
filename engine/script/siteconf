@@ -516,7 +516,7 @@ sub render_text
 	}
 	$path_q = RdKw::WwW::SiteConf::shell_quote($path);
 	my $text = slurp($render);
-	my $can_subst = eval { RdKw::WwW::GenGenLib->VERSION('0.0003') };
+	my $can_subst = eval { RdKw::WwW::GenGenLib->VERSION('0.0002') };
 	my %sub = (
 		PATH => $path,
 		PATH_Q => $path_q,

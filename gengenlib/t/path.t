@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 39;
+use Test::More tests => 46;
 
 use RdKw::WwW::GenGenLib qw(enroot uproot);
 
@@ -42,7 +42,7 @@ is(uproot('site//', 'site///'), '/');
 foreach my $ident ('', '.') {
 	is(uproot($ident, 'index.html'), 'index.html');
 	is(uproot($ident, '../secret'), '../secret');
-	is(uproot($ident, '/etc/passwd'), undef, "'$ident' cannot become absolute");
+	is(uproot($ident, '/etc/passwd'), undef, 'no way for identity to become absolute');
 }
 
 # The leading slash belongs to the root
@@ -55,3 +55,11 @@ is(uproot('/prefix', 'prefix'), undef);
 is(uproot('prefix', '/prefix'), undef);
 is(uproot('/prefix', '/prefix/x'), 'x');
 is(uproot('a', 'a//x'), '/x');
+
+is(enroot('', '/etc'), './/etc', "empty base is effectively a dot on absolute paths");
+is(enroot('.', '/etc'), './/etc', "same");
+is(enroot('', 'etc'), 'etc', "slash is omitted on relative paths");
+is(enroot('.', 'etc'), 'etc', "same");
+is(enroot('', ''), '', "idempotence");
+is(enroot('.', ''), '', "idempotence with dot");
+is(enroot('.', '.'), '.', "last dot remains dot?");

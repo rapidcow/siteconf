@@ -447,7 +447,7 @@ SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 			}
 			unless (defined $name) {
 				# "$" at EOF
-				$out = '$';
+				$out .= '$';
 				next SSS;
 			}
 			if ($name eq '$') {

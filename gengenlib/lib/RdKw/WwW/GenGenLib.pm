@@ -416,7 +416,7 @@ sub norm_deps
 	@ret;
 }
 
-=item B<subs_deps> \%D, I<spec>, ... { errors => "croak" }
+=item B<subs_deps> \%D, I<spec>... { errors => "croak" }
 
 Substitute dependency specifications with
 the given definitions.  C<norm_deps> is
@@ -498,7 +498,7 @@ sub split_dep
 	($root, $rest);
 }
 
-=item B<walk_deps> \%D, I<spec>, ... { graph => \%G, follow => \&ok }
+=item B<walk_deps> \%D, I<spec>... { graph => \%G, follow => \&ok }
 
 Enumerate all dependencies of a path specification.
 C<\%D> is a required map of for variable definitions.

@@ -5,4 +5,5 @@ MANIFEST			This list of files
 t/00-load.t
 t/deps.t
 t/make.t
+t/path.t
 t/walk.t

@@ -522,27 +522,28 @@ sub render_text
 		PATH_Q => $path_q,
 		NAME => $name,
 		IMPORT => $can_subst
-			? 'read_deps load_state'
-			: 'read_deps load_state norm_deps subs_deps uproot',
+			? 'read_deps load_state norm_deps subs_deps uproot'
+			: 'read_deps load_state',
 		LOCATE => $can_subst
 			? <<\NEW
 my $target = do {
 	my ($name, $norm, $real);
 	# Try symbolic prefix
-	if (defined (my $name = uproot('${a}',
+	if (defined ($name = uproot('${a}',
 		$norm = norm_deps($I{HAVE}))))
 	{
 		subs_deps($name);
 	}
-	elsif (defined (my $name = uproot($D->{a},
-		$real = subs_have($norm))))
+	# Try literal prefix
+	elsif (defined ($name = uproot($D->{a},
+		$real = subs_have($D, $norm))))
 	{
 		$name;
 	}
 	else {
 		my $aka = $real eq $I{HAVE} ? "" : " (which is `$real')";
 		die "E: $apath: HAVE `$I{HAVE}'$aka not "
-			. "under \${a} (which is `$D->{a}')";
+			. "under \${a} (which is `$D->{a}')\n";
 	}
 };
 NEW

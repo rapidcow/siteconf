@@ -362,7 +362,10 @@ sub enroot
 sub uproot
 {
 	my ($base, $path) = @_;
-	$base =~ s{(?<=.)/\z}{};
+	if ($base eq '' || $base eq '.') {
+		return $path;
+	}
+	$base =~ s{/\z}{};
 	if ($path eq $base) {
 		return "";
 	}

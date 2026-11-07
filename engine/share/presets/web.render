@@ -32,7 +32,7 @@ use strict;
 use warnings;
 
 use Getopt::Std;
-use RdKw::WwW::GenGenLib qw( read_deps load_state );
+use RdKw::WwW::GenGenLib qw( @IMPORT@ );
 use RdKw::WwW::GenLib qw( locate );
 use Template;
 use Template::Exception;
@@ -58,9 +58,7 @@ my ($D, $O) = @S{qw( config option )};
 #
 my %I = read_deps($apath);
 defined $I{HAVE} or die "E: $apath: HAVE declaration not found\n";
-(my $L = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}
-	or $D->{a} eq '.' or die "E: $apath: HAVE `$I{HAVE}' not under \${a} ($D->{a})\n";
-
+@LOCATE@
 #
 # Define Template variables (see also Template::Stash
 # if you want access to these from a plugin/filter).
@@ -70,9 +68,9 @@ my %v = (
 	O => $O,
 	locate => sub {
 		@_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
-		locate($O, $L, @_);
+		locate($O, $target, @_);
 	},
-	location => $L,
+	location => $target,
 );
 
 #

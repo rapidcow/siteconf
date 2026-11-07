@@ -516,10 +516,40 @@ sub render_text
 	}
 	$path_q = RdKw::WwW::SiteConf::shell_quote($path);
 	my $text = slurp($render);
+	my $can_subst = eval { RdKw::WwW::GenGenLib->VERSION('0.0003') };
 	my %sub = (
 		PATH => $path,
 		PATH_Q => $path_q,
 		NAME => $name,
+		IMPORT => $can_subst
+			? 'read_deps load_state'
+			: 'read_deps load_state norm_deps subs_deps uproot',
+		LOCATE => $can_subst
+			? <<\NEW
+my $target = do {
+	my ($name, $norm, $real);
+	# Try symbolic prefix
+	if (defined (my $name = uproot('${a}',
+		$norm = norm_deps($I{HAVE}))))
+	{
+		subs_deps($name);
+	}
+	elsif (defined (my $name = uproot($D->{a},
+		$real = subs_have($norm))))
+	{
+		$name;
+	}
+	else {
+		my $aka = $real eq $I{HAVE} ? "" : " (which is `$real')";
+		die "E: $apath: HAVE `$I{HAVE}'$aka not "
+			. "under \${a} (which is `$D->{a}')";
+	}
+};
+NEW
+			: <<\OLD,
+(my $target = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}
+	or $D->{a} eq '.' or die "E: $apath: HAVE `$I{HAVE}' not under \${a} ($D->{a})\n";
+OLD
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: $opt->{P}.render template: \@$1\@?\n"/ge;
 	$text;

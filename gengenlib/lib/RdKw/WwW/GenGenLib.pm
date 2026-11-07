@@ -353,7 +353,7 @@ sub enroot
 			$path = $comp;
 			next;
 		}
-		$path =~ s{(?<=.)/\z}{};
+		$path =~ s/\/\z//;
 		$path .= '/' . $comp;
 	}
 	return $path;
@@ -365,7 +365,7 @@ sub uproot
 	if ($base eq '' || $base eq '.') {
 		return $path;
 	}
-	$base =~ s{/\z}{};
+	$base =~ s/\/\z//;
 	if ($path eq $base) {
 		return "";
 	}
@@ -476,9 +476,9 @@ SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 				# Undefined = empty to us.
 				$value = '';
 			}
-			if (($out eq '' || $out =~ m{/\z})
+			if (($out eq '' || $out =~ /\/\z/)
 				&& ($value eq '' || $value eq '.')
-				&& $spec =~ m{\G(?:/|\z)}gc)
+				&& $spec =~ /\G(?:\/|\z)/gc)
 			{
 				# Skip useless "./" segment (only if the variable
 				# makes up the whole segment: good-${a}/x is not x)

@@ -532,7 +532,7 @@ my $target = do {
 	if (defined ($name = uproot('${a}',
 		$norm = norm_deps($I{HAVE}))))
 	{
-		subs_deps($name);
+		subs_deps($D, $name);
 	}
 	# Try literal prefix
 	elsif (defined ($name = uproot($D->{a},

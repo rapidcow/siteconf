@@ -358,7 +358,7 @@ sub uproot
 	return;
 }
 
-=item B<norm_deps> I<spec>, ... { errors => "croak" }
+=item B<norm_deps> I<spec>, ... { errors => "replace" }
 
 Symbolically normalize dependency specification,
 as read by B<read_deps>.  Variables are demarcated
@@ -372,15 +372,16 @@ the first argument.
 
 A trailing C<$> and an unterminated C<${> are malformed.
 The optional C<errors> option decides what to do about
-them: C<"croak"> (the default) dies, and C<"replace">
-treats the offending C<$> as a literal one (C<$$>).
+them: C<"croak"> dies, and C<"replace"> treats the
+offending C<$> as a literal one (C<$$>).  Defaults to
+C<"replace">.
 
 =cut
 
 sub norm_deps
 {
 	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
-	my $errors = defined $opt->{errors} ? $opt->{errors} : 'croak';
+	my $errors = defined $opt->{errors} ? $opt->{errors} : 'replace';
 	$errors eq 'croak' || $errors eq 'replace'
 		or die "norm_deps: errors must be `croak' or `replace'\n";
 
@@ -416,7 +417,7 @@ sub norm_deps
 	@ret;
 }
 
-=item B<subs_deps> \%D, I<spec>... { errors => "croak" }
+=item B<subs_deps> \%D, I<spec>... { errors => "replace" }
 
 Substitute dependency specifications with
 the given definitions.  C<norm_deps> is

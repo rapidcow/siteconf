@@ -80,13 +80,13 @@ is(norm_deps('$B/$b/z'), '${B}/${b}/z', 'more than once');
 is(norm_deps('$A//surprise'), '/surprise', 'lazy strip');
 
 # --- norm_deps: malformed
-ok(!eval { norm_deps('a$'); 1 }, 'trailing $ croaks');
+ok(!eval { norm_deps('a$', { strict => 1 }); 1 }, 'trailing $ croaks');
 like($@, qr/trailing/, '... says so');
-ok(!eval { norm_deps('${a'); 1 }, 'unterminated ${ croaks');
+ok(!eval { norm_deps('${a', { strict => 1 }); 1 }, 'unterminated ${ croaks');
 like($@, qr/unterminated/, '... says so');
-is(norm_deps('a$', { errors => 'replace' }), 'a${$}', 'trailing $ replaced');
-is(norm_deps('${a/b', { errors => 'replace' }), '${$}{a/b', 'unterminated ${ replaced');
-is(norm_deps('$$', { errors => 'replace' }), '${$}', '$$ is fine');
+is(norm_deps('a$', { strict => 0 }), 'a${$}', 'trailing $ replaced');
+is(norm_deps('${a/b', { strict => 0 }), '${$}{a/b', 'unterminated ${ replaced');
+is(norm_deps('$$', { strict => 0 }), '${$}', '$$ is fine');
 
 # --- subst_deps
 is(subs_deps({ a => '.' }, '${a}/x'), 'x', 'useless dot dropped');

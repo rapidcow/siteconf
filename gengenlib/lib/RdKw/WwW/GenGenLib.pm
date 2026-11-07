@@ -385,10 +385,9 @@ In list context; in scalar context, normalize just
 the first argument.
 
 A trailing C<$> and an unterminated C<${> are malformed.
-The optional C<errors> option decides what to do about
-them: C<"croak"> dies, and C<"replace"> treats the
-offending C<$> as a literal one (C<$$>).  Defaults to
-C<"replace">.
+The optional C<strict> option decides whether to die on
+malformed input, or to replace unpaired dollar signs
+with literal dollar signs.  Defaults to C<< strict => 0 >>.
 
 Added in 0.0002.
 
@@ -397,10 +396,6 @@ Added in 0.0002.
 sub norm_deps
 {
 	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
-	my $errors = defined $opt->{errors} ? $opt->{errors} : 'replace';
-	$errors eq 'croak' || $errors eq 'replace'
-		or die "norm_deps: errors must be `croak' or `replace'\n";
-
 	my (@ret);
 	foreach (@_) {
 		my $spec = $_;
@@ -415,11 +410,11 @@ sub norm_deps
 				$out .= "\${$1}";
 			} elsif ($spec =~ /\G\$\z/gc) {
 				die "norm_deps: trailing \$ in `$_'\n"
-					if $errors eq 'croak';
+					if $opt->{strict};
 				$out .= '${$}';
 			} elsif ($spec =~ /\G\$\{/gc) {
 				die "norm_deps: unterminated \${ in `$_'\n"
-					if $errors eq 'croak';
+					if $opt->{strict};
 				$out .= '${$}{';
 			} else {
 				last;

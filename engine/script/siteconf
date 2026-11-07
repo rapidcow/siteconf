@@ -546,6 +546,8 @@ my $target = do {
 			. "under \${a} (which is `$D->{a}')\n";
 	}
 };
+# relapath doesn't do well with leading slashes.
+$target =~ s/\A\/+//;
 NEW
 			: <<\OLD,
 (my $target = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}

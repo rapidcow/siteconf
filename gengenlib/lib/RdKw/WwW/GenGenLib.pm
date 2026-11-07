@@ -41,6 +41,7 @@ our @EXPORT_OK = qw(
 	read_deps norm_deps
 	subs_deps split_dep
 	walk_deps follow_ok
+	enroot uproot
 );
 
 =head1 ROUTINES
@@ -303,6 +304,60 @@ sub read_deps
 	%I;
 }
 
+=item B<enroot> I<root>, I<path>...
+
+Plant I<path> onto the I<root> directory.  Up to one
+trailing slash is removed from I<root> (provided the
+slash isn't the only character), and the empty string
+or C<"."> is the identity which preserves I<path>.
+
+The variadic form is defined by a left-fold on the
+binary form.  That is, C<enroot(A, B, C)> is computed
+as C<enroot(enroot(A, B), C)>.  When no paths are
+provided, B<enroot> simply appends a trailing slash
+to I<root>.
+
+=item B<uproot> I<root>, I<path>
+
+Un-plant I<path> from the I<root> directory, if
+possible.  This function returns the empty string
+if I<root> and I<path> are equivalent modulo at
+most one trailing slash, undef if I<root> and
+I<path> are unrelated, and a non-empty string if
+I<root> is a prefix of I<path> such that
+C<enroot(root, uproot(root, path))> equals
+C<path>.
+
+=cut
+
+sub enroot
+{
+	my ($path, @path) = @_;
+	@path or @path = ("");
+	foreach my $comp (@path) {
+		if ($path eq '' || $path eq '.') {
+			$path = $comp;
+			next;
+		}
+		$path =~ s{(?<=.)/\z}{};
+		$path .= '/' . $comp;
+	}
+	return $path;
+}
+
+sub uproot
+{
+	my ($base, $path) = @_;
+	$base =~ s{(?<=.)/\z}{};
+	if ($path eq $base) {
+		return "";
+	}
+	if ($path =~ s{\A\Q$base\E/}{}) {
+		return $path;
+	}
+	return;
+}
+
 =item B<norm_deps> I<spec>, ... { errors => "croak" }
 
 Symbolically normalize dependency specification,
@@ -353,7 +408,8 @@ sub norm_deps
 				last;
 			}
 		}
-		$out =~ s{\A\$\{A\}(?:/|\z)}{};
+		my $path = uproot('${A}', $out);
+		$out = $path if defined $path;
 		return $out unless wantarray;
 		push @ret, $out;
 	}

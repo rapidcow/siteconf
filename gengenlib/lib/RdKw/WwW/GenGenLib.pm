@@ -112,7 +112,7 @@ reconfiguration that changes nothing will not rebuild the world.
 Return 2 if the file is created, 1 if updated, and 0 if not modified.
 
 This function is not compatible with the original B<update_file>
-in genlib 0.00_00; use
+in genlib 0.0000; use
 C<< $r > 1 ? 'created' : $r ? 'updated' : 'unchanged' >>.
 
 =cut
@@ -148,7 +148,7 @@ an associative map of hashes, keyed by I<config> and I<option>.
 Dies kindly if you have not configured.
 
 This function not compatible with the original B<load_state>
-in genlib 0.00_00.  Namely, you must obtain C<\%D> and C<\%O>
+in genlib 0.0000.  Namely, you must obtain C<\%D> and C<\%O>
 by name.
 
 =cut
@@ -203,14 +203,7 @@ dependency list, optionally emitting a warning.
 
 =back
 
-The names are returned as written: they are paths from the project
-root, in which C<${a}> and C<${b}> and the like mean what they mean
-to L<siteconf(1)>, which does the expanding.  So a page may say
-
-   # HAVE: ${a}/index.html
-   # NEED: ${b}/style.css
-
-This function returns a hash map:
+This function returns a hash map.  So:
 
    [%#
    # HAVE: ethan
@@ -222,23 +215,40 @@ This function returns a hash map:
 
 becomes
 
-   {
+   (
       HAVE => "ethan",
       WANT => [ "art", "music", "2-draw" ],
       NEED => [ "puterz!!!" ],
-   }
+   )
 
 The header is found within the first few lines, and ends at the
 first line that is not another header line.  For this reason,
 you won't see my evil desires following the TT2 closing tag...
 
-A file that is not UTF-8 (an image, say) has no header;
-reading stops at the first line that is malformed, without
-a word.
+The names undergo no parameter expansions.  So:
 
-C<forgive_missing> is an optional boolean that decides whether
-a file that cannot be opened to begin with can be forgiven.
-Defaults to 0 (false; do not forgive).
+   # HAVE: ${a}/index.html
+   # NEED: ${B}/${b}/style.css
+
+becomes
+
+   (
+     HAVE => '${a}/index.html',
+     NEED => '${B}/${b}/index.html',
+   )
+
+But you may use B<norm_deps> and B<subs_deps> to
+interpret those.
+
+The scan for header goes on for a while (about 32 lines)
+but stops at the first line that is malformed UTF-8.
+This means that B<read_deps> is safe to call on binary
+files.  (This feature was added in 0.0001.)
+
+C<forgive_missing> is an optional boolean that decides
+whether a file that cannot be opened to begin with can
+be forgiven.  Defaults to 0 (false; do not forgive).
+(This option was added in 0.0002.)
 
 =cut
 
@@ -317,6 +327,8 @@ as C<enroot(enroot(A, B), C)>.  When no paths are
 provided, B<enroot> simply appends a trailing slash
 to I<root>.
 
+Added in 0.0002.
+
 =item B<uproot> I<root>, I<path>
 
 Un-plant I<path> from the I<root> directory, if
@@ -327,6 +339,8 @@ I<path> are unrelated, and a non-empty string if
 I<root> is a prefix of I<path> such that
 C<enroot(root, uproot(root, path))> equals
 C<path>.
+
+Added in 0.0002.
 
 =cut
 
@@ -375,6 +389,8 @@ The optional C<errors> option decides what to do about
 them: C<"croak"> dies, and C<"replace"> treats the
 offending C<$> as a literal one (C<$$>).  Defaults to
 C<"replace">.
+
+Added in 0.0002.
 
 =cut
 
@@ -427,6 +443,8 @@ segments that consist solely of a variable
 expanding to C<"."> or nothing are collapsed
 (so C<${a}/x> may become C<x>, but C<x-${a}/y>
 is left alone).
+
+Added in 0.0002.
 
 =cut
 
@@ -484,6 +502,8 @@ root and the remainder of the path.  The symbolic
 root consists of C</>-separated segments entirely
 derived from a variable.
 
+Added in 0.0002.
+
 =cut
 
 sub split_dep
@@ -517,11 +537,15 @@ are returned without their dependents.
 Note that build dependents are solely identified
 symbolically by the C<${B}> prefix.
 
+Added in 0.0002.
+
 =item B<follow_ok> \%D, I<spec>
 
 Default implementation of the C<follow> option.
 Entries denied this way are permanently cached
 as C<undef> in the graph.
+
+Added in 0.0002.
 
 =cut
 

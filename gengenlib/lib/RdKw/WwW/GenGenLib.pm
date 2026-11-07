@@ -372,7 +372,7 @@ sub uproot
 	return;
 }
 
-=item B<norm_deps> I<spec>, ... { errors => "replace" }
+=item B<norm_deps> I<spec>, ... { strict => 0 }
 
 Symbolically normalize dependency specification,
 as read by B<read_deps>.  Variables are demarcated
@@ -428,7 +428,7 @@ sub norm_deps
 	@ret;
 }
 
-=item B<subs_deps> \%D, I<spec>... { errors => "replace" }
+=item B<subs_deps> \%D, I<spec>... { strict => 0 }
 
 Substitute dependency specifications with
 the given definitions.  C<norm_deps> is

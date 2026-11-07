@@ -740,12 +740,18 @@ sub _node
 	# What the source files we NEED (or WANT) say they need, and so on:
 	# like gcc -MM, which lists the headers of headers.
 	{
-		my %seen = ($apath => 1);
+		# How firmly each file has been followed: 1 for soft, 2 for hard.
+		# A file first met as a WANT is met again as a NEED (of something
+		# else), and then what it NEEDs is NEEDed too, so only a visit at
+		# least as firm as an earlier one is skipped.
+		my %seen = ($apath => 2);
 		my (@more_need, @more_want);
 		my $follow; $follow = sub {
 			my ($list, $soft) = @_;
+			my $firm = $soft ? 1 : 2;
 			for my $d (@$list) {
-				$seen{$d->[1]}++ and next;
+				($seen{$d->[1]} || 0) >= $firm and next;
+				$seen{$d->[1]} = $firm;
 				my ($need, $want) = $self->_inherit($d->[1]);
 				push @{ $soft ? \@more_want : \@more_need }, @$need;
 				push @more_want, @$want;
@@ -757,6 +763,11 @@ sub _node
 		$follow->(\@hwant, 1);
 		push @hneed, @more_need;
 		push @hwant, @more_want;
+		# The same file may have turned up through several others, and
+		# as both: say it once, and a NEED is not a WANT as well
+		my %said;
+		@hneed = grep { !$said{$_->[1]}++ } @hneed;
+		@hwant = grep { !$said{$_->[1]}++ } @hwant;
 	}
 	# What the rule's own prerequisites (the tools) say they need, if
 	# they say anything at all

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 108;
+use Test::More tests => 111;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -517,4 +517,30 @@ SKIP:	{
 	is_deeply($plan->{node}{'a.html'}{kids}, ['b.css'], '... and it is a kid of the page');
 	ok(!(grep { $_ eq 'html/bdep' } @$deps),
 		'what we make is not read: its NEEDs are none of the page\'s business');
+}
+
+# --- ... and a NEED stays a NEED however far down it is found: a file seen
+# first as a WANT (of x) and later as a NEED (of w) still has hard NEEDs
+{
+	my $dir = project({
+		MANIFEST => $manifest,
+		'html/a.html' => lines( NEED => [qw[ ${A}/html/t/x ${A}/html/t/w ]] ),
+		'html/t/x' => lines( WANT => [qw[ ${A}/html/t/z ]] ),
+		'html/t/w' => lines( NEED => [qw[ ${A}/html/t/z ]] ),
+		'html/t/z' => lines( NEED => [qw[ ${A}/html/t/gone ]] ),
+	});
+	my $plan = eval { plan_of($dir) };
+	like($@, qr/NEEDs `html\/t\/gone' \(in header of `html\/t\/z'\)/,
+		'what a NEED of a NEED NEEDs is missing: that is a failure');
+	is(scalar(() = $@ =~ /NEEDs `html\/t\/gone'/g), 1, '... said once');
+
+	# all of it soft stays soft
+	$dir = project({
+		MANIFEST => $manifest,
+		'html/a.html' => lines( NEED => [qw[ ${A}/html/t/x ]] ),
+		'html/t/x' => lines( WANT => [qw[ ${A}/html/t/z ]] ),
+		'html/t/z' => lines( NEED => [qw[ ${A}/html/t/gone ]] ),
+	});
+	$plan = plan_of($dir);
+	ok($plan->{node}{'a.html'}{ok}, 'but what a WANT NEEDs is only wanted');
 }

@@ -459,16 +459,17 @@ sub walk_deps
 		my $spec = pop @todo;
 		next if $pool{$spec}++;
 		push @pool, $spec;
-		my $Imap = {};
-		if ($G->{$spec}) {
-			$Imap = $G->{$spec};
-		} elsif ($ok->($D, $spec)) {
-			$Imap = $G->{$spec} = +{ read_deps(
-				subs_deps($D, $spec),
-				{ forgive_missing => 1 }) };
-		} else {
-			$Imap = {};
-		}
+		my $Imap = do {
+			if ($G->{$spec}) {
+				$G->{$spec};
+			} elsif ($ok->($D, $spec)) {
+				$G->{$spec} = +{ read_deps(
+					subs_deps($D, $spec),
+					{ forgive_missing => 1 }) };
+			} else {
+				$G->{$spec} = {};
+			}
+		};
 		push @todo, reverse @{ $Imap->{WANT} || [] };
 		push @todo, reverse @{ $Imap->{NEED} || [] };
 	}

@@ -419,7 +419,7 @@ sub norm_deps
 				$out .= $1;
 			} elsif ($spec =~ /\G\$\{([^}]+)\}/gc) {
 				$out .= "\${$1}";
-			} elsif ($spec =~ /\G\$([^{}])/gcs) {
+			} elsif ($spec =~ /\G\$([^{}])/gc) {
 				# includes "$$"
 				$out .= "\${$1}";
 			} elsif ($spec =~ /\G\$\z/gc) {

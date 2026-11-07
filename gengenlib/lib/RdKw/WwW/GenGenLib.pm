@@ -10,7 +10,7 @@ $VERSION = eval $VERSION;
 
 =head1 NAME
 
-RdKw::WwW::GenGenLib - general-purpose generation utilities
+WwW::GenGenLib - general-purpose generation utilities
 
 =head1 SYNOPSIS
 

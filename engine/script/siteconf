@@ -536,7 +536,7 @@ my $target = do {
 	}
 	# Try literal prefix
 	elsif (defined ($name = uproot($D->{a},
-		$real = subs_have($D, $norm))))
+		$real = subs_deps($D, $norm))))
 	{
 		$name;
 	}

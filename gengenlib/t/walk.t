@@ -5,12 +5,12 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 55;
+use Test::More tests => 65;
 use File::Temp qw( tempdir );
 use File::Path qw( make_path );
 use Cwd qw( getcwd );
 
-use RdKw::WwW::GenGenLib qw( split_dep walk_deps );
+use RdKw::WwW::GenGenLib qw( split_dep walk_deps follow_ok );
 
 # --- split_dep (no side effects; no warnings)
 {
@@ -103,6 +103,8 @@ spew('must-not-be-read', '');
 		"$top/secret",
 		'/etc/passwd',
 		'${A}//etc/passwd',
+		'${a}//etc/passwd',
+		'${c}//etc/passwd',
 	);
 	# the start itself is held to the same rules
 	my %G;
@@ -141,3 +143,12 @@ spew('tem/head.html', hdr(NEED => '${a}/part.html', WANT => '${a}/index.html'));
 }
 
 chdir $cwd;
+
+# --- follow_ok: leaving the root
+{
+	my $D = { a => '.', B => 'build' };
+	ok(!follow_ok($D, '/etc/passwd'), 'absolute path denied');
+	ok(!follow_ok($D, '${a}//etc/passwd'), '... also when hidden behind ${a}//');
+	ok(!follow_ok($D, '${A}//etc/passwd'), '... and ${A}//');
+	ok(follow_ok($D, '${a}/x/y'), 'ordinary path okay');
+}

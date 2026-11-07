@@ -398,9 +398,14 @@ return the empty string.
 In list context; in scalar context, normalize just
 the first argument.
 
-A trailing C<$>, an unterminated C<${>, an empty C<${}>,
-and a C<$> right before a C<}> are malformed.  The optional C<strict> option decides whether to die on
-malformed input, or to replace unpaired dollar signs
+A variable is C<${name}>, where the name is anything up to
+the closing brace (there are no escapes in there), or C<$n>
+for a single word character as it is in L<siteconf(1)>; and
+C<$$> is a literal C<$>.  Any other C<$> is malformed: a
+trailing one, an unterminated C<${>, an empty C<${}>, a C<$>
+before a C<}> or a C<.>, and so on.  The optional C<strict>
+option decides whether to die on malformed input, or to
+replace unpaired dollar signs
 with literal dollar signs.  Defaults to C<< strict => 0 >>.
 
 Added in 0.0002.
@@ -419,24 +424,18 @@ sub norm_deps
 				$out .= $1;
 			} elsif ($spec =~ /\G\$\{([^}]+)\}/gc) {
 				$out .= "\${$1}";
-			} elsif ($spec =~ /\G\$([^{}])/gc) {
+			} elsif ($spec =~ /\G\$([\w\$])/gc) {
 				# includes "$$"
 				$out .= "\${$1}";
-			} elsif ($spec =~ /\G\$\z/gc) {
-				die "norm_deps: trailing \$ in `$_'\n"
-					if $opt->{strict};
-				$out .= '${$}';
-			} elsif ($spec =~ /\G\$\{\}/gc) {
-				die "norm_deps: empty \${} in `$_'\n"
-					if $opt->{strict};
-				$out .= '${$}{}';
-			} elsif ($spec =~ /\G\$\{/gc) {
-				die "norm_deps: unterminated \${ in `$_'\n"
-					if $opt->{strict};
-				$out .= '${$}{';
-			} elsif ($spec =~ /\G\$(?=\})/gc) {
-				die "norm_deps: stray \$ before } in `$_'\n"
-					if $opt->{strict};
+			} elsif ($spec =~ /\G\$/gc) {
+				# Anything else is not a variable, as siteconf agrees
+				if ($opt->{strict}) {
+					die "norm_deps: trailing \$ in `$_'\n"
+						if $spec =~ /\G\z/gc;
+					die "norm_deps: unterminated or empty \${ in `$_'\n"
+						if $spec =~ /\G\{/gc;
+					die "norm_deps: stray \$ in `$_'\n";
+				}
 				$out .= '${$}';
 			} else {
 				last;

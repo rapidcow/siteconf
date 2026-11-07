@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 39;
+use Test::More tests => 44;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( read_deps norm_deps subs_deps );
@@ -92,6 +92,11 @@ ok(!eval { norm_deps('a$}b', { strict => 1 }); 1 }, '$ before } croaks');
 is(norm_deps('a${}b'), 'a${$}{}b', 'empty ${} replaced');
 is(norm_deps('a$}b'), 'a${$}}b', '$ before } replaced');
 is(norm_deps(norm_deps('${}$}$')), norm_deps('${}$}$'), 'replacement is idempotent');
+ok(!eval { norm_deps('x$.y', { strict => 1 }); 1 }, '$ before a non-word croaks');
+like($@, qr/stray/, '... says so');
+is(norm_deps('${a-b}', { strict => 1 }), '${a-b}', 'anything goes inside braces');
+is(norm_deps('x$.y'), 'x${$}.y', '$ before a non-word replaced');
+is(norm_deps('$_/${a1}/$9', { strict => 1 }), '${_}/${a1}/${9}', 'word characters are names');
 
 # --- subst_deps
 is(subs_deps({ a => '.' }, '${a}/x'), 'x', 'useless dot dropped');

@@ -398,8 +398,8 @@ return the empty string.
 In list context; in scalar context, normalize just
 the first argument.
 
-A trailing C<$> and an unterminated C<${> are malformed.
-The optional C<strict> option decides whether to die on
+A trailing C<$>, an unterminated C<${>, an empty C<${}>,
+and a C<$> right before a C<}> are malformed.  The optional C<strict> option decides whether to die on
 malformed input, or to replace unpaired dollar signs
 with literal dollar signs.  Defaults to C<< strict => 0 >>.
 
@@ -417,19 +417,27 @@ sub norm_deps
 		for (;;) {
 			if ($spec =~ /\G([^\$]+)/gc) {
 				$out .= $1;
-			} elsif ($spec =~ /\G\$\{([^}]*)\}/gc) {
+			} elsif ($spec =~ /\G\$\{([^}]+)\}/gc) {
 				$out .= "\${$1}";
-			} elsif ($spec =~ /\G\$([^{])/gcs) {
+			} elsif ($spec =~ /\G\$([^{}])/gcs) {
 				# includes "$$"
 				$out .= "\${$1}";
 			} elsif ($spec =~ /\G\$\z/gc) {
 				die "norm_deps: trailing \$ in `$_'\n"
 					if $opt->{strict};
 				$out .= '${$}';
+			} elsif ($spec =~ /\G\$\{\}/gc) {
+				die "norm_deps: empty \${} in `$_'\n"
+					if $opt->{strict};
+				$out .= '${$}{}';
 			} elsif ($spec =~ /\G\$\{/gc) {
 				die "norm_deps: unterminated \${ in `$_'\n"
 					if $opt->{strict};
 				$out .= '${$}{';
+			} elsif ($spec =~ /\G\$(?=\})/gc) {
+				die "norm_deps: stray \$ before } in `$_'\n"
+					if $opt->{strict};
+				$out .= '${$}';
 			} else {
 				last;
 			}
@@ -464,20 +472,10 @@ sub subs_deps
 	my @ret;
 	foreach my $spec (norm_deps(@_, $opt)) {
 		my $out = '';
-	#	pos($spec) = 0;
-SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
+		# Normalized: every "$" that is left is followed by "{name}"
+SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
 			$out .= $1;
-			my ($name, $curly, $value);
-			if ($curly = ($spec =~ /\G\{([^\}]+)\}/gc)) {
-				$name = $1;
-			} elsif ($spec =~ /\G(.)/gcs) {
-				$name = $1;
-			}
-			unless (defined $name) {
-				# "$" at EOF
-				$out .= '$';
-				next SSS;
-			}
+			my ($name, $value) = ($2);
 			if ($name eq '$') {
 				# "$$" escapes "$"
 				$out .= $name;

@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 32;
+use Test::More tests => 39;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( read_deps norm_deps subs_deps );
@@ -87,6 +87,11 @@ like($@, qr/unterminated/, '... says so');
 is(norm_deps('a$', { strict => 0 }), 'a${$}', 'trailing $ replaced');
 is(norm_deps('${a/b', { strict => 0 }), '${$}{a/b', 'unterminated ${ replaced');
 is(norm_deps('$$', { strict => 0 }), '${$}', '$$ is fine');
+ok(!eval { norm_deps('a${}b', { strict => 1 }); 1 }, 'empty ${} croaks');
+ok(!eval { norm_deps('a$}b', { strict => 1 }); 1 }, '$ before } croaks');
+is(norm_deps('a${}b'), 'a${$}{}b', 'empty ${} replaced');
+is(norm_deps('a$}b'), 'a${$}}b', '$ before } replaced');
+is(norm_deps(norm_deps('${}$}$')), norm_deps('${}$}$'), 'replacement is idempotent');
 
 # --- subst_deps
 is(subs_deps({ a => '.' }, '${a}/x'), 'x', 'useless dot dropped');
@@ -95,3 +100,5 @@ is(subs_deps({ a => 'site' }, '${a}/x'), 'site/x', 'not useless ${a} is expanded
 is(subs_deps({ a => 'site' }, '${a}/Main$$Inner.class'), 'site/Main$Inner.class', 'double dollar sign preserved');
 is(subs_deps({ stuff => '.' }, 'good-${stuff}/times.html'), 'good-./times.html', 'dot in the middle of a segment kept');
 is(subs_deps({ a => '.' }, 'x/${a}/y'), 'x/y', 'useless dot dropped mid-path');
+is(subs_deps({}, 'a${}b$}c$'), 'a${}b$}c$', 'malformed is literal, not a variable');
+is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');

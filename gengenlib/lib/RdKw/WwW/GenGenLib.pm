@@ -442,7 +442,7 @@ SSS:		while ($spec =~ /\G([^\$]*)\$/gc) {
 			my ($name, $curly, $value);
 			if ($curly = ($spec =~ /\G\{([^\}]+)\}/gc)) {
 				$name = $1;
-			} elsif (/\G(.)/gc) {
+			} elsif ($spec =~ /\G(.)/gc) {
 				$name = $1;
 			}
 			unless (defined $name) {

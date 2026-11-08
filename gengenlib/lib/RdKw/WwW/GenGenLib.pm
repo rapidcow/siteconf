@@ -415,10 +415,9 @@ With C<< pass_thru => 1 >>, unrecognized dollar signs are
 left unchanged, for example C<$@>, rather than escaped.
 Recognized variables and the project root are still normalized.
 C<strict> takes precedence: malformed input still dies even
-with C<pass_thru> enabled.  C<pass_thru> defaults to 0 and
-was added in 0.0003.
+with C<pass_thru> enabled.  Defaults to C<< pass_thru => 0 >>.
 
-Added in 0.0002.
+Added in 0.0002.  C<pass_thru> added in 0.0003.
 
 =cut
 
@@ -493,13 +492,19 @@ sub subs_deps
 {
 	my $D = shift;
 	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
+	# pass_thru is not for us :)  Unpaired $s
+	# will round-trip when we substitute them.
+	if ($opt->{pass_thru}) {
+		$opt = {%$opt};
+		delete $opt->{pass_thru};
+	}
 	my @ret;
 	foreach my $spec (norm_deps(@_, $opt)) {
 		my $out = '';
 		# Whether we are at the start of a path segment
 		my $seg = 1;
-		# Skip unrecognized dollars preserved by pass_thru too.
-SSS:		while ($spec =~ /\G((?:[^\$]|\$(?!\{[^}]+\}))*)\$\{([^}]+)\}/gc) {
+		# Normalized: every "$" that is left is followed by "{name}"
+SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
 			my $name = $2;
 			if (length $1) {
 				$out .= $1;

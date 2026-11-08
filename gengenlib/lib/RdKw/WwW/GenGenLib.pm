@@ -386,7 +386,7 @@ sub uproot
 	return;
 }
 
-=item B<norm_deps> I<spec>, ... { strict => 0 }
+=item B<norm_deps> I<spec>... { strict => 0 }
 
 Symbolically normalize dependency specification,
 as read by B<read_deps>.  Variables are demarcated

@@ -6,10 +6,10 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 52;
+use Test::More tests => 86;
 use File::Temp qw( tempdir );
 
-use RdKw::WwW::GenGenLib qw( read_deps norm_deps subs_deps enroot );
+use RdKw::WwW::GenGenLib qw( read_deps norm_dep norm_deps subs_deps enroot );
 
 my $dir = tempdir(CLEANUP => 1);
 sub spew {
@@ -97,6 +97,38 @@ like($@, qr/stray/, '... says so');
 is(norm_deps('${a-b}', { strict => 1 }), '${a-b}', 'anything goes inside braces');
 is(norm_deps('x$.y'), 'x${$}.y', '$ before a non-word replaced');
 is(norm_deps('$_/${a1}/$9', { strict => 1 }), '${_}/${a1}/${9}', 'word characters are names');
+
+# --- norm_deps: pass-through
+{
+	for my $spec ('a$', '${a/b', 'a${}b', 'a$}b', 'x$.y', '$@') {
+		is(norm_deps($spec, { pass_thru => 1 }), $spec,
+			"pass through $spec");
+		is(norm_deps($spec, { strict => 0, pass_thru => 1 }), $spec,
+			"explicitly lenient pass through $spec");
+		for my $pass_thru (0, 1) {
+			ok(!eval { norm_deps($spec, { strict => 1, pass_thru => $pass_thru }); 1 },
+				"strict rejects $spec with pass_thru=$pass_thru");
+		}
+	}
+	is(norm_deps('$@', { pass_thru => 0 }), '${$}@', 'disabled pass-through escapes');
+	is(norm_deps('$A/$@/$b/$$/${unknown}', { pass_thru => 1 }),
+		'$@/${b}/${$}/${unknown}', 'recognized syntax still normalized');
+	is(norm_deps('$a', { strict => 1, pass_thru => 1 }), '${a}',
+		'valid input accepts both options');
+	is_deeply([norm_deps('$@', '$A/$b', 'a$', { pass_thru => 1 })],
+		['$@', '${b}', 'a$'], 'pass-through in list context');
+	is(scalar norm_deps('$@', '$b', { pass_thru => 1 }), '$@',
+		'scalar context still returns first spec');
+	is(norm_dep('$@/$a', pass_thru => 1), '$@/${a}', 'singular wrapper forwards option');
+	is(norm_deps(norm_deps('$@/$a/$$/a$', { pass_thru => 1 }), { pass_thru => 1 }),
+		'$@/${a}/${$}/a$', 'pass-through normalization is idempotent');
+	is(subs_deps({ a => 'v' }, '$@/$a/a$', { pass_thru => 1 }), '$@/v/a$',
+		'substitution continues after preserved syntax');
+	is(subs_deps({ a => '.' }, '$@/$a/x', { pass_thru => 1 }), '$@/x',
+		'substitution tracks path segments after preserved syntax');
+	is(subs_deps({ a => 'v' }, '${}/$a/$}', { pass_thru => 1 }), '${}/v/$}',
+		'substitution continues after empty braces');
+}
 
 # --- subst_deps
 is(subs_deps({ a => '.' }, '${a}/x'), 'x', 'useless dot dropped');

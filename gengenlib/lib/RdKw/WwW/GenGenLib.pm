@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Exporter ();
 
-our $VERSION = '0.00_02';
+our $VERSION = '0.00_03';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -387,9 +387,9 @@ sub uproot
 	return;
 }
 
-=item B<norm_dep> I<spec>, [ strict => 0 ]
+=item B<norm_dep> I<spec>, [ strict => 0, pass_thru => 0 ]
 
-=item B<norm_deps> I<spec>... { strict => 0 }
+=item B<norm_deps> I<spec>... { strict => 0, pass_thru => 0 }
 
 Symbolically normalize dependency specification,
 as read by B<read_deps>.  Variables are demarcated
@@ -411,6 +411,13 @@ option decides whether to die on malformed input, or to
 replace unpaired dollar signs
 with literal dollar signs.  Defaults to C<< strict => 0 >>.
 
+With C<< pass_thru => 1 >>, unrecognized dollar signs are
+left unchanged, for example C<$@>, rather than escaped.
+Recognized variables and the project root are still normalized.
+C<strict> takes precedence: malformed input still dies even
+with C<pass_thru> enabled.  C<pass_thru> defaults to 0 and
+was added in 0.0003.
+
 Added in 0.0002.
 
 =cut
@@ -431,7 +438,7 @@ sub norm_deps
 				# includes "$$"
 				$out .= "\${$1}";
 			} elsif ($spec =~ /\G\$/gc) {
-				# Anything else is not a variable, as siteconf agrees
+				# Anything else is not a variable we recognize
 				if ($opt->{strict}) {
 					die "norm_deps: trailing \$ in `$_'\n"
 						if $spec =~ /\G\z/gc;
@@ -439,7 +446,7 @@ sub norm_deps
 						if $spec =~ /\G\{/gc;
 					die "norm_deps: stray \$ in `$_'\n";
 				}
-				$out .= '${$}';
+				$out .= $opt->{pass_thru} ? '$' : '${$}';
 			} else {
 				last;
 			}
@@ -491,8 +498,8 @@ sub subs_deps
 		my $out = '';
 		# Whether we are at the start of a path segment
 		my $seg = 1;
-		# Normalized: every "$" that is left is followed by "{name}"
-SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
+		# Skip unrecognized dollars preserved by pass_thru too.
+SSS:		while ($spec =~ /\G((?:[^\$]|\$(?!\{[^}]+\}))*)\$\{([^}]+)\}/gc) {
 			my $name = $2;
 			if (length $1) {
 				$out .= $1;

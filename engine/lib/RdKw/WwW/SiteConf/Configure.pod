@@ -16,7 +16,7 @@ RdKw::WwW::SiteConf::Configure - the siteconf configure script
 
     # A web project needs a site URL.
     siteconf -i -P web -SB=build
-    ./configure -Osite_url=https://example.org -Obase_url=/~user/
+    ./configure -Osite_url=https://example.org -Obase_url=/~me/site/
     siteconf -g -B build -G ninja
     cd build && ninja
 
@@ -198,7 +198,7 @@ L<RdKw::WwW::GenLib> to validate and normalize these URL options.  They are
 ordinary saved options, so changing C<site_url> alone does not discard a
 previously saved C<base_url>.
 
-    ./configure -Osite_url=https://example.org -Obase_url=/~my/notes/
+    ./configure -Osite_url=https://example.org -Obase_url=/~me/notes/
 
 The renderer exposes definitions as C<D>, options as C<O>, the current
 page's location as C<location>, and the C<locate> function.  See

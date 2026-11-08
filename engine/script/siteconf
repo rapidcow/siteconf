@@ -563,7 +563,9 @@ sub render_text
 		USE_GENLIB => 'use RdKw::WwW::GenLib qw( locate );',
 		LOCATE => $can_subst
 			? <<\NEW
-my $target = do {
+# relapath doesn't do well with the leading slash,
+# though people may have a habit of including it...
+(my $target = do {
 	my ($name, $norm, $real);
 	# Try symbolic prefix
 	if (defined ($name = uproot('${a}',
@@ -582,9 +584,7 @@ my $target = do {
 		die "E: $apath: HAVE `$I{HAVE}'$aka not "
 			. "under \${a} (which is `$D->{a}')\n";
 	}
-};
-# relapath doesn't do well with leading slashes.
-$target =~ s/\A\/+//;
+}) =~ s/\A\/+//;
 NEW
 			: <<\OLD,
 (my $target = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}

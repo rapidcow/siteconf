@@ -4,6 +4,7 @@ Revision history of WwW-SiteConf
 0.02_02  2026-11-07  RC
     * Better render (with the bug-fixed GenGenLib 0.0002!)
     * Hard indirect prerequisites stay hard (thanks Claude)
+    * Misc error/warning message tweaks
 
 0.02_01  2026-11-06  RC
     + -Dclean now names the cleaning rule(s) of the Makefile.

@@ -38,9 +38,10 @@ our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
 	read_make write_make
 	update_file load_state
-	read_deps norm_deps
-	subs_deps split_dep
-	walk_deps follow_ok
+	read_deps
+	norm_deps norm_dep
+	subs_deps subs_dep
+	split_dep walk_deps follow_ok
 	enroot uproot
 );
 
@@ -386,6 +387,8 @@ sub uproot
 	return;
 }
 
+=item B<norm_dep> I<spec>, [ strict => 0 ]
+
 =item B<norm_deps> I<spec>... { strict => 0 }
 
 Symbolically normalize dependency specification,
@@ -449,6 +452,14 @@ sub norm_deps
 	@ret;
 }
 
+sub norm_dep
+{
+	my ($spec, %opt) = @_;
+	scalar norm_deps($spec, \%opt);
+}
+
+=item B<subs_dep> \%D, I<spec>, [ strict => 0 ]
+
 =item B<subs_deps> \%D, I<spec>... { strict => 0 }
 
 Substitute dependency specifications with
@@ -499,6 +510,12 @@ SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
 		push @ret, $out;
 	}
 	@ret;
+}
+
+sub subs_dep
+{
+	my ($D, $spec, %opt) = @_;
+	scalar subs_deps($D, $spec, \%opt);
 }
 
 =item B<split_dep> I<spec>

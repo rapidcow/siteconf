@@ -28,8 +28,8 @@ Revision history of WwW-GenGenLib
       slash is a directory, and is planted like enroot does:
       it keeps one trailing slash, and "." or empty vanishes
       (${a}/times.html is times.html when a is ".").  Else
-      it is just text, and nothing is special about "." there
-      (good-${a}/times.html is good-./times.html, not
+      it is just text; nothing special about "." there.
+      (So good-${a}/times.html is good-./times.html, not
       good-times.html.)
     + split_dep: return a pair of (symbolic root, path).
     + walk_deps: list pooled dependencies, hard or soft,

@@ -524,6 +524,12 @@ SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
 	@ret;
 }
 
+sub subs_dep
+{
+	my ($D, $spec, %opt) = @_;
+	scalar subs_deps($D, $spec, \%opt);
+}
+
 =item B<split_dep> I<spec>
 
 Split a dependency specification into its symbolic

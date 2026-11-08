@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Exporter ();
 
-our $VERSION = '0.02_01';
+our $VERSION = '0.02_02';
 $VERSION = eval $VERSION;
 
 =head1 NAME

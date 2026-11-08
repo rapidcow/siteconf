@@ -3,4 +3,4 @@ build/hello.html
 rapidcow@RCs-T480:~/my/project/siteconf/gengenlib $ perl -MRdKw::WwW::GenGenLib=subs_dep -e 'print subs_dep({ B => "build", p => "hello.html" }, "\${B}/\${p", strict => 1), "\n"'
 norm_deps: unterminated or empty ${ in `${B}/${p'
 
-consider this tested hhhh
+consider this tested ughhhh =n=

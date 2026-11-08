@@ -19,6 +19,7 @@ my %WriteMakefileArgs = (
 		'Test::More' => '0',
 	},
 	PREREQ_PM => {
+		'version' => '0',
 		'File::ShareDir' => '0',
 		'RdKw::WwW::GenGenLib' => '0',
 		# RdKw::WwW::GenLib isn't a dependency, though

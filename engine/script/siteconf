@@ -177,6 +177,8 @@ current directory.
 
 =cut
 
+use version;
+
 use Data::Dumper ();
 use File::Basename qw( basename dirname );
 use File::ShareDir ();
@@ -184,6 +186,9 @@ use File::Spec;
 use Getopt::Long qw( GetOptionsFromArray );
 
 use RdKw::WwW::SiteConf;
+
+# The first GenGenLib with norm_deps, subs_deps and uproot.
+our $GENGENLIB_NEW = '0.0002';
 
 my $prog = basename($0);
 my $usage = <<EOM;
@@ -295,9 +300,6 @@ if ($opt{mode} eq 'init') {
 exit;
 
 # ---
-
-# The first GenGenLib with norm_deps, subs_deps and uproot.
-our $GENGENLIB_NEW = '0.0002';
 
 # `share' lives where File::ShareDir finds it: alongside the modules
 # we were loaded from (so under blib/ in a built checkout), and nowhere

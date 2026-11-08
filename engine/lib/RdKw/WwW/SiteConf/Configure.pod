@@ -198,7 +198,7 @@ L<RdKw::WwW::GenLib> to validate and normalize these URL options.  They are
 ordinary saved options, so changing C<site_url> alone does not discard a
 previously saved C<base_url>.
 
-    ./configure -Osite_url=https://example.org -Obase_url=/notes/
+    ./configure -Osite_url=https://example.org -Obase_url=/~my/notes/
 
 The renderer exposes definitions as C<D>, options as C<O>, the current
 page's location as C<location>, and the C<locate> function.  See

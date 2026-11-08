@@ -88,7 +88,9 @@ given more than once; a later one for the same module replaces
 the earlier.  F<configure> always checks for L<RdKw::WwW::GenGenLib>
 (version 0.0002 with a preset, which F<render> needs; give
 C<-MRdKw::WwW::GenGenLib=0> to get an older F<render> that works with
-any version), and so does the preset for what it needs.
+any version), and so does the preset for what it needs (C<# USE:>
+lines in its config).  C<-M>I<module>C<=> with nothing after the C<=>
+drops I<module> from the list, even one the preset asked for.
 
 =item B<-g>, B<make>
 
@@ -400,25 +402,6 @@ sub do_init
 	length $A or die "$prog: -DA may not be empty.\n";
 	my %Ox = %{ $opt->{O} };
 
-	# -Mmodule or -Mmodule=version: configure must find it.  Keyed by
-	# module, so that a later (or explicit) one replaces the built-in.
-	my %mods = ( 'RdKw::WwW::GenGenLib' => 0 );
-	my %said;
-	for my $m (@{ $opt->{M} }) {
-		my ($module, $min) = split /=/, $m, 2;
-		$min = 0 unless defined $min;
-		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: -M$m: bad module name\n";
-		$min =~ /\A(?:v?[0-9][0-9._]*|0)\z/ or die "$prog: -M$m: bad version\n";
-		$mods{$module} = $min;
-		$said{$module} = 1;
-	}
-	# The render script wants more than 0 of GenGenLib, unless told otherwise
-	# (-MRdKw::WwW::GenGenLib=0 gets the older, weaker render script).
-	defined $opt->{P} && $opt->{P} ne 'none' && !$said{'RdKw::WwW::GenGenLib'}
-		and $mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
-	$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
-	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
-
 	my $preset = '';
 	my $help = '';
 	my $dhelp = '';
@@ -431,6 +414,33 @@ sub do_init
 		$preset =~ s/\n*\z/\n/;
 		$render = eval { share_file("presets/$opt->{P}.render") };
 	}
+	# configure must find these: what the preset says (in `# NEED:
+	# module[=version]' lines), then -Mmodule or -Mmodule=version.  Keyed
+	# by module, so that a later one replaces the earlier.  -Mmodule= with
+	# nothing after the = drops it.
+	my %mods = ( 'RdKw::WwW::GenGenLib' => 0 );
+	my @spec = ($preset =~ /^# USE: (\S+)$/mg, @{ $opt->{M} });
+	my %said;
+	for my $m (@spec) {
+		my ($module, $min) = split /=/, $m, 2;
+		$min = 0 unless defined $min;
+		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: -M$m: bad module name\n";
+		$min =~ /\A(?:v?[0-9][0-9._]*|0|)\z/ or die "$prog: -M$m: bad version\n";
+		if ($min eq '') {
+			$module eq 'RdKw::WwW::GenGenLib'
+				and die "$prog: -M$m: configure always needs it\n";
+			delete $mods{$module};
+		} else {
+			$mods{$module} = $min;
+		}
+		$said{$module} = 1;
+	}
+	# The render script wants more than 0 of GenGenLib, unless told otherwise
+	# (-MRdKw::WwW::GenGenLib=0 gets the older, weaker render script).
+	defined $render && !$said{'RdKw::WwW::GenGenLib'}
+		and $mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
+	$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
+	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
 	exists $opt->{output}{render} && !defined $render
 		and die "$prog: preset does not supply a render output\n";
 	# render names itself in a HAVE, and read_deps cannot take just

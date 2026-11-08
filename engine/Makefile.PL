@@ -21,7 +21,7 @@ my %WriteMakefileArgs = (
 	PREREQ_PM => {
 		'version' => '0',
 		'File::ShareDir' => '0',
-		'RdKw::WwW::GenGenLib' => '0.0002',
+		'RdKw::WwW::GenGenLib' => '0.0003',
 		# RdKw::WwW::GenLib isn't a dependency, though
 		# for those who use the web preset it is when
 		# they run the render script (... which we don't

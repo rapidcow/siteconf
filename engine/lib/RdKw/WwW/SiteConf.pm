@@ -198,7 +198,7 @@ use File::Basename qw( dirname basename );
 use Cwd qw( abs_path );
 use File::Spec ();
 
-use RdKw::WwW::GenGenLib 0.0002 qw(
+use RdKw::WwW::GenGenLib 0.0003 qw(
 	read_make read_deps update_file
 	norm_dep uproot );
 use RdKw::WwW::SiteConf::Modifiers;
@@ -597,12 +597,19 @@ sub _read_target
 
 # Whether this (raw) prerequisite says where in ${a} the target comes
 # from: it is ${a}, or begins with ${A}/${a}/ or ${a}/ (any number of
-# slashes).  Returns what follows, as written, which is empty if that is
-# nowhere in particular; or undef if it is not in ${a}.
+# slashes).  Returns what follows, which is empty if that is nowhere
+# in particular; or undef if it is not in ${a}.  (A `$' that is no
+# variable, as in `$@', is passed through; `$$' and `$x' may come back
+# as `${$}' and `${x}', which are the same to _subst.)
 sub _source_of
 {
-	(my ($dep) = @_) =~ s!\A\s+!!;
-	$dep =~ s!\A(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)(?:/+|\z)!! ? $dep : undef;
+	my ($dep) = @_;
+	# uproot takes one slash, and `${A}//' would leave one in front
+	$dep =~ s!\A(\$(?:\{A\}|A))/+!$1/!;
+	defined(my $rest = uproot('${a}', norm_dep($dep, pass_thru => 1)))
+		or return;
+	$rest =~ s!\A/+!!;
+	$rest;
 }
 
 # Makefile.in => { target => { recipe, deps, src, line } }

@@ -160,7 +160,7 @@ Revision history of WwW-SiteConf
         it wouldn't (and frankly should not) know where it is. :)
 
     * update %v capitalization in the render comment consistently
-      (regressed in 0.01_03~6 "2c3893f8712d48d7ebf25ea2ce9919b843f73125")
+      (regressed in v0.01_03~6 "2c3893f8712d48d7ebf25ea2ce9919b843f73125")
 
 
 0.01_03  2026-11-01  RC

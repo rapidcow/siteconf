@@ -487,7 +487,7 @@ SKIP:	{
 	is($warn->($dir), <<MSG, 'a missing WANT in a source header');
 W: target `a.html' WANTs `site/c.css'
 W:   (in header of `html/a.html')
-W: but it is missing; going on without it :(
+W: ... but it is missing; going on without it :(
 MSG
 
 	$dir = project({
@@ -499,7 +499,7 @@ MSG
 	is($warn->($dir), <<MSG, '... and in the header of a tool');
 W: target `a.html' WANTs `gen/Mod.pm'
 W:   (in header of `tool')
-W: but it is missing; going on without it :(
+W: ... but it is missing; going on without it :(
 MSG
 		
 }

@@ -810,7 +810,7 @@ sub _node
 		} else {
 			$self->_warn("W: target `$file' WANTs `$d->[1]'\n");
 			$self->_warn("W:   ($d->[2])\n");
-			$self->_warn("W: but it is missing; going on without it :(\n");
+			$self->_warn("W: ... but it is missing; going on without it :(\n");
 		}
 	}
 

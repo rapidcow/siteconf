@@ -24,7 +24,6 @@ use Getopt::Long qw( GetOptions );
 our @NEED;
 BEGIN {
 	@NEED = (
-		[ 'RdKw::WwW::GenGenLib', 0 ],
 @MODULES@
 	);
 }

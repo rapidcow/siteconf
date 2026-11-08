@@ -32,8 +32,8 @@ use strict;
 use warnings;
 
 use Getopt::Std;
-use RdKw::WwW::GenGenLib qw( @IMPORT@ );
-use RdKw::WwW::GenLib qw( locate );
+@USE_GENGENLIB@
+@USE_GENLIB@
 use Template;
 use Template::Exception;
 

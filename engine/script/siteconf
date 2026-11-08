@@ -84,8 +84,11 @@ Write F<configure> (or whatever I<-o> says).
 
 Have F<configure> check that I<module> can be loaded (and is at
 least I<version>, if given) before doing anything else.  May be
-given more than once.  F<configure> always checks for
-L<RdKw::WwW::GenGenLib>, and so does the preset for what it needs.
+given more than once; a later one for the same module replaces
+the earlier.  F<configure> always checks for L<RdKw::WwW::GenGenLib>
+(version 0.0002 with a preset, which F<render> needs; give
+C<-MRdKw::WwW::GenGenLib=0> to get an older F<render> that works with
+any version), and so does the preset for what it needs.
 
 =item B<-g>, B<make>
 
@@ -293,6 +296,9 @@ exit;
 
 # ---
 
+# The first GenGenLib with norm_deps, subs_deps and uproot.
+our $GENGENLIB_NEW = '0.0002';
+
 # `share' lives where File::ShareDir finds it: alongside the modules
 # we were loaded from (so under blib/ in a built checkout), and nowhere
 # else.  No environment variable, no path relative to us.
@@ -392,15 +398,24 @@ sub do_init
 	length $A or die "$prog: -DA may not be empty.\n";
 	my %Ox = %{ $opt->{O} };
 
-	# -Mmodule or -Mmodule=version: configure must find it
-	my @mod;
+	# -Mmodule or -Mmodule=version: configure must find it.  Keyed by
+	# module, so that a later (or explicit) one replaces the built-in.
+	my %mods = ( 'RdKw::WwW::GenGenLib' => 0 );
+	my %said;
 	for my $m (@{ $opt->{M} }) {
 		my ($module, $min) = split /=/, $m, 2;
 		$min = 0 unless defined $min;
 		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: -M$m: bad module name\n";
 		$min =~ /\A(?:v?[0-9][0-9._]*|0)\z/ or die "$prog: -M$m: bad version\n";
-		push @mod, "\t\t[ " . pq($module) . ", " . pq($min) . " ],";
+		$mods{$module} = $min;
+		$said{$module} = 1;
 	}
+	# The render script wants more than 0 of GenGenLib, unless told otherwise
+	# (-MRdKw::WwW::GenGenLib=0 gets the older, weaker render script).
+	defined $opt->{P} && $opt->{P} ne 'none' && !$said{'RdKw::WwW::GenGenLib'}
+		and $mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
+	$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
+	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
 
 	my $preset = '';
 	my $help = '';
@@ -501,6 +516,13 @@ out:	while (my ($name, $dest) = each %out) {
 	return 0;
 }
 
+sub version_ge
+{
+	my ($have, $want) = @_;
+	my $ok = eval { version->parse($have) >= version->parse($want) };
+	$ok ? 1 : 0;
+}
+
 # Generates <preset>.render.
 sub render_text
 {
@@ -516,14 +538,15 @@ sub render_text
 	}
 	$path_q = RdKw::WwW::SiteConf::shell_quote($path);
 	my $text = slurp($render);
-	my $can_subst = eval { RdKw::WwW::GenGenLib->VERSION('0.0002') };
+	my $can_subst = version_ge($opt->{gengenlib_min}, $GENGENLIB_NEW);
 	my %sub = (
 		PATH => $path,
 		PATH_Q => $path_q,
 		NAME => $name,
-		IMPORT => $can_subst
-			? 'read_deps load_state norm_deps subs_deps uproot'
-			: 'read_deps load_state',
+		USE_GENGENLIB => $can_subst
+			? "use RdKw::WwW::GenGenLib $GENGENLIB_NEW qw( read_deps load_state norm_deps subs_deps uproot );"
+			: "use RdKw::WwW::GenGenLib qw( read_deps load_state );",
+		USE_GENLIB => 'use RdKw::WwW::GenLib qw( locate );',
 		LOCATE => $can_subst
 			? <<\NEW
 my $target = do {

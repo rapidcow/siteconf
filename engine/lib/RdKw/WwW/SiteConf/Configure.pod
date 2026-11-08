@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Configure - configuring a SiteConf project
+RdKw::WwW::SiteConf::Configure - the siteconf configure script
 
 =head1 SYNOPSIS
 

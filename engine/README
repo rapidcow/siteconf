@@ -17,8 +17,9 @@ from the project root, spelled in full:
     # NEED: skel/HTML                bare names are from the root
 ${b} is relative to ${B}; on its own it is an error.
 
-In templates (TT2): D.* (config.mk), O.* (option.mk, plus O.location),
-locate(...).  Keep local changes to ./configure as a patch; it is
-generated deterministically.
+In templates (TT2): D.* (config.mk), O.* (option.mk), location
+(reversed from HAVE declaration), locate(...).  ./configure and
+./render are generated deterministically (provided the same flags
+are passed), so it's possible to keep local changes in a patch.
 
 Tests: ./env.pl prove -r gengenlib/t genlib/t engine/t

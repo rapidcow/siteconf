@@ -6,7 +6,8 @@ Revision history of WwW-SiteConf
         also tell the source of a rule and the tree of a target
         in Makefile.in now: any spelling of ${A}/${a}/, ${B}/${b}/
         and the like that GenGenLib understands is understood
-        here, and any number of slashes after them.
+        here, and any number of slashes after (but NOT between)
+        the symbols.
 
     *** Multiple slashes may not follow ${A}; such a path would
         be treated as an absolute path beginning with "/${a}"

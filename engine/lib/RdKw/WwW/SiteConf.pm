@@ -1055,7 +1055,7 @@ sub manifest_text
 	$text .= "MAKE $goal->{name}\n";
 	$text .= "\tNEED $_\n" for @{ $goal->{files} };
 	for my $drop (@{ $goal->{dropped} }) {
-		$text .= "#\tWANT $drop->[0]: $drop->[1]\n";
+		$text .= "#\tWANT $drop->[0]\t# $drop->[1]\n";
 	}
 	$text;
 }

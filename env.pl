@@ -27,8 +27,15 @@ my %shellstyle = (
 	fish => \&export_fish,
 );
 
+Getopt::Long::Configure(qw( require_order ));
 GetOptions("s=s" => \$shell) or die $usage;
-@ARGV and die "$Me: too many arguments\n";
+
+if (@ARGV) {
+	my %env = prepend_path( PERL5LIB => get_inc() );
+	$ENV{keys %env} = values %env;
+	exec @ARGV;
+	exit "exec $ARGV[0]: $!\n";
+}
 
 unless (defined $shell) {
 	$shell = guess_shell() or die "$Me: could not infer your shell.  Override with -s SHELL.\n";
@@ -40,12 +47,17 @@ unless (exists $shellstyle{$shell}) {
 
 print $shellstyle{$shell}->(
 	prepend_path(
-		PERL5LIB => map { (
-			File::Spec->rel2abs(File::Spec->catdir($_, "blib", "lib"), $FindBin::Bin),
-#			File::Spec->rel2abs(File::Spec->catfile($_, "lib"), $FindBin::Bin),
-		) } @modules,
+		PERL5LIB => get_inc(),
 	),
 );
+
+sub get_inc
+{
+	map { (
+		File::Spec->rel2abs(File::Spec->catdir($_, "blib", "lib"), $FindBin::Bin),
+#		File::Spec->rel2abs(File::Spec->catfile($_, "lib"), $FindBin::Bin),
+	) } @modules;
+}
 
 # Partially adopted from local/lib.pm, guess_shelltype()
 sub guess_shell

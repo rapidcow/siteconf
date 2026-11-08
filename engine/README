@@ -21,4 +21,4 @@ In templates (TT2): D.* (config.mk), O.* (option.mk, plus O.location),
 locate(...).  Keep local changes to ./configure as a patch; it is
 generated deterministically.
 
-Tests: PERL5LIB=genlib/lib:engine/lib prove -r engine/t genlib/t
+Tests: ./env.pl prove -r gengenlib/t genlib/t engine/t

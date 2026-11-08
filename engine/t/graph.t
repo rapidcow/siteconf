@@ -484,9 +484,11 @@ SKIP:	{
 		MANIFEST => $manifest,
 		'html/a.html' => lines( WANT => [qw[ ${B}/${b}/c.css ]] ),
 	});
-	is($warn->($dir), "W: `a.html' WANTs `site/c.css' (in header of `html/a.html')\n"
-		. "W:   ... but it is missing; going on without it :(\n",
-		'a missing WANT in a source header');
+	is($warn->($dir), <<MSG, 'a missing WANT in a source header');
+W: `a.html' WANTs `site/c.css'
+W:    (in header of `html/a.html')
+W:  but it is missing; going on without it :(
+MSG
 
 	$dir = project({
 		MANIFEST => $manifest,
@@ -494,9 +496,12 @@ SKIP:	{
 		'html/a.html' => '',
 		'tool' => lines( WANT => [qw[ gen/Mod.pm ]] ),
 	});
-	is($warn->($dir), "W: `a.html' WANTs `gen/Mod.pm' (in header of `tool')\n"
-		. "W:   ... but it is missing; going on without it :(\n",
-		'... and in the header of a tool');
+	is($warn->($dir), <<MSG, '... and in the header of a tool');
+W: `a.html' WANTs `gen/Mod.pm'
+W:    (in header of `tool')
+W:  but it is missing; going on without it :(
+MSG
+		
 }
 
 # --- headers of source files we NEED are read, too (like gcc -MM);

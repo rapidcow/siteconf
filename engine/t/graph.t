@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 137;
+use Test::More tests => 138;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -416,6 +416,16 @@ SKIP:	{
 			'... nothing from html/ is needed');
 		ok($plan && $plan->{node}{stamp}{nosrc}, '... and the node says so');
 	}
+
+	# ${A}// is not ${A}/: the slashes may not come between the symbols,
+	# so this is the absolute path /html/q.html, not a source
+	my $abs = project({
+		MANIFEST => "MAKE all\n\tNEED p.html\n",
+		'Makefile.in' => "p.html: \${A}//\${a}/q.html\n\ttrue\n",
+		'html/p.html' => '', 'html/q.html' => '',
+	});
+	eval { plan_of($abs) };
+	like($@, qr{NEEDs `/html/q\.html'}, '${A}//${a}/ is not a source');
 
 	# not first: the directory, as a prerequisite, like before
 	my $dir = project({

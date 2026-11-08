@@ -808,9 +808,9 @@ sub _node
 		if ($check->(@$d, 1)) {
 			push @deps, $d->[1];
 		} else {
-			$self->_warn("W: `$file' WANTs `$d->[1]'\n");
-			$self->_warn("W:    ($d->[2])\n");
-			$self->_warn("W:  but it is missing; going on without it :(\n");
+			$self->_warn("W: target `$file' WANTs `$d->[1]'\n");
+			$self->_warn("W:   ($d->[2])\n");
+			$self->_warn("W: but it is missing; going on without it :(\n");
 		}
 	}
 

@@ -262,8 +262,8 @@ Consider running the C<mkdir -p> equivalent on your system
 and setting the approrpiate permission or ACL bits, and at
 C<most> leave the leaf directory to configure to create it.
 
-Added in 0.02_01, since it stopped creating non-leaf
-components then.
+Added in 0.02_01, since C<./configure> stopped creating
+non-leaf components then.
 
 =back
 

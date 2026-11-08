@@ -604,8 +604,6 @@ sub _read_target
 sub _source_of
 {
 	my ($dep) = @_;
-	# uproot takes one slash, and `${A}//' would leave one in front
-	$dep =~ s!\A(\$(?:\{A\}|A))/+!$1/!;
 	defined(my $rest = uproot('${a}', norm_dep($dep, pass_thru => 1)))
 		or return;
 	$rest =~ s!\A/+!!;

@@ -2,11 +2,15 @@ Revision history of WwW-SiteConf
 
 
 0.02_03  2026-11-08
-    *** Requires GenGenLib 0.0003 (norm_dep and uproot), which
+    *** Require GenGenLib 0.0003 (norm_dep and uproot), which
         also tell the source of a rule and the tree of a target
         in Makefile.in now: any spelling of ${A}/${a}/, ${B}/${b}/
         and the like that GenGenLib understands is understood
         here, and any number of slashes after them.
+
+    *** Multiple slashes may not follow ${A}; such a path would
+        be treated as an absolute path beginning with "/${a}"
+        and loses its symbolic meaning as a source file.
 
     + A first prerequisite of ${a} alone (or ${a}/, ${A}/${a}//,
       ...) suppresses the implicit ${a}/${@} prerequisite without

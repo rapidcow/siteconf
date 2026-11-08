@@ -405,7 +405,7 @@ SKIP:	{
 
 # --- ${a} alone as the first prerequisite: no source, nothing implied
 {
-	for my $form ('${a}', '${a}/', '${a}///', '${A}/${a}/', '$a/', '$A//$a') {
+	for my $form ('${a}', '${a}/', '${a}///', '${A}/${a}/', '$a/', '$A/$a') {
 		my $dir = project({
 			MANIFEST => "MAKE all\n\tNEED stamp\n",
 			'Makefile.in' => "stamp: $form \${A}/x\n\ttouch \${\@}\n",

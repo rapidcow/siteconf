@@ -599,14 +599,13 @@ sub _read_target
 # nowhere in particular; or undef if it is not in ${a}.
 sub _source_of
 {
-	my ($dep) = @_;
-	$dep =~ s!\A\s+!!;
-	(my $one = $dep) =~ s!\A(\$(?:\{A\}|A))/+!$1/!;
-	defined uproot('${a}', norm_dep($one)) or return;
+	(my ($dep) = @_) = ~ s!\A\s+!!;
+	defined (my $src = uproot('${a}', norm_dep($dep))) or return;
 	# norm_dep rewrites a `$' that is not a variable (`$@', say), so
 	# what follows is taken from what was written, not from that.
-	$dep =~ s!\A(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)(?:/+|\z)!! or return;
-	$dep;
+	#
+	# (... Just return bro. =_=)
+	$src;
 }
 
 # Makefile.in => { target => { recipe, deps, src, line } }

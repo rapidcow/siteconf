@@ -496,7 +496,7 @@ SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
 			my $name = $2;
 			if (length $1) {
 				$out .= $1;
-				$seg = $1 =~ /\/\z/;
+				$seg = ($1 =~ /\/\z/);
 			}
 			if ($name eq '$') {
 				# "$$" escapes "$"

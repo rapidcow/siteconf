@@ -465,11 +465,18 @@ sub norm_dep
 Substitute dependency specifications with
 the given definitions.  C<norm_deps> is
 called to normalize the specification (and
-is given the options, if any), and path
-segments that consist solely of a variable
-expanding to C<"."> or nothing are collapsed
-(so C<${a}/x> may become C<x>, but C<x-${a}/y>
-is left alone).
+is given the options, if any).
+
+A variable that makes up a whole path segment
+and is followed by a slash is a directory, and
+is planted like B<enroot> does: it keeps one
+trailing slash, so C<${a}/x> is F<site/x> when
+C<${a}> is either C<site> or C<site/>, and a
+C<.> or empty one vanishes altogether (just
+F<x>).  Everywhere else it is plain text, and
+nothing is special about C<.> there: C<x-${a}/y>
+is F<x-./y>, and C<${B}/${p}> is just
+C<< enroot($B) . $p >>.
 
 Added in 0.0002.
 
@@ -482,40 +489,39 @@ sub subs_deps
 	my @ret;
 	foreach my $spec (norm_deps(@_, $opt)) {
 		my $out = '';
+		# Whether we are at the start of a path segment
+		my $seg = 1;
 		# Normalized: every "$" that is left is followed by "{name}"
 SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
-			$out .= $1;
-			my ($name, $value) = ($2);
+			my $name = $2;
+			if (length $1) {
+				$out .= $1;
+				$seg = $1 =~ /\/\z/;
+			}
 			if ($name eq '$') {
 				# "$$" escapes "$"
 				$out .= $name;
+				$seg = 0;
 				next SSS;
 			}
-			unless (defined ($value = $D->{$name})) {
-				# Undefined = empty to us.
-				$value = '';
-			}
-			if (($out eq '' || $out =~ /\/\z/)
-				&& ($value eq '' || $value eq '.')
-				&& $spec =~ /\G(?:\/|\z)/gc)
-			{
-				# Skip useless "./" segment (only if the variable
-				# makes up the whole segment: good-${a}/x is not x)
+			my $value = $D->{$name};
+			# Undefined = empty to us.
+			defined $value or $value = '';
+			if ($seg && $spec =~ /\G\//gc) {
+				# A whole directory: it brings its own trailing slash
+				# (or none, if it is the current directory)
+				$out .= enroot($value);
 				next SSS;
 			}
+			# Anything else is just text
 			$out .= $value;
+			$seg = 0;
 		}
 		$out .= substr($spec, pos($spec) || 0);
 		return $out unless wantarray;
 		push @ret, $out;
 	}
 	@ret;
-}
-
-sub subs_dep
-{
-	my ($D, $spec, %opt) = @_;
-	scalar subs_deps($D, $spec, \%opt);
 }
 
 =item B<split_dep> I<spec>

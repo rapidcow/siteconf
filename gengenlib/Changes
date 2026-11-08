@@ -8,10 +8,10 @@ Revision history of WwW-GenGenLib
 
     + enroot: path concatenation; basically like
       File::Spec::Unix->catfile, but made so that
-      norm_deps({ B => $Bdir, p => $path }, '${B}/${p}')
-      could be the programmatically created with
-      enroot($Bdir, $path) (except absolute paths
-      are explicitly distinguished from relative
+      subs_deps({ B => $Bdir, p => $path }, '${B}/${p}')
+      is enroot($Bdir) . $path, and enroot($Bdir, $path)
+      is the same unless $path is absolute (absolute
+      paths are explicitly distinguished from relative
       paths.)  Right paths are NOT normalized! namely
       empty segments and dot segments are preserved.
     + uproot: quasi-inverse of enroot; with similar
@@ -20,14 +20,19 @@ Revision history of WwW-GenGenLib
       slashes following the prefix are kept.  It is
       caller's responsibility to strip them or reject.
     + norm_deps: HAVE NEED WANT header normalization.
-      It accepts an { errors } option deciding how it
-      should handle stray "$" characters, lenient (replace)
-      or strict (croak).  (This is similar to str.encode
-      in Python, for those of you who know. ;)
-    + subs_deps: basic permissive variable expansion.  Only
-      a whole path segment that is "." or empty is collapsed
-      (For example, good-${a}/times.html is naively replaced
-      with good-./ times.html, not good-times.html.)
+      It accepts a { strict } option deciding how it
+      should handle stray "$" characters: lenient (replace
+      them with a literal one; the default) or strict (die).
+      (This is similar to str.encode in Python, for those
+      of you who know. ;)
+    + subs_deps: basic permissive variable expansion.  A
+      variable that is a whole path segment followed by a
+      slash is a directory, and is planted like enroot does:
+      it keeps one trailing slash, and "." or empty vanishes
+      (${a}/times.html is times.html when a is ".").  Else
+      it is just text, and nothing is special about "." there
+      (good-${a}/times.html is good-./times.html, not
+      good-times.html.)
     + split_dep: return a pair of (symbolic root, path).
     + walk_deps: list pooled dependencies, hard or soft,
       recursively.  The default behavior implements some

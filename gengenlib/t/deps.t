@@ -6,10 +6,10 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 44;
+use Test::More tests => 52;
 use File::Temp qw( tempdir );
 
-use RdKw::WwW::GenGenLib qw( read_deps norm_deps subs_deps );
+use RdKw::WwW::GenGenLib qw( read_deps norm_deps subs_deps enroot );
 
 my $dir = tempdir(CLEANUP => 1);
 sub spew {
@@ -106,4 +106,24 @@ is(subs_deps({ a => 'site' }, '${a}/Main$$Inner.class'), 'site/Main$Inner.class'
 is(subs_deps({ stuff => '.' }, 'good-${stuff}/times.html'), 'good-./times.html', 'dot in the middle of a segment kept');
 is(subs_deps({ a => '.' }, 'x/${a}/y'), 'x/y', 'useless dot dropped mid-path');
 is(subs_deps({}, 'a${}b$}c$'), 'a${}b$}c$', 'malformed is literal, not a variable');
+
+# a whole directory is planted like enroot does; anything else is just text
+is(subs_deps({ B => 'build/' }, '$B/abc'), 'build/abc', 'directory keeps one trailing slash');
+is(subs_deps({ B => 'build//' }, '$B/abc'), 'build//abc', '... only one is the separator');
+is(subs_deps({ R => '/' }, '${R}/x'), '/x', 'root directory');
+is(subs_deps({ name => 'foo/' }, 'var-${name}/abc'), 'var-foo//abc', 'not a whole segment: plain text');
+is(subs_deps({ B => 'build', p => '.' }, '$B/$p'), 'build/.', 'a dot is not special outside a directory');
+is(subs_deps({ a => '.' }, '${a}'), '.', '... and not at the very end');
+is(subs_deps({ a => '.' }, '${a}/${a}/z'), 'z', 'directories that are the current one vanish');
+{
+	my @bad;
+	for my $B ('', '.', '/', 'build', 'build/', 'build//', '/abs', 'a/b', './x') {
+		for my $p ('', 'x', 'x/', './x', '../x', '/x', '//x', '.', 'a b') {
+			my $want = enroot($B) . $p;
+			my $got = subs_deps({ B => $B, p => $p }, '${B}/${p}');
+			push @bad, "B=`$B' p=`$p': $got, not $want" unless $got eq $want;
+		}
+	}
+	is_deeply(\@bad, [], '${B}/${p} is enroot($B) . $p, no backtracking');
+}
 is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');

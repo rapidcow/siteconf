@@ -23,8 +23,6 @@ Revision history of WwW-GenGenLib
       It accepts a { strict } option deciding how it
       should handle stray "$" characters: lenient (replace
       them with a literal one; the default) or strict (die).
-      (This is similar to str.encode in Python, for those
-      of you who know. ;)
     + subs_deps: basic permissive variable expansion.  A
       variable that is a whole path segment followed by a
       slash is a directory, and is planted like enroot does:

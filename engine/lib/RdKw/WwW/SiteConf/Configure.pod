@@ -237,7 +237,10 @@ its header says so.
 
 =item C<-h>, C<--help>, C<-?>
 
-Show help and the defaults compiled into this script.
+Show help and the defaults compiled into this particular
+C<./configure> script.  This often has more up-to-date
+messages, especially if the author has patched the help
+text for custom definitions and options.
 
 =item C<-Dname=value>, C<-Oname=value>
 

@@ -198,7 +198,9 @@ use File::Basename qw( dirname basename );
 use Cwd qw( abs_path );
 use File::Spec ();
 
-use RdKw::WwW::GenGenLib 0.0002 qw( read_make read_deps update_file norm_dep uproot );
+use RdKw::WwW::GenGenLib 0.0002 qw(
+	read_make read_deps update_file
+	norm_dep uproot );
 use RdKw::WwW::SiteConf::Modifiers;
 
 # Goals of the manifest cannot take these names; `Makefile' because
@@ -600,12 +602,7 @@ sub _read_target
 sub _source_of
 {
 	(my ($dep) = @_) = ~ s!\A\s+!!;
-	defined (my $src = uproot('${a}', norm_dep($dep))) or return;
-	# norm_dep rewrites a `$' that is not a variable (`$@', say), so
-	# what follows is taken from what was written, not from that.
-	#
-	# (... Just return bro. =_=)
-	$src;
+	$dep =~ s!(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)(?:/+|\z)!! ? $dep : undef;
 }
 
 # Makefile.in => { target => { recipe, deps, src, line } }

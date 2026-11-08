@@ -68,13 +68,15 @@ NINJA
 
 		# Input first, then what we need but is not an input; what is
 		# a marker only has to be there, not newer.
-		my ($input, @dep) = @{ $node->{deps} };
+		my @dep = @{ $node->{deps} };
+		my $input = $node->{nosrc} ? undef : shift @dep;
 		my (@need, @order);
 		for (@dep) {
 			if (m{(?:\A|/)\Q$plan->{D}{e}\E\z}) { push @order, $_ }
 			else { push @need, $_ }
 		}
-		my $build = "build " . _path($node->{bpath}) . ": $rule " . _path($input);
+		my $build = "build " . _path($node->{bpath}) . ": $rule";
+		$build .= " " . _path($input) if defined $input;
 		$build .= " | " . join ' ', map { _path($_) } @need if @need;
 		$build .= " || " . join ' ', map { _path($_) } @order if @order;
 		$out .= "$build\n\n";

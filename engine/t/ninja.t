@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 13;
+use Test::More tests => 14;
 use RdKw::WwW::SiteConf::Ninja;
 
 sub cmd { RdKw::WwW::SiteConf::Ninja::_command($_[0]) }
@@ -38,3 +38,9 @@ like($text, qr/^build site\/x: rule1 in\/x \| a\$ b \|\| site\/\.ok$/m,
 	'input, implicit (escaped), order-only');
 like($text, qr/^default all$/m, 'default goal');
 like($text, qr/^build all: phony site\/x$/m, 'goal');
+
+$plan->{node}{x}{nosrc} = 1;
+$plan->{node}{x}{deps} = [ 'a b', 'site/.ok' ];
+$text = RdKw::WwW::SiteConf::Ninja::_emit($plan);
+like($text, qr/^build site\/x: rule1 \| a\$ b \|\| site\/\.ok$/m,
+	'no source, no input: the first dependency is not one');

@@ -4,7 +4,7 @@ use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.02_02';
+our $VERSION = '0.02_03';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -69,6 +69,14 @@ one is not there:
 needs no F<html/a.md.html>.  Spelled out, C<${a}/${@}> brings the
 implied source back.  In a recipe, C<${<}> (or C<${.IMPSRC}>) is the
 source, relative to C<${a}> as C<${@}> is to the target tree.
+
+A first prerequisite that is C<${a}> and nothing more (or C<${a}/>,
+C<${A}/${a}//>, any number of slashes) says there is no source: the
+target is made from the other prerequisites alone, and C<${<}> is an
+error in its recipe.
+
+    stamp: ${a}/ ${A}/tool
+            ${A:Q}/tool > ${B:Q}/${b:Q}/${@:Q}
 
 What is made but does not go into the site -- the intermediate files
 -- may be put in the cache, C<${c}>, which is relative to C<${B}> like
@@ -190,7 +198,7 @@ use File::Basename qw( dirname basename );
 use Cwd qw( abs_path );
 use File::Spec ();
 
-use RdKw::WwW::GenGenLib qw( read_make read_deps update_file );
+use RdKw::WwW::GenGenLib 0.0002 qw( read_make read_deps update_file norm_dep uproot );
 use RdKw::WwW::SiteConf::Modifiers;
 
 # Goals of the manifest cannot take these names; `Makefile' because
@@ -534,6 +542,8 @@ sub _subst
 		} elsif ($x eq '<' or $x eq '.IMPSRC') {
 			defined $src or die "E: $where: \${$x} is not known here"
 				. " (the source is what the prerequisites say)\n";
+			length $src or die "E: $where: \${$x}: this rule has no source"
+				. " (its first prerequisite is \${a})\n";
 			$val = $src;
 		} elsif ($x eq '^X' or $x eq "\030") {
 			$val = $^X;
@@ -565,21 +575,38 @@ sub _read_target
 {
 	my ($self, $spec, $where) = @_;
 	my $tree = 'b';
-	if ($spec =~ s!\A(?:\$(?:\{B\}|B)/)?\$(?:\{([bc])\}|([bc]))(?:/+|\z)!!) {
-		$tree = defined $1 ? $1 : $2;
+	my $norm = norm_dep($spec);
+	my $rest;
+	TREE: for my $t (qw( b c )) {
+		for my $base ("\${B}/\${$t}", "\${$t}") {
+			defined($rest = uproot($base, $norm)) or next;
+			$tree = $t;
+			$rest =~ s!\A/+!!;
+			last TREE;
+		}
 	}
-	$spec =~ /\$/ and die "E: $where: `$spec': a target is a name,"
+	# (as it was written, unless it said a tree)
+	defined $rest or $rest = $spec;
+	$rest =~ /\$/ and die "E: $where: `$rest': a target is a name,"
 		. " optionally after \${b}/ or \${c}/; nowhere else under \${B}\n";
-	_check_file($spec, $where);
-	($self->_key($tree, $spec), $spec);
+	_check_file($rest, $where);
+	($self->_key($tree, $rest), $rest);
 }
 
 # Whether this (raw) prerequisite says where in ${a} the target comes
-# from: it begins with ${A}/${a}/ or ${a}/.  Returns what follows, or undef.
+# from: it is ${a}, or begins with ${A}/${a}/ or ${a}/ (any number of
+# slashes).  Returns what follows, as written, which is empty if that is
+# nowhere in particular; or undef if it is not in ${a}.
 sub _source_of
 {
 	my ($dep) = @_;
-	$dep =~ s!\A\s*(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)/+!! ? $dep : undef;
+	$dep =~ s!\A\s+!!;
+	(my $one = $dep) =~ s!\A(\$(?:\{A\}|A))/+!$1/!;
+	defined uproot('${a}', norm_dep($one)) or return;
+	# norm_dep rewrites a `$' that is not a variable (`$@', say), so
+	# what follows is taken from what was written, not from that.
+	$dep =~ s!\A(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)(?:/+|\z)!! or return;
+	$dep;
 }
 
 # Makefile.in => { target => { recipe, deps, src, line } }
@@ -641,10 +668,13 @@ sub _read_rules
 					# the first word (a ${...} may hold spaces, in :S/ /_/)
 					my ($first) = $dep =~ /\A\s*((?:[^\s\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+)/;
 					if (defined $first and defined(my $from = _source_of($first))) {
-						my $name_of = $self->_subst($from, $name, $where);
-						$name_of =~ /\S/ and $name_of !~ /\s/
-							or die "E: $where: `$first' must be one name in \${a}\n";
-						_check_file($name_of, $where);
+						# ${a} alone says there is none (and ${<} is not known)
+						my $name_of = length $from ? $self->_subst($from, $name, $where) : '';
+						length $from and do {
+							$name_of =~ /\S/ and $name_of !~ /\s/
+								or die "E: $where: `$first' must be one name in \${a}\n";
+							_check_file($name_of, $where);
+						};
 						$rule->{src} = $name_of;
 						$dep =~ s/\A\s*\Q$first\E//;
 					}
@@ -688,7 +718,9 @@ sub _node
 	# Its source: what the rule says, or ${a}/${@} if it says nothing
 	my (undef, $name) = _unkey($file);
 	my $src = $rule && defined $rule->{src} ? $rule->{src} : $name;
-	my $apath = $self->_apath($src);
+	# (an empty one is no source at all: the rule has said ${a})
+	my $nosrc = !length $src;
+	my $apath = $nosrc ? undef : $self->_apath($src);
 	my $bpath = $self->_bpath($file);
 	basename($bpath) eq $D->{e}
 		and die "E: $file: `$D->{e}' is reserved for directory markers.\n";
@@ -696,6 +728,7 @@ sub _node
 	my $node = $self->{node}{$file} = {
 		file => $file,
 		apath => $apath,
+		nosrc => $nosrc,
 		bpath => $bpath,
 		deps => [],
 		kids => [],
@@ -712,14 +745,14 @@ sub _node
 		$fail->("No rule to make it ($D->{R})");
 		return $done->();
 	}
-	unless (-f $self->_fs($apath)) {
+	unless ($nosrc or -f $self->_fs($apath)) {
 		$fail->("Source `$apath' is missing"
 			. ($rule->{line} ? " (rule at $D->{R} line $rule->{line})" : ""));
 		return $done->();
 	}
 	$node->{recipe} = $rule->{recipe};
 
-	my %I = read_deps($self->_fs($apath));
+	my %I = $nosrc ? () : read_deps($self->_fs($apath));
 	if (defined $I{HAVE}) {
 		# The source's own name, as a header spells it, is the one
 		# the rule says it is: ${A}/${a}/FILE.
@@ -733,9 +766,10 @@ sub _node
 	}
 
 	# What the headers say they need, and what the rules do
-	my $where = "$apath";
-	my @hneed = map { [ $_, $self->_dep($_, $where), "in header of `$apath'" ] } @{ $I{NEED} || [] };
-	my @hwant = map { [ $_, $self->_dep($_, $where), "in header of `$apath'" ] } @{ $I{WANT} || [] };
+	my $where = $nosrc ? $file : $apath;
+	my $from = $nosrc ? "" : " of `$apath'";
+	my @hneed = map { [ $_, $self->_dep($_, $where), "in header$from" ] } @{ $I{NEED} || [] };
+	my @hwant = map { [ $_, $self->_dep($_, $where), "in header$from" ] } @{ $I{WANT} || [] };
 	my @rdep = map { [ $_, $_, "prerequisite in $D->{R} line $rule->{line}" ] } @{ $rule->{deps} };
 	# What the source files we NEED (or WANT) say they need, and so on:
 	# like gcc -MM, which lists the headers of headers.
@@ -744,7 +778,7 @@ sub _node
 		# A file first met as a WANT is met again as a NEED (of something
 		# else), and then what it NEEDs is NEEDed too, so only a visit at
 		# least as firm as an earlier one is skipped.
-		my %seen = ($apath => 2);
+		my %seen = $nosrc ? () : ($apath => 2);
 		my (@more_need, @more_want);
 		my $follow; $follow = sub {
 			my ($list, $soft) = @_;
@@ -777,7 +811,7 @@ sub _node
 		push @hwant, @$want;
 	}
 
-	my @deps = ($apath);
+	my @deps = $nosrc ? () : ($apath);
 	my %tree = map { File::Spec->canonpath($D->{$_}) => 1 } qw( b c );
 	my $check = sub {
 		my ($said, $dep, $from, $soft) = @_;
@@ -905,7 +939,7 @@ as a hash reference.  Dies, listing every one of them, if anything
 that is C<NEED>ed cannot be had.
 
   goals   [ { name, files => [ FILE ... ], dropped => [ [FILE, WHY] ] } ]
-  node    { FILE => { file, apath, bpath, deps, recipe } }
+  node    { FILE => { file, apath, nosrc, bpath, deps, recipe } }
   order   [ FILE ... ]    all files, in order of appearance
   dirs    [ { dir, marker, deps => [ MARKER ] } ]   parents first
   clean   [ { name, files => [ BPATH ] } ]

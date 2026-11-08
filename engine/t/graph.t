@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 111;
+use Test::More tests => 137;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -401,6 +401,65 @@ SKIP:	{
 	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${<}\n\ttrue\n" });
 	eval { plan_of($dir) };
 	like($@, qr/line 1: \$\{<\} is not known here/, '${<} in prerequisites');
+}
+
+# --- ${a} alone as the first prerequisite: no source, nothing implied
+{
+	for my $form ('${a}', '${a}/', '${a}///', '${A}/${a}/', '$a/', '$A//$a') {
+		my $dir = project({
+			MANIFEST => "MAKE all\n\tNEED stamp\n",
+			'Makefile.in' => "stamp: $form \${A}/x\n\ttouch \${\@}\n",
+		});
+		my $plan = eval { plan_of($dir) };
+		ok($plan, "no source: $form") or diag $@;
+		is_deeply($plan && $plan->{node}{stamp}{deps}, [qw(x site/.ok)],
+			'... nothing from html/ is needed');
+		ok($plan && $plan->{node}{stamp}{nosrc}, '... and the node says so');
+	}
+
+	# not first: the directory, as a prerequisite, like before
+	my $dir = project({
+		MANIFEST => "MAKE all\n\tNEED a.html\n",
+		'Makefile.in' => "a.html: \${A}/x \${a}\n\ttrue\n",
+		'html/a.html' => '',
+	});
+	is_deeply(plan_of($dir)->{node}{'a.html'}{deps}, [qw(html/a.html x html site/.ok)],
+		'${a} that is not first is just a prerequisite');
+
+	# ${<} has nothing to say
+	$dir = project({
+		MANIFEST => "MAKE all\n\tNEED stamp\n",
+		'Makefile.in' => "stamp: \${a}/\n\ttouch \${<}\n",
+	});
+	eval { plan_of($dir) };
+	like($@, qr/line 2: \$\{<\}: this rule has no source/, '${<} without a source');
+
+	# what follows ${a}/ is read as it was written, any slashes between
+	$dir = project({
+		MANIFEST => "MAKE all\n\tNEED p/x.html\n",
+		'Makefile.in' => "p/x.html: \${a}//\$\@ \${A}/x\n\ttrue\n",
+		'html/p/x.html' => '',
+	});
+	is_deeply(plan_of($dir)->{node}{'p/x.html'}{deps}, [qw(html/p/x.html x site/p/.ok)],
+		'${a}//$@ is the source (a bare $@ is the target)');
+
+	# targets: every spelling, any slashes
+	for my $form ('x.html', '${b}/x.html', '${B}/${b}//x.html', '$b/x.html') {
+		$dir = project({
+			MANIFEST => "MAKE all\n\tNEED x.html\n",
+			'Makefile.in' => "$form:\n\ttrue\n",
+			'html/x.html' => '',
+		});
+		my $plan = eval { plan_of($dir) };
+		ok($plan, "target: $form") or diag $@;
+	}
+	$dir = project({
+		MANIFEST => "MAKE all\n\tNEED x.html\n",
+		'Makefile.in' => "\${A}/x.html:\n\ttrue\n",
+		'html/x.html' => '',
+	});
+	eval { plan_of($dir) };
+	like($@, qr/a target is a name/, 'a target in ${A} is still not a target');
 }
 
 # --- the cache: ${c}

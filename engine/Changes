@@ -1,6 +1,19 @@
 Revision history of WwW-SiteConf
 
 
+0.02_03  2026-11-08
+    *** Requires GenGenLib 0.0002 (norm_dep and uproot), which
+        also tell the source of a rule and the tree of a target
+        in Makefile.in now: any spelling of ${A}/${a}/, ${B}/${b}/
+        and the like that GenGenLib understands is understood
+        here, and any number of slashes after them.
+
+    + A first prerequisite of ${a} alone (or ${a}/, ${A}/${a}//,
+      ...) suppresses the implicit ${a}/${@} prerequisite without
+      naming a source in its place.  The target has none; ${<} in
+      its recipe is an error.  (A lone ${a} used to be an ordinary
+      prerequisite on the directory.)
+
 0.02_02  2026-11-07  RC
     * Better render (with the bug-fixed GenGenLib 0.0002!)
     * Hard indirect prerequisites stay hard (thanks Claude)

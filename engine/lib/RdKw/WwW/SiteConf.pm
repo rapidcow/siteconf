@@ -577,7 +577,7 @@ sub _read_target
 {
 	my ($self, $spec, $where) = @_;
 	my $tree = 'b';
-	my $norm = norm_dep($spec);
+	my $norm = norm_dep($spec, pass_thru => 1);
 	my $rest;
 	TREE: for my $t (qw( b c )) {
 		for my $base ("\${B}/\${$t}", "\${$t}") {

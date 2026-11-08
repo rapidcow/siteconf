@@ -1,16 +1,29 @@
 Revision history of WwW-GenGenLib
 
 
-0.00_02  2026-11-06  RC
+0.00_02  2026-11-07  RC
     !!! Because these are very new functions, they are
         unstable and subject to change!  Please don't
         use them in place of your own policy/logic yet :(
 
-    + norm_deps: HAVE NEED WANT header normalization.  It
-      accepts an { errors } option deciding how it should
-      handle stray "$" characters, lenient (replace) or
-      strict (croak).  (This is similar to str.encode in
-      Python, for those of you who know. ;)
+    + enroot: path concatenation; basically like
+      File::Spec::Unix->catfile, but made so that
+      norm_deps({ B => $Bdir, p => $path }, '${B}/${p}')
+      could be the programmatically created with
+      enroot($Bdir, $path) (except absolute paths
+      are explicitly distinguished from relative
+      paths.)  Right paths are NOT normalized! namely
+      empty segments and dot segments are preserved.
+    + uproot: quasi-inverse of enroot; with similar
+      discrimination for absolute paths.  This path is
+      NOT always safe to use as a relative path! Since
+      slashes following the prefix are kept.  It is
+      caller's responsibility to strip them or reject.
+    + norm_deps: HAVE NEED WANT header normalization.
+      It accepts an { errors } option deciding how it
+      should handle stray "$" characters, lenient (replace)
+      or strict (croak).  (This is similar to str.encode
+      in Python, for those of you who know. ;)
     + subs_deps: basic permissive variable expansion.  Only
       a whole path segment that is "." or empty is collapsed
       (For example, good-${a}/times.html is naively replaced

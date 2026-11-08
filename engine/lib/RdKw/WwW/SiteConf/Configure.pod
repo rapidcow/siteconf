@@ -235,6 +235,10 @@ its header says so.
 
 =over
 
+=item C<-h>, C<--help>, C<-?>
+
+Show help and the defaults compiled into this script.
+
 =item C<-Dname=value>, C<-Oname=value>
 
 Set a definition or option as described above.
@@ -243,14 +247,23 @@ Set a definition or option as described above.
 
 Ignore saved configuration and clear earlier command-line assignments.
 
-=item C<-h>, C<--help>, C<-?>
-
-Show help and the defaults compiled into this script.
-
 =item C<-q>, C<--quiet>
 
 Suppress progress messages and the suggested generation command.
 Errors are still reported.
+
+=item C<--mkpath>
+
+Replicate legacy behavior of creating non-leaf build directory
+(C<-DB>) components.  As mentioned elsewhere:  Please do not
+C<--mkpath> unless you absolutely need to.  This is only
+provided if you B<absolutely> depend on the old behavior.
+Consider running the C<mkdir -p> equivalent on your system
+and setting the approrpiate permission or ACL bits, and at
+C<most> leave the leaf directory to configure to create it.
+
+Added in 0.02_01, since it stopped creating non-leaf
+components then.
 
 =back
 

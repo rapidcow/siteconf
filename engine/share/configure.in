@@ -105,7 +105,7 @@ respectively, for the rulebook or for the files being transformed.
   -h          This help message (alias: --help, -?)
   --reset     Clear all configuration at this point
   -q          Disable tips (alias: --quiet)
-  --mkpath    Create non-leaf build directories
+  --mkpath    Create non-leaf build directory components
 
 See also `perldoc RdKw::WwW::SiteConf::Configure'.
 EOM
@@ -158,8 +158,8 @@ chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
 # which is the very file it is about to choose.
 my $B = isnull($D{B}) ? $Dd{B} : $D{B};
 unless (-d $B) {
-	# Please don't --mkpath unless you absolutely need to.
-	# This is only a flag if you ABSOLUTELY depend on the
+	# Please do not --mkpath unless you absolutely need to.
+	# This is only provided if you ABSOLUTELY depend on the
 	# old behavior.  Consider running the mkdir -p equivalent
 	# on your system and setting the approrpiate permission
 	# or ACL bits, and at MOST leave the leaf directory to

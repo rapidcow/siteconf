@@ -189,7 +189,7 @@ use Getopt::Long qw( GetOptionsFromArray );
 
 use RdKw::WwW::SiteConf;
 
-# The first GenGenLib with norm_deps, subs_deps and uproot.
+# The first GenGenLib with norm_dep, subs_dep and uproot.
 our $GENGENLIB_NEW = '0.0002';
 
 my $prog = basename($0);
@@ -558,7 +558,7 @@ sub render_text
 		USE_GENGENLIB => $can_subst
 			? "use RdKw::WwW::GenGenLib $GENGENLIB_NEW qw(
 	read_deps load_state
-	norm_deps subs_deps uproot );"
+	norm_dep subs_dep uproot );"
 			: "use RdKw::WwW::GenGenLib qw( read_deps load_state );",
 		USE_GENLIB => 'use RdKw::WwW::GenLib qw( locate );',
 		LOCATE => $can_subst
@@ -567,13 +567,13 @@ my $target = do {
 	my ($name, $norm, $real);
 	# Try symbolic prefix
 	if (defined ($name = uproot('${a}',
-		$norm = norm_deps($I{HAVE}))))
+		$norm = norm_dep($I{HAVE}))))
 	{
-		subs_deps($D, $name);
+		subs_dep($D, $name);
 	}
 	# Try literal prefix
 	elsif (defined ($name = uproot($D->{a},
-		$real = subs_deps($D, $norm))))
+		$real = subs_dep($D, $norm))))
 	{
 		$name;
 	}

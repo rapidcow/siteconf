@@ -263,7 +263,7 @@ sub parse_base
 			# so report it thoroughly to the console.
 			my $path = $site_url->path;
 			die <<EUGH;
-$Me: site_url has an nonempty path ($path), and
+$Me: site_url has a nonempty path ($path), and
 $Me: is inconsistent with base_url ($base_url)
 EUGH
 		}

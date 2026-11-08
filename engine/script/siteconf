@@ -556,7 +556,9 @@ sub render_text
 		PATH_Q => $path_q,
 		NAME => $name,
 		USE_GENGENLIB => $can_subst
-			? "use RdKw::WwW::GenGenLib $GENGENLIB_NEW qw( read_deps load_state norm_deps subs_deps uproot );"
+			? "use RdKw::WwW::GenGenLib $GENGENLIB_NEW qw(
+	read_deps load_state
+	norm_deps subs_deps uproot );"
 			: "use RdKw::WwW::GenGenLib qw( read_deps load_state );",
 		USE_GENLIB => 'use RdKw::WwW::GenLib qw( locate );',
 		LOCATE => $can_subst

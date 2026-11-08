@@ -601,8 +601,8 @@ sub _read_target
 # nowhere in particular; or undef if it is not in ${a}.
 sub _source_of
 {
-	(my ($dep) = @_) = ~ s!\A\s+!!;
-	$dep =~ s!(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)(?:/+|\z)!! ? $dep : undef;
+	(my ($dep) = @_) =~ s!\A\s+!!;
+	$dep =~ s!\A(?:\$(?:\{A\}|A)/+)?\$(?:\{a\}|a)(?:/+|\z)!! ? $dep : undef;
 }
 
 # Makefile.in => { target => { recipe, deps, src, line } }

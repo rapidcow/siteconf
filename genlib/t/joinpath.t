@@ -9,15 +9,15 @@
 # Rules under test: in the spec that follows `/' or `//', a leading
 # run -- a single `.' or a chain of `..' -- is resolved against the
 # directory of the page (so `' and `.' are the only spellings of THIS
-# directory).  Every other `.' and `..' is internal and is written as
-# %2E and %2E%2E.  Slashes are kept verbatim: `..' is the directory with
+# directory).  Every other `.' and `..' must be spelled %2E and %2E%2E
+# in the input; nothing is escaped for you.  Slashes are kept verbatim: `..' is the directory with
 # its trailing slash, `../' the directory followed by one more slash,
 # and `../file' the directory followed by a file.  %2F passes through.
 
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 60;
+use Test::More tests => 57;
 
 use RdKw::WwW::GenLib qw( locate joinpath );
 
@@ -84,22 +84,20 @@ is (joinpath('a/b/c', 'd/e', '../f'), 'a/b/f', 'one spec after another');
 	is (locate(\%O, $L, '//x//'), $P . 'x//', 'two slashes');
 	is (locate(\%O, $L, '//x///'), $P . 'x///', 'three slashes');
 
-	# Internal dots are escaped, wherever they are
-	is (locate(\%O, $L, '//x/./y'), $P . 'x/%2E/y', 'internal dot');
-	is (locate(\%O, $L, '//x/../y'), $P . 'x/%2E%2E/y', 'internal dotdot');
-	is (locate(\%O, $L, '//x/.'), $P . 'x/%2E', 'trailing internal dot');
-	is (locate(\%O, $L, '//x/..'), $P . 'x/%2E%2E', 'trailing internal dotdot');
-	is (locate(\%O, $L, '//./x/./y'), $D . 'x/%2E/y', 'after the dot');
-	is (locate(\%O, $L, '//../x/../y'), $P . 'cs300/x/%2E%2E/y', 'after the dotdot');
-	is (locate(\%O, $L, '//././'), $D . '%2E/', 'only the first dot is the run');
-	is (locate(\%O, $L, '//./.'), $D . '%2E', 'dot after the dot');
-	is (locate(\%O, $L, '//./..'), $D . '%2E%2E', 'dotdot after the dot');
-	is (locate(\%O, $L, '//../.'), $P . 'cs300/%2E', 'dot after the dotdot');
+	# Dots are only a run at the start; to keep one literally, spell
+	# it %2E.  Nothing here is escaped or unescaped for you.
+	is (locate(\%O, $L, '//x/%2E/y'), $P . 'x/%2E/y', 'internal dot');
+	is (locate(\%O, $L, '//x/%2E%2E/y'), $P . 'x/%2E%2E/y', 'internal dotdot');
+	is (locate(\%O, $L, '//x/%2E'), $P . 'x/%2E', 'trailing internal dot');
+	is (locate(\%O, $L, '//./x/%2E/y'), $D . 'x/%2E/y', 'after the dot');
+	is (locate(\%O, $L, '//../x/%2E%2E/y'), $P . 'cs300/x/%2E%2E/y', 'after the dotdot');
+	is (locate(\%O, $L, '//./%2E/'), $D . '%2E/', 'dot after the dot');
+	is (locate(\%O, $L, '//./%2E%2E'), $D . '%2E%2E', 'dotdot after the dot');
+	is (locate(\%O, $L, '//../%2E'), $P . 'cs300/%2E', 'dot after the dotdot');
 
 	# %2F is not a slash, and %2E is not a dot (it is just what dots become)
 	is (locate(\%O, $L, '//./%2F'), $D . '%2F', '%2F after the dot');
 	is (locate(\%O, $L, '//x/%2F/y'), $P . 'x/%2F/y', '%2F inside');
-	is (locate(\%O, $L, '//./%2E%2E'), $D . '%2E%2E', '%2E%2E passes through');
 	is (locate(\%O, $L, '//..%2F'), $P . '..%2F', '..%2F starts no run');
 	is (locate(\%O, $L, '//.%2F/x'), $P . '.%2F/x', '.%2F starts no run');
 

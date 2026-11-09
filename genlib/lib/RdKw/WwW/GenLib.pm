@@ -15,35 +15,59 @@ RdKw::WwW::GenLib - static web-site generation library
 =head1 SYNOPSIS
 
     # in a `render' script...
-    use RdKw::WwW::GenGenLib qw( read_deps load_state );
-    use RdKw::WwW::GenLib qw( locate );
+    use RdKw::WwW::GenGenLib 0.0003 qw(
+        read_deps load_state
+        norm_dep subs_dep uproot );
+    use RdKw::WwW::GenLib 0.0203 qw(
+        parse_base locate );
     use Template;
-    use Template::Exception;
 
     my ($B, $apath, $bpath) = parse(@ARGV);
 
     my %S = load_state($Bdir);
     my ($D, $O) = @S{qw( config option )};
 
-    my %I = read_deps($apath);
-    (my $L = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}
-        or $D->{a} eq '.' or die "E: $apath: HAVE $I{HAVE} is not under \${a}\n";
+    # Usually this is checked at `./configure -O'
+    # time, but it doesn't hurt to check again...
+    parse_base($O);
 
-    my %V = (
+    my %I = read_deps($apath);
+    # relapath doesn't do well with the leading slash,
+    # though people may have a habit of including it...
+    (my $target = do {
+        my ($name, $norm, $real);
+        # Try symbolic prefix
+        if (defined ($name = uproot('${a}',
+            $norm = norm_dep($I{HAVE}))))
+        {
+            subs_dep($D, $name);
+        }
+        # Try literal prefix
+        elsif (defined ($name = uproot($D->{a},
+            $real = subs_dep($D, $norm))))
+        {
+            $name;
+        }
+        else {
+            my $aka = $real eq $I{HAVE} ? "" : " (which is `$real')";
+            die "E: $apath: HAVE `$I{HAVE}'$aka not "
+                . "under \${a} (which is `$D->{a}')\n";
+        }
+    }) =~ s/\A\/+//;
+
+    my %v = (
         D => $D,
         O => $O,
-        locate => {
-            @_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
-                locate($O, $L, @_);
-            },
-        location => $me,
+        locate => { locate($O, $target, @_); },
+        location => $target,
     );
     $tt = Template->new({
         ENCODING => 'UTF-8',
         INCLUDE_PATH => [ '.', $D->{a} ],
-    )
+    })
         or die "[TT] ", $Template::ERROR, "\n";
-    $tt->process($apath, \%V, $bpath)
+    $tt->process($apath, \%v, $bpath,
+        { binmode => ':encoding(UTF-8)' })
         or die "[TT] ", $tt->error();
 
 =head1 DESCRIPTION

@@ -62,7 +62,8 @@ use URI::Escape qw( uri_unescape );
 
 our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
-	locate relapath
+	locate
+	relapath joinpath
 	parse_base
 );
 
@@ -82,33 +83,29 @@ Implements the synonymous TT function.
 sub locate {
 	my ($O, $base, $spec) = @_;
 
-	if ($spec =~ s!\A//!!) {
-		return join '', (
-			$O->{site_url},
-			$O->{base_url},
-			$spec);
-	}
-
-	if ($spec =~ s!\A/!!) {
-		return join '', (
-			$O->{base_url},
-			$spec);
+	if ($spec =~ s!\A/(/?)!!) {
+		my $slash = !!$1;
+		(my $burl = $O->{base_url}) =~ s/\A\///;
+		return ($slash ? $O->{site_url} : "")
+			. '/' . joinpath($burl,
+			($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
+			? ($base, $spec)
+			: ($spec =~ s!\A\.(?:/|\z)!!)
+			? ($base, $spec)
+			: ($spec));
 	}
 
 	# Relative path passthrough
-	if ($spec eq '.' or $spec =~ /\A\.\.(?:\/|\z)/) {
-		return $spec;
-	}
+	($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
+		? $spec
 	# Here "./" is stripped as a prefix, since
 	# without it the path would be mistaken for
 	# the full URL path.  You should pass "./"
 	# twice if you want it preserved literally.
 	# For example, "././run.cgi" => "./run.cgi".
-	if ($spec =~ s!\A\.(?:/|\z)!!) {
-		return $spec;
-	}
-
-	relapath($spec => $base);
+		: ($spec =~ s!\A\.(?:/|\z)!!)
+		? $spec
+		: relapath($spec => $base);
 }
 
 =item B<relapath> I<path>, I<base>
@@ -217,6 +214,41 @@ COMM:	while () {
 		@rest = @rest > 1 ? ('') : ();
 	}
 	join '/', ('..') x $upupup, @rest;
+}
+
+=item B<joinpath> I<base>, I<spec>...
+
+Reverse operation of B<relapath>.  This is
+typically called something like "resolve" in
+URL libraries, but I call things my way. >:)
+
+Note that C<.> and C<..> are not preserved
+in I<spec>; use C<%2F> if you mean those
+literally.
+
+=cut
+
+sub joinpath
+{
+	my $base = shift;
+	my @base = split('/', $base, -1);
+	foreach my $path (@_) {
+		my @path = split('/', $path, -1);
+		@path or next;
+		$base[-1] = '' if @base;
+COMP:		while (@path) {
+			my $comp = pop @path;
+			if ($comp eq '.') {
+				next COMP;
+			}
+			if ($comp eq '..') {
+				pop @base if @base;
+				next COMP;
+			}
+			push @base, $comp;
+		}
+	}
+	join '/', @base;
 }
 
 =item B<parse_base> \%O

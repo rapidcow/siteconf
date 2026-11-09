@@ -81,7 +81,7 @@ Implements the synonymous TT function.
 =cut
 
 sub locate {
-	my ($O, $base, $spec) = @_;
+	my ($O, $base, $spec, @spec) = @_;
 
 	if ($spec =~ s!\A/(/?)!!) {
 		my $slash = !!$1;
@@ -94,10 +94,10 @@ sub locate {
 		my $path = '/' . joinpath($burl, '.')
 			. joinpath(
 			($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
-			? ($base, $spec)
+			? ($base, $spec, @spec)
 			: ($spec =~ /\A\.(?:\/|\z)/)
-			? ($base, $spec)
-			: ($spec));
+			? ($base, $spec, @spec)
+			: ($spec, @spec));
 		if ($slash) {
 			defined ($aurl = $O ? $O->{site_url}
 				: undef) or $aurl = "/";
@@ -107,11 +107,12 @@ sub locate {
 	}
 
 	# Relative path passthrough
+	my $path = joinpath("", $spec, @spec);
 	($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
-		? joinpath("", $spec)
+		? $path
 		: ($spec =~ /\A\.(?:\/|\z)/)
-		? joinpath("", $spec)
-		: relapath(joinpath("", $spec) => $base);
+		? $path
+		: relapath($path => $base);
 }
 
 =item B<relapath> I<path>, I<base>

@@ -19,6 +19,7 @@ Revision history of WwW-GenLib
     +++ New function: joinpath!
 
     *** locate now normalizes all paths with joinpath.
+        (On the bright side, it is variadic now. :)
 
 0.02_02  2026-11-07  RC
     + locate now preserves relative paths!

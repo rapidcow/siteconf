@@ -90,7 +90,7 @@ sub locate {
 			. '/' . joinpath($burl,
 			($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
 			? ($base, $spec)
-			: ($spec =~ s!\A\.(?:/|\z)!!)
+			: ($spec =~ /\A\.(?:\/|\z)/)
 			? ($base, $spec)
 			: ($spec));
 	}
@@ -103,7 +103,7 @@ sub locate {
 	# the full URL path.  You should pass "./"
 	# twice if you want it preserved literally.
 	# For example, "././run.cgi" => "./run.cgi".
-		: ($spec =~ s!\A\.(?:/|\z)!!)
+		: ($spec =~ s/\A\.(?:\/|\z)//)
 		? $spec
 		: relapath($spec => $base);
 }
@@ -238,16 +238,16 @@ sub joinpath
 		pop @base;
 		my $dot = 0;
 DOT:		while (@path) {
-			my $comp = $path[-1];
+			my $comp = $path[0];
 			if ($comp eq '..') {
 				pop @base;
 				$dot = 1;
-				pop @path;
+				shift @path;
 				next DOT;
 			}
 			last DOT if $dot;
 			if ($comp eq '.') {
-				pop @path;
+				shift @path;
 				last DOT;
 			}
 			last DOT;

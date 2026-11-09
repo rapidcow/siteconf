@@ -15,14 +15,15 @@ RdKw::WwW::GenLib - static web-site generation library
 =head1 SYNOPSIS
 
     # in a `render' script...
-    use RdKw::WwW::GenGenLib 0.0003 qw(
+    use RdKw::WwW::GenGenLib 0.0002 qw(
         read_deps load_state
         norm_dep subs_dep uproot );
     use RdKw::WwW::GenLib 0.0203 qw(
         parse_base locate );
     use Template;
 
-    my ($B, $apath, $bpath) = parse(@ARGV);
+    # (Parser omitted...)
+    my ($Bdir, $apath, $bpath) = parse(@ARGV);
 
     my %S = load_state($Bdir);
     my ($D, $O) = @S{qw( config option )};

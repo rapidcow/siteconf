@@ -1,6 +1,6 @@
 #!perl
 #
-# t/locate.t - locate and relapath
+# t/relapath.t - relapath, and relative locate
 
 use 5.006;
 use strict;
@@ -46,26 +46,26 @@ is (relapath('a', 'a/b/c'), '../../a',
 is (relapath('a/b/c/d', 'a/b'), 'b/c/d',
 	'base is an ancestor of path');
 
-# Directory-like results: `..' is already a directory, so one
-# trailing slash after it is omitted; a second one is kept.
-# (The leading `.' is dropped once, so `.' and `./' are root.)
+# Directory-like results: `..' is already a directory, so the first
+# trailing slash after it is omitted.  Every further slash is kept
+# verbatim (as is every slash after a name), and a `.' is just a name.
 my $deep = 'trivnote/libexpr/index.html';
 is (relapath('trivnote', $deep), '../../trivnote', 'file namespace');
 is (relapath('trivnote/', $deep), '..', 'dir: one slash omitted');
 is (relapath('trivnote//', $deep), '../', 'dir: second slash kept');
+is (relapath('trivnote///', $deep), '..//', 'dir: third slash kept');
 is (relapath('', $deep), '../..', 'root, empty');
-is (relapath('.', $deep), '../..', 'root, dot');
-is (relapath('./', $deep), '../..', 'root, dot slash');
-is (relapath('.//', $deep), '../../', 'root, dot double slash');
-is (relapath('./.', $deep), '../../.', 'only the first dot is special');
-is (relapath('./trivnote/', $deep), '..', 'dot slash is redundant');
+is (relapath('.', $deep), '../../.', 'dot is a name');
+is (relapath('./', $deep), '../.././', 'dot slash');
+is (relapath('.//', $deep), '../.././/', 'dot double slash');
+is (relapath('./.', $deep), '../.././.', 'dots are names');
+is (relapath('./trivnote/', $deep), '../.././trivnote/', 'dot is not redundant');
 is (relapath('a/./b', 'x/y/z'), '../../a/./b', 'inner dots are kept');
 is (relapath('.x', $deep), '../../.x', 'a dotfile is not a dot');
 is (relapath('archive/', $deep), '../../archive/', 'sibling dir keeps slash');
-is (relapath('archive//', $deep), '../../archive/', 'extra slash after a name');
-is (relapath('archive///', $deep), '../../archive/', 'many slashes after a name');
+is (relapath('archive//', $deep), '../../archive//', 'extra slash after a name');
+is (relapath('archive///', $deep), '../../archive///', 'many slashes after a name');
 is (relapath('a//b/', $deep), '../../a//b/', 'inner empty segment is kept');
-is (relapath('trivnote///', $deep), '../', 'many slashes after dotdot');
 
 # --- locate
 {
@@ -76,6 +76,6 @@ is (relapath('trivnote///', $deep), '../', 'many slashes after dotdot');
 	is(locate(\%O, $L, '//c.html'), 'https://example.test/c.html', 'locate, absolute');
 	is(locate(\%O, $L, 'c/'), '../c/', 'nothing is done to the spec');
 	is(locate(\%O, $L, './c.html'), 'c.html', 'manual "./" relative path');
-	is(locate(\%O, $L, '././c.html'), './c.html', 'relative path with literal "./"');
+	is(locate(\%O, $L, './%2E/c.html'), '%2E/c.html', 'a literal dot is spelled %2E');
 	is(locate(\%O, $L, '../c.html'), '../c.html', 'manual "../" relative path');
 }

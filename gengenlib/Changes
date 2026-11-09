@@ -1,7 +1,7 @@
 Revision history of WwW-GenGenLib
 
 
-0.00_03  2026-11-08
+0.00_03  2026-11-08  RC
     + norm_deps: pass_thru => 1 preserves unrecognized dollar
       syntax (for Makefile.in's dependency parameter expansion
       syntax).  Strict mode still takes precedence.

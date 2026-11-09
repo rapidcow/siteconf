@@ -1,7 +1,7 @@
 Revision history of WwW-GenLib
 
 
-0.02_03  2026-11-09
+0.02_03  2026-11-09  RC
     + locate absolute/site-relative specifications
       also resolves relative to your location if you
       follow immediately with "." or "./" or "../".

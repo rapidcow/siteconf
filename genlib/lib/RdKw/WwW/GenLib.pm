@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Exporter ();
 
-our $VERSION = '0.02_02';
+our $VERSION = '0.02_03';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -236,17 +236,23 @@ sub joinpath
 		my @path = split('/', $path, -1);
 		@path or next;
 		$base[-1] = '' if @base;
-COMP:		while (@path) {
-			my $comp = pop @path;
-			if ($comp eq '.') {
-				next COMP;
-			}
+		my $dot = 0;
+DOT:		while (@path) {
+			my $comp = $path[-1];
 			if ($comp eq '..') {
 				pop @base if @base;
-				next COMP;
+				$dot = 1;
+				pop @path;
+				next DOT;
 			}
-			push @base, $comp;
+			last if $dot;
+			if ($comp eq '.') {
+				pop @path;
+				last DOT;
+			}
+			last DOT;
 		}
+		push @base, @path;
 	}
 	join '/', @base;
 }

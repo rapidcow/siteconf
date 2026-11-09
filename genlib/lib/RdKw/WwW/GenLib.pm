@@ -108,15 +108,10 @@ sub locate {
 
 	# Relative path passthrough
 	($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
-		? $spec
-	# Here "./" is stripped as a prefix, since
-	# without it the path would be mistaken for
-	# the full URL path.  You should pass "./"
-	# twice if you want it preserved literally.
-	# For example, "././run.cgi" => "./run.cgi".
-		: ($spec =~ s/\A\.(?:\/|\z)//)
-		? $spec
-		: relapath($spec => $base);
+		? joinpath("", $spec)
+		: ($spec =~ /\A\.(?:\/|\z)/)
+		? joinpath("", $spec)
+		: relapath(joinpath("", $spec) => $base);
 }
 
 =item B<relapath> I<path>, I<base>

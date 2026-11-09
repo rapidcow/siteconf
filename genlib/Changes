@@ -16,6 +16,10 @@ Revision history of WwW-GenLib
     *** relapath no longer collapses trailing slash
         (since ".." inherently has an implicit slash).
 
+    +++ New function: joinpath!
+
+    *** locate now normalizes all paths with joinpath.
+
 0.02_02  2026-11-07  RC
     + locate now preserves relative paths!
 

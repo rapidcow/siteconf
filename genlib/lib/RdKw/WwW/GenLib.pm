@@ -97,7 +97,7 @@ sub locate {
 				: ($spec, @spec));
 		if ($slash) {
 			defined ($aurl = $O ? $O->{site_url}
-				: undef) or $aurl = "/";
+				: undef) or $aurl = "";
 			return $aurl . $path;
 		}
 		return $path;

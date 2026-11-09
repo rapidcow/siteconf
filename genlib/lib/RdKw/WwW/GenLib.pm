@@ -235,22 +235,17 @@ sub joinpath
 	foreach my $path (@_) {
 		my @path = split('/', $path, -1);
 		@path or next;
-		# Clear final segment (dir-ify)
-		if (@base == 1) {
-			pop @base;
-		} elsif (@base) {
-			$base[-1] = '';
-		}
+		pop @base;
 		my $dot = 0;
 DOT:		while (@path) {
 			my $comp = $path[-1];
 			if ($comp eq '..') {
-				splice @base, @base - 2, 2, @base == 2 ? () : ('');
+				pop @base;
 				$dot = 1;
 				pop @path;
 				next DOT;
 			}
-			last if $dot;
+			last DOT if $dot;
 			if ($comp eq '.') {
 				pop @path;
 				last DOT;
@@ -258,8 +253,11 @@ DOT:		while (@path) {
 			last DOT;
 		}
 		if (@path) {
-			pop @base if @base;
+			# Path under directory
 			push @base, @path;
+		} else {
+			# Directory: append trailing slash
+			push @base, ('');
 		}
 	}
 	join '/', @base;

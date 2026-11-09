@@ -62,7 +62,7 @@ RdKw::WwW::GenLib - static web-site generation library
         locate => { locate($O, $target, @_); },
         location => $target,
     );
-    $tt = Template->new({
+    my $tt = Template->new({
         ENCODING => 'UTF-8',
         INCLUDE_PATH => [ '.', $D->{a} ],
     })

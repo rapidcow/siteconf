@@ -189,8 +189,10 @@ use Getopt::Long qw( GetOptionsFromArray );
 
 use RdKw::WwW::SiteConf;
 
-# The first GenGenLib with norm_dep, subs_dep and uproot.
+# GenGenLib with norm_dep, subs_dep and uproot.
 our $GENGENLIB_NEW = '0.0002';
+# GenLib with non-broken varargs locate
+our $GENLIB_NEW = '0.0003';
 
 my $prog = basename($0);
 my $usage = <<EOM;
@@ -420,7 +422,7 @@ sub do_init
 	# nothing after the = drops it.
 	my %mods = ( 'RdKw::WwW::GenGenLib' => 0 );
 	my @spec = ($preset =~ /^# USE: (\S+)$/mg, @{ $opt->{M} });
-	my %said;
+	my %user;
 	for my $m (@spec) {
 		my ($module, $min) = split /=/, $m, 2;
 		$min = 0 unless defined $min;
@@ -433,13 +435,17 @@ sub do_init
 		} else {
 			$mods{$module} = $min;
 		}
-		$said{$module} = 1;
+		$user{$module} = 1;
 	}
-	# The render script wants more than 0 of GenGenLib, unless told otherwise
-	# (-MRdKw::WwW::GenGenLib=0 gets the older, weaker render script).
-	defined $render && !$said{'RdKw::WwW::GenGenLib'}
-		and $mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
-	$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
+	# Test how far we could go, with user overrides taken into account.
+	if (defined $render) {
+		$user{'RdKw::WwW::GenGenLib'} or
+			$mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
+		$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
+		$user{'RdKw::WwW::GenLib'} or
+			$mods{'RdKw::WwW::GenLib'} = $GENLIB_NEW;
+		$opt->{genlib_min} = $mods{'RdKw::WwW::GenLib'};
+	}
 	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
 	exists $opt->{output}{render} && !defined $render
 		and die "$prog: preset does not supply a render output\n";
@@ -551,6 +557,7 @@ sub render_text
 	$path_q = RdKw::WwW::SiteConf::shell_quote($path);
 	my $text = slurp($render);
 	my $can_subst = version_ge($opt->{gengenlib_min}, $GENGENLIB_NEW);
+	my $can_valoc = version_ge($opt->{genlib_min}, $GENLIB_NEW);
 	my %sub = (
 		PATH => $path,
 		PATH_Q => $path_q,
@@ -559,8 +566,13 @@ sub render_text
 			? "use RdKw::WwW::GenGenLib $GENGENLIB_NEW qw(
 	read_deps load_state
 	norm_dep subs_dep uproot );"
-			: "use RdKw::WwW::GenGenLib qw( read_deps load_state );",
-		USE_GENLIB => 'use RdKw::WwW::GenLib qw( locate );',
+			: 'use RdKw::WwW::GenGenLib qw( read_deps load_state );',
+		USE_GENLIB => $can_valoc
+			? 'use RdKw::WwW::GenLib 0.0203 qw( locate );'
+			: 'use RdKw::WwW::GenLib 0.0203 qw( locate );',
+		USE_TT_EXC => $can_valoc ? '' : <<\OLD,
+use Template::Exception;
+OLD
 		LOCATE => $can_subst
 			? <<\NEW
 # relapath doesn't do well with the leading slash,
@@ -589,6 +601,16 @@ NEW
 			: <<\OLD,
 (my $target = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}
 	or $D->{a} eq '.' or die "E: $apath: HAVE `$I{HAVE}' not under \${a} ($D->{a})\n";
+OLD
+		V_LOCATE => $can_valoc
+			? <<\NEW
+	locate => sub { locate($O, $target, @_); },
+NEW
+			: <<\OLD,
+	locate => sub {
+		@_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
+		locate($O, $target, @_);
+	},
 OLD
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: $opt->{P}.render template: \@$1\@?\n"/ge;

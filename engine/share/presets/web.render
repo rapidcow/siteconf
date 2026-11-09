@@ -36,8 +36,7 @@ use Getopt::Std;
 @USE_GENGENLIB@
 @USE_GENLIB@
 use Template;
-use Template::Exception;
-
+@USE_TT_EXC@
 my %o;
 getopts('B:', \%o) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
 my $B = defined $o{B} ? $o{B} : '.';
@@ -67,11 +66,7 @@ defined $I{HAVE} or die "E: $apath: HAVE declaration not found\n";
 my %v = (
 	D => $D,
 	O => $O,
-	locate => sub {
-		@_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
-		locate($O, $target, @_);
-	},
-	location => $target,
+@V_LOCATE@	location => $target,
 );
 
 #

@@ -16,7 +16,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 51;
+use Test::More tests => 49;
 
 use RdKw::WwW::GenLib qw( locate joinpath );
 
@@ -60,8 +60,7 @@ is (joinpath('a/b/c', 'd/e', '../f'), 'a/b/f', 'one spec after another');
 	# The dot
 	is (locate(\%O, $L, '//.'), $D, 'dot is the directory');
 	is (locate(\%O, $L, '//././'), $D . './', 'second dot is literal');
-	is (locate(\%O, $L, '//.//'), $D, 'extra trailing slashes are collapsed');
-	is (locate(\%O, $L, '//.//fnaf//'), $D . '/fnaf/', 'extra internal slashes are kept');
+	is (locate(\%O, $L, '//.//'), $D . '/', 'extra slash is kept');
 	is (locate(\%O, $L, '//./x/./y'), $D . 'x/./y', 'inner dots are kept');
 
 	# The dotdot
@@ -84,8 +83,7 @@ is (joinpath('a/b/c', 'd/e', '../f'), 'a/b/f', 'one spec after another');
 	is (locate(\%O, $L, '//./'), $D, 'dot slash is the directory');
 	is (locate(\%O, $L, '//./.'), $D . '.', 'dot after the dot');
 	is (locate(\%O, $L, '//../'), $P . 'cs300/', 'dotdot slash');
-	is (locate(\%O, $L, '//..//'), $P . 'cs300/', 'dotdot extra trailing slashes are collapsed');
-	is (locate(\%O, $L, '//..//x//'), $P . 'cs300//x/', 'dotdot extra internal slashes are kept');
+	is (locate(\%O, $L, '//..//'), $P . 'cs300//', 'dotdot extra slash');
 	is (locate(\%O, $L, '//../x'), $P . 'cs300/x', 'dotdot then name');
 	is (locate(\%O, $L, '//../../x'), $P . 'x', 'dotdot chain then name');
 	is (locate(\%O, $L, '//../.'), $P . 'cs300/.', 'dot after dotdot');

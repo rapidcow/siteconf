@@ -224,20 +224,13 @@ Reverse operation of B<relapath>.  This is
 typically called something like "resolve" in
 URL libraries, but I call things my way. >:)
 
-The first C<./> and continuous run of C<../>
-of I<spec> are special for path resolution,
-and consistent with B<relapath>, trailing
-slashes are collapsed.
-
 =cut
 
 sub joinpath
 {
 	my $base = shift;
 	my @base = split('/', $base, -1);
-	for (@_) {
-		# At most one trailing empty segment.
-		(my $path = $_) =~ s/\/+\z/\//;
+	foreach my $path (@_) {
 		my @path = split('/', $path, -1);
 		@path or next;
 		pop @base;

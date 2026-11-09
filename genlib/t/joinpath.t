@@ -33,14 +33,11 @@ is (joinpath('a/b/c', 'x/%2F/y'), 'a/b/x/%2F/y', '%2F passes through');
 is (joinpath('a/b/c', '..%2F'), 'a/b/..%2F', '..%2F is not dotdot');
 is (joinpath('a/b/c', './.'), 'a/b/.', 'only the first dot is special');
 
-TODO: {
-	local $TODO = 'joinpath only looks at the last segment of a spec';
-	is (joinpath('a/b/c', './x'), 'a/b/x', 'leading dot');
-	is (joinpath('a/b/c', '../x'), 'a/x', 'leading dotdot');
-	is (joinpath('a/b/c', '../../x'), 'x', 'leading dotdot chain');
-	is (joinpath('a/b/c', '../x/../y'), 'a/x/../y', 'run ends at x');
-	is (joinpath('a/b/c', 'd/e', '../f'), 'a/b/f', 'one spec after another');
-}
+is (joinpath('a/b/c', './x'), 'a/b/x', 'leading dot');
+is (joinpath('a/b/c', '../x'), 'a/x', 'leading dotdot');
+is (joinpath('a/b/c', '../../x'), 'x', 'leading dotdot chain');
+is (joinpath('a/b/c', '../x/../y'), 'a/x/../y', 'run ends at x');
+is (joinpath('a/b/c', 'd/e', '../f'), 'a/b/f', 'one spec after another');
 
 # --- locate, csl-web style
 {
@@ -82,28 +79,22 @@ TODO: {
 	is (locate(\%O, $L, '//..%2F'), $P . '..%2F', '..%2F starts no run');
 	is (locate(\%O, $L, '//.%2F/x'), $P . '.%2F/x', '.%2F starts no run');
 
-	TODO: {
-		local $TODO = 'a "./" or "../" run that is followed by something';
-
-		# (`//.' gives the directory but `//./' gives feed.html itself)
-		is (locate(\%O, $L, '//./'), $D, 'dot slash is the directory');
-		is (locate(\%O, $L, '//./.'), $D . '.', 'dot after the dot');
-		is (locate(\%O, $L, '//../'), $P . 'cs300/', 'dotdot slash');
-		is (locate(\%O, $L, '//..//'), $P . 'cs300//', 'dotdot extra slash');
-		is (locate(\%O, $L, '//../x'), $P . 'cs300/x', 'dotdot then name');
-		is (locate(\%O, $L, '//../../x'), $P . 'x', 'dotdot chain then name');
-		is (locate(\%O, $L, '//../.'), $P . 'cs300/.', 'dot after dotdot');
-		is (locate(\%O, $L, '//../x/../y'), $P . 'cs300/x/../y',
-			'run ends at x');
-		is (locate(\%O, $L, '//./..'), $D . '..', 'dotdot after the dot');
-		is (locate(\%O, $L, '/../x'), '/~emeng/cs300/x', 'site-relative, dotdot then name');
-	}
+	# (`//.' gives the directory but `//./' gives feed.html itself)
+	is (locate(\%O, $L, '//./'), $D, 'dot slash is the directory');
+	is (locate(\%O, $L, '//./.'), $D . '.', 'dot after the dot');
+	is (locate(\%O, $L, '//../'), $P . 'cs300/', 'dotdot slash');
+	is (locate(\%O, $L, '//..//'), $P . 'cs300//', 'dotdot extra slash');
+	is (locate(\%O, $L, '//../x'), $P . 'cs300/x', 'dotdot then name');
+	is (locate(\%O, $L, '//../../x'), $P . 'x', 'dotdot chain then name');
+	is (locate(\%O, $L, '//../.'), $P . 'cs300/.', 'dot after dotdot');
+	is (locate(\%O, $L, '//../x/../y'), $P . 'cs300/x/../y',
+		'run ends at x');
+	is (locate(\%O, $L, '//./..'), $D . '..', 'dotdot after the dot');
+	is (locate(\%O, $L, '/../x'), '/~emeng/cs300/x', 'site-relative, dotdot then name');
 
 	# base_url need not end in a slash: parse_base accepts `/~emeng'.
-	TODO: {
-		local $TODO = 'joinpath takes the last segment of base_url for a file';
-		my %N = ( base_url => '/~emeng', site_url => $O{site_url} );
-		is (locate(\%N, $L, '//x'), $P . 'x', 'base_url without a slash');
-		is (locate(\%N, $L, '/x'), '/~emeng/x', 'same, site-relative');
-	}
+	local $TODO = 'joinpath takes the last segment of base_url for a file';
+	my %N = ( base_url => '/~emeng', site_url => $O{site_url} );
+	is (locate(\%N, $L, '//x'), $P . 'x', 'base_url without a slash');
+	is (locate(\%N, $L, '/x'), '/~emeng/x', 'same, site-relative');
 }

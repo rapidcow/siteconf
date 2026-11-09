@@ -16,7 +16,7 @@
 #
 #    resource/location.html: @PATH@
 #       cd -- $A && ${^X} @PATH_Q@ -B $B \
-#           -- $a/${.IMPSRC} $B/$b/${.TARGET}
+#          -- $a/${.IMPSRC} $B/$b/${.TARGET}
 #
 # (Multiple files are okay!)
 #

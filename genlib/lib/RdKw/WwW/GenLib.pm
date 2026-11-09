@@ -219,8 +219,11 @@ COMP:		while (@path) {
 				&& $path[0] ne '..'
 				&& $path[0] ne '.')
 			{
-				# A trailing slash does not itself
-				# replace the trailing empty segment.
+				# Keep $dot set only while the last non-
+				# empty segment was `.' or `..'.  Empty
+				# segments preserve it, but must not set
+				# it again.  Any intervening non-empty
+				# segment resets this permanently.
 				$dot = $dot && $path[0] eq '';
 				push @base, shift @path;
 			}

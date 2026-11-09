@@ -204,17 +204,7 @@ COMM:	while () {
 	# Only `..'s and empty segments: the first empty segment
 	# is the trailing slash that `..' does not need.
 	#
-	if (grep { length } @rest) {
-		# After a name, a trailing slash is only a hint that it
-		# is a directory; asking for it twice changes nothing.
-		pop @rest while @rest > 1 && !length($rest[-1])
-			&& !length($rest[-2]);
-	}
-	elsif ($upupup && @rest) {
-		# Just `..'s: the first slash is the one `..' does not
-		# need, and any more than one are the same as one.
-		@rest = @rest > 1 ? ('') : ();
-	}
+	pop @rest if $upupup && @rest && !grep { length } @rest;
 	join '/', ('..') x $upupup, @rest;
 }
 
@@ -233,30 +223,34 @@ sub joinpath
 	foreach my $path (@_) {
 		my @path = split('/', $path, -1);
 		@path or next;
-		pop @base;
+		# All segments in the base path
+		# are semantically significant.
+		# We won't question that...
+		pop @base if @base;
 		my $dot = 0;
-DOT:		while (@path) {
+COMP:		while (@path) {
 			my $comp = $path[0];
 			if ($comp eq '..') {
 				pop @base;
-				$dot = 1;
 				shift @path;
-				next DOT;
+				$dot = 1;
+				next;
 			}
-			last DOT if $dot;
 			if ($comp eq '.') {
 				shift @path;
-				last DOT;
+				$dot = 1;
+				next;
 			}
-			last DOT;
+			while (@path
+				&& $path[0] ne '..'
+				&& $path[0] ne '.')
+			{
+				push @base, shift @path;
+				$dot = 0;
+			}
 		}
-		if (@path) {
-			# Path under directory
-			push @base, @path;
-		} else {
-			# Directory: append trailing slash
-			push @base, ('');
-		}
+		# Path under directory
+		push @base, ('') if $dot && @base;
 	}
 	join '/', @base;
 }

@@ -214,6 +214,9 @@ COMP:		while (@path) {
 				$dot = 1;
 				next;
 			}
+			# After a run, a remainder with no name asks for
+			# one more slash than it spells out.
+			push @base, ('') if $dot && !grep { length } @path;
 			while (@path
 				&& $path[0] ne '..'
 				&& $path[0] ne '.')

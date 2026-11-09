@@ -87,7 +87,8 @@ sub locate {
 		my $slash = !!$1;
 		(my $burl = $O->{base_url}) =~ s/\A\///;
 		return ($slash ? $O->{site_url} : "")
-			. '/' . joinpath($burl,
+			. '/' . joinpath($burl, '.')
+			. joinpath(
 			($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
 			? ($base, $spec)
 			: ($spec =~ /\A\.(?:\/|\z)/)

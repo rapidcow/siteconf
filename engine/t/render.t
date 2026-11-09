@@ -12,9 +12,8 @@ use TestPaths qw( project_root script_path perl5lib );
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
-use RdKw::WwW::GenLib ();
 
-for my $m (qw( Template )) {
+for my $m (qw( Template RdKw::WwW::GenLib )) {
 	eval "require $m; 1" or plan skip_all => "$m is not installed";
 }
 my $script = script_path();

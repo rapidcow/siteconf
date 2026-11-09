@@ -214,15 +214,14 @@ COMP:		while (@path) {
 				$dot = 1;
 				next;
 			}
-			# After a run, a remainder with no name asks for
-			# one more slash than it spells out.
-			push @base, ('') if $dot && !grep { length } @path;
 			while (@path
 				&& $path[0] ne '..'
 				&& $path[0] ne '.')
 			{
+				# A trailing slash does not itself
+				# replace the trailing empty segment.
+				$dot = $dot && $path[0] eq '';
 				push @base, shift @path;
-				$dot = 0;
 			}
 		}
 		# Path under directory

@@ -92,12 +92,9 @@ sub locate {
 			: undef) or $burl = "/";
 		$burl =~ s/\A\///;
 		my $path = '/' . joinpath($burl, '.')
-			. joinpath(
-			($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
-			? ($base, $spec, @spec)
-			: ($spec =~ /\A\.(?:\/|\z)/)
-			? ($base, $spec, @spec)
-			: ($spec, @spec));
+			. joinpath(($spec =~ /\A\.\.?(?:\/|\z)/)
+				? ($base, $spec, @spec)
+				: ($spec, @spec));
 		if ($slash) {
 			defined ($aurl = $O ? $O->{site_url}
 				: undef) or $aurl = "/";
@@ -107,12 +104,10 @@ sub locate {
 	}
 
 	# Relative path passthrough
-	my $path = joinpath("", $spec, @spec);
-	($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
-		? $path
-		: ($spec =~ /\A\.(?:\/|\z)/)
-		? $path
-		: relapath($path => $base);
+	my $path = ($spec =~ /\A\.\.?(?:\/|\z)/)
+		? joinpath($base, $spec, @spec)
+		: joinpath("", $spec, @spec);
+	relapath($path => $base);
 }
 
 =item B<relapath> I<path>, I<base>

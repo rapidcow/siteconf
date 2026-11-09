@@ -9,6 +9,12 @@ Revision history of WwW-GenLib
 0.02_02  2026-11-07  RC
     + locate now preserves relative paths!
 
+    *** Unbeknownst to me then but this DOES break the previous
+        semantics we defined in javadoc.rapidcow.org, where
+        [% locate('.') %] was used to name base_url.  Consider
+        0.02 to be the first ACTUALLY breaking version since
+        the migration from elsewhere...
+
 0.02_01  2026-11-06  RC
     - Remove dependency on parent.pm.
 

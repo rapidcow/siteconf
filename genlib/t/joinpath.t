@@ -10,9 +10,10 @@
 # run -- a single `.' or a chain of `..' -- is resolved against the
 # directory of the page (so `' and `.' are the only spellings of THIS
 # directory).  Every other `.' and `..' must be spelled %2E and %2E%2E
-# in the input; nothing is escaped for you.  Slashes are kept verbatim: `..' is the directory with
-# its trailing slash, `../' the directory followed by one more slash,
-# and `../file' the directory followed by a file.  %2F passes through.
+# in the input; nothing is escaped for you.  Slashes are kept verbatim:
+# `..' is the directory with its trailing slash, `../' the directory
+# followed by one more slash, and `../file' the directory followed by
+# a file.  %2F passes through.
 
 use 5.006;
 use strict;

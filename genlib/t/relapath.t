@@ -67,7 +67,7 @@ is (relapath('archive///', $deep), '../../archive/', 'many slashes after a name'
 is (relapath('a//b/', $deep), '../../a//b/', 'inner empty segment is kept');
 is (relapath('trivnote///', $deep), '../', 'many slashes after dotdot');
 
-# --- locator
+# --- locate
 {
 	my %O = ( base_url => '/', site_url => 'https://example.test' );
 	my $L = 'a/b.html';

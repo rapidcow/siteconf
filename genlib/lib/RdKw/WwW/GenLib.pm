@@ -139,7 +139,8 @@ rather than C<../../>.  A second slash asks for it back
 
 =cut
 
-sub relapath {
+sub relapath
+{
 	my ($path, $base) = @_;
 	#
 	# (contributed by Anthropic Claude)
@@ -149,7 +150,7 @@ sub relapath {
 	# `./' prefix serves as a no-op prefix -- but
 	# only when it is spelled as . and not %2F.)
 	#
-	$path =~ s!^[.](?:/|$)!!;
+	$path =~ s/\A[.](?:\/|$)//;
 	my @path = split('/', $path, -1);
 	my @base = split('/', $base, -1);
 

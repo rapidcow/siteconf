@@ -16,7 +16,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 48;
+use Test::More tests => 49;
 
 use RdKw::WwW::GenLib qw( locate joinpath );
 
@@ -92,9 +92,12 @@ is (joinpath('a/b/c', 'd/e', '../f'), 'a/b/f', 'one spec after another');
 	is (locate(\%O, $L, '//./..'), $D . '..', 'dotdot after the dot');
 	is (locate(\%O, $L, '/../x'), '/~emeng/cs300/x', 'site-relative, dotdot then name');
 
-	# base_url need not end in a slash: parse_base accepts `/~emeng'.
-	local $TODO = 'joinpath takes the last segment of base_url for a file';
+	# base_url need not end in a slash: parse_base accepts `/~emeng',
+	# but then its last segment is taken for a file and truncated.
 	my %N = ( base_url => '/~emeng', site_url => $O{site_url} );
-	is (locate(\%N, $L, '//x'), $P . 'x', 'base_url without a slash');
-	is (locate(\%N, $L, '/x'), '/~emeng/x', 'same, site-relative');
+	is (locate(\%N, $L, '//x'), 'https://pages.cs.wisc.edu/x',
+		'base_url without a slash is truncated');
+	is (locate(\%N, $L, '/x'), '/x', 'same, site-relative');
+	is (locate(\%N, $L, '//.'), 'https://pages.cs.wisc.edu/cs300/pair/',
+		'same, relative to the page');
 }

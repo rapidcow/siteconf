@@ -82,6 +82,7 @@ Implements the synonymous TT function.
 
 sub locate {
 	my ($O, $base, $spec, @spec) = @_;
+	defined $spec or $spec = '';
 
 	if ($spec =~ s!\A/(/?)!!) {
 		my $slash = !!$1;
@@ -193,8 +194,8 @@ sub joinpath
 {
 	my $base = shift;
 	my @base = split('/', $base, -1);
-	foreach my $path (@_) {
-		my @path = split('/', $path, -1);
+	foreach my $spec (@_) {
+		my @path = split('/', $spec, -1);
 		@path or next;
 		# All segments in the base path
 		# are semantically significant.

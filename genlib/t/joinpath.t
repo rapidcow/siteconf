@@ -18,7 +18,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 57;
+use Test::More tests => 59;
 
 use RdKw::WwW::GenLib qw( locate joinpath );
 
@@ -26,6 +26,8 @@ use RdKw::WwW::GenLib qw( locate joinpath );
 is (joinpath('a/b/c', 'd'), 'a/b/d', 'sibling of a file');
 is (joinpath('a/b/', 'd'), 'a/b/d', 'child of a directory');
 is (joinpath('', 'x'), 'x', 'from root');
+is (joinpath('a/b/c'), 'a/b/c', 'empty arg is identity');
+is (joinpath('a/b/c', ''), 'a/b/c', 'empty string is identity');
 is (joinpath('a/b/c', '.'), 'a/b/', 'dot is the directory');
 is (joinpath('a/b/c', '..'), 'a/', 'dotdot is the parent');
 is (joinpath('a/b/c', '..', 'x'), 'a/x', 'dotdot in its own spec');

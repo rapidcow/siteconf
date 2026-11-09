@@ -19,7 +19,7 @@ my $dir;	# (it is removed when we are)
 # path to our siteconf, having cd'd to the copy of the fixture.
 sub setup
 {
-	for my $m (qw( Template URI RdKw::WwW::GenLib )) {
+	for my $m (qw( Template RdKw::WwW::GenLib )) {
 		eval "require $m; 1" or plan skip_all => "$m is not installed";
 	}
 

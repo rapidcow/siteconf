@@ -6,6 +6,16 @@ Revision history of WwW-GenLib
       also resolves relative to your location if you
       follow immediately with "." or "./" or "../".
 
+    + locate no longer demands you to pass an option
+      hash.  It defaults to "/" for both base_url and
+      site_url.
+
+    *** Leading ./ is no longer special to relapath
+        (since relapath never sees it).
+
+    *** relapath no longer collapses trailing slash
+        (since ".." inherently has an implicit slash).
+
 0.02_02  2026-11-07  RC
     + locate now preserves relative paths!
 

@@ -85,15 +85,25 @@ sub locate {
 
 	if ($spec =~ s!\A/(/?)!!) {
 		my $slash = !!$1;
-		(my $burl = $O->{base_url}) =~ s/\A\///;
-		return ($slash ? $O->{site_url} : "")
-			. '/' . joinpath($burl, '.')
+		# aurl = absolute
+		# burl = base URL
+		my ($aurl, $burl);
+		defined ($burl = $O ? $O->{base_url}
+			: undef) or $burl = "/";
+		$burl =~ s/\A\///;
+		my $path = '/' . joinpath($burl, '.')
 			. joinpath(
 			($spec eq '.' || $spec =~ /\A\.\.(?:\/|\z)/)
 			? ($base, $spec)
 			: ($spec =~ /\A\.(?:\/|\z)/)
 			? ($base, $spec)
 			: ($spec));
+		if ($slash) {
+			defined ($aurl = $O ? $O->{site_url}
+				: undef) or $aurl = "/";
+			return $aurl . $path;
+		}
+		return $path;
 	}
 
 	# Relative path passthrough
@@ -114,43 +124,15 @@ sub locate {
 Write a path to I<path> relative to I<base>.  It's as
 simple as that.  Of course, like web browsers, there is
 the notion of the "current directory".  That is, the
-trailing slash will be honored, and the lack of one
-will be taken to indicate an omissible filename.
-
-Two conveniences on top of that:
-
-=over
-
-=item *
-
-A leading C<.> segment on I<path> is dropped, once.  So
-C<.> and C<./> both mean the root (as does the empty string),
-and C<./x> means C<x>.  Only the first dot is special:
-C<./.> and C<a/./b> keep the dot that comes later.
-
-=item *
-
-A C<..> is already a directory, so a lone trailing slash
-after the last C<..> is redundant and is omitted: C<../..>
-rather than C<../../>.  A second slash asks for it back
-(C<../>).  Any subsequent slashes are idempotent.
-
-=back
+trailing slash (all of them!) will be honored, and the
+lack of one will be taken to indicate a directory
+(formally a path with an empty trailing segment).
 
 =cut
 
 sub relapath
 {
 	my ($path, $base) = @_;
-	#
-	# (contributed by Anthropic Claude)
-	# Done as a pre-processing step so that `.//'
-	# leaves `/' behind, i.e., one empty segment
-	# per extra slash.  (This is also so that a
-	# `./' prefix serves as a no-op prefix -- but
-	# only when it is spelled as . and not %2F.)
-	#
-	$path =~ s/\A[.](?:\/|$)//;
 	my @path = split('/', $path, -1);
 	my @base = split('/', $base, -1);
 

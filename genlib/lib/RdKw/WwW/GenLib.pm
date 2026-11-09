@@ -222,10 +222,6 @@ Reverse operation of B<relapath>.  This is
 typically called something like "resolve" in
 URL libraries, but I call things my way. >:)
 
-Note that C<.> and C<..> are not preserved
-in I<spec>; use C<%2F> if you mean those
-literally.
-
 =cut
 
 sub joinpath

@@ -16,7 +16,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 47;
+use Test::More tests => 48;
 
 use RdKw::WwW::GenLib qw( locate joinpath );
 
@@ -66,8 +66,8 @@ is (joinpath('a/b/c', 'd/e', '../f'), 'a/b/f', 'one spec after another');
 	# The dotdot
 	is (locate(\%O, $L, '//..'), $P . 'cs300/', 'dotdot');
 	is (locate(\%O, $L, '//../..'), $P, 'dotdot chain');
-	is (locate(\%O, $L, '//../../..'), 'https://pages.cs.wisc.edu/',
-		'dotdot chain leaves base_url');
+	is (locate(\%O, $L, '//../../..'), $P, 'dotdot chain stops at base_url');
+	is (locate(\%O, $L, '//../../../x'), $P . 'x', '...and keeps going down');
 	is (locate(\%O, $L, '/..'), '/~emeng/cs300/', 'site-relative dotdot');
 
 	# After the run

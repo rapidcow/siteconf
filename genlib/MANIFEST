@@ -4,5 +4,5 @@ Makefile.PL
 lib/RdKw/WwW/GenLib.pm
 t/00-load.t
 t/joinpath.t
-t/locate.t
 t/parse_base.t
+t/relapath.t

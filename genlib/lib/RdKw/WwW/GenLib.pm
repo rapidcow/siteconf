@@ -59,7 +59,7 @@ RdKw::WwW::GenLib - static web-site generation library
     my %v = (
         D => $D,
         O => $O,
-        locate => { locate($O, $target, @_); },
+        locate => sub { locate($O, $target, @_); },
         location => $target,
     );
     my $tt = Template->new({

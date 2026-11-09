@@ -17,6 +17,10 @@ my %WriteMakefileArgs = (
 	},
 	TEST_REQUIRES => {
 		'Test::More' => '0',
+		# At the present it's hard to test the web preset
+		# without GenLib... (it is possible, but requires
+		# rewrite that I don't want to do right now :x)
+		'RdKw::WwW::GenLib' => '0',
 	},
 	PREREQ_PM => {
 		'version' => '0',

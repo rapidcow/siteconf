@@ -20,11 +20,13 @@ my $make = E2E::make();
 # (only now: we may have skipped all)
 plan tests => 62;
 
-run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build ));
+run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build
+	-MRdKw::WwW::GenLib=0 ));
 ok(-x 'configure', 'configure is executable');
 my $text = slurp('configure');
 my $again = do { run('siteconf -i again', $^X, $script,
-	qw( -i -P web -Osite_url=https://example.test -SB=build -o configure.2 ));
+	qw( -i -P web -Osite_url=https://example.test -SB=build
+	-MRdKw::WwW::GenLib=0 -o configure.2 ));
 	slurp('configure.2') };
 is($again, $text, 'configure is generated deterministically');
 

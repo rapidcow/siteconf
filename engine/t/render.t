@@ -12,8 +12,9 @@ use TestPaths qw( project_root script_path perl5lib );
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );
+use RdKw::WwW::GenLib ();
 
-for my $m (qw( Template URI )) {
+for my $m (qw( Template )) {
 	eval "require $m; 1" or plan skip_all => "$m is not installed";
 }
 my $script = script_path();
@@ -44,7 +45,8 @@ sub spew {
 	open my $fh, '-|' or do {
 		open STDERR, '>&', STDOUT or die $!;
 		exec $^X, $script, 'init', '-P', 'web', '-SA=project',
-			'-o', 'render:bin/render-page';
+			'-o', 'render:bin/render-page',
+			'-M', "RdKw::WwW::GenLib=$RdKw::WwW::GenLib::VERSION";
 		die "exec: $!";
 	};
 	my $out = do { local $/; <$fh> };

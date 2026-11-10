@@ -5,3 +5,4 @@ MANIFEST			This list of files
 t/00-load.t
 t/provider.t
 t/unicode.t
+t/lib/TestConsole.pm

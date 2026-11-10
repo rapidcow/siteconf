@@ -6,6 +6,9 @@ use 5.006;
 use strict;
 use warnings;
 use Test::More tests => 46;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use TestConsole;
 
 use RdKw::WwW::GenGenLib qw(enroot uproot);
 

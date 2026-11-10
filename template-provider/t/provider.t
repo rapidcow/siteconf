@@ -6,6 +6,9 @@ use 5.008;
 use strict;
 use warnings;
 use Test::More;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use TestConsole;
 use File::Temp qw( tempdir );
 use Cwd qw( getcwd abs_path );
 

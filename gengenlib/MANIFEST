@@ -8,3 +8,4 @@ t/make.t
 t/path.t
 t/walk.t
 t/unicode.t
+t/lib/TestConsole.pm

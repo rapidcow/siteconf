@@ -34,6 +34,8 @@ Revision history of WwW-GenGenLib
     *** read_deps: names are split at blanks (space and tab)
         only: a no-break space, form feed and so on are part
         of a name.  A CR at the end of a line is not.
+    - Tests say what they say as the locale does (\x{...}
+      where it cannot), not with a Wide character warning.
 
 
 0.00_03  2026-11-08  RC

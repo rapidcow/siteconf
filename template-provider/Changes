@@ -38,3 +38,10 @@ Revision history of WwW-GenGenLib-Template-Provider
       a declaration may have; by default, any.  A list
       given is the whole list ('' for no root); what has
       another root is not declared, nor followed.
+
+    + access NAME: the file that fetch and load would load
+      for NAME, and whether they may: (path, undef), or
+      (undef, what is wrong), or nothing if it is not there.
+
+    - Tests say what they say as the locale does (\x{...}
+      where it cannot), not with a Wide character warning.

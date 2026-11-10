@@ -14,6 +14,9 @@ my %WriteMakefileArgs = (
 		'ExtUtils::MakeMaker' => '0',
 	},
 	TEST_REQUIRES => {
+		'Encode' => '0',
+		'Encode::Locale' => '0',
+		'PerlIO::encoding' => '0',
 		'Test::More' => '0',
 	},
 	PREREQ_PM => {

@@ -6,6 +6,9 @@ use 5.008;
 use strict;
 use warnings;
 use Test::More;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use TestConsole;
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 plan tests => 1;

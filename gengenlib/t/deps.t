@@ -7,6 +7,9 @@ use strict;
 use warnings;
 use utf8;
 use Test::More tests => 128;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use TestConsole;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( read_deps norm_dep norm_deps subs_deps subs_dep

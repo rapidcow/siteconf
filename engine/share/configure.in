@@ -18,7 +18,7 @@ use File::Spec;
 use FindBin;
 use Getopt::Long qw( GetOptions );
 
-# --- requirements: [ module, minimum version ], from `@PROG@ -i -M',
+# --- requirements: [ module, minimum version ], from `@PROG@ -i -M'.
 # The requirements of the preset, if any, is appended here too.
 our @NEED;
 BEGIN {
@@ -85,7 +85,7 @@ sub un_fs
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
 	defined $name or die "E: cannot decode @{[_perlqq($fs)]}"
 		. " in current locale"
-		. "($Encode::Locale::ENCODING_LOCALE_FS)\n";
+		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
 	$name;
 }
 
@@ -99,7 +99,7 @@ sub _perlqq
 # Anyways, let's just port this one function in the (very
 # weird) circumstance where SiteConf.pm is somehow missing.
 #
-# This assumes you have a Bourne shell (/bin/sh), the same
+# This assumes you have a Bourne shell (/bin/sh), like the
 # shell POSIX make runs its commands in.
 sub shell_quote
 {
@@ -185,12 +185,12 @@ GetOptions(
 ) or die +( split(/^/, $usage, 2) )[0];
 @ARGV and die "$prog: too many arguments\n";
 
-# Store where we were started from: for telling the user what
-# to run after configuring.
+# Store the starting directory: for the
+# `siteconf -g' hint after configuring.
 my $start = un_fs(getcwd());
 
 # Find the source tree, which is where A says it is,
-# observed from the current directory (not necessarily
+# observed from the starting directory (not necessarily
 # relative to the base directory of this script).
 my $A = isnull($D{A}) ? $Dd{A} : $D{A};
 my $srcdir = abs_path(to_fs(File::Spec->rel2abs($A, $start)));
@@ -208,7 +208,7 @@ unless (-d to_fs($B)) {
 	# Please do not --mkpath unless you absolutely need to.
 	# This is only provided if you ABSOLUTELY depend on the
 	# old behavior.  Consider running the mkdir -p equivalent
-	# on your system and setting the approrpiate permission
+	# on your system and setting the appropriate permission
 	# or ACL bits, and at MOST leave the leaf directory to
 	# us to create it.
 	if ($mkpath) {
@@ -275,9 +275,9 @@ foreach my $k (qw( a b R F )) {
 # other hand, is free to be absolute for foreign source files.)
 File::Spec->file_name_is_absolute($D{b})
 	and die "E: `b' prefix must be a relative path.\n";
-# c, the cache: defaults to -Dc from the command-line, or else
-# -Sc, or else b.  It is guaranteed to be defined since 0.02_01
-# as it is a part of our core variables, though it is opt-in.
+# c, the cache: defaults to -Dc from the command-line, or
+# else -Sc (but *only* if it differs from -Sc), or else b.
+# It is always defined since 0.02_01, though it is opt-in.
 isnull($D{c}) and $D{c} = !isnull($Dd{c}) && $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
 length $D{c} or die "E: `c' may not be empty.\n";
@@ -295,7 +295,7 @@ foreach my $f ([ option => \%O ], [ config => \%D ]) {
 		" MY/$name.mk\n" unless $shutup;
 }
 
-# Compute $B for siteconf -g, as seen from the current directory
+# Compute $B for `siteconf -g', as seen from the starting directory
 # (not from the source tree, which is where $D{B} is seen from);
 # an absolute one is spelled as it was given, like in config.mk.
 my $Bhere = File::Spec->file_name_is_absolute($B) ? $B

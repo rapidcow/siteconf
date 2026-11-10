@@ -72,7 +72,7 @@ my %v = (
 #
 # Specify UTF-8 on both ends of Template Toolkit's I/O:
 #
-#   * ENCODING for $apath (input), as well any fetched
+#   * ENCODING for $apath (input), as well as any fetched
 #     files via INCLUDE / INSERT / PROCESS / WRAPPER.
 #   * binmode for $bpath (output).
 #

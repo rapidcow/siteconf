@@ -14,7 +14,7 @@ use RdKw::WwW::SiteConf;
 
 my %D = ( A => '.', B => '.', a => 'html', b => 'site', c => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Y => 'xa$ xa$$ xa', md => '.md', html => '.html', F => 'a.md b.md.md c.mdx' );
 my $sc = bless { D => \%D }, 'RdKw::WwW::SiteConf';
-sub s_ { $sc->_subst($_[0], $_[1], 'test') }
+sub s_ { $sc->_subst($_[0], $_[1], 'test', $_[2]) }
 
 my @ok = (
 	# word modifiers
@@ -79,11 +79,57 @@ my @ok = (
 	['${W:S/a/X\}/}',   'X}a bX}'],
 	['$$ ${A:Q}/b $',   '$ b $'],
 );
-plan tests => @ok + 12 + 3;
+
+# :Q alone, of what a shell would make something else of
+my %Q = ( sp => 'sp ace', tab => "ta\tb", pipe => 'a|b', colon => 'c:d', quote => "it's",
+	semi => 'a;b', amp => 'a&&b', redir => '<in >out', glob => '*.html ?[ab]', tilde => '~x',
+	hash => '#x', bang => '!x', sub => '`x` $(x)', dollar => '$x ${x}', back => 'a\\b',
+	dq => '"x"', nl => "a\nb", paren => '(x)', brace => '{a,b}', eq => 'a=b', empty => '',
+	lead => '-n', mix => "  'a b'\t| \"c\" ; \\ \$ " );
+@D{ map { "Q_$_" } keys %Q } = values %Q;
+push @ok, (
+	['${Q_colon:Q}',    'c:d'],                        # (nothing to the shell)
+	['${Q_eq:Q}',       'a=b'],
+	['${Q_pipe:Q}',     "'a|b'"],
+	['${Q_sp:Q}',       "'sp ace'"],
+	['${Q_tab:Q}',      "'ta\tb'"],
+	['${Q_quote:Q}',    q{'it'\''s'}],
+	['${Q_empty:Q}',    "''"],
+	['${Q_tilde:Q}',    "'~x'"],
+	['${@:Q}',          "'a b|c.html'", 'a b|c.html'],
+	['${<:Q}',          "'s\tc:d.md'", 'x', "s\tc:d.md"],
+	['${A:Q}/${a:Q}',   'html'],                       # (${A} of . takes its slash)
+);
+plan tests => @ok + 12 + 3 + keys(%Q) + 1;
 
 for my $c (@ok) {
-	my ($in, $want, $node) = @$c;
-	is(eval { s_($in, $node) }, $want, $in) or diag $@;
+	my ($in, $want, $node, $src) = @$c;
+	is(eval { s_($in, $node, $src) }, $want, $in) or diag $@;
+}
+
+# ... and the shell reads each back as it was: run `line', with these
+# commands only saying what they were given (each word, then a NUL)
+sub sh_args
+{
+	my ($line, @cmd) = @_;
+	my $fns = join '', map { "$_() { printf '$_\\0'; printf '%s\\0' \"\$@\"; }; " } @cmd;
+	open my $fh, '-|', '/bin/sh', '-c', $fns . $line or die "sh: $!";
+	my $out = do { local $/; <$fh> };
+	close $fh;
+	my @w = split /\0/, $out, -1;
+	pop @w;	# (after the last NUL)
+	\@w;
+}
+for my $k (sort keys %Q) {
+	my $q = s_("\${Q_$k:Q}");
+	is_deeply(sh_args("args $q", 'args'), [ 'args', $Q{$k} ], "the shell reads :Q of $k as it was: $q");
+}
+{
+	local @D{qw( A a B b )} = ('my site', "ht\tml", 'build|x', 'pub:lic');
+	my $line = s_('cd -- ${A:Q} && cp ${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}', "o u|t.html", "i n;\tput.html");
+	is_deeply(sh_args($line, qw( cd cp )),
+		[ 'cd', '--', 'my site', 'cp', "ht\tml/i n;\tput.html", "build|x/pub:lic/o u|t.html" ],
+		'a whole recipe, as the shell reads it') or diag $line;
 }
 
 for my $c (

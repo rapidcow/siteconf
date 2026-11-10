@@ -61,7 +61,9 @@ occurrence in a word) and C<W> (the value is a single word).
 
 =item C<:Q>
 
-Shell-quotes the value as a whole, unless that is needless.
+Shell-quotes the value as a whole, unless that is needless.  What it
+makes is for the shell, not for make: in a recipe, a C<$> in it is
+written C<$$> (as by bmake's C<:q>), so that make passes it on.
 
 =back
 

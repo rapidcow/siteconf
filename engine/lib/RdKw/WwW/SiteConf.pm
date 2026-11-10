@@ -46,7 +46,9 @@ like those of L<make(1)>, with C<${A}>, C<${B}>, C<${a}>, C<${b}>
 C<${.TARGET}> for the file being made (in prerequisites too, each
 target of a rule having its own), C<${^X}> for our perl, C<${U+>I<hex>C<}>
 for the character of that code point (as in a header), and the
-modifiers C<:Q> to shell-quote (C<${A:Q}>), C<:E>, C<:H>, C<:R>, C<:T>
+modifiers C<:Q> to shell-quote (C<${A:Q}>; in a recipe, a C<$> in what
+it makes is for the shell, and is written C<$$>, while one from C<$$>
+or a variable is make's), C<:E>, C<:H>, C<:R>, C<:T>
 and C<:S/old/new/> to take names apart (C<${@:R}>); see
 L<RdKw::WwW::SiteConf::Modifiers>.  Targets are named
 relative to C<${b}>, or to C<${c}> if they say so (below).  A prerequisite of a rule (a tool, such as the
@@ -586,9 +588,11 @@ sub read_manifest
 # `node' is the name of the target (relative to its tree), and `src'
 # that of its source (relative to `a'); the latter is only known
 # once all prerequisites have been read, so those may not say it.
+# What a :Q made is for the shell; if `quoted' is given, it is pushed
+# where each one is in what we return, as [ offset, length ].
 sub _subst
 {
-	my ($self, $line, $node, $where, $src) = @_;
+	my ($self, $line, $node, $where, $src, $quoted) = @_;
 	my $D = $self->{D};
 	my $out = '';
 	my $pos = 0;
@@ -639,10 +643,11 @@ sub _subst
 			defined $D->{$x} or die "E: $where: undefined variable: \${$x}\n";
 			$val = $D->{$x};
 		}
+		my $q;
 		if (defined $mods) {
 			$val = eval {
 				RdKw::WwW::SiteConf::Modifiers::_apply($val, $mods,
-					quote => \&shell_quote,
+					quote => sub { $q = 1; shell_quote(@_) },
 					expand => sub { $self->_subst($_[0], $node, $where, $src) });
 			};
 			defined $val or die $@ =~ /\AE: / ? $@ : "E: $where: $@";
@@ -651,6 +656,7 @@ sub _subst
 			# `./' is no use to anyone
 			($val, $slash) = ('', '');
 		}
+		push @$quoted, [ length $out, length $val ] if $q && $quoted;
 		$out .= $val . $slash;
 	}
 	$out . substr($line, $pos);
@@ -790,8 +796,14 @@ sub _read_rules
 	close $fh;
 	for my $rule (values %rule) {
 		my $src = defined $rule->{src} ? $rule->{src} : $rule->{name};
-		$rule->{recipe} .= $self->_subst($_->[0], $rule->{name}, $_->[1], $src)
-			for @{ $rule->{raw} };
+		# The recipe is in make's words: a `$' from $$ or a variable
+		# is make's, but one in what a :Q made is the shell's, $$
+		for (@{ $rule->{raw} }) {
+			my @q;
+			my $line = $self->_subst($_->[0], $rule->{name}, $_->[1], $src, \@q);
+			substr($line, $_->[0], $_->[1]) =~ s/\$/\$\$/g for reverse @q;
+			$rule->{recipe} .= $line;
+		}
 		delete $rule->{raw};
 	}
 	\%rule;

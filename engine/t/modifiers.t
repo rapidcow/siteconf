@@ -100,7 +100,7 @@ push @ok, (
 	['${<:Q}',          "'s\tc:d.md'", 'x', "s\tc:d.md"],
 	['${A:Q}/${a:Q}',   'html'],                       # (${A} of . takes its slash)
 );
-plan tests => @ok + 12 + 3 + keys(%Q) + 1;
+plan tests => @ok + 12 + 3 + keys(%Q) + 1 + 1;
 
 for my $c (@ok) {
 	my ($in, $want, $node, $src) = @$c;
@@ -173,4 +173,24 @@ for my $c (
 		or diag explain $plan->{node}{'blog/b.md.html'}{deps};
 	like($plan->{node}{'blog/a.md.html'}{recipe}, qr!conv html/blog/a\.md -o site/blog/a\.md\.html!, 'recipe for the first');
 	like($plan->{node}{'blog/b.md.html'}{recipe}, qr!conv html/blog/b\.md -o site/blog/b\.md\.html!, 'recipe for the second');
+}
+
+# --- a recipe is in make's words: what :Q made is the shell's, and its
+# `$' is $$; one from a variable is make's
+{
+	my $dir = tempdir(CLEANUP => 1);
+	make_path("$dir/html", "$dir/MY");
+	open my $fh, '>', "$dir/html/a" or die; close $fh;
+	open $fh, '>', "$dir/Makefile.in" or die;
+	print $fh "a:\n\tx \${X:Q} \${X} \${W:S/a/\${X:Q}/:Q} \${\@:Q}\n";
+	close $fh or die;
+	open $fh, '>', "$dir/MANIFEST" or die;
+	print $fh "MAKE all\n\tNEED a\n";
+	close $fh or die;
+	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
+		X => 'd$l $(x)', W => 'a',
+		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
+	my $plan = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->plan;
+	is($plan->{node}{a}{recipe}, "\tx 'd\$\$l \$\$(x)' d\$l \$(x) ''\\''d\$\$l \$\$(x)'\\''' a\n",
+		'what :Q made has $$, and only that (once, however deep)');
 }

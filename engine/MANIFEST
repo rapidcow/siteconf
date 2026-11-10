@@ -17,6 +17,7 @@ share/presets/web.render
 t/00-load.t
 t/clean.t
 t/configure.t
+t/e2e-dollar.t
 t/e2e-make.t
 t/e2e-names.t
 t/e2e-ninja.t

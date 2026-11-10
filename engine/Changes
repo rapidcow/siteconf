@@ -10,6 +10,10 @@ Revision history of WwW-SiteConf
       GenGenLib.  So a header can name any file, and so may
       render be named (its HAVE is escaped; with what is not
       ASCII left as it is, but for white space).
+    *** :Q in a recipe: a $ in what it makes is the shell's,
+        and is written $$, so that make (or ninja) passes it on
+        rather than expanding it (as bmake's :q).  A $ from $$
+        or a variable is make's, as ever.
     + -G gmake: a Makefile for GNU make (newer than 3.81),
       which can name more: a $ is $$; blanks, #, : and | are
       escaped with a backslash; wildcards are in brackets

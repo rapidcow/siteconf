@@ -69,6 +69,12 @@ True (the default) to load only what is declared.  False to stay
 shallow: anything may be loaded, and nothing is read from any header
 (the name of the source in its C<HAVE> is the caller's business).
 
+=item C<CHECK_HAVE>
+
+True to have the header of I<SOURCE> say C<HAVE>, and name I<SOURCE>
+(by any spelling, as for C<CHECK_DEPS>).  False (the default) to leave
+that to siteconf, which checks it when it writes the build file.
+
 =item C<GRAPH>, C<FOLLOW>
 
 For L<RdKw::WwW::GenGenLib/walk_deps>: the graph to cache headers in,
@@ -103,13 +109,17 @@ sub new
 	$self->{SOURCE} = $args->{SOURCE};
 	$self->{D} = { %{ $args->{D} || {} }, A => '.' };
 	$self->{CHECK_DEPS} = exists $args->{CHECK_DEPS} ? $args->{CHECK_DEPS} : 1;
-	$self->{CHECK_DEPS} or return $self;
+	$self->{CHECK_DEPS} || $args->{CHECK_HAVE} or return $self;
 
 	my $source = $self->_entry;
 	defined $source or die "$class: source `$args->{SOURCE}' not found\n";
 	my %I = read_deps($source);
-	defined $I{HAVE} && $self->_norm($I{HAVE}) ne File::Spec->canonpath($source)
-		and die "$class: $source: HAVE `$I{HAVE}', but it is `$source'\n";
+	if ($args->{CHECK_HAVE}) {
+		defined $I{HAVE} or die "$class: $source: no HAVE\n";
+		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
+			or die "$class: $source: HAVE `$I{HAVE}', but it is `$source'\n";
+	}
+	$self->{CHECK_DEPS} or return $self;
 	# Everything it declares, and what those declare, and so on; but no
 	# variable that we do not have, which would lead somewhere else.
 	my $follow = $args->{FOLLOW} || \&follow_ok;
@@ -207,8 +217,8 @@ sub _authorized
 =item B<new> \%options
 
 See L</OPTIONS>.  Dies if I<SOURCE> cannot be found, or its header
-(or what it declares, and so on) names a variable not in I<D>, or a
-C<HAVE> that is not I<SOURCE>.
+(or what it declares, and so on) names a variable not in I<D>, or
+(with C<CHECK_HAVE>) its C<HAVE> is not I<SOURCE>.
 
 =item B<fetch> I<name>
 

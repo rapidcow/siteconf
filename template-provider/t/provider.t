@@ -103,8 +103,14 @@ ok(eval { provider(CHECK_DEPS => 0) }, '... and no header is read') or diag $@;
 
 # --- what a header may say
 spew('site/entry', "[%#\n# HAVE: elsewhere\n-%]\n");
-ok(!eval { provider() }, 'HAVE must be the source');
-like($@, qr/HAVE `elsewhere', but it is `site\/entry'/, '... and says so');
+ok(eval { provider() }, 'HAVE is not ours to check') or diag $@;
+ok(!eval { provider(CHECK_HAVE => 1) }, '... unless CHECK_HAVE');
+like($@, qr/HAVE `elsewhere', but it is `site\/entry'/, '... which says so');
+ok(!eval { provider(CHECK_HAVE => 1, CHECK_DEPS => 0) }, '... shallow, too');
+spew('site/entry', "[%#\n# HAVE: \${A}/site/entry\n-%]\n");
+ok(eval { provider(CHECK_HAVE => 1) }, '... by any spelling') or diag $@;
+spew('site/entry', "x\n");
+ok(!eval { provider(CHECK_HAVE => 1) }, '... and a HAVE there must be');
 spew('site/entry', "[%#\n# NEED: \${nope}/x\n-%]\n");
 ok(!eval { provider() }, 'an undefined variable is an error');
 like($@, qr/no such variable \$\{nope\}/, '... and says so');

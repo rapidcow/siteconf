@@ -8,3 +8,5 @@ Revision history of WwW-GenGenLib-Template-Provider
       source declares in its header, or what those declare
       in theirs (walk_deps).  CHECK_DEPS => 0 stays shallow:
       anything may be loaded, and no header is read.
+    + CHECK_HAVE => 1: the source must HAVE itself (siteconf
+      checks that already, so it is off by default).

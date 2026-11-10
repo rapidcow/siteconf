@@ -118,7 +118,7 @@ use File::Spec ();
 use Template::Constants qw( STATUS_ERROR STATUS_DECLINED );
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_deps walk_deps follow_ok
-	norm_dep subs_dep split_dep to_fs un_fs );
+	norm_dep subs_dep split_dep escape_dep uproot to_fs un_fs );
 
 my %default = (
 	ALLOW_DEPS => 1,
@@ -169,7 +169,7 @@ sub new
 	if ($self->{CHECK_HAVE}) {
 		defined $I{HAVE} or die "$class: $source: no HAVE\n";
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
-			or die "$class: $source: HAVE `$I{HAVE}', but it is `$source'\n";
+			or die "$class: $source: HAVE `$I{HAVE}', but it is `@{[ $self->_spell($source) ]}'\n";
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;
 
@@ -232,6 +232,22 @@ sub _unreasonable
 	return;
 }
 
+# A path as a header would say it: under ${a}, symbolically (and
+# escaped, so that it is one name there)
+sub _spell
+{
+	my ($self, $path) = @_;
+	$path = File::Spec->canonpath($path);
+	my $a = $self->{D}{a};
+	defined $a && !File::Spec->file_name_is_absolute($path)
+		&& $path !~ m{\A\.\.(?:/|\z)}
+		or return escape_dep($path, unicode => 1);
+	$a = File::Spec->canonpath($a);
+	my $rest = $a eq '.' ? $path : uproot($a, $path);
+	defined $rest && length $rest or return escape_dep($path, unicode => 1);
+	'${a}/' . escape_dep($rest, unicode => 1);
+}
+
 # The first file named so in INCLUDE_PATH, which is the one we would load
 sub _resolve
 {
@@ -283,8 +299,9 @@ sub _authorized
 		if ($self->{CHECK_DEPS} && !$declared) {
 			my $why = $self->{REFUSED}{$dep};
 			return (undef, defined $why
-				? "`$dep' is declared, but forbidden because $why is unset"
-				: "undeclared dependency `$dep'; add NEED: $dep to $self->{ENTRY}");
+				? "`@{[ $self->_spell($dep) ]}' is declared, but forbidden because $why is unset"
+				: "undeclared dependency `@{[ $self->_spell($dep) ]}';"
+					. " add NEED: @{[ $self->_spell($dep) ]} to $self->{ENTRY}");
 		}
 		if ($kind && !($self->{ALLOW_DEPS} && $declared) && !$self->{"TT_$kind"}) {
 			return (undef, lc($kind) . " paths are not allowed (set $kind option)");

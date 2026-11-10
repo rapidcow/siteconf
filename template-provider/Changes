@@ -23,3 +23,7 @@ Revision history of WwW-GenGenLib-Template-Provider
       A ${U+...} in a declaration is a character, not a
       variable, and RELATIVE_DEPS and ABSOLUTE_DEPS look at
       what it spells: ${U+002E}${U+002E}/ is ../ to them.
+
+    + Messages name a file as a header would: under ${a}, as
+      ${a}/x (escaped, so that it can be pasted in as a NEED).
+      (Borrowed from Neocities code!)

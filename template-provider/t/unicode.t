@@ -59,15 +59,15 @@ sub run
 my ($ok, $out, $err) = run('ヘッダー.html');
 is($out, 'résumé', 'a source and an INCLUDE of any name') or diag $err;
 ($ok, $out, $err) = run('秘密');
-like("$err", qr/undeclared dependency `サイト\/秘密'/, 'and undeclared, of any name');
+like("$err", qr/undeclared dependency `\$\{a\}\/秘密'/, 'and undeclared, of any name');
 ($ok, $out, $err) = run('秘密', CHECK_DEPS => 0);
 is($out, 'secret', '... unchecked, all the same');
 
 # A name we cannot spell is an error, not a guess
 ($ok, $out, $err) = run("x\x{D800}");
 ok(!$ok, 'a name the locale cannot spell is not loaded');
-like("$err", qr/\Aundef error - \S+: cannot name `サイト\/x/, '... and says so');
+like("$err", qr/\Aundef error - \S+: cannot encode "\\x\{30b5\}\\x\{30a4\}\\x\{30c8\}\/x/, '... and says so');
 ($ok, $out, $err) = run("x\x{D800}", CHECK_DEPS => 0);
-like("$err", qr/\Aundef error - \S+: cannot name `サイト\/x/, '... unchecked, too');
+like("$err", qr/\Aundef error - \S+: cannot encode "\\x\{30b5\}\\x\{30a4\}\\x\{30c8\}\/x/, '... unchecked, too');
 
 chdir $cwd or die $!;

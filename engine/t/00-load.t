@@ -5,11 +5,12 @@
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 BEGIN {
 	my @module = qw(
 		RdKw::WwW::SiteConf
+		RdKw::WwW::SiteConf::GMake
 		RdKw::WwW::SiteConf::Make
 		RdKw::WwW::SiteConf::Modifiers
 	);

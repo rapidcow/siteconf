@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 102;
+use Test::More tests => 128;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( read_deps norm_dep norm_deps subs_deps subs_dep
@@ -205,4 +205,60 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 	is(subs_dep(undef, escape_dep('a$b/$c')), 'a$b/$c', 'subs_dep without definitions undoes it');
 	is(subs_dep(undef, '${x}/y'), 'y', '... and a variable is empty, as ever');
 	is(escape_dep('plain/name'), 'plain/name', 'nothing to escape, nothing escaped');
+}
+
+# --- ${U+hex}: a character by its code point, and what escape_dep
+# spells with it
+{
+	is(escape_dep("a b\tc"), 'a${U+0020}b${U+0009}c', 'a blank is its code point');
+	is(escape_dep("r\x{e9}sum\x{e9}"), 'r${U+00E9}sum${U+00E9}', '... and so is what is not ASCII');
+	is(escape_dep("\x{1F600}"), '${U+1F600}', '... of as many digits as it takes');
+	is(escape_dep('{}!~'), '{}!~', 'printable ASCII is as it is');
+	is(escape_dep("r\x{e9}\x{1F600}", unicode => 1), "r\x{e9}\x{1F600}", 'unicode => 1: as it is');
+	is(escape_dep("\x{7f}\x{85}\x{d800}\x{2028}\x{2029}", unicode => 1),
+		'${U+007F}${U+0085}${U+D800}${U+2028}${U+2029}',
+		'... but for controls, surrogates and line breaks');
+	is(escape_dep("\x{a0}\x{3000}", unicode => 1), '${U+00A0}${U+3000}', '... and white space');
+	is(escape_dep("\x{a0}\x{3000}\x{2028} \t", unicode => 1, unicode_space => 1),
+		"\x{a0}\x{3000}" . '${U+2028}${U+0020}${U+0009}',
+		'unicode_space => 1: white space too, but no blank or line break');
+	is_deeply([ escape_deps("\x{e9}", "\x{a0}", { unicode => 1 }) ], [ "\x{e9}", '${U+00A0}' ],
+		'escape_deps: options last');
+
+	is(norm_dep('${u+e9}${U+0000041}'), '${U+00E9}${U+0041}', 'norm_dep: in capitals, of 4 digits or more');
+	is(subs_dep(undef, '${U+0024}{a}${u+20}'), '${a} ', 'subs_dep: the character, and only that');
+	is(subs_dep({ a => 's' }, '${U+002E}${U+002E}/${a}/x'), '../s/x', '${U+002E}${U+002E}/ is ../');
+	is(subs_dep({ a => 's' }, '${U+002F}${a}/x'), '/s/x', '${U+002F} is a slash, before a directory too');
+	is_deeply([ split_dep('${U+0041}/x') ], [ '', '${U+0041}/x' ], 'split_dep: no root');
+	is_deeply([ split_dep('${a}/${U+0041}/x') ], [ '${a}', '${U+0041}/x' ], '... after one either');
+	for my $bad ('${U+110000}', '${U+}', '${U+123456789}', '${U+x}', '${u+-1}') {
+		ok(!defined eval { norm_dep("x$bad", strict => 1) } && $@ =~ /is no code point/,
+			"strict: no code point: $bad");
+	}
+	(my $lit = '${U+110000}') =~ s/\A\$/\${\$}/;
+	is(norm_dep('${U+110000}'), $lit, 'not strict: a literal $');
+	is(norm_dep('${U+110000}', pass_thru => 1), '${U+110000}', 'pass_thru: as it is');
+	is(subs_dep(undef, '${U+110000}'), '${U+110000}', '... and so subs_dep gives it back');
+	require RdKw::WwW::GenGenLib;
+	ok(!RdKw::WwW::GenGenLib::follow_ok({ a => 's' }, '${a}/${U+002E}${U+002E}/${U+002E}${U+002E}/etc'),
+		'follow_ok: a climb by code point is a climb');
+	ok(!RdKw::WwW::GenGenLib::follow_ok({}, '${U+002F}etc'), '... and so is the root');
+
+	# Through a header, which is split at blanks: what is escaped is
+	# one name, and that name
+	my @c = (' ', "\t", "\x{a0}", "\x{2028}", "\x{85}", "\x{1F600}", "\x{e9}",
+		'{', '}', '$', '/', 'a', '${a}', "\x{7f}", "\x{3000}", 'U+', '#');
+	my @bad;
+	srand 42;
+	for (1 .. 2000) {
+		my $name = join '', map { $c[rand @c] } 0 .. rand 6;
+		for my $opt ({}, { unicode => 1 }, { unicode => 1, unicode_space => 1 }) {
+			spew('esc', "# NEED: " . escape_dep($name, %$opt) . "\n");
+			my %I = read_deps("$dir/esc");
+			my @n = @{ $I{NEED} || [] };
+			my $back = @n == 1 && subs_dep({ a => 'NO' }, $n[0], strict => 1);
+			push @bad, sprintf('%vX', $name) if !defined $back || $back ne $name;
+		}
+	}
+	is_deeply(\@bad, [], 'escape_dep, read_deps, subs_dep: the name, whatever is in it');
 }

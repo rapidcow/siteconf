@@ -17,3 +17,6 @@ Revision history of WwW-GenGenLib-Template-Provider
           (siteconf checks that already).
       What a template is given is taken as it is, and
       compared with the declarations after canonpath.
+      A ${U+...} in a declaration is a character, not a
+      variable, and RELATIVE_DEPS and ABSOLUTE_DEPS look at
+      what it spells: ${U+002E}${U+002E}/ is ../ to them.

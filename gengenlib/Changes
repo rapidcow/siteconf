@@ -3,10 +3,19 @@ Revision history of WwW-GenGenLib
 
 0.01_00
     *** Perl 5.8 is required, and so is Encode::Locale.
-    + escape_deps, escape_dep: a literal name as a spec ($ as
-      ${$}), which subs_deps gives back (with or without
-      definitions, which are optional now).
-    * split_dep: an escaped $ (${$}) is no root.
+    + escape_deps, escape_dep: a literal name as a spec, which
+      subs_deps gives back (with or without definitions, which
+      are optional now), and read_deps reads as one name: a $
+      is ${$}, and what is not printable ASCII is ${U+HEX}.
+      { unicode => 1 } leaves what is not ASCII as it is (but
+      for controls, surrogates, line breaks and white space,
+      which { unicode_space => 1 } leaves too).
+    *** norm_deps, subs_deps: ${U+hex} (1 to 8 hex digits, up to
+        10FFFF) is the character of that code point, not a
+        variable; normalized to ${U+HEX} of 4 digits or more.
+        Any other ${U+...} is malformed.
+    * split_dep: an escaped $ (${$}) or character (${U+...}) is
+      no root.
     *** File names are character strings: read_make, write_make,
         update_file, load_state, read_deps and walk_deps encode
         them to the file system locale (locale_fs), and die if

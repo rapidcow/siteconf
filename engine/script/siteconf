@@ -44,9 +44,9 @@ siteconf - configurable incremental build script generator
 
     ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
 
-    siteconf -g [-B outdir] [-G make|ninja] [-q]
+    siteconf -g [-B outdir] [-G make|gmake|ninja] [-q]
     siteconf make ...                         # same
-    cd ${B} && [make|ninja] [goal]   # ninja -t clean to clean
+    cd ${B} && [make|gmake|ninja] [goal]   # ninja -t clean to clean
 
 =head1 DESCRIPTION
 
@@ -122,8 +122,11 @@ run.
 
 =item B<-G> I<generator>
 
-C<make> (default), writing F<Makefile>, or C<ninja>, writing
-F<build.ninja>.
+C<make> (default), writing F<Makefile>; C<gmake>, writing one for GNU
+make, which can name files that make cannot (with blanks, C<#>, C<:>,
+C<$>, wildcards and so on: see L<RdKw::WwW::SiteConf::GMake>); or
+C<ninja>, writing F<build.ninja>.  A name that the generator cannot
+spell is an error.
 
 =item B<-o> I<file>
 
@@ -235,7 +238,7 @@ my $prog = un_fs(basename($0));
 my $usage = <<EOM;
 usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
                 [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
-       $prog -g [-B builddir] [-G make] [-F manifest] [-R rulebook] [-o file] [-q]
+       $prog -g [-B builddir] [-G generator] [-F manifest] [-R rulebook] [-o file] [-q]
        $prog -V [-V]
 EOM
 
@@ -614,7 +617,7 @@ sub render_text
 		and die "$prog: -M$PROVIDER needs RdKw::WwW::GenGenLib $GENGENLIB_LOCALE\n";
 	my %sub = (
 		# (a spec, in its HAVE and in Makefile.in: a $ is a $)
-		PATH => escape_dep($path),
+		PATH => escape_dep($path, unicode => 1),
 		PATH_Q => $path_q,
 		NAME => $name,
 		PERL_MIN => $can_locale ? '5.008' : '5.006',

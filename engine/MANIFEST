@@ -4,6 +4,7 @@ Makefile.PL
 README
 lib/RdKw/WwW/SiteConf.pm
 lib/RdKw/WwW/SiteConf/Configure.pod
+lib/RdKw/WwW/SiteConf/GMake.pm
 lib/RdKw/WwW/SiteConf/Make.pm
 lib/RdKw/WwW/SiteConf/Modifiers.pm
 lib/RdKw/WwW/SiteConf/Ninja.pm
@@ -17,6 +18,7 @@ t/00-load.t
 t/clean.t
 t/configure.t
 t/e2e-make.t
+t/e2e-names.t
 t/e2e-ninja.t
 t/general.t
 t/graph.t

@@ -14,7 +14,7 @@ use TestPaths qw( script_path perl5lib );
 use Encode ();
 use Encode::Locale ();
 use File::Temp qw( tempdir );
-use RdKw::WwW::GenGenLib qw( read_deps );
+use RdKw::WwW::GenGenLib qw( read_deps subs_dep );
 
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
@@ -54,7 +54,7 @@ for (@args) {
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
-plan tests => 18;
+plan tests => 19;
 
 local $ENV{PERL5LIB} = perl5lib();
 
@@ -139,13 +139,15 @@ SKIP: {
 }
 
 # --- a render named with a no-break space, which is no white space to
-# init, nor to read_deps: it is one name, and the one it HAVEs
+# init, nor to read_deps: it is one name, and the one it HAVEs (though
+# it says so by code point, which no one mistakes for a blank)
 {
 	($status, $out) = run($P, {}, $script, 'init', '-q', '-P', 'web',
-		'-o', 'configure:/dev/null', '-o', "render:no\x{a0}render");
+		'-o', 'configure:/dev/null', '-o', "render:no\x{a0}r\x{e9}nder");
 	is($status, 0, 'init: a render name with a no-break space') or diag $out;
-	my %I = eval { read_deps("$P/no\x{a0}render") };
-	is($I{HAVE}, "no\x{a0}render", '... HAVEs just that') or diag $@;
+	my %I = eval { read_deps("$P/no\x{a0}r\x{e9}nder") };
+	is($I{HAVE}, "no\${U+00A0}r\x{e9}nder", '... HAVEs just that, the space by code point') or diag $@;
+	is(subs_dep(undef, $I{HAVE}), "no\x{a0}r\x{e9}nder", '... which is the name');
 }
 
 # --- where the locale cannot say it: \x{...}, and the arguments it

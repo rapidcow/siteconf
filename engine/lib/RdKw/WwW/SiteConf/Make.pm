@@ -20,11 +20,25 @@ the first of which is what a bare L<make(1)> builds; there is also a
 rule to clean up (C<clean>, or what C<-Dclean> says), or one for each goal.  The one thing asked of L<make(1)> is that a recipe may be
 a tab-indented shell fragment, so any make will do.
 
+Any make will not do with just any name, though: there is no
+escaping a file name in POSIX, and bmake reads a dependency line
+twice, so that not even C<$$> is a C<$>.  So a name with white
+space, a control, a C<$>, any of C<#:;=|(){}[]*?>, a C<\> at the
+end or a C<~> in front is an error here; L<RdKw::WwW::SiteConf::GMake>
+escapes most of those.
+
 =cut
 
 sub _emit
 {
 	my ($plan) = @_;
+	_makefile($plan, \&_name);
+}
+
+# The Makefile, with names as `name' spells them
+sub _makefile
+{
+	my ($plan, $name) = @_;
 	my $D = $plan->{D};
 	my @goal = @{ $plan->{goals} };
 	my $out = <<MAKE;
@@ -37,7 +51,7 @@ include MY/config.mk
 MAKE
 
 	for my $goal (@goal) {
-		my @target = map { $plan->{node}{$_}{bpath} } @{ $goal->{files} };
+		my @target = map { $name->($plan->{node}{$_}{bpath}) } @{ $goal->{files} };
 		$out .= "$goal->{name}: @target\n";
 	}
 	for my $rule (@{ $plan->{clean} }) {
@@ -47,7 +61,8 @@ MAKE
 
 	for my $dir (@{ $plan->{dirs} }) {
 		my $d = _quote($dir->{dir});
-		$out .= "$dir->{marker}: @{ $dir->{deps} }\n";
+		$out .= $name->($dir->{marker}) . ": "
+			. join(' ', map { $name->($_) } @{ $dir->{deps} }) . "\n";
 		$out .= "\t[ -d $d ] || mkdir -- $d\n";
 		$out .= "\t\@> $dir->{marker}\n";
 	}
@@ -56,11 +71,29 @@ MAKE
 		my $node = $plan->{node}{$file};
 		my $recipe = $node->{recipe};
 		$recipe .= "\n" if length $recipe and $recipe !~ /\n\z/;
-		# (a $ in a name, which is no target's, is make's to read)
-		my @deps = map { (my $d = $_) =~ s/\$/\$\$/g; $d } @{ $node->{deps} };
-		$out .= "$node->{bpath}: @deps\n$recipe";
+		my @deps = map { $name->($_) } @{ $node->{deps} };
+		$out .= $name->($node->{bpath}) . ": @deps\n$recipe";
 	}
 	$out;
+}
+
+# A name, as any make reads it: as it is, or not at all
+sub _name
+{
+	my ($s) = @_;
+	$s =~ /([\p{Cc} \x{2028}\x{2029}\$#:;=|(){}\[\]*?]|\\\z|\A~)/ or return $s;
+	my $c = $1;
+	require RdKw::WwW::SiteConf::GMake;
+	my $gnu = eval { RdKw::WwW::SiteConf::GMake::_name($s); 1 };
+	die "E: make cannot name `$s' (with " . _char($c) . " in it)"
+		. ($gnu ? "; GNU make can (-G gmake)" : "") . "\n";
+}
+
+# A character, as one would see it said
+sub _char
+{
+	my ($c) = @_;
+	$c =~ /\A[!-~]\z/ ? "`$c'" : sprintf 'U+%04X', ord $c;
 }
 
 sub _quote

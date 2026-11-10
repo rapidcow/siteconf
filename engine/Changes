@@ -5,9 +5,22 @@ Revision history of WwW-SiteConf
     + -P tem: a Template Toolkit render with D and O, and no
       web (no GenLib, no site_url, no location).  It needs
       GenGenLib 0.0100 (and so may not be pinned below it).
-    + $$ or ${$} in a header is a $, as it is to GenGenLib; and
-      a $ in a prerequisite is $$ in the Makefile.  So render
-      may be named with one (its HAVE is escaped).
+    + $$ or ${$} in a header is a $, and ${U+hex} the character
+      of that code point (${U+0020}, a space), as they are to
+      GenGenLib.  So a header can name any file, and so may
+      render be named (its HAVE is escaped; with what is not
+      ASCII left as it is, but for white space).
+    + -G gmake: a Makefile for GNU make (newer than 3.81),
+      which can name more: a $ is $$; blanks, #, : and | are
+      escaped with a backslash; wildcards are in brackets
+      (a[*]b), and a ~ in front is ./~.  A line break, ; or =,
+      a \ at the end, or (...) at the end is still an error.
+    *** -G make: a name with white space, a control, a $, any
+        of #:;=|(){}[]*?, a \ at the end or a ~ in front is an
+        error (saying whether -G gmake could), rather than a
+        Makefile that is wrong: there is no escaping in POSIX
+        make, and bmake reads $$ twice.  -G ninja: a line break
+        or a | is an error (ninja cannot escape either).
     + -MRdKw::WwW::GenGenLib::Template::Provider (of its own
       dist, WwW-GenGenLib-Template-Provider) has render load
       templates through it: only what the page declares, and

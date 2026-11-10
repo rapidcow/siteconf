@@ -28,6 +28,10 @@ subshell, as C<cd> would not carry over in make either), a backslash
 joins lines, a leading C<@> is dropped and a leading C<-> ignores
 failure.  For clean-up there is C<ninja -t clean>.
 
+A space, C<:> or C<$> in a name is escaped (as C<$ >, C<$:> and
+C<$$>); a vertical space (a line break, CR, form feed, ...) or a
+C<|> cannot be, and is an error.
+
 =cut
 
 sub _emit
@@ -89,10 +93,14 @@ NINJA
 	$out;
 }
 
-# A path, as ninja wants to read it
+# A path, as ninja wants to read it (which is never with a line
+# break, nor with a `|', which ends it)
 sub _path
 {
 	my ($s) = @_;
+	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}|])/
+		and die "E: ninja cannot name `$s' (with "
+			. ($1 eq '|' ? "`|'" : sprintf('U+%04X', ord $1)) . " in it)\n";
 	$s =~ s/([ :\$])/\$$1/g;
 	$s;
 }

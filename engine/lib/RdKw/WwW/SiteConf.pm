@@ -44,7 +44,8 @@ Transformation rules from C<${a}/FILE> to C<${b}/FILE>.  Rules look
 like those of L<make(1)>, with C<${A}>, C<${B}>, C<${a}>, C<${b}>
 (and whatever else is in F<config.mk>) substituted, plus C<${@}> or
 C<${.TARGET}> for the file being made (in prerequisites too, each
-target of a rule having its own), C<${^X}> for our perl, and the
+target of a rule having its own), C<${^X}> for our perl, C<${U+>I<hex>C<}>
+for the character of that code point (as in a header), and the
 modifiers C<:Q> to shell-quote (C<${A:Q}>), C<:E>, C<:H>, C<:R>, C<:T>
 and C<:S/old/new/> to take names apart (C<${@:R}>); see
 L<RdKw::WwW::SiteConf::Modifiers>.  Targets are named
@@ -186,10 +187,11 @@ If the variable is still not found here then it is an error.
 
 =back
 
-A single letter may drop its braces (C<$a>), and C<$$> or C<${$}> is a
-C<$> (see L<RdKw::WwW::GenGenLib/escape_dep>).  A name with none of
-these is relative to the root, so C<skel/HTML> and C<${A}/skel/HTML>
-are the same.  Build state is under C<${B}/MY/>.
+A single letter may drop its braces (C<$a>), C<$$> or C<${$}> is a
+C<$>, and C<${U+>I<hex>C<}> is the character of that code point, as in
+C<${U+0020}> for a space (see L<RdKw::WwW::GenGenLib/escape_dep>).  A
+name with none of these is relative to the root, so C<skel/HTML> and
+C<${A}/skel/HTML> are the same.  Build state is under C<${B}/MY/>.
 
 C<HAVE> is the source's own path, C<${A}/${a}/FILE>.  A dependency on
 something in C<${B}/${b}> is an edge to that file in the graph, which
@@ -391,13 +393,19 @@ sub _expand
 	# ${A} is `.', so ${A}/x is just x -- even when x is absolute
 	# (as ${a} may be), which `./' in front of it would not be.
 	$spec =~ s{\A\$(?:\{A\}|A)(?:/+|\z)}{} and !length $spec and $spec = '.';
-	# $$ (or ${$}) is a $, as it is to GenGenLib (see escape_dep)
+	# $$ (or ${$}) is a $, and ${U+hex} the character of that code
+	# point, as they are to GenGenLib (see escape_dep)
 	my $out = '';
 	for (;;) {
 		if ($spec =~ /\G([^\$]+)/gc) {
 			$out .= $1;
 		} elsif ($spec =~ /\G\$(?:\{\$\}|\$)/gc) {
 			$out .= '$';
+		} elsif ($spec =~ /\G\$\{([Uu]\+[^}]*)\}/gc) {
+			my $u = $1;
+			$u =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ and hex($1) <= 0x10FFFF
+				or die "E: $where: `$spec': \${$u} is no code point\n";
+			$out .= chr hex $1;
 		} elsif ($spec =~ /\G\$(?:\{(\w+)\}|(\w))/gc) {
 			my $x = defined $1 ? $1 : $2;
 			defined $var{$x} or die "E: $where: `$spec': no such variable \${$x}\n";
@@ -611,6 +619,11 @@ sub _subst
 		my $val;
 		if ($x eq '$') {
 			$val = '$';
+		} elsif ($x =~ /\A[Uu]\+/) {
+			# a character, as in a header (see _expand)
+			$x =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ and hex($1) <= 0x10FFFF
+				or die "E: $where: \${$x} is no code point\n";
+			$val = chr hex $1;
 		} elsif ($x eq '@' or $x eq '.TARGET') {
 			defined $node or die "E: $where: \${$x} outside of a recipe\n";
 			$val = $node;
@@ -1192,14 +1205,16 @@ sub manifest_text
 =item B<generate> [ I<generator>, [ I<file> ] ]
 
 Writes F<MY/MANIFEST.I<goal>> for each goal, and the build file
-for I<generator> (C<make>, the default, or C<ninja>), named I<file>
-in the build directory if given (else F<Makefile> or F<build.ninja>).
+for I<generator> (C<make>, the default, C<gmake> or C<ninja>), named
+I<file> in the build directory if given (else F<Makefile> or
+F<build.ninja>).
 The files that would not change are left alone, mtime and all.
 
 =cut
 
 my %generator = (
 	make => [ 'RdKw::WwW::SiteConf::Make', 'Makefile' ],
+	gmake => [ 'RdKw::WwW::SiteConf::GMake', 'Makefile' ],
 	ninja => [ 'RdKw::WwW::SiteConf::Ninja', 'build.ninja' ],
 );
 
@@ -1247,8 +1262,7 @@ sub generate
 	# What to type next: the builder (named after the generator), with
 	# -C if we are not in the build directory, -f if the file is not
 	# the one it would look for, and the first goal of the manifest.
-	my $builder = $G eq 'ninja' ? 'ninja' : 'make';
-	my @cmd = ($builder);
+	my @cmd = ($G);
 	push @cmd, '-C', shell_quote($self->{B}) unless $self->{B} eq '.';
 	push @cmd, '-f', shell_quote($outfile) if $named;
 	push @cmd, shell_quote($plan->{goals}[0]{name}) if @{ $plan->{goals} };

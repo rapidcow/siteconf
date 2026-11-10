@@ -194,12 +194,13 @@ sub new
 	$self;
 }
 
-# Dies if `spec' names a variable we do not have.
+# Dies if `spec' names a variable we do not have (a ${$} or a
+# ${U+...} is a character, not a variable).
 sub _vars
 {
 	my ($self, $spec) = @_;
 	for my $x (norm_dep($spec) =~ /\$\{([^}]+)\}/g) {
-		$x eq '$' || defined $self->{D}{$x}
+		$x eq '$' || $x =~ /\AU\+/ || defined $self->{D}{$x}
 			or die __PACKAGE__ . ": `$spec': no such variable \${$x}\n";
 	}
 	1;

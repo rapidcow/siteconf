@@ -156,6 +156,11 @@ is_deeply($p->{REFUSED}, {}, '... unless the options say so');
 		'... however the variables after the root spell it');
 	ok($p->{DECLARED}{'site/../../w'}, '... but the root itself is as configured');
 }
+# (a climb spelled by code point is a climb all the same)
+spew('site/entry', "[%#\n# NEED: \${a}/\${U+002E}\${U+002E}/\${u+2e}./etc/passwd\n# NEED: \${U+002F}etc/group\n-%]\n");
+$p = provider();
+is_deeply($p->{REFUSED}, { 'site/../../etc/passwd' => 'RELATIVE_DEPS', '/etc/group' => 'ABSOLUTE_DEPS' },
+	'... or the characters they are made of');
 
 ($ok, $out, $err) = render("# NEED: ../up/secret\n", q{[% INCLUDE '../up/secret' %]}, @strict);
 like("$err", qr/`\.\.\/up\/secret' is declared, but forbidden because RELATIVE_DEPS is unset/,

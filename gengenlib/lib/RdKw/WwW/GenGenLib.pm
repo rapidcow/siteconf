@@ -492,8 +492,13 @@ the first argument.
 A variable is C<${name}>, where the name is anything up to
 the closing brace (there are no escapes in there), or C<$n>
 for a single word character as it is in L<siteconf(1)>; and
-C<$$> is a literal C<$>.  Any other C<$> is malformed: a
-trailing one, an unterminated C<${>, an empty C<${}>, a C<$>
+C<$$> is a literal C<$>.  C<${U+>I<hex>C<}> is not a variable
+but a character, by its code point: 1 to 8 hex digits, in any
+case (and so is the C<U>), up to C<10FFFF>; it is normalized to
+C<${U+>I<HEX>C<}>, in capitals and of at least 4 digits, and the
+character is what B<subs_deps> gives (see B<escape_deps>).  Any
+other C<$> is malformed: a trailing one, an unterminated C<${>,
+an empty C<${}>, a C<${U+...}> that is no code point, a C<$>
 before a C<}> or a C<.>, and so on.  The optional C<strict>
 option decides whether to die on malformed input, or to
 replace unpaired dollar signs
@@ -505,9 +510,19 @@ Recognized variables and the project root are still normalized.
 C<strict> takes precedence: malformed input still dies even
 with C<pass_thru> enabled.  Defaults to C<< pass_thru => 0 >>.
 
-Added in 0.0002.  C<pass_thru> added in 0.0003.
+Added in 0.0002.  C<pass_thru> added in 0.0003.  C<${U+...}>
+added in 0.0100 (before, it was a variable of that name).
 
 =cut
+
+# The code point that `U+hex' is, if it is one
+sub _code_point
+{
+	my ($name) = @_;
+	$name =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ or return;
+	my $n = hex $1;
+	$n <= 0x10FFFF ? $n : undef;
+}
 
 sub norm_deps
 {
@@ -519,6 +534,17 @@ sub norm_deps
 		for (;;) {
 			if ($spec =~ /\G([^\$]+)/gc) {
 				$out .= $1;
+			} elsif ($spec =~ /\G\$\{([Uu]\+[^}]*)\}/gc) {
+				# A character, not a variable
+				my $name = $1;
+				my $n = _code_point($name);
+				if (defined $n) {
+					$out .= sprintf '${U+%04X}', $n;
+				} else {
+					$opt->{strict}
+						and die "norm_deps: \${$name} is no code point in `$_'\n";
+					$out .= ($opt->{pass_thru} ? '$' : '${$}') . "{$name}";
+				}
 			} elsif ($spec =~ /\G\$\{([^}]+)\}/gc) {
 				$out .= "\${$1}";
 			} elsif ($spec =~ /\G\$([\w\$])/gc) {
@@ -574,6 +600,10 @@ nothing is special about C<.> there: C<x-${a}/y>
 is F<x-./y>, and C<${B}/${p}> is just
 C<< enroot($B) . $p >>.
 
+A C<${U+...}> is its character, and is nothing more:
+C<${U+002E}${U+002E}/> is F<../> as much as C<../> is,
+and C<${U+002F}> is a slash like any other.
+
 Added in 0.0002.
 
 =cut
@@ -606,6 +636,13 @@ SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
 				$seg = 0;
 				next SSS;
 			}
+			if ($name =~ /\AU\+([0-9A-F]+)\z/) {
+				# a character (normalized: it is a code point)
+				my $c = chr hex $1;
+				$out .= $c;
+				$seg = $c eq '/';
+				next SSS;
+			}
 			my $value = $D ? $D->{$name} : undef;
 			# Undefined = empty to us.
 			defined $value or $value = '';
@@ -632,35 +669,58 @@ sub subs_dep
 	scalar subs_deps($D, $spec, \%opt);
 }
 
-=item B<escape_deps> I<name>, ...
+=item B<escape_deps> I<name>... { unicode => 0, unicode_space => 0 }
 
-=item B<escape_dep> I<name>
+=item B<escape_dep> I<name>, [ unicode => 0, unicode_space => 0 ]
 
-Quote a literal name by escaping metacharacters
-(that is, C<$>, as C<${$}>), so that it is read as
-that name and nothing else: C<subs_deps> (without
-definitions, or with any) gives it back, and
-C<split_dep> finds no root in it.  The escaped
-dependency specifications are returned as a copy
-(in scalar context, the first).  There is no
-escape for a blank: a header cannot name a file
-with one in it.
+Quote a literal name as a spec that is read as that name and
+nothing else: C<subs_deps> (without definitions, or with any)
+gives it back, C<split_dep> finds no root in it, and
+B<read_deps> reads it as one name, whatever is in it.  The
+escaped dependency specifications are returned as a copy (in
+scalar context, the first).
+
+What is safe is left as it is: printable ASCII, from C<!> to
+C<~>.  A C<$> is C<${$}>, and anything else is
+C<${U+>I<HEX>C<}>, its code point (as in C<${U+0020}> for a
+space).
+
+With C<< unicode => 1 >>, what is above C<~> is safe too, but for
+controls (C<DEL> and the C1s), surrogates, the line and
+paragraph separators, and white space (such as the no-break
+space).  C<< unicode_space => 1 >> leaves that white space alone
+as well, though there is little good in a name that looks like
+it is two; a space, tab or vertical space is escaped regardless.
 
 Added in 0.0100.
 
 =cut
 
+# What is left as it is: printable ASCII, but for $
+my $ESCAPE = qr/[^!-#%-~]/;
+
+sub _escape_char
+{
+	my ($c, $opt) = @_;
+	return '${$}' if $c eq '$';
+	return $c if $opt->{unicode} && ord($c) > 0x7E
+		&& $c !~ /[\p{Cc}\p{Cs}\x{2028}\x{2029}]/
+		&& ($opt->{unicode_space} || $c !~ /\p{Space}/);
+	sprintf '${U+%04X}', ord $c;
+}
+
 sub escape_deps
 {
+	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
 	my @s = @_;
-	s/(\$)/\${$1}/g for @s;
+	s/($ESCAPE)/_escape_char($1, $opt)/ge for @s;
 	wantarray ? @s : $s[0];
 }
 
 sub escape_dep
 {
-	my ($s) = @_;
-	scalar escape_deps($s);
+	my ($s, %opt) = @_;
+	scalar escape_deps($s, \%opt);
 }
 
 =item B<split_dep> I<spec>
@@ -679,8 +739,9 @@ sub split_dep
 	my $spec = norm_deps(@_);
 #	pos($spec) = 0;
 	my $root = '';
-	# (an escaped $, ${$}, is no variable, and so no root)
-	while ($spec =~ /\G(\$\{(?!\$\})[^}]+\})(\/|\z)/gc) {
+	# (an escaped $, ${$}, is no variable, and so no root; nor
+	# is any other character, ${U+...})
+	while ($spec =~ /\G(\$\{(?!\$\}|U\+)[^}]+\})(\/|\z)/gc) {
 		$root .= '/' if length($root);
 		$root .= $1;
 	}

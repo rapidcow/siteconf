@@ -125,7 +125,7 @@ like("$err", qr/absent: not found/, '... and not found, used');
 		'site/x' => '${a}/x',
 		'site/t/x' => '${tem}/x',                     # the longest expansion
 		'site/t/deep/x' => '${deep}/x',
-		'public/x' => '${B}/${b}/x',                  # shortest, then first
+		'public/x' => '${B}/${b}/x',                  # then the first
 		'include/x' => '${x}/include/x',              # `.' is under everything
 		'site' => '${a}',
 		'/abs/x' => undef, '../x' => undef,
@@ -134,6 +134,10 @@ like("$err", qr/absent: not found/, '... and not found, used');
 	for my $path (sort keys %alias) {
 		is($p->_alias($path), $alias{$path}, "PREFIXES: $path");
 	}
+	is(provider(DEFINITION => { %D, B => '.' }, PREFIXES => [ qw( ${B}/${c} ${B}/${b} ) ])
+		->_alias('public/x'), '${B}/${c}/x', '... in the order given');
+	is(provider(PREFIXES => [ qw( ${A} ${a} ) ])->_alias('site/x'), '${a}/x',
+		'... and ${A}, if it is given, only if nothing else is');
 	is(provider()->_alias('B/public/x'), '${B}/${b}/x', 'by default, ${a} ${B}/${b} ${B}/${c}');
 	is($P->new({ SOURCE => 'site/entry' })->_alias('site/x'), undef,
 		'... and none, without the variables');
@@ -206,6 +210,34 @@ is($out, 'up', 'RELATIVE_DEPS: declared, and so loaded') or diag $err;
 ($ok, $out, $err) = render("# NEED: \${A}/../up/secret\n", q{[% INCLUDE '../up/secret' %]},
 	{}, RELATIVE_DEPS => 1);
 is($out, 'up', '... by any spelling') or diag $err;
+
+# --- ALLOW_PREFIXES: the roots a declaration may have
+spew('include/outer', "[%# NEED: \${inc}/secret -%]\n");
+spew('site/entry', <<'TT');
+[%
+ # NEED: ${a}/x
+ # NEED: $a//y
+ # NEED: ${B}/${b}/z
+ # NEED: ${B}/w
+ # NEED: ${inc}/outer
+ # NEED: plain
+-%]
+TT
+$p = provider(ALLOW_PREFIXES => [ qw( $a/ ${B}/${b} ) ]);
+is_deeply($p->{REFUSED}, { 'B/w' => 'ALLOW_PREFIXES', 'include/outer' => 'ALLOW_PREFIXES',
+	'plain' => 'ALLOW_PREFIXES' }, 'ALLOW_PREFIXES: only these roots, and only whole');
+ok($p->{DECLARED}{'site/x'} && $p->{DECLARED}{'site/y'} && $p->{DECLARED}{'B/public/z'},
+	'... by any spelling');
+ok(!exists $p->{DECLARED}{"include/secret"}, '... and what the rest declare is not followed');
+$p = provider(ALLOW_PREFIXES => [ '', '${inc}' ]);
+ok($p->{DECLARED}{plain} && $p->{DECLARED}{"include/secret"} && !$p->{DECLARED}{'site/x'},
+	'... and no root is a root too');
+is_deeply(provider()->{REFUSED}, {}, '... by default, any');
+ok(!eval { provider(ALLOW_PREFIXES => [ '${a}/x' ]) }, '... and a root is all it may be');
+($ok, $out, $err) = render("# NEED: \${inc}/secret\n", '[% INCLUDE secret %]',
+	{}, ALLOW_PREFIXES => [ '${a}' ], CHECK_DEPS => 1);
+like("$err", qr/`include\/secret' is declared, but forbidden because ALLOW_PREFIXES does not have its root/,
+	'... and CHECK_DEPS says so');
 
 # --- no header, unless an option asks
 spew('site/entry', "[%#\n# HAVE: elsewhere\n# NEED: \${nope}/x\n-%]\n");

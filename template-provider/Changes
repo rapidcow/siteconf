@@ -31,5 +31,10 @@ Revision history of WwW-GenGenLib-Template-Provider
       one name in a header.  (Borrowed from Neocities code!)
 
     + PREFIXES: those symbolic prefixes (by default ${a},
-      ${B}/${b} and ${B}/${c}).  The longest expansion wins;
-      then the shortest prefix, then the first in order.
+      ${B}/${b} and ${B}/${c}; a list given is the whole
+      list).  The longest expansion wins, then the first.
+
+    + ALLOW_PREFIXES: the symbolic roots (split_dep) that
+      a declaration may have; by default, any.  A list
+      given is the whole list ('' for no root); what has
+      another root is not declared, nor followed.

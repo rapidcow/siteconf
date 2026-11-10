@@ -73,14 +73,24 @@ that is not defined is an error.
 
 The symbolic prefixes that a file may be called by in what we say
 (as a header would name it, and as it is also known): by default
-C<${a}>, C<${B}/${b}> and C<${B}/${c}>, and a trailing slash or not
-makes no difference.  A file is called by the prefix whose expansion
-it is under, the longest; of those that are as long, by the shortest
-prefix, and then the first in alphabetical order (so C<${B}/${b}>
-before C<${A}/${B}/${b}>, and C<${B}/${b}> before C<${B}/${c}>).  A
-prefix that expands to C<.> has every relative name under it, but is
-the shortest of all; one with a variable not in I<DEFINITION> is
-none at all.
+C<${a}>, C<${B}/${b}> and C<${B}/${c}>; a list given is the whole
+list, and a trailing slash or not makes no difference.  A file is
+called by the prefix whose expansion it is under, the longest (so
+C<${tem}/x> rather than C<${a}/t/x>, if C<${tem}> is C<site/t>); of
+those that are as long, by the first in the list (list C<${B}/${c}>
+before C<${B}/${b}> to call a file by that where the two are the
+same).  A prefix that expands to C<.> has every relative name under
+it, but is the shortest of all; one with a variable not in
+I<DEFINITION> is none at all.
+
+=item C<ALLOW_PREFIXES>
+
+The symbolic roots (see L<RdKw::WwW::GenGenLib/split_dep>) that a
+declaration may have, such as C<${a}> or C<${B}/${b}>; by default,
+any.  A list given is the whole list, and a root is in it only as a
+whole (C<${a}> is not C<${a}/${x}>); the empty string is no root at
+all, for C<x>, C<../x> and C</x>.  A declaration with another root
+is not declared, nor are its own declarations followed.
 
 =item C<ALLOW_DEPS>
 
@@ -170,6 +180,15 @@ sub new
 	$self->{SOURCE} = $args->{SOURCE};
 	$self->{DEFINITION} = { %{ $args->{DEFINITION} || {} }, A => '.' };
 	$self->{PREFIXES} = [ @{ $args->{PREFIXES} || [ '${a}', '${B}/${b}', '${B}/${c}' ] } ];
+	if ($args->{ALLOW_PREFIXES}) {
+		$self->{ALLOW_PREFIXES} = {};
+		for (@{ $args->{ALLOW_PREFIXES} }) {
+			my ($root, $rest) = split_dep($_);
+			$rest =~ m{\A/*\z}
+				or die "$class: ALLOW_PREFIXES: `$_' is not a symbolic root\n";
+			$self->{ALLOW_PREFIXES}{$root} = 1;
+		}
+	}
 	$self->{$_} = exists $args->{$_} ? $args->{$_} : $default{$_} for keys %default;
 	$self->{DECLARED} = {};
 	$self->{REFUSED} = {};
@@ -193,7 +212,10 @@ sub new
 		map { $self->_vars($_); $_ } @{ $I{NEED} || [] }, @{ $I{WANT} || [] },
 		{
 			graph => $args->{GRAPH} || {},
-			follow => sub { $self->_vars($_[1]); $follow->(@_) },
+			follow => sub {
+				$self->_vars($_[1]);
+				$self->_allowed_root($_[1]) && $follow->(@_);
+			},
 		});
 	$self->{DECLARED}{ File::Spec->canonpath($source) } = 1;
 	for my $spec (@all) {
@@ -227,12 +249,23 @@ sub _norm
 	File::Spec->canonpath(subs_dep($self->{DEFINITION}, $spec));
 }
 
-# The option that would let `spec' be declared, if it may not be: the
-# part after its symbolic root (which is ours, as configured) may not
-# climb out of it, nor be absolute where there is no root
+# Whether `spec' has a symbolic root that ALLOW_PREFIXES allows
+sub _allowed_root
+{
+	my ($self, $spec) = @_;
+	my $allow = $self->{ALLOW_PREFIXES} or return 1;
+	my ($root) = split_dep($spec);
+	$allow->{$root};
+}
+
+# The option that would let `spec' be declared, if it may not be: its
+# symbolic root must be allowed, and the part after it (which is ours,
+# as configured) may not climb out of it, nor be absolute where there
+# is no root
 sub _unreasonable
 {
 	my ($self, $spec) = @_;
+	$self->_allowed_root($spec) or return 'ALLOW_PREFIXES';
 	my ($root, $rest) = split_dep($spec);
 	my $name = subs_dep($self->{DEFINITION}, $rest);
 	if (length $root) {
@@ -256,7 +289,7 @@ sub _named
 }
 
 # The longest of the PREFIXES that `path' is under (as they expand),
-# with the rest of it; ties go to the shortest prefix, then the first
+# with the rest of it; ties go to the first
 sub _alias
 {
 	my ($self, $path) = @_;
@@ -274,9 +307,7 @@ sub _alias
 			defined($r = uproot($dir, $path)) or next;
 			$l = length $dir;
 		}
-		next if defined $best and $l < $len
-			|| $l == $len && (length $prefix > length $best
-				|| length $prefix == length $best && $prefix ge $best);
+		next if defined $best and $l <= $len;
 		($best, $len, $rest) = ($prefix, $l, $r);
 	}
 	defined $best or return;
@@ -334,7 +365,8 @@ sub _authorized
 		if ($self->{CHECK_DEPS} && !$declared) {
 			my $why = $self->{REFUSED}{$dep};
 			return (undef, defined $why
-				? "@{[ $self->_named($dep) ]} is declared, but forbidden because $why is unset"
+				? "@{[ $self->_named($dep) ]} is declared, but forbidden because $why "
+					. ($why eq 'ALLOW_PREFIXES' ? 'does not have its root' : 'is unset')
 				: "undeclared dependency: @{[ $self->_named($dep) ]}");
 		}
 		if ($kind && !($self->{ALLOW_DEPS} && $declared) && !$self->{"TT_$kind"}) {

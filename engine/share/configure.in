@@ -66,7 +66,7 @@ use RdKw::WwW::GenGenLib qw( read_make write_make );
 
 # File names are characters here, spelled as the file system's locale
 # says only on their way to it (and back), and never made up: a name
-# it cannot spell is an error.  (GenGenLib 0.03 has these too, but we
+# it cannot spell is an error.  (GenGenLib 0.01 has these too, but we
 # don't know if we have one that is new enough.)
 sub to_fs
 {

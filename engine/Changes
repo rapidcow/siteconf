@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf
 
 
-0.03_00
+0.03_00  2026-11-10  RC
     + -P tem: a Template Toolkit render with D and O, and no
       web (no GenLib, no site_url, no location).  It needs
       GenGenLib 0.0100 (and so may not be pinned below it).

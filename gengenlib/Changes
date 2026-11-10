@@ -1,7 +1,7 @@
 Revision history of WwW-GenGenLib
 
 
-0.01_00
+0.01_00  2026-11-10  RC
     *** Perl 5.8 is required, and so is Encode::Locale.
     + escape_deps, escape_dep: a literal name as a spec, which
       subs_deps gives back (with or without definitions, which
@@ -34,6 +34,7 @@ Revision history of WwW-GenGenLib
     *** read_deps: names are split at blanks (space and tab)
         only: a no-break space, form feed and so on are part
         of a name.  A CR at the end of a line is not.
+
 
 0.00_03  2026-11-08  RC
     + norm_deps: pass_thru => 1 preserves unrecognized dollar

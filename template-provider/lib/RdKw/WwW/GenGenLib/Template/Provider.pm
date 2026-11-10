@@ -350,8 +350,22 @@ sub _entry
 	$self->_find($self->{SOURCE});
 }
 
-# The path to load `name' from, or an error; nothing if there is none
-sub _authorized
+=item B<access> I<name>
+
+The file that B<fetch> and B<load> would load for I<name> (by the
+rules in L</DESCRIPTION>: absolute, C<./> or C<../> as it is, and any
+other the first in I<INCLUDE_PATH>), and whether they may: in list
+context, the path (absolute, as L<Cwd/abs_path> spells it) and
+C<undef>, or C<undef> and what is wrong.  Both are C<undef> if there
+is no such file.
+
+    my ($path, $error) = $provider->access("./$file");
+    defined $error and die "$file: $error\n";
+    defined $path or die "$file: not found\n";
+
+=cut
+
+sub access
 {
 	my ($self, $name) = @_;
 	my $path;
@@ -395,7 +409,7 @@ sub fetch
 {
 	my ($self, $name, @rest) = @_;
 	ref $name and return $self->SUPER::fetch($name, @rest);
-	my ($path, $error) = $self->_authorized($name);
+	my ($path, $error) = $self->access($name);
 	defined $error and return ("$name: $error", STATUS_ERROR);
 	defined $path or return (undef, STATUS_DECLINED);
 	$self->SUPER::fetch($path, @rest);
@@ -405,7 +419,7 @@ sub load
 {
 	my ($self, $name, @rest) = @_;
 	ref $name and return $self->SUPER::load($name, @rest);
-	my ($path, $error) = $self->_authorized($name);
+	my ($path, $error) = $self->access($name);
 	defined $error and return ("$name: $error", STATUS_ERROR);
 	defined $path or return (undef, STATUS_DECLINED);
 	$self->SUPER::load($path, @rest);

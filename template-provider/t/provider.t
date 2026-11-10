@@ -288,6 +288,18 @@ like($data, qr/`site\/a b\$' \(\$\{a\}\/a\$\{U\+0020\}b\$\{\$\}\)$/, '... escape
 unlink 'site/a b$';
 unlink 'site/allowed';
 
+# --- access: what fetch and load would say, for a caller of its own
+spew('site/entry', "[%#\n# NEED: \${inc}/allowed\n-%]\n");
+$p = provider(CHECK_DEPS => 1);
+is_deeply([ $p->access('./include/allowed') ], [ "$top/w/include/allowed", undef ],
+	'access: the path, and no error');
+is_deeply([ $p->access('allowed') ], [ "$top/w/include/allowed", undef ], '... by any name');
+my ($path, $error) = $p->access('./include/secret');
+ok(!defined $path && $error =~ /^undeclared dependency: `include\/secret'/, '... or an error')
+	or diag $error;
+($path, $error) = $p->access('ghost');
+ok(!defined $path && !defined $error, '... or neither, if there is none');
+
 # --- ENCODING reaches the provider (Template's own does not)
 spew('include/allowed', "caf\x{e9}");
 ($ok, $out) = render('', '[% INCLUDE allowed %]');

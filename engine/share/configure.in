@@ -194,9 +194,9 @@ my $start = un_fs(getcwd());
 # relative to the base directory of this script).
 my $A = isnull($D{A}) ? $Dd{A} : $D{A};
 my $srcdir = abs_path(to_fs(File::Spec->rel2abs($A, $start)));
-defined $srcdir or die "E: cannot find the project root ($A): $!\n";
+defined $srcdir or die "E: cannot find \$A (aka `$A'): $!\n";
 $srcdir = un_fs($srcdir);
-chdir to_fs($srcdir) or die "E: cannot chdir to $srcdir: $!\n";
+chdir to_fs($srcdir) or die "E: cannot chdir to \$A (aka `$srcdir'): $!\n";
 
 # -DB is the build directory, seen from the source tree; like
 # `cmake -B' we go there, and make it if it is not there.  Its
@@ -228,7 +228,7 @@ unless (-d to_fs($B)) {
 			: "\n");
 	}
 }
-chdir to_fs($B) or die "E: cannot chdir to $B: $!\n";
+chdir to_fs($B) or die "E: cannot chdir to \$B (aka `$B'): $!\n";
 my $Babs = un_fs(getcwd());
 
 # Files first, command line over them -- unless --reset said otherwise.

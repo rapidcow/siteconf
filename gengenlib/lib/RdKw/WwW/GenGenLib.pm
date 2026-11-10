@@ -48,6 +48,7 @@ our @EXPORT_OK = qw(
 	read_deps
 	norm_deps norm_dep
 	subs_deps subs_dep
+	escape_deps escape_dep
 	split_dep walk_deps follow_ok
 	enroot uproot
 	to_fs un_fs
@@ -558,7 +559,9 @@ sub norm_dep
 Substitute dependency specifications with
 the given definitions.  C<norm_deps> is
 called to normalize the specification (and
-is given the options, if any).
+is given the options, if any).  The map is
+optional since 0.0100, so this could be an
+inverse operation of C<escape_deps>.
 
 A variable that makes up a whole path segment
 and is followed by a slash is a directory, and
@@ -603,7 +606,7 @@ SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
 				$seg = 0;
 				next SSS;
 			}
-			my $value = $D->{$name};
+			my $value = $D ? $D->{$name} : undef;
 			# Undefined = empty to us.
 			defined $value or $value = '';
 			if ($seg && $spec =~ /\G\//gc) {
@@ -627,6 +630,31 @@ sub subs_dep
 {
 	my ($D, $spec, %opt) = @_;
 	scalar subs_deps($D, $spec, \%opt);
+}
+
+=item B<escape_deps> I<name>, ...
+
+=item B<escape_dep> I<name>
+
+Quote a literal name by escaping metacharacters.
+The escaped dependency specifications are returned
+as a copy.
+
+Added in 0.0100.
+
+=cut
+
+sub escape_deps
+{
+	my @s = @_;
+	s/(\$)/\${$1}/g for @s;
+	@s;
+}
+
+sub escape_dep
+{
+	my ($s) = @_;
+	scalar escape_deps($s);
 }
 
 =item B<split_dep> I<spec>

@@ -7,6 +7,9 @@ use warnings;
 our $VERSION = '0.00_00';
 $VERSION = eval $VERSION;
 
+use Template::Provider;
+our @ISA = qw( Template::Provider );
+
 =head1 NAME
 
 WwW::GenGenLib::Template::Provider - Template Toolkit provider for declared dependencies
@@ -135,7 +138,6 @@ those write files by names this provider does not spell.
 
 =cut
 
-use base 'Template::Provider';
 use Cwd ();
 use File::Spec ();
 use Template::Constants qw( STATUS_ERROR STATUS_DECLINED );

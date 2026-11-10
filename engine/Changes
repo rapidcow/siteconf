@@ -60,6 +60,14 @@ Revision history of WwW-SiteConf
       error (NEED:NEED: for a file named `NEED:').
     *** So a prerequisite with a colon before any `/' or `$'
         (other than those two prefixes) is an error now.
+    * "A (which is B)" is uniformly replaced by "A (aka B)",
+      which despite being a three-letter abbreviation for
+      "also known as", is shorter, and possibly helps non-
+      English speakers read better than relative clauses. :)
+      (Directly inspired by C compiler diagnostic messages
+      (like clang's).  Of course, there is also plan for
+      gettext translation like Debian adduser... but this
+      will do the trick for now.)
 
 
 0.02_03  2026-11-09  RC

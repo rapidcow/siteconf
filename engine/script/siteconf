@@ -726,9 +726,9 @@ OLD
 		$name;
 	}
 	else {
-		my $aka = $real eq $I{HAVE} ? "" : " (which is `$real')";
-		die "E: $apath: HAVE `$I{HAVE}'$aka not "
-			. "under \${a} (which is `$D->{a}')\n";
+		die "E: $apath: Your HAVE `$I{HAVE}'"
+			. ($real eq $I{HAVE} ? "" : " (aka `$real')")
+			. " is not under \${a} (aka `$D->{a}')\n";
 	}
 }) =~ s/\A\/+//;
 NEW

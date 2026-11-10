@@ -861,7 +861,7 @@ sub _node
 		my $have = $self->_expand($I{HAVE}, $where);
 		my $want = File::Spec->canonpath("$D->{a}/$src");
 		$have eq $want or die "E: $apath: You HAVE `$I{HAVE}'"
-			. ($have eq $I{HAVE} ? "" : " (which is `$have')")
+			. ($have eq $I{HAVE} ? "" : " (aka `$have')")
 			. ",\n"
 			. "E: but I need `$want'?\n";
 	}
@@ -1025,7 +1025,7 @@ sub _tool
 			my $have = $self->_dep($I{HAVE}, "$dep: HAVE");
 			$self->_same($have, $dep)
 				or die "E: $dep: You HAVE `$I{HAVE}'"
-					. ($have eq $I{HAVE} ? "" : " (which is `$have')")
+					. ($have eq $I{HAVE} ? "" : " (aka `$have')")
 					. ",\n"
 					. "E: but I need `$dep' (for the rule for `$file',"
 					. " $self->{D}{R} line $rule->{line})?\n";

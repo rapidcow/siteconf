@@ -107,7 +107,7 @@ for my $case (
 {
 	my ($status, $err) = render('src', 'other/x.html', 'src/x.html');
 	isnt($status, 0, 'not under ${a}: fails');
-	like($err, qr/HAVE `other\/x\.html' not under \$\{a\} \(which is `src'\)/, '... and says so');
+	like($err, qr/Your HAVE `other\/x\.html' is not under \$\{a\} \(aka `src'\)/, '... and says so');
 
 	($status, $err) = render('src', '${b}/x.html', 'src/x.html');
 	isnt($status, 0, 'HAVE in another variable: fails');

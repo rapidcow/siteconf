@@ -65,7 +65,7 @@ use PerlIO::encoding ();
 
 # File names are characters here, spelled as the file system's locale
 # says only on their way to it (and back), and never made up: a name
-# it cannot spell is an error.  (GenGenLib has these too, but not
+# it cannot spell is an error.  (GenGenLib.pm has these too, but not
 # every version that you may have pinned it to.)
 sub to_fs
 {

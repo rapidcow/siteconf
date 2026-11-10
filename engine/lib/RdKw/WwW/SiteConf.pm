@@ -99,6 +99,11 @@ Only files made in C<${b}> can
 be goals of the manifest; those in the cache are made because
 something needs them.
 
+Words (targets, prerequisites, and what F<MANIFEST> says) are separated
+by white space as L<make(1)> knows it -- space, tab, newline, vertical
+tab, form feed and carriage return -- and by nothing else: a no-break
+space is part of a name.
+
 Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along
 with indentation on the next line, are replaced by a space.  Lines
@@ -215,6 +220,19 @@ use RdKw::WwW::SiteConf::Modifiers;
 # we write it, and `MY' is a directory.  (`clean', or whatever -Dclean
 # makes of it, is reserved too: see _clean_pattern.)
 my %reserved_goal = map { $_ => 1 } qw( Makefile MY );
+
+# White space, as make and the shell (and POSIX) know it: these six, and
+# nothing else.  A no-break space, say, is part of a name.
+my $SP = '\t\n\cK\f\r ';
+
+# The words of `s', split as split ' ' would, at $SP alone.  (Matched,
+# not split: split takes /[$SP]+/ for /\s+/, which a no-break space in
+# an upgraded string is.)
+sub _words
+{
+	my ($s) = @_;
+	$s =~ /([^$SP]+)/go;
+}
 
 =item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, quiet =E<gt> 1 ]
 
@@ -430,7 +448,7 @@ sub shell_quote
 sub _check_file
 {
 	my ($file, $where) = @_;
-	$file =~ m!\A[^\s:\$#%\\|;<>"'`*?\[\](){}&]+\z!
+	$file =~ m!\A[^$SP:\$#%\\|;<>"'`*?\[\](){}&]+\z!o
 		or die "E: $where: bad file name `$file'\n";
 	$file =~ m!\A/! and die "E: $where: file name `$file' must be relative\n";
 	grep { $_ eq '..' } split m!/!, $file
@@ -481,10 +499,10 @@ sub read_manifest
 	my (@goal, %seen, $goal);
 	while (<$fh>) {
 		chomp;
-		s/(?:^|\s)#.*//;
-		next if /^\s*$/;
+		s/(?:^|[$SP])#.*//o;
+		next if /\A[$SP]*\z/o;
 		my $where = "$file line $.";
-		my ($kw, @arg) = split ' ';
+		my ($kw, @arg) = _words($_);
 		if ($kw eq 'MAKE') {
 			@arg == 1 or die "E: $where: MAKE takes exactly one goal name\n";
 			my $name = $arg[0];
@@ -636,7 +654,7 @@ sub _read_rules
 
 	my (%rule, @node, $stanza);
 	while (<$fh>) {
-		next if /^\s*#(?:\s|\z)/ or /^\s*$/;
+		next if /\A[$SP]*#(?:[$SP]|\z)/o or /\A[$SP]*\z/o;
 		my $line = $.;
 		my $where = "$D->{R} line $line";
 		# Fold rule headers before deciding whether an indented line
@@ -646,7 +664,7 @@ sub _read_rules
 				s/[ \t]*\\\r?\n\z/ /;
 				my $next = <$fh>;
 				# a comment line does not end the header (nor is it in it)
-				$next = <$fh> while defined $next and $next =~ /^\s*#(?:\s|\z)/;
+				$next = <$fh> while defined $next and $next =~ /\A[$SP]*#(?:[$SP]|\z)/o;
 				defined $next or die "E: $where: unfinished line continuation\n";
 				$next =~ s/^[ \t]+//;
 				$_ .= $next;
@@ -667,7 +685,7 @@ sub _read_rules
 		}
 		if (/:/) {
 			my ($src, $dep) = split /:/, $_, 2;
-			@node = map { [ $self->_read_target($_, $where) ] } split ' ', $src
+			@node = map { [ $self->_read_target($_, $where) ] } _words($src)
 				or die "E: $where: null target list\n";
 			$stanza = $line;
 			for my $node (@node) {
@@ -675,24 +693,24 @@ sub _read_rules
 				my $rule = ($rule{$key} ||= { recipe => '', raw => [], deps => [],
 					name => $name, line => $line });
 				my $dep = $dep;
-				if (!$rule->{decided} && $dep =~ /\S/) {
+				if (!$rule->{decided} && $dep =~ /[^$SP]/o) {
 					$rule->{decided} = 1;
 					# the first word (a ${...} may hold spaces, in :S/ /_/)
-					my ($first) = $dep =~ /\A\s*((?:[^\s\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+)/;
+					my ($first) = $dep =~ /\A[$SP]*((?:[^$SP\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+)/o;
 					if (defined $first and defined(my $from = _source_of($first))) {
 						# ${a} alone says there is none (and ${<} is not known)
 						my $name_of = length $from ? $self->_subst($from, $name, $where) : '';
 						length $from and do {
-							$name_of =~ /\S/ and $name_of !~ /\s/
+							$name_of =~ /[^$SP]/o and $name_of !~ /[$SP]/o
 								or die "E: $where: `$first' must be one name in \${a}\n";
 							_check_file($name_of, $where);
 						};
 						$rule->{src} = $name_of;
-						$dep =~ s/\A\s*\Q$first\E//;
+						$dep =~ s/\A[$SP]*\Q$first\E//;
 					}
 				}
 				push @{ $rule->{deps} },
-					split ' ', $self->_subst($dep, $name, $where);
+					_words($self->_subst($dep, $name, $where));
 			}
 			next;
 		}

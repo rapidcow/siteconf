@@ -11,6 +11,16 @@ Revision history of WwW-GenGenLib
         is in the files is UTF-8, as it always was.
     + to_fs, un_fs: the same, for anyone else (un_fs is
       for what the system gives back: getcwd, glob, ...).
+    *** read_deps: a header line is any comment (after anything
+        at all), blanks, a field name of letters, `.', `_' or
+        `-', and a colon.  Fields not ours (USE:, vim:, Have:,
+        and NEED-ONLY: for now) are skipped: they neither end
+        the header nor begin it.  Any number of blanks may
+        follow the comment and surround the colon; REM must be
+        a word of its own.
+    *** read_deps: names are split at blanks (space and tab)
+        only: a no-break space, form feed and so on are part
+        of a name.  A CR at the end of a line is not.
 
 0.00_03  2026-11-08  RC
     + norm_deps: pass_thru => 1 preserves unrecognized dollar

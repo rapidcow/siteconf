@@ -120,13 +120,13 @@ sub _command
 
 	my @cmd;
 	for my $line (@logical) {
-		next if $line =~ /^\s*\z/;
+		next if $line =~ /\A[\t\n\cK\f\r ]*\z/;
 		my $ignore = 0;
 		# @ is for make to not echo, - is to not mind
-		while ($line =~ s/^\s*([-@+])\s*//) {
+		while ($line =~ s/\A[\t\n\cK\f\r ]*([-@+])[\t\n\cK\f\r ]*//) {
 			$ignore = 1 if $1 eq '-';
 		}
-		$line =~ s/\s+\z//;
+		$line =~ s/[\t\n\cK\f\r ]+\z//;
 		# (grouped, so that `|| true' is not for what came before)
 		$line = $ignore ? "( ( $line ) || true )" : "( $line )";
 		push @cmd, $line;

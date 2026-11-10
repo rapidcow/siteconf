@@ -272,6 +272,17 @@ The header is found within the first few lines, and ends at the
 first line that is not another header line.  For this reason,
 you won't see my evil desires following the TT2 closing tag...
 
+A header line is a comment (in any of the styles listed in the
+source, after anything at all, as in C<x = 1  # NEED: ...>), blanks, a field
+name and a colon.  The fields are C<HAVE>, C<NEED> and C<WANT>, in
+capitals; a field of any other name (C<USE:>, C<vim:>, C<Have:>)
+is someone else's, and is skipped: it neither ends the header nor
+begins one.  The names a field lists are separated by blanks (spaces
+and tabs) and by nothing else, so a no-break space is part of a name.
+(Since 0.0100; before, only C<HAVE>, C<NEED> and C<WANT> after
+exactly one space were header lines, and names were split at any
+white space.)
+
 The names undergo no parameter expansions.  So:
 
    # HAVE: ${a}/index.html
@@ -302,6 +313,35 @@ be forgiven.  Defaults to 0 (false; do not forgive).
 
 =cut
 
+# A header line, as read_deps sees it: a comment, then a field
+# name and a colon.  What other tools put in their headers looks like
+# this too, and should, so that the one does not end the other's.
+my $header_field = qr{
+	\A .*?			# anything at all before the comment, as in
+				# `x = 1  # NEED: ...' -- but the first
+				# comment that works is the one
+	(?:
+		\#		# UNIX sh, scripting languages
+	|	;		# BIND zone, DOS-INI, Lisp, ledger
+	|	\*		# C89/ANSI/K&R /* ... */
+	|	//		# C++, Java, C99 line-comment
+	|	"		# vimscript
+	|	'		# VBScript (aughhhhhh!!! >n<!)
+	|	--		# lua, SQL
+	|	%		# TeX, lilypond
+	|	(?<![A-Za-z0-9_])
+		\@?(?i:rem)	# BASIC, DOS batch; any case (but a word
+				# of its own, unlike theorem)
+	|	::		# DOS batch, the label that is not
+	)
+	[\t ]+			# Blanks are necessary both due to my
+				# subjective aesthetics and preventing
+				# false positives (e.g. a quoted string)
+	([A-Za-z._-]+)		# The field: any name, in any case (ours
+				# are HAVE, NEED, WANT, and only so)
+	[\t ]* : [\t ]*		# and then what it says
+}x;
+
 sub read_deps
 {
 	local ($_, $.);
@@ -321,24 +361,20 @@ sub read_deps
 		# A line break is never inside a character, so this is safe.
 		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
 			or last;
-		chomp;
-		# Common comment chars:
-		#   #  (UNIX sh, scripting languages)
-		#   ;  (BIND zone, DOS-INI, Lisp, ledger)
-		#   *  (C89/ANSI/K&R /* ... */)
-		#   // (C++, Java, C99 line-comment)
-		#   "  (vimscript)
-		#   '  (VBScript (aughhhhhh!!! >n<!))
-		#   -- (lua)
-		#   %  (TeX, lilypond)
-		#   REM, @REM  (BASIC, DOS batch; any case)
-		#   :: (DOS batch, the label that is not)
-		# A space is necessary both due to my
-		# subjective aesthetics and preventing
-		# false positives (e.g. a quoted string)
-		if (/^\s*(?:#|;|\*|\/\/|"|'|--|%|\@?(?i:rem)|::) (HAVE|WANT|NEED):/g) {
+		# (a CR of a CRLF is not part of the last name)
+		s/\r?\n\z//;
+		if (/$header_field/gc) {
 			my $type = $1;
-			my @list = /\S+/g;
+			# What is not ours (USE:, vim:, NEED-ONLY: for now,
+			# and HAVE in any other case) is skipped: it does not
+			# end the header, nor does it begin one.
+			unless ($type =~ /\A(?:HAVE|WANT|NEED)\z/) {
+				last if !$onit and $. >= 32;
+				next;
+			}
+			# Names are split at blanks (space and tab), and only
+			# at blanks: anything else is part of a name.
+			my @list = /\G[\t ]*([^\t ]+)/gc;
 			$onit = 1;
 			next unless @list;
 

@@ -23,6 +23,12 @@ Revision history of WwW-SiteConf
       decodes its arguments and names its files for Template
       as the locale does; pin -MRdKw::WwW::GenGenLib=0.0002 if
       you do not want this.
+    *** Makefile.in and MANIFEST are split into words at white
+        space as make knows it (space, tab, newline, VT, FF,
+        CR) and at nothing else: a no-break space is part of a
+        name now, as it is to read_deps (GenGenLib 0.0100), so
+        render may be named with one.  So are :T, :S and the
+        like, and ninja's recipes.
 
 
 0.02_03  2026-11-09  RC

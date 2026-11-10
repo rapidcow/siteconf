@@ -10,7 +10,7 @@ use File::Path qw(make_path);
 
 my $root = getcwd();
 my $script = script_path();
-plan tests => 97;
+plan tests => 96;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -157,7 +157,8 @@ for my $bad ('a b', '"quoted', "tab\there", 'what?', 'quoted"', 'bin/"x"') {
     like($out, qr/^siteconf: dangerous name for render: .* is not supported/, 'useful diagnostic');
     ok(!-e "project/$bad" && !-e 'bad-name', 'nothing written');
 }
-for my $ok ('what?.pl', 'a"b', "non\xc2\xa0break") {
+# (and a no-break space, which is not white space: see t/unicode.t)
+for my $ok ('what?.pl', 'a"b') {
     ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
         '-o', 'configure:/dev/null', '-o', "render:$ok");
     is($status, 0, "accept render name <$ok>") or diag $out;

@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 86;
+use Test::More tests => 96;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( read_deps norm_dep norm_deps subs_deps enroot );
@@ -69,6 +69,35 @@ HTML
 	}
 	my $f = spew('remark', "REMEMBER HAVE: a\n");
 	is_deeply({ read_deps($f) }, {}, 'REM is a word');
+}
+
+# --- read_deps: other people's fields, and what a name is
+{
+	my $f = spew('use', "# HAVE: a\n# USE: Template\n# NEED-ONLY: x\n# vim: ft=perl\n# NEED: b\nbody\n");
+	is_deeply({ read_deps($f) }, { HAVE => 'a', NEED => ['b'] },
+		'fields not ours do not end the header');
+	$f = spew('copy', "# Copyright: me\n\n# HAVE: a\n");
+	is_deeply({ read_deps($f) }, { HAVE => 'a' }, '... nor do they begin it');
+	$f = spew('case', "# Have: a\n# need: b\n# NEED: c\n");
+	is_deeply({ read_deps($f) }, { NEED => ['c'] }, 'our fields are in capitals');
+	$f = spew('blank', "#\tHAVE\t:\ta\n#   NEED :b\tc  d\n");
+	is_deeply({ read_deps($f) }, { HAVE => 'a', NEED => [qw( b c d )] },
+		'blanks: any number, either kind, before and after the colon');
+	$f = spew('nbsp', "# HAVE: non\x{a0}break\n# NEED: ideo\x{3000}graphic x\x{c}y\n");
+	is_deeply({ read_deps($f) }, { HAVE => "non\x{a0}break",
+		NEED => [ "ideo\x{3000}graphic", "x\x{c}y" ] },
+		'names split at blanks only');
+	$f = spew('crlf', "# HAVE: a\r\n# NEED: b c\r\n");
+	is_deeply({ read_deps($f) }, { HAVE => 'a', NEED => [qw( b c )] }, 'CRLF');
+	$f = spew('later', "x = 1  # NEED: a.html  -- why: b\n");
+	is_deeply({ read_deps($f) }, { NEED => [qw( a.html -- why: b )] },
+		'the first comment that works is the one');
+	$f = spew('theorem', "theorem NEED: a\n");
+	is_deeply({ read_deps($f) }, {}, 'REM, still a word after anything');
+	$f = spew('nospace', "#HAVE: a\n");
+	is_deeply({ read_deps($f) }, {}, 'a blank is still necessary');
+	$f = spew('far', ("# x: y\n" x 40) . "# HAVE: a\n");
+	is_deeply({ read_deps($f) }, {}, 'no peeking far down past fields either');
 }
 
 # --- norm_deps

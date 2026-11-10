@@ -191,6 +191,15 @@ Private; for L<RdKw::WwW::SiteConf>.
 # given the text of an expression (`${x}') and returns its value,
 # `quote' a string and returns it quoted.  Dies, without a location,
 # on what it cannot understand.
+# The words of `s', at white space as make knows it (and as
+# RdKw::WwW::SiteConf splits the rules): not a no-break space
+sub _words
+{
+	my ($s) = @_;
+	# (not split, which takes this for /\s+/: see RdKw::WwW::SiteConf)
+	$s =~ /([^\t\n\cK\f\r ]+)/g;
+}
+
 sub _apply
 {
 	my ($val, $mods, %o) = @_;
@@ -201,7 +210,7 @@ sub _apply
 		my $start = $pos;
 		my $c = substr($mods, $pos++, 1);
 		if ($WORD{$c}) {
-			$val = join ' ', map { $WORD{$c}->($_) } split ' ', $val;
+			$val = join ' ', map { $WORD{$c}->($_) } _words($val);
 		} elsif ($c eq 'Q') {
 			$val = $o{quote}->($val);
 		} elsif ($c eq 'S') {
@@ -218,7 +227,7 @@ sub _apply
 				$flag{$f} = 1;
 			}
 			my $done;
-			my @word = $flag{W} ? ($val) : split ' ', $val;
+			my @word = $flag{W} ? ($val) : _words($val);
 			for my $w (@word) {
 				next if $flag{1} && $done;
 				my $r = _replace($w, $old, \@new, $bol, $eol, $flag{g});

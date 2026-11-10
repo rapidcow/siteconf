@@ -14,6 +14,7 @@ use TestPaths qw( script_path perl5lib );
 use Encode ();
 use Encode::Locale ();
 use File::Temp qw( tempdir );
+use RdKw::WwW::GenGenLib qw( read_deps );
 
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
@@ -40,8 +41,9 @@ my $Bdir = "$utmp/外/ビルド";
 
 # What we name things, and what we tell our children (all of it); if
 # the locale cannot spell them, there is nothing for us to test.
-my @files = ( $P, $Bdir, 'résumé.html', 'ないもの.html' );
-my @args = ( $script, "-DB=$Bdir", $Bdir, 'html/résumé.html', 'résumé.out.html' );
+my @files = ( $P, $Bdir, 'résumé.html', 'ないもの.html', "no\x{a0}break.html" );
+my @args = ( $script, "-DB=$Bdir", $Bdir, 'html/résumé.html', 'résumé.out.html',
+	"render:no\x{a0}render" );
 for (@files) {
 	eval { spell(locale_fs => $_); 1 }
 		or plan skip_all => "locale_fs ($Encode::Locale::ENCODING_LOCALE_FS)"
@@ -52,7 +54,7 @@ for (@args) {
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
-plan tests => 14;
+plan tests => 18;
 
 local $ENV{PERL5LIB} = perl5lib();
 
@@ -91,9 +93,11 @@ sub slurp
 # go into MY/config.mk as they are, once.
 mkdir fs($_) or die "$_: $!" for $P, "$P/html", "$utmp/外";
 spew("$P/html/résumé.html", "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n");
-spew("$P/Makefile.in", 'résumé.html:' . "\n\t"
+spew("$P/html/no\x{a0}break.html", "# NEED: \${A}/\${a}/résumé.html\n");
+# (a no-break space is not white space: not to make, nor to us)
+spew("$P/Makefile.in", "résumé.html no\x{a0}break.html:\n\t"
 	. 'cp ${A:Q}/${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}' . "\n");
-spew("$P/MANIFEST", "MAKE all\n\tNEED résumé.html\n");
+spew("$P/MANIFEST", "MAKE all\n\tNEED résumé.html\n\tNEED no\x{a0}break.html\n");
 
 my ($status, $out) = run($P, {}, $script, 'init', '-q');
 is($status, 0, 'init') or diag $out;
@@ -106,17 +110,20 @@ like($mk, qr/^A=\t\.\.\/\.\.\/プロジェクト$/m, 'A, as it was found');
 ($status, $out) = run($P, {}, $script, '-g', '-q', '-B', $Bdir);
 is($status, 0, 'siteconf -g') or diag $out;
 like(slurp("$Bdir/Makefile"), qr/^site\/résumé\.html: /m, 'the Makefile names it (in UTF-8)');
+like(slurp("$Bdir/Makefile"), qr/^site\/no\x{a0}break\.html: [^ ]*html\/no\x{a0}break\.html [^ ]*html\/résumé\.html /m,
+	'... and a no-break space is part of a name, in headers too');
 ok(-f fs("$Bdir/MY/MANIFEST.all"), '... and its manifest');
 
 SKIP: {
 	my $make = $ENV{MAKE} || 'make';
 	system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0
-		or skip 'no make', 1;
+		or skip 'no make', 2;
 	$Encode::Locale::ENCODING_LOCALE_FS =~ /\Autf-?8\z/i
-		or skip 'make finds what the Makefile names only in UTF-8', 1;
+		or skip 'make finds what the Makefile names only in UTF-8', 2;
 	($status, $out) = run($Bdir, {}, '-e', 'exec @ARGV', $make, '-s');
 	is(slurp("$Bdir/site/résumé.html"), "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n",
 		'make makes it') or diag $out;
+	ok(-f fs("$Bdir/site/no\x{a0}break.html"), '... all of it');
 }
 
 # --- render: arguments as the locale says, files as the file system does
@@ -129,6 +136,16 @@ SKIP: {
 	($status, $out) = run($P, {}, 'render', '-B', $Bdir, '--',
 		'html/résumé.html', 'résumé.out.html');
 	like(slurp("$P/résumé.out.html"), qr/^résumé$/m, 'render renders it') or diag $out;
+}
+
+# --- a render named with a no-break space, which is no white space to
+# init, nor to read_deps: it is one name, and the one it HAVEs
+{
+	($status, $out) = run($P, {}, $script, 'init', '-q', '-P', 'web',
+		'-o', 'configure:/dev/null', '-o', "render:no\x{a0}render");
+	is($status, 0, 'init: a render name with a no-break space') or diag $out;
+	my %I = eval { read_deps("$P/no\x{a0}render") };
+	is($I{HAVE}, "no\x{a0}render", '... HAVEs just that') or diag $@;
 }
 
 # --- where the locale cannot say it: \x{...}, and the arguments it

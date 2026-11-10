@@ -2,6 +2,11 @@ Revision history of WwW-SiteConf
 
 
 0.03_00
+    + -MRdKw::WwW::GenGenLib::Template::Provider (of its own
+      dist, WwW-GenGenLib-Template-Provider) has render load
+      templates through it: only what the page declares, and
+      what that declares, and so on.  Only if asked for: no
+      preset asks, and render is the same as ever without it.
     *** Perl 5.8 is required, and so is Encode::Locale (by
         siteconf, the configure it writes, and GenGenLib 0.0100,
         which is required too).

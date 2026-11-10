@@ -99,6 +99,12 @@ and so does the preset for what it needs (C<# USE:>
 lines in its config).  C<-M>I<module>C<=> with nothing after the C<=>
 drops I<module> from the list, even one the preset asked for.
 
+C<-MRdKw::WwW::GenGenLib::Template::Provider> (which nothing asks for,
+and nothing needs) has F<render> load templates through it: what a page
+C<INCLUDE>s (or C<PROCESS>es, C<WRAPPER>s, C<INSERT>s) must be declared
+in its header, or in the header of what that declares, and so on; and
+the names are spelled as the locale says.  It needs GenGenLib 0.0100.
+
 =item B<-g>, B<make>
 
 Write the build file, reading the configuration from C<-B>
@@ -205,6 +211,8 @@ use RdKw::WwW::SiteConf;
 our $GENGENLIB_NEW = '0.0002';
 # GenGenLib that is locale-aware
 our $GENGENLIB_LOCALE = '0.0100';
+# What render loads templates with, if (and only if) -M says so
+our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
 # GenLib with non-broken varargs locate
 our $GENLIB_NEW = '0.0203';
 
@@ -474,6 +482,8 @@ sub do_init
 		$user{'RdKw::WwW::GenLib'} or
 			$mods{'RdKw::WwW::GenLib'} = $GENLIB_NEW;
 		$opt->{genlib_min} = $mods{'RdKw::WwW::GenLib'};
+		# (only ever because -M said so: no preset asks for it)
+		$opt->{provider} = $user{$PROVIDER} && exists $mods{$PROVIDER};
 	}
 	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
 	exists $opt->{output}{render} && !defined $render
@@ -589,6 +599,9 @@ sub render_text
 	my $can_subst = version_ge($opt->{gengenlib_min}, $GENGENLIB_NEW);
 	my $can_valoc = version_ge($opt->{genlib_min}, $GENLIB_NEW);
 	my $can_locale = version_ge($opt->{gengenlib_min}, $GENGENLIB_LOCALE);
+	my $provider = $opt->{provider};
+	$provider && !$can_locale
+		and die "$prog: -M$PROVIDER needs RdKw::WwW::GenGenLib $GENGENLIB_LOCALE\n";
 	my %sub = (
 		PATH => $path,
 		PATH_Q => $path_q,
@@ -624,8 +637,31 @@ NEW
 			: 'use RdKw::WwW::GenGenLib qw( read_deps load_state );',
 		# Template opens the files itself: by the names
 		# the file system knows them by.
-		A_FS => $can_locale ? "to_fs(\$D->{a}, 'E')" : '$D->{a}',
-		APATH_FS => $can_locale ? "to_fs(\$apath, 'E')" : '$apath',
+		# (the provider names files itself)
+		APATH_FS => $can_locale && !$provider ? "to_fs(\$apath, 'E')" : '$apath',
+		USE_PROVIDER => $provider ? "use $PROVIDER;\n" : '',
+		TT_NEW => $provider ? <<"NEW" : <<"OLD",
+#
+# What is loaded is what the header (of \$apath, or of what it
+# declares, and so on) declares: see $PROVIDER.
+# CHECK_DEPS => 0 loads anything, and reads no header.
+#
+my \$provider = $PROVIDER->new({
+	SOURCE => \$apath,
+	D => \$D,
+	ENCODING => 'UTF-8',
+	INCLUDE_PATH => [ '.', \$D->{a} ],
+})
+	or die "[TT] ", $PROVIDER->error(), "\\n";
+my \$tt = Template->new({ LOAD_TEMPLATES => [ \$provider ] })
+	or die "[TT] ", \$Template::ERROR, "\\n";
+NEW
+my \$tt = Template->new({
+	ENCODING => 'UTF-8',
+	INCLUDE_PATH => [ '.', @{[ $can_locale ? "to_fs(\$D->{a}, 'E')" : '$D->{a}' ]} ],
+})
+	or die "[TT] ", \$Template::ERROR, "\\n";
+OLD
 		BPATH_FS => $can_locale ? "to_fs(\$bpath, 'E')" : '$bpath',
 		USE_GENLIB => $can_valoc
 			? "use RdKw::WwW::GenLib $GENLIB_NEW qw( locate );"

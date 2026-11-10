@@ -13,6 +13,7 @@ my @modules = qw(
 	engine
 	gengenlib
 	genlib
+	template-provider
 );
 
 my $Me = basename($0);

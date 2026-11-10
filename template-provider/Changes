@@ -1,0 +1,10 @@
+Revision history of WwW-GenGenLib-Template-Provider
+
+
+0.00_00
+    + RdKw::WwW::GenGenLib::Template::Provider: a Template
+      Toolkit provider that names files as the locale does
+      (to_fs of GenGenLib 0.0100), and loads only what the
+      source declares in its header, or what those declare
+      in theirs (walk_deps).  CHECK_DEPS => 0 stays shallow:
+      anything may be loaded, and no header is read.

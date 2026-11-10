@@ -17,7 +17,7 @@ for my $m (qw( Template RdKw::WwW::GenLib )) {
 	eval "require $m; 1" or plan skip_all => "$m is not installed";
 }
 my $script = script_path();
-plan tests => 30;
+plan tests => 29;
 # The preset comes from the built share (not from an installed one, which
 # is what File::ShareDir would find if the build is not in front)
 local $ENV{PERL5LIB} = join ':', project_root() . '/blib/lib', perl5lib();
@@ -150,7 +150,7 @@ for my $case (
 # it declares
 SKIP: {
 	eval { require RdKw::WwW::GenGenLib::Template::Provider; 1 }
-		or skip 'RdKw::WwW::GenGenLib::Template::Provider is not installed', 4;
+		or skip 'RdKw::WwW::GenGenLib::Template::Provider is not installed', 3;
 	my $run = sub {
 		open my $fh, '-|' or do {
 			chdir 'project' or die $!;
@@ -173,6 +173,6 @@ SKIP: {
 	is($status ? $out : slurp('project/out.html'), "included\n", 'a declared INCLUDE is loaded');
 	spew('project/src/x.html', "[%#\n# HAVE: \${a}/x.html\n-%]\n[% INCLUDE inc.html %]\n");
 	($status, $out) = $run->('bin/render-checked', '-B', "$tmp/B", 'src/x.html', 'out.html');
-	isnt($status, 0, 'an undeclared one is not');
-	like($out, qr/undeclared dependency `src\/inc\.html'/, '... and named');
+	is($status ? $out : slurp('project/out.html'), "included\n",
+		'... and by default, an undeclared one too, as Template would');
 }

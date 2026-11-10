@@ -9,6 +9,8 @@ lib/RdKw/WwW/SiteConf/Modifiers.pm
 lib/RdKw/WwW/SiteConf/Ninja.pm
 script/siteconf
 share/configure.in
+share/presets/tem.config
+share/presets/tem.render
 share/presets/web.config
 share/presets/web.render
 t/00-load.t
@@ -16,6 +18,7 @@ t/clean.t
 t/configure.t
 t/e2e-make.t
 t/e2e-ninja.t
+t/general.t
 t/graph.t
 t/init.t
 t/manifest.t

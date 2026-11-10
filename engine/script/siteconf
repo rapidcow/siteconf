@@ -39,7 +39,7 @@ siteconf - configurable incremental build script generator
     #
     # -D, -O: defaults for definitions and options (see ./configure -h)
     #
-    # -P: preset, such as web (the default is none)
+    # -P: preset, such as web or tem (the default is none)
     #
 
     ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
@@ -69,6 +69,10 @@ are rendered through Template Toolkit; by convention with the
 namespaces C<D> and C<O>, the variable C<location>, and the function
 C<locate>, though it is each F<render> that decides;
 see L<RdKw::WwW::GenLib/SYNOPSIS>.
+
+The C<tem> preset (C<-P tem>) is the same without the web: F<render>
+gives a template C<D> and C<O>, and nothing else, and F<configure>
+asks for no options (nor GenLib).  It needs GenGenLib 0.0100.
 
 For the generated script, see L<RdKw::WwW::SiteConf::Configure>.
 
@@ -479,8 +483,7 @@ sub do_init
 			or version_ge($mods{'RdKw::WwW::GenGenLib'}, $GENGENLIB_NEW)
 			or $mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
 		$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
-		$user{'RdKw::WwW::GenLib'} or
-			$mods{'RdKw::WwW::GenLib'} = $GENLIB_NEW;
+		# (what the preset said, if it says anything: -P tem does not)
 		$opt->{genlib_min} = $mods{'RdKw::WwW::GenLib'};
 		# (only ever because -M said so: no preset asks for it)
 		$opt->{provider} = $user{$PROVIDER} && exists $mods{$PROVIDER};

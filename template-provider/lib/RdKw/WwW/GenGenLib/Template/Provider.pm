@@ -366,7 +366,7 @@ sub _authorized
 			my $why = $self->{REFUSED}{$dep};
 			return (undef, defined $why
 				? "@{[ $self->_named($dep) ]} is declared, but forbidden because $why "
-					. ($why eq 'ALLOW_PREFIXES' ? 'does not have its root' : 'is unset')
+					. ($why eq 'ALLOW_PREFIXES' ? 'does not permit its root' : 'is unset')
 				: "undeclared dependency: @{[ $self->_named($dep) ]}");
 		}
 		if ($kind && !($self->{ALLOW_DEPS} && $declared) && !$self->{"TT_$kind"}) {

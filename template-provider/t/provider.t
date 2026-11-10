@@ -236,7 +236,7 @@ is_deeply(provider()->{REFUSED}, {}, '... by default, any');
 ok(!eval { provider(ALLOW_PREFIXES => [ '${a}/x' ]) }, '... and a root is all it may be');
 ($ok, $out, $err) = render("# NEED: \${inc}/secret\n", '[% INCLUDE secret %]',
 	{}, ALLOW_PREFIXES => [ '${a}' ], CHECK_DEPS => 1);
-like("$err", qr/`include\/secret' is declared, but forbidden because ALLOW_PREFIXES does not have its root/,
+like("$err", qr/`include\/secret' is declared, but forbidden because ALLOW_PREFIXES does not permit its root/,
 	'... and CHECK_DEPS says so');
 
 # --- no header, unless an option asks

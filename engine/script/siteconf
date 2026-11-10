@@ -214,17 +214,19 @@ use PerlIO::encoding ();
 use RdKw::WwW::GenGenLib qw( to_fs un_fs escape_dep );
 use RdKw::WwW::SiteConf;
 
+# GenLib with non-broken varargs locate
+our $GENLIB_NEW = '0.0203';
 # GenGenLib with norm_dep, subs_dep and uproot.
 our $GENGENLIB_NEW = '0.0002';
 # GenGenLib that is locale-aware
 our $GENGENLIB_LOCALE = '0.0100';
-# The least a preset's render can do with: tem is no older than the
-# GenGenLib that spells names as the locale does, and has no other way
-my %PRESET_GENGENLIB = ( tem => $GENGENLIB_LOCALE );
-# What render loads templates with, if (and only if) -M says so
+# Our preferred provider, if (and only if) the user requests it via -M
 our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
-# GenLib with non-broken varargs locate
-our $GENLIB_NEW = '0.0203';
+
+# The minimum version a preset's render supports: -P tem is here
+# due to its belated inclusion, while -P web isn't because it has
+# been around for much longer.
+my %PRESET_GENGENLIB = ( tem => $GENGENLIB_LOCALE );
 
 # What we say is for people: as the locale says, or \x{...} where it
 # cannot (rather than a warning about each one)
@@ -656,15 +658,30 @@ NEW
 		USE_PROVIDER => $provider ? "use $PROVIDER;\n" : '',
 		TT_NEW => $provider
 			? <<"NEW"
-# This uses a provider that provides access to out-of-tree
-# builds, even if they contain absolute paths, as long as
-# they are declared in a NEED/WANT header.  (It is possible
-# to disable this with ALLOW_DEPS => 0, or reinforce that
-# all access be declared with CHECK_DEPS => 1.)
+# This provider encodes file paths to the system locale,
+# and additionally grants access to named dependencies
+# that are declared in the same headers siteconf reads.
+# Namely, the NEEDs and WANTs are followed recursively
+# starting at the SOURCE and added to a whitelist that
+# bypasses the regular RELATIVE/ABSOLUTE restrictions.
+# This whitelist can be disabled with ALLOW_DEPS => 0.
+# You can also require that all file access be declared
+# with such a dependency header with CHECK_DEPS => 1,
+# in case that helps keeping your templates up-to-date.
 #
-# Also file paths are encoded to the system locale; that's
-# one reason to put up with this guy instead of the default
-# Template Provider. ;)
+# By default, any symbolic prefix is permitted, though
+# only the standard \${a}, \${B}/\${b}, \${B}/\${c} are
+# tried for composing diagnostic messages.  To impose
+# an explicit whitelist of symbolic prefixes, specify
+# ALLOW_PREFIXES => [qw( \${a} \${B}/\${b} \${B}/\${c}
+# \${custom} ... )].  To have more prefixes considered
+# for diagnostic messages, pass PREFIXES => [qw( \${a}
+# \${B}/\${b} \${B}/\${c} \${custom} ... )].  In both cases
+# it is possible to opt out of any standard ones by
+# omitting them from the explicit list.
+#
+# There are more options documented in the perldoc of
+# $PROVIDER.
 #
 my \$provider = $PROVIDER->new({
 	SOURCE => \$apath,

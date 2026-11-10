@@ -664,7 +664,7 @@ NEW
 # that are declared in the same headers siteconf reads.
 # Namely, the NEEDs and WANTs are followed recursively
 # starting at the SOURCE and added to a whitelist that
-# bypasses the regular RELATIVE/ABSOLUTE restrictions.
+# bypasses the regular RELATIVE / ABSOLUTE restrictions.
 # This whitelist can be disabled with ALLOW_DEPS => 0.
 # You can also require that all file access be declared
 # with such a dependency header with CHECK_DEPS => 1,
@@ -681,7 +681,7 @@ NEW
 # it is possible to opt out of any standard ones by
 # omitting them from the explicit list.
 #
-# There are more options documented in the perldoc of
+# More options documented in the perldoc of
 # $PROVIDER.
 #
 my \$provider = $PROVIDER->new({

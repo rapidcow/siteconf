@@ -642,17 +642,21 @@ NEW
 		USE_PROVIDER => $provider ? "use $PROVIDER;\n" : '',
 		TT_NEW => $provider ? <<"NEW" : <<"OLD",
 #
-# What is loaded is what the header (of \$apath, or of what it
-# declares, and so on) declares: see $PROVIDER.
-# CHECK_DEPS => 0 loads what is not declared too, as Template
-# would (and ALLOW_DEPS => 0 does not read the header at all).
+# This is a provider that provides access to out-of-tree
+# builds, even if they contain absolute paths, as long as
+# they are declared in a NEED/WANT header.  (It is possible
+# to disable this with ALLOW_DEPS => 0, or reinforce that
+# all access be declared with CHECK_DEPS => 1.)
+#
+# Also file paths are encoded to the system locale; that's
+# one reason to put up with this guy instead of the default
+# Template Provider. ;)
 #
 my \$provider = $PROVIDER->new({
 	SOURCE => \$apath,
 	D => \$D,
 	ENCODING => 'UTF-8',
 	INCLUDE_PATH => [ '.', \$D->{a} ],
-	CHECK_DEPS => 1,
 })
 	or die "[TT] ", $PROVIDER->error(), "\\n";
 my \$tt = Template->new({ LOAD_TEMPLATES => [ \$provider ] })

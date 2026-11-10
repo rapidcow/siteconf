@@ -14,9 +14,9 @@
 # To invoke this, add to your Makefile.in (or whatever
 # you set your "R" path to):
 #
-#    page.txt: NEED:${A}/@PATH@
-#       cd -- ${A:Q} && ${^X} @PATH_Q@ -B ${B:Q} \
-#          -- ${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}
+#    page.txt: @PATH@
+#       cd -- $A && ${^X} @PATH_Q@ -B $B \
+#          -- $a/${.IMPSRC} $B/$b/${.TARGET}
 #
 # (Multiple files are okay!)  A template sees D (MY/config.mk)
 # and O (MY/option.mk), and nothing else.

@@ -27,13 +27,13 @@ my $plan = {
 	order => ['x'], dirs => [],
 	node => { x => { bpath => 'site/x', recipe => '', deps => ['in/x'] } },
 };
-ok(!eval { RdKw::WwW::SiteConf::Ninja::_emit($plan); 1 }, 'no recipe, no build');
+ok(!eval { RdKw::WwW::SiteConf::Ninja->_emit($plan); 1 }, 'no recipe, no build');
 like($@, qr/no recipe/, '... says so');
 
 $plan->{node}{x}{recipe} = "\tcp \$< \$\@\n";
 $plan->{node}{x}{deps} = [ 'in/x', 'a b', 'site/.ok' ];
 $plan->{dirs} = [ { dir => 'site', marker => 'site/.ok', deps => [] } ];
-my $text = RdKw::WwW::SiteConf::Ninja::_emit($plan);
+my $text = RdKw::WwW::SiteConf::Ninja->_emit($plan);
 like($text, qr/^build site\/x: rule1 in\/x \| a\$ b \|\| site\/\.ok$/m,
 	'input, implicit (escaped), order-only');
 like($text, qr/^default all$/m, 'default goal');
@@ -41,6 +41,6 @@ like($text, qr/^build all: phony site\/x$/m, 'goal');
 
 $plan->{node}{x}{nosrc} = 1;
 $plan->{node}{x}{deps} = [ 'a b', 'site/.ok' ];
-$text = RdKw::WwW::SiteConf::Ninja::_emit($plan);
+$text = RdKw::WwW::SiteConf::Ninja->_emit($plan);
 like($text, qr/^build site\/x: rule1 \| a\$ b \|\| site\/\.ok$/m,
 	'no source, no input: the first dependency is not one');

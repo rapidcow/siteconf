@@ -32,7 +32,7 @@ sub project {
 my $manifest = "MAKE all\n\tNEED a.css\n\tNEED d/b.css\nMAKE small\n\tNEED a.css\n";
 sub plan_of { RdKw::WwW::SiteConf->new(B => $_[0], quiet => 1)->plan }
 sub names { join ' ', map { $_->{name} } @{ $_[0]{clean} } }
-sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make::_emit($_[0]) }
+sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make->_emit($_[0]) }
 
 # --- the default is what it always was
 {

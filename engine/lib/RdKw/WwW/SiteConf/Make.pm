@@ -10,7 +10,7 @@ RdKw::WwW::SiteConf::Make - Makefile backend for siteconf
 
 =head1 SYNOPSIS
 
-    my $text = RdKw::WwW::SiteConf::Make::_emit($plan);
+    my $text = RdKw::WwW::SiteConf::Make->_emit($plan);
 
 =head1 DESCRIPTION
 
@@ -27,18 +27,15 @@ space, a control, a C<$>, any of C<#:;=|(){}[]*?>, a C<\> at the
 end or a C<~> in front is an error here; L<RdKw::WwW::SiteConf::GMake>
 escapes most of those.
 
+Names are spelled by C<< $class->_name >>, so that a subclass need
+only say how else to spell them.
+
 =cut
 
 sub _emit
 {
-	my ($plan) = @_;
-	_makefile($plan, \&_name);
-}
-
-# The Makefile, with names as `name' spells them
-sub _makefile
-{
-	my ($plan, $name) = @_;
+	my ($class, $plan) = @_;
+	my $name = sub { $class->_name(@_) };
 	my $D = $plan->{D};
 	my @goal = @{ $plan->{goals} };
 	my $out = <<MAKE;
@@ -80,19 +77,19 @@ MAKE
 # A name, as any make reads it: as it is, or not at all
 sub _name
 {
-	my ($s) = @_;
+	my ($class, $s) = @_;
 	$s =~ /([\p{Cc} \x{2028}\x{2029}\$#:;=|(){}\[\]*?]|\\\z|\A~)/ or return $s;
 	my $c = $1;
 	require RdKw::WwW::SiteConf::GMake;
-	my $gnu = eval { RdKw::WwW::SiteConf::GMake::_name($s); 1 };
-	die "E: make cannot name `$s' (with " . _char($c) . " in it)"
+	my $gnu = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
+	die "E: make cannot name `$s' (with " . $class->_char($c) . " in it)"
 		. ($gnu ? "; GNU make can (-G gmake)" : "") . "\n";
 }
 
 # A character, as one would see it said
 sub _char
 {
-	my ($c) = @_;
+	my ($class, $c) = @_;
 	$c =~ /\A[!-~]\z/ ? "`$c'" : sprintf 'U+%04X', ord $c;
 }
 

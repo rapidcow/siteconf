@@ -1256,7 +1256,7 @@ sub generate
 		" -$_ " . shell_quote($self->{fromhere}{$_})
 	} sort keys %{ $self->{fromhere} };
 	$plan->{prog} .= " -o " . shell_quote($out) if $named;
-	my $text = $module->can('_emit')->($plan);
+	my $text = $module->_emit($plan);
 	$self->_report($outfile, update_file("$self->{B}/$outfile", $text));
 
 	# What to type next: the builder (named after the generator), with

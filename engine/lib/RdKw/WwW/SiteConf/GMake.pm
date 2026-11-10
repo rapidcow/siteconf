@@ -5,13 +5,15 @@ use strict;
 use warnings;
 use RdKw::WwW::SiteConf::Make ();
 
+our @ISA = qw( RdKw::WwW::SiteConf::Make );
+
 =head1 NAME
 
 RdKw::WwW::SiteConf::GMake - GNU Makefile backend for siteconf
 
 =head1 SYNOPSIS
 
-    my $text = RdKw::WwW::SiteConf::GMake::_emit($plan);
+    my $text = RdKw::WwW::SiteConf::GMake->_emit($plan);
 
 =head1 DESCRIPTION
 
@@ -28,19 +30,13 @@ name that ends in parentheses, which would be an archive member.
 
 =cut
 
-sub _emit
-{
-	my ($plan) = @_;
-	RdKw::WwW::SiteConf::Make::_makefile($plan, \&_name);
-}
-
 # A name, as GNU make reads it
 sub _name
 {
-	my ($s) = @_;
+	my ($class, $s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029};=]|\\\z)/
 		and die "E: GNU make cannot name `$s' (with "
-			. RdKw::WwW::SiteConf::Make::_char($1) . " in it)\n";
+			. $class->_char($1) . " in it)\n";
 	$s =~ /\(.*\)\z/s
 		and die "E: GNU make cannot name `$s' (it would be an archive member)\n";
 	$s =~ s/\$/\$\$/g;

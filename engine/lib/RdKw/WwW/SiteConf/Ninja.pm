@@ -10,7 +10,7 @@ RdKw::WwW::SiteConf::Ninja - build.ninja backend for siteconf
 
 =head1 SYNOPSIS
 
-    my $text = RdKw::WwW::SiteConf::Ninja::_emit($plan);
+    my $text = RdKw::WwW::SiteConf::Ninja->_emit($plan);
 
 =head1 DESCRIPTION
 
@@ -36,7 +36,7 @@ C<|> cannot be, and is an error.
 
 sub _emit
 {
-	my ($plan) = @_;
+	my ($class, $plan) = @_;
 	my @goal = @{ $plan->{goals} };
 
 	my $out = <<NINJA;

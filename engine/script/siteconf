@@ -247,7 +247,7 @@ EOM
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 eval { $_ = Encode::decode(locale => $_, Encode::FB_CROAK()) for @ARGV; 1 }
 	or die "$prog: cannot decode argv in current locale"
-		. " ($Encode::Locale::ENCODING_LOCALE): $@";
+		. " ($Encode::Locale::ENCODING_LOCALE)\n";
 
 my %opt = (S => {}, D => {}, O => {}, M => [], outputs => []);
 # What `-i' was told, in the order it was told, for the header of

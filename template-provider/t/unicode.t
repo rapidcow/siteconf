@@ -49,7 +49,7 @@ sub run
 {
 	my ($x, @opt) = @_;
 	my $p = $P->new({ SOURCE => '入口', INCLUDE_PATH => [ 'サイト' ],
-		D => { a => 'サイト' }, ENCODING => 'UTF-8', CHECK_DEPS => 1, @opt });
+		DEFINITION => { a => 'サイト' }, ENCODING => 'UTF-8', CHECK_DEPS => 1, @opt });
 	my $tt = Template->new({ LOAD_TEMPLATES => [ $p ] });
 	my $out = '';
 	my $ok = eval { $tt->process('入口', { x => $x }, \$out) };
@@ -59,7 +59,7 @@ sub run
 my ($ok, $out, $err) = run('ヘッダー.html');
 is($out, 'résumé', 'a source and an INCLUDE of any name') or diag $err;
 ($ok, $out, $err) = run('秘密');
-like("$err", qr/undeclared dependency `サイト\/秘密'/, 'and undeclared, of any name');
+like("$err", qr/undeclared dependency: `サイト\/秘密' \(\$\{a\}\/秘密\)/, 'and undeclared, of any name');
 ($ok, $out, $err) = run('秘密', CHECK_DEPS => 0);
 is($out, 'secret', '... unchecked, all the same');
 

@@ -23,3 +23,13 @@ Revision history of WwW-GenGenLib-Template-Provider
       A ${U+...} in a declaration is a character, not a
       variable, and RELATIVE_DEPS and ABSOLUTE_DEPS look at
       what it spells: ${U+002E}${U+002E}/ is ../ to them.
+
+    + Messages say what is wrong (undeclared dependency:
+      `file'), and not how to fix it; and name a file as a
+      header would too, after it, if one of the PREFIXES
+      leads there: `site/x' (${a}/x), escaped so that it is
+      one name in a header.  (Borrowed from Neocities code!)
+
+    + PREFIXES: those symbolic prefixes (by default ${a},
+      ${B}/${b} and ${B}/${c}).  The longest expansion wins;
+      then the shortest prefix, then the first in order.

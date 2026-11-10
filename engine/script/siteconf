@@ -668,7 +668,7 @@ NEW
 #
 my \$provider = $PROVIDER->new({
 	SOURCE => \$apath,
-	D => \$D,
+	DEFINITION => \$D,
 	ENCODING => 'UTF-8',
 	INCLUDE_PATH => [ '.', \$D->{a} ],
 })

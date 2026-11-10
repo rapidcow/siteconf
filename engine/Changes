@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf
 
 
-0.02_03  2026-11-08  RC
+0.02_03  2026-11-09  RC
     * Have render recommend $< / ${.IMPSRC} (i meant to do
       this yesterday or something but i forgot it lol u_u)
     *** Require GenGenLib 0.0003 (norm_dep (with pass_thru)

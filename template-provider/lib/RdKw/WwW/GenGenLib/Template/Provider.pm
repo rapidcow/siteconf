@@ -282,7 +282,7 @@ sub _authorized
 		if ($self->{CHECK_DEPS} && !$declared) {
 			my $why = $self->{REFUSED}{$dep};
 			return (undef, defined $why
-				? "`$dep' is declared, but may not be (set $why)"
+				? "`$dep' is declared, but forbidden because $why is unset"
 				: "undeclared dependency `$dep'; add NEED: $dep to $self->{ENTRY}");
 		}
 		if ($kind && !($self->{ALLOW_DEPS} && $declared) && !$self->{"TT_$kind"}) {

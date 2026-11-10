@@ -158,7 +158,7 @@ is_deeply($p->{REFUSED}, {}, '... unless the options say so');
 }
 
 ($ok, $out, $err) = render("# NEED: ../up/secret\n", q{[% INCLUDE '../up/secret' %]}, @strict);
-like("$err", qr/`\.\.\/up\/secret' is declared, but may not be \(set RELATIVE_DEPS\)/,
+like("$err", qr/`\.\.\/up\/secret' is declared, but forbidden because RELATIVE_DEPS is unset/,
 	'CHECK_DEPS: what may not be declared is said so');
 ($ok, $out, $err) = render("# NEED: ../up/secret\n", q{[% INCLUDE '../up/secret' %]});
 like("$err", qr/relative paths are not allowed/, '... and without it, it is just not declared');

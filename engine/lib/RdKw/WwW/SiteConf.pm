@@ -70,6 +70,20 @@ needs no F<html/a.md.html>.  Spelled out, C<${a}/${@}> brings the
 implied source back.  In a recipe, C<${<}> (or C<${.IMPSRC}>) is the
 source, relative to C<${a}> as C<${@}> is to the target tree.
 
+A prerequisite may say how firmly it is needed: C<NEED:x> is the same
+as plain C<x>, and C<WANT:x> is kept if it can be had (it exists, or it
+can be made), and is dropped with a warning if not -- as a C<WANT> in a
+header is.  What a C<WANT:> tool's header C<NEED>s is only wanted, too.
+The prefix is read as it is written, before anything is expanded, and
+is for each word the rest expands to.  It is in capitals and has
+nothing between it and the name (C<NEED: x> is an error), and nothing
+else may come before a colon in a prerequisite: C<need:x> and C<USE:x>
+are errors, so a file named F<NEED:> is C<NEED:NEED:>.  A first
+prerequisite with a prefix is never the source.
+
+    a.html: NEED:${A}/render NEED:${B}/MY/option.mk WANT:${A}/extra.css
+            cd -- ${A:Q} && ${^X} render -B ${B:Q} -- ${a}/${<} ${B:Q}/${b}/${@}
+
 A first prerequisite that is C<${a}> and nothing more (or C<${a}/>,
 C<${A}/${a}//>, any number of slashes) says there is no source: the
 target is made from the other prerequisites alone, and C<${<}> is an
@@ -225,9 +239,27 @@ my %reserved_goal = map { $_ => 1 } qw( Makefile MY );
 # nothing else.  A no-break space, say, is part of a name.
 my $SP = '\t\n\cK\f\r ';
 
+# A word of Makefile.in as it is written: a ${...} may hold spaces
+# (in :S/ /_/), and it is all one word.
+my $WORD = qr/(?:[^$SP\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+/;
+
+# The words of `s' as written (see $WORD).  Whatever is not one (an
+# unfinished ${, say) is the last, for _subst to say what is wrong.
+sub _raw_words
+{
+	my ($s) = @_;
+	my @word;
+	push @word, $1 while $s =~ /\G[$SP]*($WORD)/gco;
+	$s =~ /\G[$SP]*/gco;
+	my $rest = substr($s, pos($s) || 0);
+	push @word, $rest if length $rest;
+	@word;
+}
+
 # The words of `s', split as split ' ' would, at $SP alone.  (Matched,
-# not split: split takes /[$SP]+/ for /\s+/, which a no-break space in
-# an upgraded string is.)
+# not split: split /[$SP]+/ splits an upgraded string at a Unicode
+# space, in perl 5.34 and 5.44 at least, though the class alone never
+# matches one -- as if it were /\s+/.)
 sub _words
 {
 	my ($s) = @_;
@@ -691,12 +723,12 @@ sub _read_rules
 			for my $node (@node) {
 				my ($key, $name) = @$node;
 				my $rule = ($rule{$key} ||= { recipe => '', raw => [], deps => [],
-					name => $name, line => $line });
+					want => [], name => $name, line => $line });
 				my $dep = $dep;
 				if (!$rule->{decided} && $dep =~ /[^$SP]/o) {
 					$rule->{decided} = 1;
 					# the first word (a ${...} may hold spaces, in :S/ /_/)
-					my ($first) = $dep =~ /\A[$SP]*((?:[^$SP\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+)/o;
+					my ($first) = $dep =~ /\A[$SP]*($WORD)/o;
 					if (defined $first and defined(my $from = _source_of($first))) {
 						# ${a} alone says there is none (and ${<} is not known)
 						my $name_of = length $from ? $self->_subst($from, $name, $where) : '';
@@ -709,8 +741,22 @@ sub _read_rules
 						$dep =~ s/\A[$SP]*\Q$first\E//;
 					}
 				}
-				push @{ $rule->{deps} },
-					_words($self->_subst($dep, $name, $where));
+				# NEED:x (or just x) is a prerequisite, and WANT:x
+				# one that can be done without: said as it is written,
+				# before anything is expanded, and of each word it
+				# expands to.  Nothing else may come before a colon.
+				for my $word (_raw_words($dep)) {
+					my $kind = 'deps';
+					if ($word =~ s/\A([^$SP\$\/:]*)://o) {
+						$1 eq 'NEED' or $1 eq 'WANT'
+							or die "E: $where: `$1:$word': a prerequisite may say"
+								. " NEED: or WANT:, and nothing else, before a colon\n";
+						$kind = $1 eq 'WANT' ? 'want' : 'deps';
+						length $word or die "E: $where: `$1:' of nothing\n";
+					}
+					push @{ $rule->{$kind} },
+						_words($self->_subst($word, $name, $where));
+				}
 			}
 			next;
 		}
@@ -801,6 +847,7 @@ sub _node
 	my @hneed = map { [ $_, $self->_dep($_, $where), "in header$from" ] } @{ $I{NEED} || [] };
 	my @hwant = map { [ $_, $self->_dep($_, $where), "in header$from" ] } @{ $I{WANT} || [] };
 	my @rdep = map { [ $_, $_, "prerequisite in $D->{R} line $rule->{line}" ] } @{ $rule->{deps} };
+	my @rwant = map { [ $_, $_, "WANT: in $D->{R} line $rule->{line}" ] } @{ $rule->{want} || [] };
 	# What the source files we NEED (or WANT) say they need, and so on:
 	# like gcc -MM, which lists the headers of headers.
 	{
@@ -840,6 +887,11 @@ sub _node
 		push @hneed, @$need;
 		push @hwant, @$want;
 	}
+	# (and what a tool we can do without needs, we can do without too)
+	for my $dep (@{ $rule->{want} || [] }) {
+		my ($need, $want) = $self->_tool($dep, $file, $rule);
+		push @hwant, @$need, @$want;
+	}
 
 	my @deps = $nosrc ? () : ($apath);
 	my %tree = map { File::Spec->canonpath($D->{$_}) => 1 } qw( b c );
@@ -868,7 +920,7 @@ sub _node
 	for my $d (@rdep, @hneed) {
 		$check->(@$d, 0) and push @deps, $d->[1];
 	}
-	for my $d (@hwant) {
+	for my $d (@rwant, @hwant) {
 		if ($check->(@$d, 1)) {
 			push @deps, $d->[1];
 		} else {

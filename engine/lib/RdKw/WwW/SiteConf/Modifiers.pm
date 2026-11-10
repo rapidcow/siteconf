@@ -196,7 +196,8 @@ Private; for L<RdKw::WwW::SiteConf>.
 sub _words
 {
 	my ($s) = @_;
-	# (not split, which takes this for /\s+/: see RdKw::WwW::SiteConf)
+	# (We cannot use split, since it would eat Unicode spaces:
+	# see _words in RdKw::WwW::SiteConf.)
 	$s =~ /([^\t\n\cK\f\r ]+)/g;
 }
 

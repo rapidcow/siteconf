@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 138;
+use Test::More tests => 154;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -619,4 +619,54 @@ MSG
 	});
 	$plan = plan_of($dir);
 	ok($plan->{node}{'a.html'}{ok}, 'but what a WANT NEEDs is only wanted');
+}
+
+# --- NEED: and WANT: in Makefile.in: said before anything is expanded,
+# in capitals, with nothing in between; nothing else before a colon
+{
+	my $rule = sub {
+		my ($deps, %f) = @_;
+		my $dir = project({
+			MANIFEST => $manifest,
+			'Makefile.in' => "a.html: $deps\n\ttrue\nb.css:\n\ttrue\n",
+			'html/a.html' => '', 'html/b.css' => '', y => '', %f,
+		});
+		my $plan = eval { plan_of($dir) };
+		($plan, $@);
+	};
+	my ($p, $err) = $rule->('NEED:${A}/x WANT:${A}/gone WANT:${A}/y ${A}/y');
+	is_deeply($p && $p->{node}{'a.html'}{deps}, [qw( html/a.html x y site/.ok )],
+		'NEED: is needed, WANT: kept if there, dropped if not') or diag $err;
+
+	($p, $err) = $rule->('WANT:${B}/${b}/b.css WANT:${B}/${b}/c.css');
+	is_deeply($p && $p->{node}{'a.html'}{deps}, [qw( html/a.html site/b.css site/.ok )],
+		'WANT: of what we make (or cannot)') or diag $err;
+	is_deeply($p && $p->{node}{'a.html'}{kids}, ['b.css'], '... is an edge when it can be made');
+
+	($p, $err) = $rule->('NEED:${A}/gone');
+	like($err, qr/NEEDs `gone' \(prerequisite in \S*Makefile\.in line 1\), which we don't seem to have/,
+		'NEED: is as firm as no prefix at all');
+
+	($p, $err) = $rule->('NEED:NEED:', 'NEED:' => '');
+	is_deeply($p && $p->{node}{'a.html'}{deps}, [ 'html/a.html', 'NEED:', 'site/.ok' ],
+		'NEED:NEED: is the file NEED:') or diag $err;
+
+	($p, $err) = $rule->('NEED:${a}/y.txt', 'html/y.txt' => '');
+	is_deeply($p && $p->{node}{'a.html'}{deps}, [qw( html/a.html html/y.txt site/.ok )],
+		'a first prerequisite with a prefix is not the source');
+
+	($p, $err) = $rule->('WANT:${A}/tool', tool => lines( NEED => [qw[ gen/Mod.pm ]] ));
+	is_deeply($p && $p->{node}{'a.html'}{deps}, [qw( html/a.html tool site/.ok )],
+		'what a WANTed tool NEEDs is only wanted') or diag $err;
+
+	for my $bad ('need:x', 'Want:x', 'USE:x', 'x:y', ':x', 'NEED-ONLY:x') {
+		($p, $err) = $rule->($bad);
+		like($err, qr/may say NEED: or WANT:, and nothing else, before a colon/, "rejected: $bad");
+	}
+	($p, $err) = $rule->('NEED:');
+	like($err, qr/`NEED:' of nothing/, 'NEED: of nothing');
+	($p, $err) = $rule->('NEED: ${A}/x');
+	like($err, qr/`NEED:' of nothing/, '... no space after it');
+	($p, $err) = $rule->('${A}/${a:S/h/h/}/a.html NEED:${A}/${a:Q}/b.css');
+	ok($p, 'a colon in ${...} is no prefix') or diag $err;
 }

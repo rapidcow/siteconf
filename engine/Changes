@@ -29,6 +29,13 @@ Revision history of WwW-SiteConf
         name now, as it is to read_deps (GenGenLib 0.0100), so
         render may be named with one.  So are :T, :S and the
         like, and ninja's recipes.
+    + Prerequisites in Makefile.in may say NEED:x (the same as
+      x) or WANT:x (kept if it can be had, dropped with a
+      warning if not, like a WANT in a header).  In capitals,
+      with no space after the colon; any other prefix is an
+      error (NEED:NEED: for a file named `NEED:').
+    *** So a prerequisite with a colon before any `/' or `$'
+        (other than those two prefixes) is an error now.
 
 
 0.02_03  2026-11-09  RC

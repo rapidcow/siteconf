@@ -9,6 +9,18 @@ use Test::More ();
 use parent qw( Exporter );
 our @EXPORT_OK = qw( project_root script_path perl5lib );
 
+# What Test::More says (names, and got and expected when a test fails)
+# is said as the locale says, with \x{...} where it cannot, as siteconf
+# says it.  It prints to its own handles, not to STDOUT and STDERR.
+{
+	require Encode;
+	require Encode::Locale;
+	require PerlIO::encoding;
+	local $PerlIO::encoding::fallback = Encode::PERLQQ();
+	my $tb = Test::More->builder;
+	binmode $tb->$_, ':encoding(console_out)' for qw( output failure_output todo_output );
+}
+
 # Resolve while loading, before a test changes to its temporary directory.
 my $root = abs_path(File::Spec->catdir(dirname(__FILE__), '..', '..'));
 

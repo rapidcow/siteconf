@@ -11,7 +11,7 @@ use E2E qw( lines );
 use Cwd ();
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
-use RdKw::WwW::GenGenLib qw( write_make );
+use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 use RdKw::WwW::SiteConf;
 
 # A project in a directory of its own.  %f is name => contents.
@@ -753,12 +753,12 @@ MSG
 		'a\\*b' => 'a\\\\[*]b', 'a%b' => 'a%b', 'a(b' => 'a(b', 'a~' => 'a~',
 	);
 	for my $name (sort keys %gmake) {
-		is(eval { RdKw::WwW::SiteConf::GMake->_name($name) }, $gmake{$name}, "GNU make: `$name'")
+		is(eval { RdKw::WwW::SiteConf::GMake->_name($name) }, $gmake{$name}, "GNU make: `" . escape_dep($name) . "'")
 			or diag $@;
 	}
 	for my $name ("a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a;b', 'a=b', 'a\\', 'a(b)') {
 		ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name($name) }
-			&& $@ =~ /\AE: GNU make cannot name/, "GNU make cannot: `$name'");
+			&& $@ =~ /\AE: GNU make cannot name/, "GNU make cannot: `" . escape_dep($name) . "'");
 	}
 	is(RdKw::WwW::SiteConf::Make->_name("a+b,c\x{e9}\x{a0}%\\d"), "a+b,c\x{e9}\x{a0}%\\d",
 		'make: what needs no escape is as it is');
@@ -766,7 +766,7 @@ MSG
 		&& $@ =~ /make cannot name `a;b' \(with `;' in it\)$/, '... and there is no -G gmake for some');
 	for my $name ("a\nb", "a\rb", "a\x{2028}b", 'a|b') {
 		ok(!defined eval { RdKw::WwW::SiteConf::Ninja::_path($name) }
-			&& $@ =~ /\AE: ninja cannot name/, "ninja cannot: `$name'");
+			&& $@ =~ /\AE: ninja cannot name/, "ninja cannot: `" . escape_dep($name) . "'");
 	}
 	is(RdKw::WwW::SiteConf::Ninja::_path("a b:c\$d\te#f"), "a\$ b\$:c\$\$d\te#f", 'ninja: escaped');
 }

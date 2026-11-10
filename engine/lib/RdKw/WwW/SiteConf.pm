@@ -1039,8 +1039,8 @@ sub _tool
 				or die "E: $dep: You HAVE `$I{HAVE}'"
 					. ($have eq $I{HAVE} ? "" : " (aka `$have')")
 					. ",\n"
-					. "E: but I need `$dep' (for the rule for `$file',"
-					. " $self->{D}{R} line $rule->{line})?\n";
+					. "E: but I need `$dep' for the rule for `$file'"
+					. " ($self->{D}{R} line $rule->{line})?\n";
 		}
 		my $where = $dep;
 		{

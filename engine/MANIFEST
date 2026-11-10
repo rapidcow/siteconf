@@ -32,3 +32,4 @@ t/fixture/web/html/style.css
 t/fixture/web/html/sub/index.html
 t/fixture/web/html/extra/index.html
 t/fixture/web/skel/HTML
+t/unicode.t

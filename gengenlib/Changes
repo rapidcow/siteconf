@@ -1,6 +1,17 @@
 Revision history of WwW-GenGenLib
 
 
+0.01_00
+    *** Perl 5.8 is required, and so is Encode::Locale.
+    *** File names are character strings: read_make, write_make,
+        update_file, load_state, read_deps and walk_deps encode
+        them to the file system locale (locale_fs), and die if
+        a name cannot be spelled there.  Pass decoded names; a
+        UTF-8 byte string will be encoded a second time.  What
+        is in the files is UTF-8, as it always was.
+    + to_fs, un_fs: the same, for anyone else (un_fs is
+      for what the system gives back: getcwd, glob, ...).
+
 0.00_03  2026-11-08  RC
     + norm_deps: pass_thru => 1 preserves unrecognized dollar
       syntax (for Makefile.in's dependency parameter expansion

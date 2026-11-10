@@ -1,10 +1,10 @@
 package RdKw::WwW::SiteConf;
 
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '0.02_03';
+our $VERSION = '0.03_00';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -188,6 +188,14 @@ C<NEED>s exists.  The resolved goals are written to
 F<MY/MANIFEST.I<goal>> in the very same format (all C<NEED>, with
 what was dropped left as comments).
 
+File names, here and in what we are given, are character strings:
+they are spelled as the file system's locale says (see
+L<RdKw::WwW::GenGenLib/to_fs>) on their way out to the system, and a
+name it cannot spell is an error.  What is in the files is UTF-8, the
+build file we write included; so a name that is not ASCII is found by
+L<make(1)> or L<ninja(1)> only where the file system's locale is UTF-8
+too.
+
 =head1 METHODS
 
 =over
@@ -198,9 +206,9 @@ use File::Basename qw( dirname basename );
 use Cwd qw( abs_path );
 use File::Spec ();
 
-use RdKw::WwW::GenGenLib 0.0003 qw(
+use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_make read_deps update_file
-	norm_dep uproot );
+	norm_dep uproot to_fs un_fs );
 use RdKw::WwW::SiteConf::Modifiers;
 
 # Goals of the manifest cannot take these names; `Makefile' because
@@ -228,7 +236,7 @@ sub new
 	}, $class;
 
 	my $conf = "$self->{B}/MY/config.mk";
-	-f $conf or die <<RUSH;
+	-f to_fs($conf, 'E') or die <<RUSH;
 E: You have not configured!  (no $conf)
 E: You should ./configure first. ;)
 RUSH
@@ -261,10 +269,12 @@ RUSH
 		and die "E: `clean' may be made of letters, digits and -_.+& only: $D{clean}\n";
 	$self->{D} = \%D;
 	# The build directory and the project root, as they really are
-	$self->{Babs} = abs_path($self->{B});
-	$self->{Rabs} = abs_path($self->_fs($D{A}));
+	# (and as characters, like every other name)
+	$self->{Babs} = abs_path(to_fs($self->{B}, 'E'));
+	$self->{Rabs} = abs_path(to_fs($self->_fs($D{A}), 'E'));
 	defined $self->{Babs} && defined $self->{Rabs}
 		or die "E: cannot find the build dir or the source tree: $!\n";
+	$_ = un_fs($_, 'E') for @$self{qw( Babs Rabs )};
 	$self->{fromhere} = \%fromhere;
 	$self;
 }
@@ -464,7 +474,8 @@ sub read_manifest
 		open $fh, '<:encoding(UTF-8)', $file or die "E: open <string: $!\n";
 		$file = 'MANIFEST';
 	} else {
-		open $fh, '<:encoding(UTF-8)', $file or die "E: open <$file: $!\n";
+		open $fh, '<:encoding(UTF-8)', to_fs($file, 'E')
+			or die "E: open <$file: $!\n";
 	}
 
 	my (@goal, %seen, $goal);
@@ -548,7 +559,7 @@ sub _subst
 				. " (its first prerequisite is \${a})\n";
 			$val = $src;
 		} elsif ($x eq '^X' or $x eq "\030") {
-			$val = $^X;
+			$val = un_fs($^X, 'E');
 		} else {
 			defined $D->{$x} or die "E: $where: undefined variable: \${$x}\n";
 			$val = $D->{$x};
@@ -620,7 +631,7 @@ sub _read_rules
 	my ($self) = @_;
 	my $D = $self->{D};
 	my $file = File::Spec->canonpath($D->{R});
-	open my $fh, '<:encoding(UTF-8)', $file
+	open my $fh, '<:encoding(UTF-8)', to_fs($file, 'E')
 		or die "E: open <$file: $!\n";
 
 	my (%rule, @node, $stanza);
@@ -746,7 +757,7 @@ sub _node
 		$fail->("No rule to make it ($D->{R})");
 		return $done->();
 	}
-	unless ($nosrc or -f $self->_fs($apath)) {
+	unless ($nosrc or -f to_fs($self->_fs($apath), 'E')) {
 		$fail->("Source `$apath' is missing"
 			. ($rule->{line} ? " (rule at $D->{R} line $rule->{line})" : ""));
 		return $done->();
@@ -829,7 +840,7 @@ sub _node
 			push @{ $node->{kids} }, $made unless grep { $_ eq $made } @{ $node->{kids} };
 			return 1;
 		}
-		return 1 if -e $self->_fs($dep);
+		return 1 if -e to_fs($self->_fs($dep), 'E');
 		unless ($soft) {
 			my $hint = $said =~ m!\AMY/(?:config|option)\.mk\z! ? " (is it \${B}/$said?)" : "";
 			$fail->("NEEDs `$dep' ($from), which we don't seem to have$hint");
@@ -863,7 +874,7 @@ sub _inherit
 	my ($self, $dep) = @_;
 	my $got = $self->{inherit}{$dep} ||= do {
 		my $fs = $self->_fs($dep);
-		my %I = !defined $self->_target($dep) && -f $fs && -T _
+		my %I = !defined $self->_target($dep) && -f to_fs($fs, 'E') && -T _
 			? read_deps($fs) : ();
 		my $where = $dep;
 		[
@@ -913,7 +924,7 @@ sub _tool
 	my ($self, $dep, $file, $rule) = @_;
 	my $tool = $self->{tool}{$dep} ||= do {
 		my $fs = $self->_fs($dep);
-		my %I = !defined $self->_target($dep) && -f $fs && -T _
+		my %I = !defined $self->_target($dep) && -f to_fs($fs, 'E') && -T _
 			? read_deps($fs) : ();
 		if (defined $I{HAVE}) {
 			my $have = $self->_dep($I{HAVE}, "$dep: HAVE");
@@ -1135,8 +1146,8 @@ sub generate
 		$self->_report($name, update_file("$My/$name", $self->manifest_text($goal)));
 	}
 	# Goals that are no more
-	for my $old (glob("$My/MANIFEST.*")) {
-		my $name = basename($old);
+	for my $old (glob(to_fs("$My/MANIFEST.*", 'E'))) {
+		my $name = basename(un_fs($old, 'E'));
 		$name =~ /\AMANIFEST\.[A-Za-z0-9][-\w.+]*\z/ or next;
 		$have{$name} or do {
 			unlink $old;

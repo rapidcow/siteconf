@@ -1,6 +1,30 @@
 Revision history of WwW-SiteConf
 
 
+0.03_00
+    *** Perl 5.8 is required, and so is Encode::Locale (by
+        siteconf, the configure it writes, and GenGenLib 0.0100,
+        which is required too).
+    *** File names are characters, spelled as the file system's
+        locale says (locale_fs) only on their way to it, and an
+        error if it cannot spell them: Makefile.in, MANIFEST,
+        headers, -B, -o, and what configure makes and finds.
+        What is in the files is UTF-8, as it always was -- the
+        Makefile and build.ninja too, so a name that is not ASCII
+        is found by make or ninja only where locale_fs is UTF-8.
+    *** Arguments are decoded as the locale says (decode_argv),
+        and an error if they cannot be; they used to be UTF-8
+        or else left alone.
+    * Messages are written as the locale says, with \x{...} for
+      what it cannot say, by siteconf, configure and render
+      (configure wrote UTF-8, and siteconf whatever perl had).
+    * configure always checks for Encode::Locale, and for
+      GenGenLib 0.0100 unless told otherwise (-M).  render
+      decodes its arguments and names its files for Template
+      as the locale does; pin -MRdKw::WwW::GenGenLib=0.0002 if
+      you do not want this.
+
+
 0.02_03  2026-11-09  RC
     * Have render recommend $< / ${.IMPSRC} (i meant to do
       this yesterday or something but i forgot it lol u_u)

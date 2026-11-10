@@ -2,7 +2,7 @@
 #
 # t/00-load.t - basic load
 
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 use Test::More tests => 3;

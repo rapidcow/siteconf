@@ -7,3 +7,4 @@ t/deps.t
 t/make.t
 t/path.t
 t/walk.t
+t/unicode.t

@@ -1,6 +1,6 @@
 #!perl
 
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 
@@ -72,6 +72,11 @@ see L<RdKw::WwW::GenLib/SYNOPSIS>.
 
 For the generated script, see L<RdKw::WwW::SiteConf::Configure>.
 
+File names and arguments are read as the locale says, and messages
+are written that way too (what cannot be said there is written as
+C<\x{...}>).  An argument or a name that the locale cannot spell is
+an error.  What is in the files we read and write is always UTF-8.
+
 =head1 OPTIONS
 
 =over
@@ -85,10 +90,12 @@ Write F<configure> (or whatever I<-o> says).
 Have F<configure> check that I<module> can be loaded (and is at
 least I<version>, if given) before doing anything else.  May be
 given more than once; a later one for the same module replaces
-the earlier.  F<configure> always checks for L<RdKw::WwW::GenGenLib>
-(version 0.0002 with a preset, which F<render> needs; give
+the earlier.  F<configure> always checks for L<Encode::Locale> and
+L<RdKw::WwW::GenGenLib> (version 0.0100, which spells file names as
+the locale does, and which F<render> needs; give
 C<-MRdKw::WwW::GenGenLib=0> to get an older F<render> that works with
-any version), and so does the preset for what it needs (C<# USE:>
+any version, and C<=0.0002> for one that does not mind the locale),
+and so does the preset for what it needs (C<# USE:>
 lines in its config).  C<-M>I<module>C<=> with nothing after the C<=>
 drops I<module> from the list, even one the preset asked for.
 
@@ -187,14 +194,28 @@ use File::ShareDir ();
 use File::Spec;
 use Getopt::Long qw( GetOptionsFromArray );
 
+use Encode ();
+use Encode::Locale ();
+use PerlIO::encoding ();
+use RdKw::WwW::GenGenLib qw( to_fs un_fs );
 use RdKw::WwW::SiteConf;
 
 # GenGenLib with norm_dep, subs_dep and uproot.
 our $GENGENLIB_NEW = '0.0002';
+# GenGenLib that is locale-aware
+our $GENGENLIB_LOCALE = '0.0100';
 # GenLib with non-broken varargs locate
 our $GENLIB_NEW = '0.0203';
 
-my $prog = basename($0);
+# What we say is for people: as the locale says, or \x{...} where it
+# cannot (rather than a warning about each one)
+{
+	local $PerlIO::encoding::fallback = Encode::PERLQQ();
+	binmode STDOUT, ':encoding(console_out)';
+	binmode STDERR, ':encoding(console_out)';
+}
+
+my $prog = un_fs(basename($0));
 my $usage = <<EOM;
 usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
                 [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
@@ -203,7 +224,9 @@ usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
 EOM
 
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
-utf8::decode($_) for @ARGV;
+eval { Encode::Locale::decode_argv(Encode::FB_CROAK()); 1 }
+	or die "$prog: cannot read the arguments in this locale"
+		. " ($Encode::Locale::ENCODING_LOCALE)\n";
 
 my %opt = (S => {}, D => {}, O => {}, M => [], outputs => []);
 # What `-i' was told, in the order it was told, for the header of
@@ -235,7 +258,7 @@ VAR
 
 	exit unless $vee > 1;
 	print <<LVER;
-perl version $], $^X
+perl version $], @{[ un_fs($^X) ]}
 WwW::GenGenLib version $RdKw::WwW::GenGenLib::VERSION
 LVER
 
@@ -313,13 +336,14 @@ sub share_file
 	my ($file) = @_;
 	my $path = eval { File::ShareDir::dist_file('WwW-SiteConf', $file) };
 	defined $path or die "$prog: cannot find share/$file (is WwW-SiteConf installed?)\n";
-	$path;
+	un_fs($path, $prog);
 }
 
 sub slurp
 {
 	my ($file) = @_;
-	open my $fh, '<:encoding(UTF-8)', $file or die "$prog: open <$file: $!\n";
+	open my $fh, '<:encoding(UTF-8)', to_fs($file, $prog)
+		or die "$prog: open <$file: $!\n";
 	my $text = do { local $/; readline $fh };
 	close $fh or die "$prog: read <$file: $!\n";
 	$text;
@@ -420,7 +444,10 @@ sub do_init
 	# module[=version]' lines), then -Mmodule or -Mmodule=version.  Keyed
 	# by module, so that a later one replaces the earlier.  -Mmodule= with
 	# nothing after the = drops it.
-	my %mods = ( 'RdKw::WwW::GenGenLib' => 0 );
+	my %mods = (
+		'Encode::Locale' => 0,
+		'RdKw::WwW::GenGenLib' => $GENGENLIB_LOCALE,
+	);
 	my @spec = ($preset =~ /^# USE: (\S+)$/mg, @{ $opt->{M} });
 	my %user;
 	for my $m (@spec) {
@@ -429,7 +456,7 @@ sub do_init
 		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: -M$m: bad module name\n";
 		$min =~ /\A(?:v?[0-9][0-9._]*|0|)\z/ or die "$prog: -M$m: bad version\n";
 		if ($min eq '') {
-			$module eq 'RdKw::WwW::GenGenLib'
+			$module eq 'RdKw::WwW::GenGenLib' || $module eq 'Encode::Locale'
 				and die "$prog: -M$m: configure always needs it\n";
 			delete $mods{$module};
 		} else {
@@ -439,8 +466,9 @@ sub do_init
 	}
 	# Test how far we could go, with user overrides taken into account.
 	if (defined $render) {
-		$user{'RdKw::WwW::GenGenLib'} or
-			$mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
+		$user{'RdKw::WwW::GenGenLib'}
+			or version_ge($mods{'RdKw::WwW::GenGenLib'}, $GENGENLIB_NEW)
+			or $mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
 		$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
 		$user{'RdKw::WwW::GenLib'} or
 			$mods{'RdKw::WwW::GenLib'} = $GENLIB_NEW;
@@ -453,7 +481,7 @@ sub do_init
 	# anything there (" is reserved for an escape mechanism, and ?
 	# is for soft-deps).
 	if (defined(my $path = $opt->{output}{render})) {
-		$path eq '' || $path =~ /\A"/ || $path =~ /[?"]\z/ || $path =~ /\s/a
+		$path eq '' || $path =~ /\A"/ || $path =~ /[?"]\z/ || $path =~ /[\t\n\cK\f\r ]/
 			and die "$prog: dangerous name for render: @{[pq($path)]} "
 				. "is not supported (yet)\n";
 	}
@@ -496,12 +524,13 @@ sub do_init
 	my %written;
 out:	while (my ($name, $dest) = each %out) {
 		next if $dest eq '/dev/null';
-		my $exists = (-e $dest || -l $dest);
+		my $dest_fs = to_fs($dest, $prog);
+		my $exists = (-e $dest_fs || -l $dest_fs);
 		if (!$opt->{f} && $exists) {
 			print STDERR "Not changing $dest\n" unless $opt->{q};
 			next out;
 		}
-		if ($exists && !(-l $dest || unlink $dest)) {
+		if ($exists && !(-l $dest_fs || unlink $dest_fs)) {
 			print STDERR "$prog: unlink $dest: $!\n" unless $opt->{q};
 		}
 		my $contents;
@@ -512,10 +541,10 @@ out:	while (my ($name, $dest) = each %out) {
 		} else {
 			die "Unreachable\n";
 		}
-		open my $fh, '>:encoding(UTF-8)', $dest or die "$prog: open >$dest: $!\n";
+		open my $fh, '>:encoding(UTF-8)', $dest_fs or die "$prog: open >$dest: $!\n";
 		print $fh $contents or die "$prog: write >$dest: $!\n";
 		close $fh or die "$prog: write >$dest: $!\n";
-		unless (chmod 0777 & ~umask, $dest) {
+		unless (chmod 0777 & ~umask, $dest_fs) {
 			print STDERR "$prog: chmod $dest: $!\n" unless $opt->{q};
 		}
 		$written{$name} = 1;
@@ -558,15 +587,45 @@ sub render_text
 	my $text = slurp($render);
 	my $can_subst = version_ge($opt->{gengenlib_min}, $GENGENLIB_NEW);
 	my $can_valoc = version_ge($opt->{genlib_min}, $GENLIB_NEW);
+	my $can_locale = version_ge($opt->{gengenlib_min}, $GENGENLIB_LOCALE);
 	my %sub = (
 		PATH => $path,
 		PATH_Q => $path_q,
 		NAME => $name,
-		USE_GENGENLIB => $can_subst
+		PERL_MIN => $can_locale ? '5.008' : '5.006',
+		USE_LOCALE => $can_locale ? <<\NEW : '',
+
+use Encode ();
+use Encode::Locale ();
+use PerlIO::encoding ();
+
+# What we say is as the locale says (\x{...} where it cannot).
+# File names and arguments are characters, spelled as the
+# locale says; what is in the files is UTF-8.
+{
+	local $PerlIO::encoding::fallback = Encode::PERLQQ();
+	binmode STDOUT, ':encoding(console_out)';
+	binmode STDERR, ':encoding(console_out)';
+}
+NEW
+		DECODE_ARGV => $can_locale ? <<\NEW : '',
+eval { Encode::Locale::decode_argv(Encode::FB_CROAK()); 1 }
+	or die "$0: cannot read the arguments in this locale\n";
+NEW
+		USE_GENGENLIB => $can_locale
+			? "use RdKw::WwW::GenGenLib $GENGENLIB_LOCALE qw(
+	read_deps load_state
+	norm_dep subs_dep uproot to_fs );"
+			: $can_subst
 			? "use RdKw::WwW::GenGenLib $GENGENLIB_NEW qw(
 	read_deps load_state
 	norm_dep subs_dep uproot );"
 			: 'use RdKw::WwW::GenGenLib qw( read_deps load_state );',
+		# Template opens the files itself: by the names
+		# the file system knows them by.
+		A_FS => $can_locale ? "to_fs(\$D->{a}, 'E')" : '$D->{a}',
+		APATH_FS => $can_locale ? "to_fs(\$apath, 'E')" : '$apath',
+		BPATH_FS => $can_locale ? "to_fs(\$bpath, 'E')" : '$bpath',
 		USE_GENLIB => $can_valoc
 			? "use RdKw::WwW::GenLib $GENLIB_NEW qw( locate );"
 			: 'use RdKw::WwW::GenLib qw( locate );',

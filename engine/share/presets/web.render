@@ -28,16 +28,16 @@
 # More information about Template Toolkit here:
 # https://template-toolkit.org/
 #
-use 5.006;
+use @PERL_MIN@;
 use strict;
 use warnings;
-
+@USE_LOCALE@
 use Getopt::Std;
 @USE_GENGENLIB@
 @USE_GENLIB@
 use Template;
 @USE_TT_EXC@
-my %o;
+@DECODE_ARGV@my %o;
 getopts('B:', \%o) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
 my $B = defined $o{B} ? $o{B} : '.';
 @ARGV == 2 or die "$0: need exactly two args\n";
@@ -82,11 +82,11 @@ my %v = (
 #
 my $tt = Template->new({
 	ENCODING => 'UTF-8',
-	INCLUDE_PATH => [ '.', $D->{a} ],
+	INCLUDE_PATH => [ '.', @A_FS@ ],
 })
 	or die "[TT] ", $Template::ERROR, "\n";
 
-$tt->process($apath, \%v, $bpath,
+$tt->process(@APATH_FS@, \%v, @BPATH_FS@,
 	{ binmode => ':encoding(UTF-8)' })
 	or die "[TT] ", $tt->error(), "\n";
 

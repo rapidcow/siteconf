@@ -1,4 +1,4 @@
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -9,7 +9,7 @@ my %WriteMakefileArgs = (
 	VERSION_FROM     => 'lib/RdKw/WwW/GenGenLib.pm',
 	ABSTRACT_FROM    => 'lib/RdKw/WwW/GenGenLib.pm',
 	LICENSE          => 'gpl_3',
-	MIN_PERL_VERSION => '5.006',
+	MIN_PERL_VERSION => '5.008',
 	CONFIGURE_REQUIRES => {
 		'ExtUtils::MakeMaker' => '0',
 	},
@@ -18,6 +18,8 @@ my %WriteMakefileArgs = (
 	},
 	PREREQ_PM => {
 		'Exporter' => '0',
+		'Encode' => '0',
+		'Encode::Locale' => '0',
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
 	clean => { FILES => 'WwW-GenGenLib-*' },

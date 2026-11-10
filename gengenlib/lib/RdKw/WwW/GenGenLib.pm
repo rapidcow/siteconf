@@ -1,11 +1,11 @@
 package RdKw::WwW::GenGenLib;
 
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 use Exporter ();
 
-our $VERSION = '0.00_03';
+our $VERSION = '0.01_00';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -27,9 +27,16 @@ system and now operates without web-specific libraries (i.e.,
 L<URI> and L<URI::Escape>).  For the web-specific parts see
 L<RdKw::WwW::GenLib>.
 
+File names are character strings, as is everything else: they are
+encoded to the file system's locale (see L<Encode::Locale>) only on
+their way to the system, and a name that cannot be spelled there is
+an error, never a guess.  What is I<in> the files is always UTF-8.
+
 =cut
 
 use Encode ();
+use Encode::Locale ();
+use IO::Handle ();
 use File::Basename qw( basename dirname );
 use File::Compare ();
 use File::Spec;
@@ -43,11 +50,47 @@ our @EXPORT_OK = qw(
 	subs_deps subs_dep
 	split_dep walk_deps follow_ok
 	enroot uproot
+	to_fs un_fs
 );
 
 =head1 ROUTINES
 
 =over
+
+=item B<to_fs> I<name>[, I<who>]
+
+=item B<un_fs> I<bytes>[, I<who>]
+
+I<name>, a character string, as the file system spells it
+(C<locale_fs> of L<Encode::Locale>), or the other way around.  Dies
+(saying I<who> did it, if given) if that cannot be done: we do not
+make up names for files.
+
+Added in 0.0100.
+
+=cut
+
+sub to_fs
+{
+	my ($name, $who) = @_;
+	my $fs = eval { Encode::encode(locale_fs => $name,
+		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
+	defined $fs or die +(defined $who ? "$who: " : "")
+		. "cannot name `$name' in this locale"
+		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
+	$fs;
+}
+
+sub un_fs
+{
+	my ($fs, $who) = @_;
+	my $name = eval { Encode::decode(locale_fs => $fs,
+		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
+	defined $name or die +(defined $who ? "$who: " : "")
+		. "cannot read a file name in this locale"
+		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
+	$name;
+}
 
 =item B<read_make> I<file>
 
@@ -67,7 +110,8 @@ sub read_make
 	local ($_, $.);
 	my ($file) = @_;
 
-	open my $fh, '<', $file or die "read_make: open <$file: $!\n";
+	open my $fh, '<', to_fs($file, 'read_make')
+		or die "read_make: open <$file: $!\n";
 	binmode $fh, ':encoding(UTF-8)';
 
 	my %O;
@@ -128,17 +172,19 @@ sub update_file
 	#
 	my $tmp = File::Spec->catfile(dirname($file), 'tmp-' . basename($file));
 
-	open my $fh, '>:encoding(UTF-8)', $tmp
+	my ($tmp_fs, $file_fs) = map { to_fs($_, 'update_file') } $tmp, $file;
+
+	open my $fh, '>:encoding(UTF-8)', $tmp_fs
 		or die "update_file: open >$tmp: $!\n";
 	print $fh $text or die "update_file: write >$tmp: $!\n";
 	close $fh or die "update_file: write >$tmp: $!\n";
 
-	my $exists = -e $file;
-	if ($exists && File::Compare::compare($tmp, $file) == 0) {
-		unlink $tmp;
+	my $exists = -e $file_fs;
+	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0) {
+		unlink $tmp_fs;
 		return 0;  # make it numeric so `>' isn't upset
 	}
-	rename $tmp, $file or die "update_file: mv $tmp $file: $!\n";
+	rename $tmp_fs, $file_fs or die "update_file: mv $tmp $file: $!\n";
 	$exists ? 1 : 2;
 }
 
@@ -161,7 +207,7 @@ sub load_state
 	my %S;
 	for my $f (qw( config option )) {
 		my $file = "$Bdir/MY/$f.mk";
-		-f $file or die <<RUSH;
+		-f to_fs($file, 'load_state') or die <<RUSH;
 error: You have not configured! (no $file)
 error: You should ./configure first. ;)
 RUSH
@@ -246,6 +292,9 @@ but stops at the first line that is malformed UTF-8.
 This means that B<read_deps> is safe to call on binary
 files.  (This feature was added in 0.0001.)
 
+I<file> is a character string (see B<to_fs>); one that cannot be
+named in this locale is an error, forgiven or not.
+
 C<forgive_missing> is an optional boolean that decides
 whether a file that cannot be opened to begin with can
 be forgiven.  Defaults to 0 (false; do not forgive).
@@ -261,7 +310,8 @@ sub read_deps
 	my $onit = 0;
 	my %I = ();
 
-	open (my $fh, '<', $file) or ($missing_ok
+	# (A name we cannot even spell is not missing: it is an error.)
+	open (my $fh, '<', to_fs($file, 'read_deps')) or ($missing_ok
 		? return ()
 		: die "read_deps: open $file: $!\n");
 
@@ -641,7 +691,7 @@ sub walk_deps
 				# Only a regular file has a header to read: a directory
 				# opens fine but cannot be read, and a FIFO would hang
 				my $file = subs_deps($D, $spec);
-				$G->{$spec} = -f $file
+				$G->{$spec} = -f to_fs($file, 'walk_deps')
 					? { read_deps($file, { forgive_missing => 1 }) }
 					: {};
 			} else {

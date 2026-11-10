@@ -1,6 +1,6 @@
 package RdKw::WwW::SiteConf::Ninja;
 
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 

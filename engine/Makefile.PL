@@ -1,4 +1,4 @@
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -10,7 +10,7 @@ my %WriteMakefileArgs = (
 	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf.pm',
 	ABSTRACT         => q{Web site transformation rulebook configuration utilties},
 	LICENSE          => 'gpl_3',
-	MIN_PERL_VERSION => '5.006',
+	MIN_PERL_VERSION => '5.008',
 	CONFIGURE_REQUIRES => {
 		'ExtUtils::MakeMaker' => '0',
 		'File::ShareDir::Install' => '0',
@@ -23,7 +23,9 @@ my %WriteMakefileArgs = (
 	PREREQ_PM => {
 		'version' => '0',
 		'File::ShareDir' => '0',
-		'RdKw::WwW::GenGenLib' => '0.0003',
+		'Encode' => '0',
+		'Encode::Locale' => '0',
+		'RdKw::WwW::GenGenLib' => '0.0100',
 		# RdKw::WwW::GenLib isn't a dependency, though
 		# for those who use the web preset it is when
 		# they run the render script (... which we don't

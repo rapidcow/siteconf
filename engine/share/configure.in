@@ -8,10 +8,9 @@
 # them the next time `@PROG@ -i' is run.
 #
 @ARGS@use utf8;
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
-use open ':std', ':encoding(UTF-8)';
 
 use Cwd qw(getcwd abs_path);
 use File::Basename;
@@ -51,6 +50,42 @@ BEGIN {
 }
 
 use RdKw::WwW::GenGenLib qw(read_make write_make);
+use Encode ();
+use Encode::Locale ();
+use PerlIO::encoding ();
+
+# What we say is for people: as the locale says, or \x{...} where it
+# cannot (rather than a warning about each one).  What is in the
+# files, MY/*.mk, is UTF-8 (which is read_make's and write_make's).
+{
+	local $PerlIO::encoding::fallback = Encode::PERLQQ();
+	binmode STDOUT, ':encoding(console_out)';
+	binmode STDERR, ':encoding(console_out)';
+}
+
+# File names are characters here, spelled as the file system's locale
+# says only on their way to it (and back), and never made up: a name
+# it cannot spell is an error.  (GenGenLib has these too, but not
+# every version that you may have pinned it to.)
+sub to_fs
+{
+	my ($name) = @_;
+	my $fs = eval { Encode::encode(locale_fs => $name,
+		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
+	defined $fs or die "E: cannot name `$name' in this locale"
+		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
+	$fs;
+}
+
+sub un_fs
+{
+	my ($fs) = @_;
+	my $name = eval { Encode::decode(locale_fs => $fs,
+		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
+	defined $name or die "E: cannot read a file name in this locale"
+		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
+	$name;
+}
 
 #
 # How can ./configure work without siteconf -g afterwards?
@@ -67,7 +102,7 @@ sub shell_quote
 	"'$s'";
 }
 
-my $prog = basename($0);
+my $prog = un_fs(basename($0));
 
 # Baked in by `@PROG@ -i'.
 #   D   definitions, which are filesystem routing and nothing else
@@ -110,11 +145,12 @@ respectively, for the rulebook or for the files being transformed.
 See also `perldoc RdKw::WwW::SiteConf::Configure'.
 EOM
 
-# `use open' covers the standard handles and `use utf8' our source,
-# but not @ARGV: those arrive as raw bytes, and would be encoded a
-# second time on their way into MY/*.mk.  (Anything that is not
-# valid UTF-8 is left alone.)
-utf8::decode($_) for @ARGV;
+# `use utf8' covers our source, but not @ARGV: those arrive as bytes
+# in the locale's encoding, and would be encoded a second time on
+# their way into MY/*.mk.  What cannot be read is an error.
+eval { Encode::Locale::decode_argv(Encode::FB_CROAK()); 1 }
+	or die "$prog: cannot read the arguments in this locale"
+		. " ($Encode::Locale::ENCODING_LOCALE)\n";
 
 my (%D, %O, $reset, $shutup, $mkpath);
 
@@ -142,14 +178,15 @@ GetOptions(
 
 # Store where we were started from: for telling the user what
 # to run after configuring.
-my $start = getcwd();
+my $start = un_fs(getcwd());
 
 # We go to the source tree, which is where A says it is,
 # seen from where we have been started (not from this script).
 my $A = isnull($D{A}) ? $Dd{A} : $D{A};
-my $srcdir = abs_path(File::Spec->rel2abs($A, $start));
+my $srcdir = abs_path(to_fs(File::Spec->rel2abs($A, $start)));
 defined $srcdir or die "E: cannot find the project root ($A): $!\n";
-chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
+$srcdir = un_fs($srcdir);
+chdir to_fs($srcdir) or die "E: cannot chdir to $srcdir: $!\n";
 
 # -DB is the build directory, seen from the source tree; like
 # `cmake -B' we go there, and make it if it is not there.  Its
@@ -157,7 +194,7 @@ chdir $srcdir or die "E: cannot chdir to $srcdir: $!\n";
 # *this* run: nothing about it is ever read back from MY/config.mk,
 # which is the very file it is about to choose.
 my $B = isnull($D{B}) ? $Dd{B} : $D{B};
-unless (-d $B) {
+unless (-d to_fs($B)) {
 	# Please do not --mkpath unless you absolutely need to.
 	# This is only provided if you ABSOLUTELY depend on the
 	# old behavior.  Consider running the mkdir -p equivalent
@@ -166,13 +203,13 @@ unless (-d $B) {
 	# us to create it.
 	if ($mkpath) {
 		require File::Path;
-		File::Path::make_path($B, { error => \my $err });
+		File::Path::make_path(to_fs($B), { error => \my $err });
 		if (@$err) {
 			my ($path, $why) = %{ $err->[0] };
-			die "E: cannot create " . (length $path ? $path : $B) . ": $why\n";
+			die "E: cannot create " . (length $path ? un_fs($path) : $B) . ": $why\n";
 		}
 	} else {
-		mkdir $B or $!{EEXIST}   # Forgive race condition...
+		mkdir to_fs($B) or $!{EEXIST}   # Forgive race condition...
 			or die "E: cannot mkdir $B: $!" . ($!{ENOENT}
 			# Provide a plausible explanation for ENOENT.
 			# There might be weirder cases with symlinks,
@@ -181,8 +218,8 @@ unless (-d $B) {
 			: "\n");
 	}
 }
-chdir $B or die "E: cannot chdir to $B: $!\n";
-my $Babs = getcwd();
+chdir to_fs($B) or die "E: cannot chdir to $B: $!\n";
+my $Babs = un_fs(getcwd());
 
 # Files first, command line over them -- unless --reset said otherwise.
 unless ($reset) {

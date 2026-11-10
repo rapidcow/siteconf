@@ -44,6 +44,11 @@ F<configure> checks its required Perl modules before configuring anything.
 The project author can add requirements with C<siteconf init -MModule>
 or C<-MModule=version>; a preset can supply its own requirements too.
 
+Arguments and file names are read as the locale says (see
+L<Encode::Locale>), and messages are written that way, with C<\x{...}>
+for what it cannot say; an argument or a name the locale cannot spell
+is an error.  F<MY/config.mk> and F<MY/option.mk> are always UTF-8.
+
 =head1 DEFINITIONS AND OPTIONS
 
 C<-Dname=value> sets a I<definition>, stored in F<MY/config.mk>.

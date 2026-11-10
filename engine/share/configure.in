@@ -73,8 +73,8 @@ sub to_fs
 	my ($name) = @_;
 	my $fs = eval { Encode::encode(locale_fs => $name,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
-	defined $fs or die "E: cannot encode @{[_perlqq($name)]} "
-		. "in current locale"
+	defined $fs or die "E: cannot encode @{[_perlqq($name)]}"
+		. " in current locale"
 		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
 	$fs;
 }
@@ -84,9 +84,9 @@ sub un_fs
 	my ($fs) = @_;
 	my $name = eval { Encode::decode(locale_fs => $fs,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
-	defined $name or die "E: cannot decode @{[_perlqq($fs)]} "
-		. "in current locale"
-		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
+	defined $name or die "E: cannot decode @{[_perlqq($fs)]}"
+		. " in current locale"
+		. "($Encode::Locale::ENCODING_LOCALE_FS)\n";
 	$name;
 }
 

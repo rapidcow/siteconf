@@ -4,9 +4,16 @@ Revision history of WwW-GenGenLib-Template-Provider
 0.00_00
     + RdKw::WwW::GenGenLib::Template::Provider: a Template
       Toolkit provider that names files as the locale does
-      (to_fs of GenGenLib 0.0100), and loads only what the
-      source declares in its header, or what those declare
-      in theirs (walk_deps).  CHECK_DEPS => 0 stays shallow:
-      anything may be loaded, and no header is read.
-    + CHECK_HAVE => 1: the source must HAVE itself (siteconf
-      checks that already, so it is off by default).
+      (to_fs of GenGenLib 0.0100), and knows what the source
+      declares in its header, and what those declare in
+      theirs (walk_deps):
+        ALLOW_DEPS (on): what is declared may be loaded, even
+          by a name ABSOLUTE or RELATIVE would refuse;
+        CHECK_DEPS (off): only what is declared may be;
+        RELATIVE_DEPS, ABSOLUTE_DEPS (off): whether what is
+          declared may climb out (..) of its root, or be
+          absolute without one;
+        CHECK_HAVE (off): the source must HAVE itself
+          (siteconf checks that already).
+      What a template is given is taken as it is, and
+      compared with the declarations after canonpath.

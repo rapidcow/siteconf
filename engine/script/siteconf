@@ -644,13 +644,15 @@ NEW
 #
 # What is loaded is what the header (of \$apath, or of what it
 # declares, and so on) declares: see $PROVIDER.
-# CHECK_DEPS => 0 loads anything, and reads no header.
+# CHECK_DEPS => 0 loads what is not declared too, as Template
+# would (and ALLOW_DEPS => 0 does not read the header at all).
 #
 my \$provider = $PROVIDER->new({
 	SOURCE => \$apath,
 	D => \$D,
 	ENCODING => 'UTF-8',
 	INCLUDE_PATH => [ '.', \$D->{a} ],
+	CHECK_DEPS => 1,
 })
 	or die "[TT] ", $PROVIDER->error(), "\\n";
 my \$tt = Template->new({ LOAD_TEMPLATES => [ \$provider ] })

@@ -286,9 +286,8 @@ File::Spec->file_name_is_absolute($D{c})
 	and die "E: `c' prefix must be a relative path.\n";
 $D{e} =~ m!/! and die "E: `e' may not contain a slash.\n";
 
-# MY/option.mk first, or this would be circular.
 -d 'MY' or mkdir 'MY' or die "mkdir MY: $!\n";
-foreach my $f ([ option => \%O ], [ config => \%D ]) {
+foreach my $f ([ config => \%D ], [ option => \%O ]) {
 	my ($name, $H) = @$f;
 	my $what = write_make("MY/$name.mk", $H, $prog);
 	$what and print STDERR ($what > 1 ? "Writing" : "Updating"),

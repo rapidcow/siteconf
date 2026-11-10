@@ -1,7 +1,10 @@
 Revision history of WwW-GenGenLib-Template-Provider
 
 
-0.00_00
+0.00_00  2026-11-10  RC
+    (Based on nginx and Neocities providers; this too is
+     mostly written by Claude... but what else is new eh.)
+
     + RdKw::WwW::GenGenLib::Template::Provider: a Template
       Toolkit provider that names files as the locale does
       (to_fs of GenGenLib 0.0100), and knows what the source

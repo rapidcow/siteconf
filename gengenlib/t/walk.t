@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 69;
+use Test::More tests => 71;
 use File::Temp qw( tempdir );
 use File::Path qw( make_path );
 use Cwd qw( getcwd );
@@ -30,6 +30,8 @@ use RdKw::WwW::GenGenLib qw( split_dep walk_deps follow_ok norm_deps );
 		'${a}/../../etc/passwd'    => [ '${a}', '../../etc/passwd' ],
 		'${B}/${b}/../../x'        => [ '${B}/${b}', '../../x' ],
 		'/etc/passwd'              => [ '', '/etc/passwd' ],
+		'$$/x'                     => [ '', '${$}/x' ],
+		'${$}/${a}/x'              => [ '', '${$}/${a}/x' ],
 	);
 	for my $spec (sort keys %want) {
 		is_deeply([ split_dep($spec) ], $want{$spec}, "split_dep $spec");

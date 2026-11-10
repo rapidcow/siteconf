@@ -6,10 +6,11 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 96;
+use Test::More tests => 102;
 use File::Temp qw( tempdir );
 
-use RdKw::WwW::GenGenLib qw( read_deps norm_dep norm_deps subs_deps enroot );
+use RdKw::WwW::GenGenLib qw( read_deps norm_dep norm_deps subs_deps subs_dep
+	escape_dep escape_deps split_dep enroot );
 
 my $dir = tempdir(CLEANUP => 1);
 sub spew {
@@ -188,3 +189,20 @@ is(subs_deps({ a => '.' }, '${a}/${a}/z'), 'z', 'directories that are the curren
 	is_deeply(\@bad, [], '${B}/${p} is enroot($B) . $p, no backtracking');
 }
 is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
+
+# --- escape_dep: a literal name, read as that name and nothing else
+{
+	is(escape_dep('a$b'), 'a${$}b', 'escape_dep: a $ is ${$}');
+	is_deeply([ escape_deps('$x', 'y') ], [ '${$}x', 'y' ], 'escape_deps: each');
+	my @bad;
+	for my $name ('$', '$$', '${a}/x', '$a/x', '${A}/x', '$A', '${', '}$', 'x/${$}/y', '${B}/${b}/z') {
+		my $spec = escape_dep($name);
+		my $back = subs_dep({ a => 'NO', A => 'NO', B => 'NO', b => 'NO' }, $spec, strict => 1);
+		my ($root) = split_dep($spec);
+		push @bad, "$name: $back, root `$root'" if $back ne $name or length $root;
+	}
+	is_deeply(\@bad, [], '... whatever the definitions, with no root');
+	is(subs_dep(undef, escape_dep('a$b/$c')), 'a$b/$c', 'subs_dep without definitions undoes it');
+	is(subs_dep(undef, '${x}/y'), 'y', '... and a variable is empty, as ever');
+	is(escape_dep('plain/name'), 'plain/name', 'nothing to escape, nothing escaped');
+}

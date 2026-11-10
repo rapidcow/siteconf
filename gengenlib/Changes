@@ -3,6 +3,10 @@ Revision history of WwW-GenGenLib
 
 0.01_00
     *** Perl 5.8 is required, and so is Encode::Locale.
+    + escape_deps, escape_dep: a literal name as a spec ($ as
+      ${$}), which subs_deps gives back (with or without
+      definitions, which are optional now).
+    * split_dep: an escaped $ (${$}) is no root.
     *** File names are character strings: read_make, write_make,
         update_file, load_state, read_deps and walk_deps encode
         them to the file system locale (locale_fs), and die if

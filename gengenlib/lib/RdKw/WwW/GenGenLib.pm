@@ -636,9 +636,15 @@ sub subs_dep
 
 =item B<escape_dep> I<name>
 
-Quote a literal name by escaping metacharacters.
-The escaped dependency specifications are returned
-as a copy.
+Quote a literal name by escaping metacharacters
+(that is, C<$>, as C<${$}>), so that it is read as
+that name and nothing else: C<subs_deps> (without
+definitions, or with any) gives it back, and
+C<split_dep> finds no root in it.  The escaped
+dependency specifications are returned as a copy
+(in scalar context, the first).  There is no
+escape for a blank: a header cannot name a file
+with one in it.
 
 Added in 0.0100.
 
@@ -648,7 +654,7 @@ sub escape_deps
 {
 	my @s = @_;
 	s/(\$)/\${$1}/g for @s;
-	@s;
+	wantarray ? @s : $s[0];
 }
 
 sub escape_dep
@@ -673,7 +679,8 @@ sub split_dep
 	my $spec = norm_deps(@_);
 #	pos($spec) = 0;
 	my $root = '';
-	while ($spec =~ /\G(\$\{[^}]+\})(\/|\z)/gc) {
+	# (an escaped $, ${$}, is no variable, and so no root)
+	while ($spec =~ /\G(\$\{(?!\$\})[^}]+\})(\/|\z)/gc) {
 		$root .= '/' if length($root);
 		$root .= $1;
 	}

@@ -164,7 +164,7 @@ sub new
 
 	my $source = $self->_entry;
 	defined $source or die "$class: source `$args->{SOURCE}' not found\n";
-	$self->{ENTRY} = $source;
+	$self->{ENTRY} = File::Spec->canonpath($source);
 	my %I = read_deps($source);
 	if ($self->{CHECK_HAVE}) {
 		defined $I{HAVE} or die "$class: $source: no HAVE\n";

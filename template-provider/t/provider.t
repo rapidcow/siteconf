@@ -106,6 +106,16 @@ is($out, 'fine', '... and so is a NEED: it is a declaration');
 ($ok, $out, $err) = render("# WANT: \${inc}/absent\n", '[% INCLUDE absent %]', @strict);
 like("$err", qr/absent: not found/, '... and not found, used');
 
+# the source is named in messages as canonpath spells it, whatever
+# INCLUDE_PATH it was found in
+{
+	spew('site/entry', "[%#\n# HAVE: \${a}/entry\n-%]\n[% INCLUDE include/secret %]");
+	my $tt = Template->new({ LOAD_TEMPLATES => [ provider(SOURCE => 'site/entry',
+		INCLUDE_PATH => [ '.' ], CHECK_DEPS => 1) ] });
+	$tt->process('site/entry', {}, \my $o);
+	like($tt->error, qr/add NEED: include\/secret to site\/entry$/, 'the source, without ./');
+}
+
 # deep: what the declared declare is declared, too
 spew('include/outer', "[%# NEED: \${inc}/secret -%]\n[% INCLUDE secret %]");
 ($ok, $out, $err) = render("# NEED: \${inc}/outer\n", '[% INCLUDE outer %]', @strict);

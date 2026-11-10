@@ -77,7 +77,7 @@ sub to_fs
 	my $fs = eval { Encode::encode(locale_fs => $name,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
 	defined $fs or die +(defined $who ? "$who: " : "")
-		. "cannot encode `$name' in current locale"
+		. "cannot encode @{[_perlqq($name)]} in current locale"
 		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
 	$fs;
 }

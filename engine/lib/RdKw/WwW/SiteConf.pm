@@ -186,7 +186,8 @@ If the variable is still not found here then it is an error.
 
 =back
 
-A single letter may drop its braces (C<$a>).  A name with none of
+A single letter may drop its braces (C<$a>), and C<$$> or C<${$}> is a
+C<$> (see L<RdKw::WwW::GenGenLib/escape_dep>).  A name with none of
 these is relative to the root, so C<skel/HTML> and C<${A}/skel/HTML>
 are the same.  Build state is under C<${B}/MY/>.
 
@@ -390,14 +391,25 @@ sub _expand
 	# ${A} is `.', so ${A}/x is just x -- even when x is absolute
 	# (as ${a} may be), which `./' in front of it would not be.
 	$spec =~ s{\A\$(?:\{A\}|A)(?:/+|\z)}{} and !length $spec and $spec = '.';
-	$spec =~ s{\$(?:\{(\w+)\}|(\w))}{
-		my $x = defined $1 ? $1 : $2;
-		defined $var{$x} or die "E: $where: `$spec': no such variable \${$x}\n";
-		$var{$x};
-	}ge;
-	$spec =~ /\$/ and die "E: $where: stray \$ in `$spec'\n";
-	length $spec or die "E: $where: empty path\n";
-	File::Spec->canonpath($spec);
+	# $$ (or ${$}) is a $, as it is to GenGenLib (see escape_dep)
+	my $out = '';
+	for (;;) {
+		if ($spec =~ /\G([^\$]+)/gc) {
+			$out .= $1;
+		} elsif ($spec =~ /\G\$(?:\{\$\}|\$)/gc) {
+			$out .= '$';
+		} elsif ($spec =~ /\G\$(?:\{(\w+)\}|(\w))/gc) {
+			my $x = defined $1 ? $1 : $2;
+			defined $var{$x} or die "E: $where: `$spec': no such variable \${$x}\n";
+			$out .= $var{$x};
+		} elsif ($spec =~ /\G\$/gc) {
+			die "E: $where: stray \$ in `$spec'\n";
+		} else {
+			last;
+		}
+	}
+	length $out or die "E: $where: empty path\n";
+	File::Spec->canonpath($out);
 }
 
 # `path' relative to `a', as seen from the build dir.

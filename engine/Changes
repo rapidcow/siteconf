@@ -3,7 +3,11 @@ Revision history of WwW-SiteConf
 
 0.03_00
     + -P tem: a Template Toolkit render with D and O, and no
-      web (no GenLib, no site_url, no location).
+      web (no GenLib, no site_url, no location).  It needs
+      GenGenLib 0.0100 (and so may not be pinned below it).
+    + $$ or ${$} in a header is a $, as it is to GenGenLib; and
+      a $ in a prerequisite is $$ in the Makefile.  So render
+      may be named with one (its HAVE is escaped).
     + -MRdKw::WwW::GenGenLib::Template::Provider (of its own
       dist, WwW-GenGenLib-Template-Provider) has render load
       templates through it: only what the page declares, and

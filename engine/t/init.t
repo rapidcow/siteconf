@@ -10,7 +10,7 @@ use File::Path qw(make_path);
 
 my $root = getcwd();
 my $script = script_path();
-plan tests => 96;
+plan tests => 98;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -163,6 +163,12 @@ for my $ok ('what?.pl', 'a"b') {
         '-o', 'configure:/dev/null', '-o', "render:$ok");
     is($status, 0, "accept render name <$ok>") or diag $out;
 }
+
+# A $ in the name is a $ in its HAVE (and in the rulebook)
+($status, $out) = invoke('init', '-P', 'web', '-SA=project',
+    '-o', 'configure:/dev/null', '-o', 'render:bin/re$nder');
+is($status, 0, 'a render named with a $') or diag $out;
+like(slurp('project/bin/re$nder'), qr/^# HAVE: bin\/re\$\{\$\}nder$/m, '... HAVEs it, escaped');
 
 for my $case (
     [ ['init', '-o', 'unknown:foo'], qr/unknown output name/ ],

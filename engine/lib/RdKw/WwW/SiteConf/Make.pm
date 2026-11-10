@@ -56,7 +56,9 @@ MAKE
 		my $node = $plan->{node}{$file};
 		my $recipe = $node->{recipe};
 		$recipe .= "\n" if length $recipe and $recipe !~ /\n\z/;
-		$out .= "$node->{bpath}: @{ $node->{deps} }\n$recipe";
+		# (a $ in a name, which is no target's, is make's to read)
+		my @deps = map { (my $d = $_) =~ s/\$/\$\$/g; $d } @{ $node->{deps} };
+		$out .= "$node->{bpath}: @deps\n$recipe";
 	}
 	$out;
 }

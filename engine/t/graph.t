@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 154;
+use Test::More tests => 158;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -669,4 +669,25 @@ MSG
 	like($err, qr/`NEED:' of nothing/, '... no space after it');
 	($p, $err) = $rule->('${A}/${a:S/h/h/}/a.html NEED:${A}/${a:Q}/b.css');
 	ok($p, 'a colon in ${...} is no prefix') or diag $err;
+}
+
+# --- a $ in a name, escaped in a header as GenGenLib escapes it
+{
+	my $dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "a.html: \${A}/t\$\$ool\n\ttrue\n",
+		'html/a.html' => lines( NEED => [ 'd${$}/x', 'd$$/y' ] ),
+		'd$/x' => '', 'd$/y' => '',
+		't$ool' => "# HAVE: t\${\$}ool\n",
+	});
+	my $plan = eval { plan_of($dir) };
+	is_deeply($plan && $plan->{node}{'a.html'}{deps}, [ 'html/a.html', 't$ool', 'd$/x', 'd$/y', 'site/.ok' ],
+		'$$ and ${$} are a $, in headers too') or diag $@;
+	$dir = project({ MANIFEST => $manifest, 'html/a.html' => lines( NEED => [ 'x$' ] ) });
+	ok(!eval { plan_of($dir) }, 'a lone $ is still stray');
+	like($@, qr/stray \$ in `x\$'/, '... and says so');
+	require RdKw::WwW::SiteConf::Make;
+	like(RdKw::WwW::SiteConf::Make::_emit({ %$plan, prog => 'test', clean => [], dirs => [], goals => [] }),
+		qr/^site\/a\.html: html\/a\.html t\$\$ool d\$\$\/x d\$\$\/y site\/\.ok$/m,
+		'... and $$ to make') if $plan;
 }

@@ -13,7 +13,7 @@ use File::Temp qw( tempdir );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 my $script = script_path();
-plan tests => 14;
+plan tests => 16;
 # The preset comes from the built share
 local $ENV{PERL5LIB} = join ':', project_root() . '/blib/lib', perl5lib();
 
@@ -49,6 +49,12 @@ like($configure, qr/\[ "RdKw::WwW::GenGenLib", "0\.0100" \]/, '... but GenGenLib
 my $render = slurp('render');
 unlike($render, qr/\$target|locate|location/, 'render has no location to speak of');
 like($render, qr/^use RdKw::WwW::GenGenLib 0\.0100 /m, '... and uses the GenGenLib it needs');
+
+for my $pin ('0', '0.0003') {
+	my ($st, $o) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null',
+		"-MRdKw::WwW::GenGenLib=$pin");
+	like($o, qr/-P tem needs RdKw::WwW::GenGenLib 0\.0100/, "no tem for GenGenLib $pin");
+}
 
 ($status, $out) = run('configure', '-q', '-DB=build', '-Ogreeting=hello');
 is($status, 0, 'configure, with no site_url') or diag $out;

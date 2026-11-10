@@ -208,13 +208,16 @@ use Getopt::Long qw( GetOptionsFromArray );
 use Encode ();
 use Encode::Locale ();
 use PerlIO::encoding ();
-use RdKw::WwW::GenGenLib qw( to_fs un_fs );
+use RdKw::WwW::GenGenLib qw( to_fs un_fs escape_dep );
 use RdKw::WwW::SiteConf;
 
 # GenGenLib with norm_dep, subs_dep and uproot.
 our $GENGENLIB_NEW = '0.0002';
 # GenGenLib that is locale-aware
 our $GENGENLIB_LOCALE = '0.0100';
+# The least a preset's render can do with: tem is no older than the
+# GenGenLib that spells names as the locale does, and has no other way
+my %PRESET_GENGENLIB = ( tem => $GENGENLIB_LOCALE );
 # What render loads templates with, if (and only if) -M says so
 our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
 # GenLib with non-broken varargs locate
@@ -483,6 +486,10 @@ sub do_init
 			or version_ge($mods{'RdKw::WwW::GenGenLib'}, $GENGENLIB_NEW)
 			or $mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
 		$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
+		if (defined(my $least = $PRESET_GENGENLIB{$opt->{P}})) {
+			version_ge($opt->{gengenlib_min}, $least)
+				or die "$prog: -P $opt->{P} needs RdKw::WwW::GenGenLib $least\n";
+		}
 		# (what the preset said, if it says anything: -P tem does not)
 		$opt->{genlib_min} = $mods{'RdKw::WwW::GenLib'};
 		# (only ever because -M said so: no preset asks for it)
@@ -606,7 +613,8 @@ sub render_text
 	$provider && !$can_locale
 		and die "$prog: -M$PROVIDER needs RdKw::WwW::GenGenLib $GENGENLIB_LOCALE\n";
 	my %sub = (
-		PATH => $path,
+		# (a spec, in its HAVE and in Makefile.in: a $ is a $)
+		PATH => escape_dep($path),
 		PATH_Q => $path_q,
 		NAME => $name,
 		PERL_MIN => $can_locale ? '5.008' : '5.006',

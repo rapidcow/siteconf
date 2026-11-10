@@ -654,9 +654,9 @@ NEW
 		# (the provider names files itself)
 		APATH_FS => $can_locale && !$provider ? "to_fs(\$apath, 'E')" : '$apath',
 		USE_PROVIDER => $provider ? "use $PROVIDER;\n" : '',
-		TT_NEW => $provider ? <<"NEW" : <<"OLD",
-#
-# This is a provider that provides access to out-of-tree
+		TT_NEW => $provider
+			? <<"NEW"
+# This uses a provider that provides access to out-of-tree
 # builds, even if they contain absolute paths, as long as
 # they are declared in a NEED/WANT header.  (It is possible
 # to disable this with ALLOW_DEPS => 0, or reinforce that
@@ -676,6 +676,7 @@ my \$provider = $PROVIDER->new({
 my \$tt = Template->new({ LOAD_TEMPLATES => [ \$provider ] })
 	or die "[TT] ", \$Template::ERROR, "\\n";
 NEW
+			: <<"OLD",
 my \$tt = Template->new({
 	ENCODING => 'UTF-8',
 	INCLUDE_PATH => [ '.', @{[ $can_locale ? "to_fs(\$D->{a}, 'E')" : '$D->{a}' ]} ],

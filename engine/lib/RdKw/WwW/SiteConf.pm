@@ -749,8 +749,8 @@ sub _read_rules
 					my $kind = 'deps';
 					if ($word =~ s/\A([^$SP\$\/:]*)://o) {
 						$1 eq 'NEED' or $1 eq 'WANT'
-							or die "E: $where: `$1:$word': a prerequisite may say"
-								. " NEED: or WANT:, and nothing else, before a colon\n";
+							or die "E: $where: `$1:$word': a prerequisite must"
+								. " either NEED: or WANT: before a colon\n";
 						$kind = $1 eq 'WANT' ? 'want' : 'deps';
 						length $word or die "E: $where: `$1:' of nothing\n";
 					}

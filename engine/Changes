@@ -72,6 +72,7 @@ Revision history of WwW-SiteConf
       (like clang's).  Of course, there is also plan for
       gettext translation like Debian adduser... but this
       will do the trick for now.)
+    * reworked comments in generated scripts
 
 
 0.02_03  2026-11-09  RC

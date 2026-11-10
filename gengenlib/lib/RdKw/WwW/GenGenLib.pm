@@ -777,6 +777,35 @@ headers are returned without their dependents.
 Note that build dependents are solely identified
 symbolically by the C<${B}> prefix.
 
+Every specification the walk comes to is a key of C<\%G>,
+so the graph is a negative cache too.  Its value is:
+
+=over
+
+=item *
+
+the header (what B<read_deps> returns, as a hash
+reference), for a regular file that was read;
+
+=item *
+
+an empty hash, for what has no header to read: a file
+without one, or one that is not a regular file, or is
+not there at all (so a WANT that is missing is still in
+the list, and is not looked for again);
+
+=item *
+
+C<undef>, for what C<follow> denied: it is listed, but
+was never read (see B<follow_ok>).
+
+=back
+
+So C<exists> says only that the walk came to it; whether
+it was read is whether the value is defined.  A graph
+passed to another walk is taken as it is, and what it
+holds is not read or followed again.
+
 Added in 0.0002.
 
 =item B<follow_ok> \%D, I<spec>

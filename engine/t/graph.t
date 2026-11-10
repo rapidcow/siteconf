@@ -661,7 +661,7 @@ MSG
 
 	for my $bad ('need:x', 'Want:x', 'USE:x', 'x:y', ':x', 'NEED-ONLY:x') {
 		($p, $err) = $rule->($bad);
-		like($err, qr/may say NEED: or WANT:, and nothing else, before a colon/, "rejected: $bad");
+		like($err, qr/a prerequisite must either NEED: or WANT: before a colon/, "rejected: $bad");
 	}
 	($p, $err) = $rule->('NEED:');
 	like($err, qr/`NEED:' of nothing/, 'NEED: of nothing');

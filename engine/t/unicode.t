@@ -167,4 +167,4 @@ unlike($out, qr/[^\x00-\x7f]/, '... in nothing but ASCII');
 # (bytes, as a UTF-8 locale would have said `-Sa=é')
 ($status, $out) = run($C, { LC_ALL => 'C' }, $script, 'init', '-o', '/dev/null',
 	Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
-like($out, qr/cannot read the arguments in this locale/, 'unreadable arguments are an error');
+like($out, qr/cannot decode argv in current locale/, 'unreadable arguments are an error');

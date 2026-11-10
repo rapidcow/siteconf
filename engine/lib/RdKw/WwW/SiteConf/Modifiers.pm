@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Modifiers - the C<${VAR:mod:mod}> modifiers of Makefile.in
+RdKw::WwW::SiteConf::Modifiers - Makefile.in variable modifiers
 
 =head1 SYNOPSIS
 

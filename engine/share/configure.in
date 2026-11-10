@@ -18,8 +18,8 @@ use File::Spec;
 use FindBin;
 use Getopt::Long qw( GetOptions );
 
-# --- what we need: [ module, minimum version ], from `@PROG@ -i -M',
-# and the preset if any (which comes first, so it can add to the list)
+# --- requirements: [ module, minimum version ], from `@PROG@ -i -M',
+# The requirements of the preset, if any, is appended here too.
 our @NEED;
 BEGIN {
 	@NEED = (
@@ -29,11 +29,11 @@ BEGIN {
 @PRESET@
 # ---
 
-# Look before we load: a missing module is reported by us, all of
-# them at once, and not by the first `use' to trip over it.
+# Look before we load: a missing module is reported by us, all
+# of them at once, and not by the first `use' to trip over it.
 BEGIN {
 	my @bad;
-	for my $need (@NEED) {
+	foreach my $need (@NEED) {
 		my ($module, $min) = @$need;
 		(my $file = "$module.pm") =~ s!::!/!g;
 		eval { require $file; 1 }
@@ -53,9 +53,10 @@ use Encode ();
 use Encode::Locale ();
 use PerlIO::encoding ();
 
-# What we say is for people: as the locale says, or \x{...} where it
-# cannot (rather than a warning about each one).  What is in the
-# files, MY/*.mk, is UTF-8 (which is read_make's and write_make's).
+# Use locale encoding for wide-characters, since console
+# output/error is often meant for humans and not machine-
+# consumable.  Fall back to ASCII \x{...} when a Unicode
+# character cannot be encoded, however.
 {
 	local $PerlIO::encoding::fallback = Encode::PERLQQ();
 	binmode STDOUT, ':encoding(console_out)';
@@ -64,10 +65,8 @@ use PerlIO::encoding ();
 
 use RdKw::WwW::GenGenLib qw( read_make write_make );
 
-# File names are characters here, spelled as the file system's locale
-# says only on their way to it (and back), and never made up: a name
-# it cannot spell is an error.  (GenGenLib 0.01 has these too, but we
-# don't know if we have one that is new enough.)
+# File name utilities!  (GenGenLib 0.01 has these too,
+# but we don't know if the one we have is new enough.)
 sub to_fs
 {
 	my ($name) = @_;
@@ -96,11 +95,12 @@ sub _perlqq
 	Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Useqq(1)->Dump();
 }
 
-#
 # How can ./configure work without siteconf -g afterwards?
 # Anyways, let's just port this one function in the (very
 # weird) circumstance where SiteConf.pm is somehow missing.
 #
+# This assumes you have a Bourne shell (/bin/sh), the same
+# shell POSIX make runs its commands in.
 sub shell_quote
 {
 	my ($s) = @_;
@@ -156,10 +156,10 @@ EOM
 
 # `use utf8' covers our source, but not @ARGV: those arrive as bytes
 # in the locale's encoding, and would be encoded a second time on
-# their way into MY/*.mk.  What cannot be read is an error.
-eval { Encode::Locale::decode_argv(Encode::FB_CROAK()); 1 }
-	or die "$prog: cannot read the arguments in this locale"
-		. " ($Encode::Locale::ENCODING_LOCALE)\n";
+# their way into MY/*.mk.  What cannot be decoded now is an error.
+eval { $_ = Encode::decode(locale => $_, Encode::FB_CROAK()) for @ARGV; 1 }
+	or die "$prog: cannot decode argv in current locale"
+		. " ($Encode::Locale::ENCODING_LOCALE): $@";
 
 my (%D, %O, $reset, $shutup, $mkpath);
 
@@ -189,8 +189,9 @@ GetOptions(
 # to run after configuring.
 my $start = un_fs(getcwd());
 
-# We go to the source tree, which is where A says it is,
-# seen from where we have been started (not from this script).
+# Find the source tree, which is where A says it is,
+# observed from the current directory (not necessarily
+# relative to the base directory of this script).
 my $A = isnull($D{A}) ? $Dd{A} : $D{A};
 my $srcdir = abs_path(to_fs(File::Spec->rel2abs($A, $start)));
 defined $srcdir or die "E: cannot find the project root ($A): $!\n";
@@ -236,8 +237,8 @@ unless ($reset) {
 	my %Oc = %O;   # trade anyone?
 	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk") : ();
 	# A c that was the same as b (as it was last time: no distinction
-	# between build and cache, however it came to be) follows b, if b is
-	# now said to be something else -- unless c is said too.
+	# between build and cache, however it came to be) follows b, if b
+	# is now set to something else -- unless c is explicitly set.
 	$D{c} = $Dc{b} if !exists $Dc{c} && exists $Dc{b} && !isnull($D{c})
 		&& !isnull($D{b}) && $D{c} eq $D{b};
 	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk") : ();
@@ -245,10 +246,7 @@ unless ($reset) {
 	@O{keys %Oc} = values %Oc;
 }
 
-# Both are facts about where we are standing right now, so we clobber
-# whatever MY/config.mk said.  They are still written out, so that
-# whatever makes the Makefile need only read MY/*.mk.
-#
+# Set base paths according to our knowledge.
 #   A  the source tree, seen from the build dir (`.' in-tree)
 #   B  the build dir, seen from the source tree (`.' in-tree)
 # An absolute A or B is spelled as it was given.
@@ -256,40 +254,41 @@ $D{B} = $B;
 $D{A} = File::Spec->file_name_is_absolute($A) ? $A
 	: File::Spec->abs2rel($srcdir, $Babs);
 
-# What was not said, is the default (even if it was said to be empty).
-# (c is below: if it is b by default, it is whatever b is now)
-for my $k (keys %Dd) {
+# Set other paths and other variables.
+foreach my $k (keys %Dd) {
 	next if $k eq 'c';
 	$D{$k} = $Dd{$k} if isnull($D{$k});
 }
-for my $k (keys %Od) {
+foreach my $k (keys %Od) {
 	$O{$k} = $Od{$k} if isnull($O{$k});
 }
 
-defined &preset_finish and preset_finish(\%D, \%O);
+# If there is a preset, validate our state there.
+preset_finish(\%D, \%O) if defined &preset_finish;
 
-for my $k (qw( a b R F )) {
+foreach my $k (qw( a b R F )) {
 	$D{$k} =~ s!/+$!!;
 	length $D{$k} or die "E: `$k' may not be empty.\n";
 }
-# b is a directory we create rules under, one parent at a time; that
-# walk only ends at `.', so it must be relative.  (a, on the other
-# hand, is free to be absolute: out-of-tree builds.)
+# b is a directory we create rules under, one parent at a time;
+# that walk ends at `.', so it must be relative.  (a, on the
+# other hand, is free to be absolute for foreign source files.)
 File::Spec->file_name_is_absolute($D{b})
 	and die "E: `b' prefix must be a relative path.\n";
-# c, the cache: -Dc, or else -Sc (which made it a default above), or
-# else b.  It is always written, so that it is never taken to be b by
-# something that reads MY/config.mk.
+# c, the cache: defaults to -Dc from the command-line, or else
+# -Sc, or else b.  It is guaranteed to be defined since 0.02_01
+# as it is a part of our core variables, though it is opt-in.
 isnull($D{c}) and $D{c} = !isnull($Dd{c}) && $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
 length $D{c} or die "E: `c' may not be empty.\n";
+# We also create rules under c, so it must be relative too.
 File::Spec->file_name_is_absolute($D{c})
 	and die "E: `c' prefix must be a relative path.\n";
 $D{e} =~ m!/! and die "E: `e' may not contain a slash.\n";
 
 # MY/option.mk first, or this would be circular.
 -d 'MY' or mkdir 'MY' or die "mkdir MY: $!\n";
-for my $f ([ option => \%O ], [ config => \%D ]) {
+foreach my $f ([ option => \%O ], [ config => \%D ]) {
 	my ($name, $H) = @$f;
 	my $what = write_make("MY/$name.mk", $H, $prog);
 	$what and print STDERR ($what > 1 ? "Writing" : "Updating"),
@@ -297,8 +296,8 @@ for my $f ([ option => \%O ], [ config => \%D ]) {
 }
 
 # Compute $B for siteconf -g, as seen from the current directory
-# (not from the source tree, which is where -DB is seen from);
-# an absolute one is spelled as it was given, like in config.mk
+# (not from the source tree, which is where $D{B} is seen from);
+# an absolute one is spelled as it was given, like in config.mk.
 my $Bhere = File::Spec->file_name_is_absolute($B) ? $B
 	: File::Spec->abs2rel($Babs, $start);
 my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);

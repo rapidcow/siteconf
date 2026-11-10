@@ -67,4 +67,4 @@ $tt->process(@APATH_FS@, \%v, to_fs($bpath, 'E'),
 	{ binmode => ':encoding(UTF-8)' })
 	or die "[TT] ", $tt->error(), "\n";
 
-exit;  # goodbye!
+exit 0;  # goodbye!

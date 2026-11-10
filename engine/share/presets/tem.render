@@ -2,8 +2,12 @@
 # HAVE: @PATH@
 # NEED: ${B}/MY/option.mk
 #
-# (Not MY/config.mk: what is routed where is no reason to
-# render anything again.)
+# (Note that we do not "NEED" MY/config.mk; doing so
+# would declare an undesirable dependency edge that
+# undermines the very point of separating these two.
+#
+# We do depend on it to be very clear; it's just that
+# we don't need to re-render stuff when it changes.)
 #
 # @NAME@ - Template Toolkit renderer
 #

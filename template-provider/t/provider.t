@@ -58,7 +58,7 @@ my ($ok, $out, $err) = render('', '[% INCLUDE secret %]');
 is($out, 'secret', 'by default, what is not declared is loaded') or diag $err;
 spew("$top/out/public/gen.html", 'made');
 ($ok, $out, $err) = render('', "[% INCLUDE $top/out/public/gen.html %]");
-like("$err", qr/absolute paths are not allowed \(set ABSOLUTE option\)/,
+like("$err", qr/absolute paths are not allowed \(ABSOLUTE is unset\)/,
 	'... as Template::Provider would (ABSOLUTE)');
 ($ok, $out, $err) = render('', "[% INCLUDE $top/out/public/gen.html %]", {}, ABSOLUTE => 1);
 is($out, 'made', '... and does, with ABSOLUTE') or diag $err;
@@ -74,7 +74,7 @@ is($out, 'made', '... and does, with ABSOLUTE') or diag $err;
 }
 spew('../up/secret', 'up');
 ($ok, $out, $err) = render('', q{[% INCLUDE '../up/secret' %]});
-like("$err", qr/relative paths are not allowed \(set RELATIVE option\)/, '... nor RELATIVE');
+like("$err", qr/relative paths are not allowed \(RELATIVE is unset\)/, '... nor RELATIVE');
 
 # --- CHECK_DEPS: only what is declared, by any spelling
 ($ok, $out, $err) = render("# NEED: \${inc}/allowed\n", '[% INCLUDE allowed %]', @strict);

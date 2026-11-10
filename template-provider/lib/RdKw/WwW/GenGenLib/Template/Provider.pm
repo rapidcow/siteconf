@@ -370,7 +370,7 @@ sub _authorized
 				: "undeclared dependency: @{[ $self->_named($dep) ]}");
 		}
 		if ($kind && !($self->{ALLOW_DEPS} && $declared) && !$self->{"TT_$kind"}) {
-			return (undef, lc($kind) . " paths are not allowed (set $kind option)");
+			return (undef, lc($kind) . " paths are not allowed ($kind is unset)");
 		}
 		-f to_fs($path, __PACKAGE__) or return;
 	}

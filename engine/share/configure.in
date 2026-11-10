@@ -12,7 +12,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use Cwd qw(getcwd abs_path);
+use Cwd qw( getcwd abs_path );
 use File::Basename;
 use File::Spec;
 use FindBin;
@@ -49,7 +49,6 @@ BEGIN {
 	}
 }
 
-use RdKw::WwW::GenGenLib qw(read_make write_make);
 use Encode ();
 use Encode::Locale ();
 use PerlIO::encoding ();
@@ -63,16 +62,18 @@ use PerlIO::encoding ();
 	binmode STDERR, ':encoding(console_out)';
 }
 
+use RdKw::WwW::GenGenLib qw( read_make write_make );
+
 # File names are characters here, spelled as the file system's locale
 # says only on their way to it (and back), and never made up: a name
-# it cannot spell is an error.  (GenGenLib.pm has these too, but not
-# every version that you may have pinned it to.)
+# it cannot spell is an error.  (GenGenLib 0.03 has these too, but we
+# don't know if we have one that is new enough.)
 sub to_fs
 {
 	my ($name) = @_;
 	my $fs = eval { Encode::encode(locale_fs => $name,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
-	defined $fs or die "E: cannot name `$name' in this locale"
+	defined $fs or die "E: cannot encode `$name' in current locale"
 		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
 	$fs;
 }
@@ -82,9 +83,16 @@ sub un_fs
 	my ($fs) = @_;
 	my $name = eval { Encode::decode(locale_fs => $fs,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
-	defined $name or die "E: cannot read a file name in this locale"
+	defined $name or die "E: cannot decode @{[_perlqq($fs)]} "
+		. "in current locale"
 		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
 	$name;
+}
+
+sub _perlqq
+{
+	require Data::Dumper;
+	Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Useqq(1)->Dump();
 }
 
 #

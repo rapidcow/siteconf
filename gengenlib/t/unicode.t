@@ -35,7 +35,7 @@ is(to_fs('résumé.html'), fs('résumé.html'), 'to_fs: as the locale spells it'
 is(un_fs(fs('résumé.html')), 'résumé.html', 'un_fs: and back');
 my $bad = "x\x{D800}";
 ok(!eval { to_fs($bad, 'here'); 1 }, 'to_fs: no surrogates');
-like($@, qr/\Ahere: cannot name `x/, '... and says who could not');
+like($@, qr/\Ahere: cannot encode `x/, '... and says who could not');
 is($bad, "x\x{D800}", '... leaving the name be');
 
 # --- update_file, write_make, read_make: the name on disk is the locale's

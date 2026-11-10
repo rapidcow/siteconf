@@ -77,7 +77,7 @@ sub to_fs
 	my $fs = eval { Encode::encode(locale_fs => $name,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
 	defined $fs or die +(defined $who ? "$who: " : "")
-		. "cannot name `$name' in this locale"
+		. "cannot encode `$name' in current locale"
 		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
 	$fs;
 }
@@ -88,9 +88,15 @@ sub un_fs
 	my $name = eval { Encode::decode(locale_fs => $fs,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
 	defined $name or die +(defined $who ? "$who: " : "")
-		. "cannot read a file name in this locale"
+		. "cannot decode @{[_perlqq($fs)]} in current locale"
 		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
 	$name;
+}
+
+sub _perlqq
+{
+	require Data::Dumper;
+	Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Useqq(1)->Dump();
 }
 
 =item B<read_make> I<file>

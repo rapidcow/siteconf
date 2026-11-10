@@ -17,28 +17,28 @@ chdir $tmp or die $!;
 make_path('tools', 'bin', 'project');
 
 sub invoke {
-    open my $fh, '-|' or do {
-        open STDERR, '>&', STDOUT or die $!;
-        exec $^X, $script, @_;
-        die "exec: $!";
-    };
-    my $out = do { local $/; <$fh> };
-    close $fh;
-    return ($? >> 8, $out);
+	open my $fh, '-|' or do {
+		open STDERR, '>&', STDOUT or die $!;
+		exec $^X, $script, @_;
+		die "exec: $!";
+	};
+	my $out = do { local $/; <$fh> };
+	close $fh;
+	return ($? >> 8, $out);
 }
 sub slurp {
-    open my $fh, '<', $_[0] or die "$_[0]: $!";
-    local $/; <$fh>;
+	open my $fh, '<', $_[0] or die "$_[0]: $!";
+	local $/; <$fh>;
 }
 
 # Outputs are named relative to us; render, relative to the project root.
 my ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-    '-o', 'configure:tools/setup', '-o', 'render:bin/render-page');
+	'-o', 'configure:tools/setup', '-o', 'render:bin/render-page');
 isnt($status, 0, 'render cannot go in a directory that is not there');
 make_path('project/bin');
 unlink 'tools/setup';
 ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-    '-o', 'configure:tools/setup', '-o', 'render:bin/render-page');
+	'-o', 'configure:tools/setup', '-o', 'render:bin/render-page');
 is($status, 0, 'mapped init succeeds') or diag $out;
 ok(-x 'tools/setup' && -x 'project/bin/render-page', 'both mapped outputs executable');
 ok(!-e 'bin/render-page', 'render mapping is relative to the project root');
@@ -52,7 +52,7 @@ print $rh "custom renderer\n";
 close $rh;
 
 ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-    '-o', 'configure:/dev/null', '-o', 'render:bin/render-page');
+	'-o', 'configure:/dev/null', '-o', 'render:bin/render-page');
 is($status, 0, 'suppressed configure is not a failure');
 like($out, qr/Not changing project\/bin\/render-page/, 'existing renderer reported');
 is(slurp('project/bin/render-page'), "custom renderer\n", 'existing renderer preserved');
@@ -96,14 +96,14 @@ isnt($status, 0, 'empty -SA is rejected');
 ($status, $out) = invoke('init', '-DA=', '-o', 'tools/empty');
 isnt($status, 0, 'empty -DA is rejected');
 ($status, $out) = invoke('init', '-P', 'web', '-DA=project',
-    '-o', 'configure:/dev/null', '-o', 'render:bin/da-render');
+	'-o', 'configure:/dev/null', '-o', 'render:bin/da-render');
 is($status, 0, '-DA places render like -SA') or diag $out;
 ok(-x 'project/bin/da-render', '... in the project root');
 
 # Existing outputs are skipped independently, without aborting init.
 my $configure = slurp('configure');
 ($status, $out) = invoke('init', '-P', 'web', '-Otitle=changed', '-SA=project',
-    '-o', 'render:bin/render-page');
+	'-o', 'render:bin/render-page');
 is($status, 1, 'existing configure gives status 1');
 is(slurp('configure'), $configure, 'configure is not overwritten by default');
 is(slurp('project/bin/render-page'), "custom renderer\n", 'renderer is not overwritten by default');
@@ -121,13 +121,13 @@ ok(-x 'project/bin/new-render', 'renderer created after skipping configure');
 like($out, qr/^Wrote project\/bin\/new-render$/m, 'new renderer reported');
 
 ($status, $out) = invoke('init', '-P', 'web', '-SA=project', '-o', 'configure:new-configure',
-    '-o', 'render:bin/render-page');
+	'-o', 'render:bin/render-page');
 is($status, 0, 'skipped renderer does not affect success');
 like($out, qr/^Wrote new-configure$/m, 'written configure reported');
 unlike($out, qr/You already have/, 'no error for a skipped renderer');
 
 ($status, $out) = invoke('init', '-f', '-P', 'web', '-Otitle=changed', '-SA=project',
-    '-o', 'render:bin/render-page');
+	'-o', 'render:bin/render-page');
 is($status, 0, 'force overwrites existing outputs');
 isnt(slurp('configure'), $configure, 'configure replaced');
 is(slurp('project/bin/render-page'), $renderer, 'renderer replaced');
@@ -141,45 +141,45 @@ is($status, 0, 'quiet force succeeds');
 is($out, '', 'quiet suppresses overwrite messages');
 
 for my $flags ([], ['-f'], ['-q']) {
-    ($status, $out) = invoke('init', @$flags, '-P', 'web',
-        '-o', 'configure:/dev/null', '-o', 'render:/dev/null');
-    is($status, 0, "fully suppressed output is fine (@$flags)");
-    is($out, '', '... and quiet');
+	($status, $out) = invoke('init', @$flags, '-P', 'web',
+		'-o', 'configure:/dev/null', '-o', 'render:/dev/null');
+	is($status, 0, "fully suppressed output is fine (@$flags)");
+	is($out, '', '... and quiet');
 }
 is((stat '/dev/null')[2], $nullmode, 'force leaves null device permissions alone');
 
 # Names we cannot write in a HAVE (or the Makefile example);
 # rejected before anything is written.
 for my $bad ('a b', '"quoted', "tab\there", 'what?', 'quoted"', 'bin/"x"') {
-    ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-        '-o', 'configure:bad-name', '-o', "render:$bad");
-    isnt($status, 0, "reject render name <$bad>");
-    like($out, qr/^siteconf: dangerous name for render: .* is not supported/, 'useful diagnostic');
-    ok(!-e "project/$bad" && !-e 'bad-name', 'nothing written');
+	($status, $out) = invoke('init', '-P', 'web', '-SA=project',
+		'-o', 'configure:bad-name', '-o', "render:$bad");
+	isnt($status, 0, "reject render name <$bad>");
+	like($out, qr/^siteconf: dangerous name for render: .* is not supported/, 'useful diagnostic');
+	ok(!-e "project/$bad" && !-e 'bad-name', 'nothing written');
 }
 # (and a no-break space, which is not white space: see t/unicode.t)
 for my $ok ('what?.pl', 'a"b') {
-    ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-        '-o', 'configure:/dev/null', '-o', "render:$ok");
-    is($status, 0, "accept render name <$ok>") or diag $out;
+	($status, $out) = invoke('init', '-P', 'web', '-SA=project',
+		'-o', 'configure:/dev/null', '-o', "render:$ok");
+	is($status, 0, "accept render name <$ok>") or diag $out;
 }
 
 # A $ in the name is a $ in its HAVE (and in the rulebook)
 ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-    '-o', 'configure:/dev/null', '-o', 'render:bin/re$nder');
+	'-o', 'configure:/dev/null', '-o', 'render:bin/re$nder');
 is($status, 0, 'a render named with a $') or diag $out;
 like(slurp('project/bin/re$nder'), qr/^# HAVE: bin\/re\$\{\$\}nder$/m, '... HAVEs it, escaped');
 
 for my $case (
-    [ ['init', '-o', 'unknown:foo'], qr/unknown output name/ ],
-    [ ['init', '-o', 'render:'], qr/empty output path/ ],
-    [ ['init', '-o', 'render:foo'], qr/preset does not supply/ ],
-    [ ['make', '-o', 'render:foo'], qr/only for init/ ],
-    [ ['make', '-f'], qr/-f is not for make/ ],
+	[ ['init', '-o', 'unknown:foo'], qr/unknown output name/ ],
+	[ ['init', '-o', 'render:'], qr/empty output path/ ],
+	[ ['init', '-o', 'render:foo'], qr/preset does not supply/ ],
+	[ ['make', '-o', 'render:foo'], qr/only for init/ ],
+	[ ['make', '-f'], qr/-f is not for make/ ],
 ) {
-    ($status, $out) = invoke(@{ $case->[0] });
-    isnt($status, 0, "reject @{$case->[0]}");
-    like($out, $case->[1], 'useful diagnostic');
+	($status, $out) = invoke(@{ $case->[0] });
+	isnt($status, 0, "reject @{$case->[0]}");
+	like($out, $case->[1], 'useful diagnostic');
 }
 chdir $root or die $!;
 done_testing;

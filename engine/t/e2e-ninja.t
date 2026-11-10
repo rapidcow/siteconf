@@ -15,7 +15,7 @@ system("$ninja --version >/dev/null 2>&1") == 0 or plan skip_all => "no ninja";
 plan tests => 13;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q
-       -MRdKw::WwW::GenLib=0 ));
+	-MRdKw::WwW::GenLib=0 ));
 run('./configure', $^X, './configure', '-q');
 
 run('siteconf -g -G ninja', $^X, $script, qw( -g -q -G ninja -B build ));

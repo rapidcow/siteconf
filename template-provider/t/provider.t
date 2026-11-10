@@ -33,7 +33,7 @@ my %D = ( A => '../..', B => 'B', a => 'site', b => 'public', c => 'public', inc
 sub provider
 {
 	$P->new({ SOURCE => 'entry', INCLUDE_PATH => [qw( site include )],
-		D => \%D, ENCODING => 'UTF-8', @_ });
+		DEFINITION => \%D, ENCODING => 'UTF-8', @_ });
 }
 
 # Process site/entry, with these header lines and this body
@@ -88,7 +88,7 @@ for my $directive (qw( INCLUDE PROCESS WRAPPER INSERT )) {
 	$body .= '[% END %]' if $directive eq 'WRAPPER';
 	($ok, $out, $err) = render('', $body, @strict);
 	ok(!$ok, "$directive: an undeclared file is refused");
-	like("$err", qr/undeclared dependency `include\/secret'/, '... by name');
+	like("$err", qr/undeclared dependency: `include\/secret'/, '... by name');
 }
 
 ($ok, $out) = render('', '[% BLOCK local %]local[% END %][% INCLUDE local %]', @strict);
@@ -106,14 +106,37 @@ is($out, 'fine', '... and so is a NEED: it is a declaration');
 ($ok, $out, $err) = render("# WANT: \${inc}/absent\n", '[% INCLUDE absent %]', @strict);
 like("$err", qr/absent: not found/, '... and not found, used');
 
-# the source is named in messages as canonpath spells it, whatever
-# INCLUDE_PATH it was found in
+# what is wrong is said, and not how to fix it (it may be the INCLUDE),
+# and by no ./ that INCLUDE_PATH found it by
 {
 	spew('site/entry', "[%#\n# HAVE: \${a}/entry\n-%]\n[% INCLUDE include/secret %]");
 	my $tt = Template->new({ LOAD_TEMPLATES => [ provider(SOURCE => 'site/entry',
 		INCLUDE_PATH => [ '.' ], CHECK_DEPS => 1) ] });
 	$tt->process('site/entry', {}, \my $o);
-	like($tt->error, qr/add NEED: include\/secret to site\/entry$/, 'the source, without ./');
+	like($tt->error, qr/: undeclared dependency: `include\/secret'$/, 'just what is wrong');
+}
+
+# PREFIXES: what a file is also known as, as a header would say it
+{
+	my $p = provider(DEFINITION => { %D, B => '.', b => 'public', c => 'public', tem => 'site/t',
+		x => '.', deep => 'site/t/deep' },
+		PREFIXES => [ qw( ${a} ${B}/${b}/ ${B}/${c} ${tem}/ ${A}/${B}/${b} ${x} ${deep} ${nope} ) ]);
+	my %alias = (
+		'site/x' => '${a}/x',
+		'site/t/x' => '${tem}/x',                     # the longest expansion
+		'site/t/deep/x' => '${deep}/x',
+		'public/x' => '${B}/${b}/x',                  # shortest, then first
+		'include/x' => '${x}/include/x',              # `.' is under everything
+		'site' => '${a}',
+		'/abs/x' => undef, '../x' => undef,
+		'site/a b' => '${a}/a${U+0020}b',             # (as a header would)
+	);
+	for my $path (sort keys %alias) {
+		is($p->_alias($path), $alias{$path}, "PREFIXES: $path");
+	}
+	is(provider()->_alias('B/public/x'), '${B}/${b}/x', 'by default, ${a} ${B}/${b} ${B}/${c}');
+	is($P->new({ SOURCE => 'site/entry' })->_alias('site/x'), undef,
+		'... and none, without the variables');
 }
 
 # deep: what the declared declare is declared, too
@@ -122,7 +145,7 @@ spew('include/outer', "[%# NEED: \${inc}/secret -%]\n[% INCLUDE secret %]");
 is($out, 'secret', 'what an INCLUDE declares, it may INCLUDE') or diag $err;
 spew('include/outer', '[% INCLUDE secret %]');
 ($ok, $out, $err) = render("# NEED: \${inc}/outer\n", '[% INCLUDE outer %]', @strict);
-like("$err", qr/undeclared dependency `include\/secret'/, '... but nothing else');
+like("$err", qr/undeclared dependency: `include\/secret'/, '... but nothing else');
 ($ok, $out, $err) = render("# NEED: \${inc}/outer \${inc}/secret\n", '[% INCLUDE outer %]', @strict);
 is($out, 'secret', 'the source may declare it for it');
 
@@ -194,7 +217,7 @@ is($out, 'secret', '... and it is a Template::Provider') or diag $err;
 spew('site/entry', "[%#\n# HAVE: elsewhere\n-%]\n");
 ok(eval { provider() }, 'HAVE is not ours to check') or diag $@;
 ok(!eval { provider(CHECK_HAVE => 1) }, '... unless CHECK_HAVE');
-like($@, qr/HAVE `elsewhere', but it is `\$\{a\}\/entry'/, '... which says so (as a header would)');
+like($@, qr/HAVE `elsewhere', but it is `site\/entry' \(\$\{a\}\/entry\)$/, '... which says so (and as a header would)');
 ok(!eval { provider(CHECK_HAVE => 1, ALLOW_DEPS => 0) }, '... with nothing else, too');
 spew('site/entry', "[%#\n# HAVE: \${A}/site/entry\n-%]\n");
 ok(eval { provider(CHECK_HAVE => 1) }, '... by any spelling') or diag $@;
@@ -225,11 +248,11 @@ spew('site/allowed', 'shadow');
 $p = provider(CHECK_DEPS => 1);
 ($data, $status) = $p->fetch('allowed');
 is($status, STATUS_ERROR(), 'an undeclared namesake earlier in the path is not skipped');
-like($data, qr/undeclared dependency `\$\{a\}\/allowed'; add NEED: \$\{a\}\/allowed to site\/entry$/,
-	'... and named, as a header would name it');
+like($data, qr/undeclared dependency: `site\/allowed' \(\$\{a\}\/allowed\)$/,
+	'... and named (and as a header would name it)');
 spew('site/a b$', 'x');
 ($data, $status) = $p->fetch('a b$');
-like($data, qr/add NEED: \$\{a\}\/a\$\{U\+0020\}b\$\{\$\} to/, '... escaped, so that it is one name there');
+like($data, qr/`site\/a b\$' \(\$\{a\}\/a\$\{U\+0020\}b\$\{\$\}\)$/, '... escaped, so that it is one name there');
 unlink 'site/a b$';
 unlink 'site/allowed';
 

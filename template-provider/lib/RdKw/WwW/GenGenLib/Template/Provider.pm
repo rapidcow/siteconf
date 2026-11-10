@@ -18,7 +18,7 @@ WwW::GenGenLib::Template::Provider - Template Toolkit provider for declared depe
 
     my $provider = RdKw::WwW::GenGenLib::Template::Provider->new({
         SOURCE => $apath,               # what is to be processed
-        D => $D,                        # MY/config.mk
+        DEFINITION => $D,               # MY/config.mk
         INCLUDE_PATH => [ '.', $D->{a} ],
         ENCODING => 'UTF-8',            # (Template's does not get here)
         CHECK_DEPS => 1,                # load only what is declared
@@ -63,11 +63,24 @@ for everything):
 The name of the template that is processed, as it is given to
 C<process>.  Required.  It may always be loaded.
 
-=item C<D>
+=item C<DEFINITION>
 
 The definitions (F<MY/config.mk>), for the variables in the headers.
 C<${A}> is the project root, C<.>, as it is to siteconf.  A variable
 that is not defined is an error.
+
+=item C<PREFIXES>
+
+The symbolic prefixes that a file may be called by in what we say
+(as a header would name it, and as it is also known): by default
+C<${a}>, C<${B}/${b}> and C<${B}/${c}>, and a trailing slash or not
+makes no difference.  A file is called by the prefix whose expansion
+it is under, the longest; of those that are as long, by the shortest
+prefix, and then the first in alphabetical order (so C<${B}/${b}>
+before C<${A}/${B}/${b}>, and C<${B}/${b}> before C<${B}/${c}>).  A
+prefix that expands to C<.> has every relative name under it, but is
+the shortest of all; one with a variable not in I<DEFINITION> is
+none at all.
 
 =item C<ALLOW_DEPS>
 
@@ -135,7 +148,7 @@ my %default = (
 =item B<new> \%options
 
 See L</OPTIONS>.  Dies if I<SOURCE> cannot be found, or its header
-(or what it declares, and so on) names a variable not in I<D>, or
+(or what it declares, and so on) names a variable not in I<DEFINITION>, or
 (with C<CHECK_HAVE>) its C<HAVE> is not I<SOURCE>.
 
 =cut
@@ -155,7 +168,8 @@ sub new
 	$self->{TT_ABSOLUTE} = $args->{ABSOLUTE};
 	$self->{TT_RELATIVE} = $args->{RELATIVE};
 	$self->{SOURCE} = $args->{SOURCE};
-	$self->{D} = { %{ $args->{D} || {} }, A => '.' };
+	$self->{DEFINITION} = { %{ $args->{DEFINITION} || {} }, A => '.' };
+	$self->{PREFIXES} = [ @{ $args->{PREFIXES} || [ '${a}', '${B}/${b}', '${B}/${c}' ] } ];
 	$self->{$_} = exists $args->{$_} ? $args->{$_} : $default{$_} for keys %default;
 	$self->{DECLARED} = {};
 	$self->{REFUSED} = {};
@@ -164,19 +178,18 @@ sub new
 
 	my $source = $self->_entry;
 	defined $source or die "$class: source `$args->{SOURCE}' not found\n";
-	$self->{ENTRY} = File::Spec->canonpath($source);
 	my %I = read_deps($source);
 	if ($self->{CHECK_HAVE}) {
 		defined $I{HAVE} or die "$class: $source: no HAVE\n";
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
-			or die "$class: $source: HAVE `$I{HAVE}', but it is `@{[ $self->_spell($source) ]}'\n";
+			or die "$class: $source: HAVE `$I{HAVE}', but it is @{[ $self->_named($source) ]}\n";
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;
 
 	# Everything it declares, and what those declare, and so on; but no
 	# variable that we do not have, which would lead somewhere else.
 	my $follow = $args->{FOLLOW} || \&follow_ok;
-	my @all = walk_deps($self->{D},
+	my @all = walk_deps($self->{DEFINITION},
 		map { $self->_vars($_); $_ } @{ $I{NEED} || [] }, @{ $I{WANT} || [] },
 		{
 			graph => $args->{GRAPH} || {},
@@ -200,7 +213,7 @@ sub _vars
 {
 	my ($self, $spec) = @_;
 	for my $x (norm_dep($spec) =~ /\$\{([^}]+)\}/g) {
-		$x eq '$' || $x =~ /\AU\+/ || defined $self->{D}{$x}
+		$x eq '$' || $x =~ /\AU\+/ || defined $self->{DEFINITION}{$x}
 			or die __PACKAGE__ . ": `$spec': no such variable \${$x}\n";
 	}
 	1;
@@ -211,7 +224,7 @@ sub _norm
 {
 	my ($self, $spec) = @_;
 	$self->_vars($spec);
-	File::Spec->canonpath(subs_dep($self->{D}, $spec));
+	File::Spec->canonpath(subs_dep($self->{DEFINITION}, $spec));
 }
 
 # The option that would let `spec' be declared, if it may not be: the
@@ -221,7 +234,7 @@ sub _unreasonable
 {
 	my ($self, $spec) = @_;
 	my ($root, $rest) = split_dep($spec);
-	my $name = subs_dep($self->{D}, $rest);
+	my $name = subs_dep($self->{DEFINITION}, $rest);
 	if (length $root) {
 		$name =~ s!\A/+!!;
 	} elsif (File::Spec->file_name_is_absolute($name) && !$self->{ABSOLUTE_DEPS}) {
@@ -232,20 +245,42 @@ sub _unreasonable
 	return;
 }
 
-# A path as a header would say it: under ${a}, symbolically (and
-# escaped, so that it is one name there)
-sub _spell
+# `path', as we say it: and as a header would, if one of the PREFIXES
+# leads to it
+sub _named
 {
 	my ($self, $path) = @_;
 	$path = File::Spec->canonpath($path);
-	my $a = $self->{D}{a};
-	defined $a && !File::Spec->file_name_is_absolute($path)
-		&& $path !~ m{\A\.\.(?:/|\z)}
-		or return escape_dep($path, unicode => 1);
-	$a = File::Spec->canonpath($a);
-	my $rest = $a eq '.' ? $path : uproot($a, $path);
-	defined $rest && length $rest or return escape_dep($path, unicode => 1);
-	'${a}/' . escape_dep($rest, unicode => 1);
+	my $alias = $self->_alias($path);
+	"`$path'" . (defined $alias ? " ($alias)" : '');
+}
+
+# The longest of the PREFIXES that `path' is under (as they expand),
+# with the rest of it; ties go to the shortest prefix, then the first
+sub _alias
+{
+	my ($self, $path) = @_;
+	my ($best, $len, $rest);
+	for (@{ $self->{PREFIXES} }) {
+		(my $prefix = $_) =~ s{/+\z}{};
+		my $dir = eval { $self->_norm($prefix) };
+		defined $dir or next;
+		my ($l, $r);
+		if ($dir eq '.') {
+			File::Spec->file_name_is_absolute($path) || $path =~ m{\A\.\.(?:/|\z)}
+				and next;
+			($l, $r) = (0, $path);
+		} else {
+			defined($r = uproot($dir, $path)) or next;
+			$l = length $dir;
+		}
+		next if defined $best and $l < $len
+			|| $l == $len && (length $prefix > length $best
+				|| length $prefix == length $best && $prefix ge $best);
+		($best, $len, $rest) = ($prefix, $l, $r);
+	}
+	defined $best or return;
+	length $rest ? "$best/" . escape_dep($rest, unicode => 1) : $best;
 }
 
 # The first file named so in INCLUDE_PATH, which is the one we would load
@@ -299,9 +334,8 @@ sub _authorized
 		if ($self->{CHECK_DEPS} && !$declared) {
 			my $why = $self->{REFUSED}{$dep};
 			return (undef, defined $why
-				? "`@{[ $self->_spell($dep) ]}' is declared, but forbidden because $why is unset"
-				: "undeclared dependency `@{[ $self->_spell($dep) ]}';"
-					. " add NEED: @{[ $self->_spell($dep) ]} to $self->{ENTRY}");
+				? "@{[ $self->_named($dep) ]} is declared, but forbidden because $why is unset"
+				: "undeclared dependency: @{[ $self->_named($dep) ]}");
 		}
 		if ($kind && !($self->{ALLOW_DEPS} && $declared) && !$self->{"TT_$kind"}) {
 			return (undef, lc($kind) . " paths are not allowed (set $kind option)");

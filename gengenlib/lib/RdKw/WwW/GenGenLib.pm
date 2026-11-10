@@ -336,7 +336,8 @@ my $header_field = qr{
 	)
 	[\t ]+			# Blanks are necessary both due to my
 				# subjective aesthetics and preventing
-				# false positives (e.g. a quoted string)
+				# false positives (e.g. a quoted string or
+				# part of a word, in the case of REMember.)
 	([A-Za-z._-]+)		# The field: any name, in any case (ours
 				# are HAVE, NEED, WANT, and only so)
 	[\t ]* : [\t ]*		# and then what it says

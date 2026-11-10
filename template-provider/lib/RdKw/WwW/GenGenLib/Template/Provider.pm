@@ -203,7 +203,7 @@ sub new
 	if ($self->{CHECK_HAVE}) {
 		defined $I{HAVE} or die "$class: $source: no HAVE\n";
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
-			or die "$class: $source: HAVE `$I{HAVE}', but it is @{[ $self->_named($source) ]}\n";
+			or die "$class: $source: You HAVE `$I{HAVE}', but it is actually @{[ $self->_named($source) ]}\n";
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;
 
@@ -287,7 +287,7 @@ sub _named
 	my ($self, $path) = @_;
 	$path = File::Spec->canonpath($path);
 	my $alias = $self->_alias($path);
-	"`$path'" . (defined $alias ? " ($alias)" : '');
+	"`$path'" . (defined $alias ? " (aka `$alias')" : '');
 }
 
 # The longest of the PREFIXES that `path' is under (as they expand),

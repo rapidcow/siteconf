@@ -249,7 +249,7 @@ is($out, 'secret', '... and it is a Template::Provider') or diag $err;
 spew('site/entry', "[%#\n# HAVE: elsewhere\n-%]\n");
 ok(eval { provider() }, 'HAVE is not ours to check') or diag $@;
 ok(!eval { provider(CHECK_HAVE => 1) }, '... unless CHECK_HAVE');
-like($@, qr/HAVE `elsewhere', but it is `site\/entry' \(\$\{a\}\/entry\)$/, '... which says so (and as a header would)');
+like($@, qr/You HAVE `elsewhere', but it is actually `site\/entry' \(aka `\$\{a\}\/entry'\)$/, '... which says so (and as a header would)');
 ok(!eval { provider(CHECK_HAVE => 1, ALLOW_DEPS => 0) }, '... with nothing else, too');
 spew('site/entry', "[%#\n# HAVE: \${A}/site/entry\n-%]\n");
 ok(eval { provider(CHECK_HAVE => 1) }, '... by any spelling') or diag $@;
@@ -280,11 +280,11 @@ spew('site/allowed', 'shadow');
 $p = provider(CHECK_DEPS => 1);
 ($data, $status) = $p->fetch('allowed');
 is($status, STATUS_ERROR(), 'an undeclared namesake earlier in the path is not skipped');
-like($data, qr/undeclared dependency: `site\/allowed' \(\$\{a\}\/allowed\)$/,
+like($data, qr/undeclared dependency: `site\/allowed' \(aka `\$\{a\}\/allowed'\)$/,
 	'... and named (and as a header would name it)');
 spew('site/a b$', 'x');
 ($data, $status) = $p->fetch('a b$');
-like($data, qr/`site\/a b\$' \(\$\{a\}\/a\$\{U\+0020\}b\$\{\$\}\)$/, '... escaped, so that it is one name there');
+like($data, qr/`site\/a b\$' \(aka `\$\{a\}\/a\$\{U\+0020\}b\$\{\$\}'\)$/, '... escaped, so that it is one name there');
 unlink 'site/a b$';
 unlink 'site/allowed';
 

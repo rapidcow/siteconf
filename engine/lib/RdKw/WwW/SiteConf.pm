@@ -87,6 +87,12 @@ prerequisite with a prefix is never the source.
     a.html: NEED:${A}/render NEED:${B}/MY/option.mk WANT:${A}/extra.css
             cd -- ${A:Q} && ${^X} render -B ${B:Q} -- ${a}/${<} ${B:Q}/${b}/${@}
 
+A C<;> ends the prerequisites, as it does to make, and what follows it
+is the first line of the recipe; a tab line after it is the next.  (A
+C<;> in a C<${...}>, as in C<${@:S/;/,/}>, is part of that.)
+
+    robots.txt: ; printf 'User-agent: *\n' > ${B:Q}/${b:Q}/${@:Q}
+
 A first prerequisite that is C<${a}> and nothing more (or C<${a}/>,
 C<${A}/${a}//>, any number of slashes) says there is no source: the
 target is made from the other prerequisites alone, and C<${<}> is an
@@ -247,6 +253,10 @@ my $SP = '\t\n\cK\f\r ';
 # A word of Makefile.in as it is written: a ${...} may hold spaces
 # (in :S/ /_/), and it is all one word.
 my $WORD = qr/(?:[^$SP\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+/;
+
+# The prerequisites of a rule: up to a `;', which begins its recipe,
+# as in `a: b ; cp b a' -- but not one in a ${...} (:S/;/,/), nor $;
+my $PREREQ = qr/(?:[^;\$]|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\}|\$[^{]|\$\z)*/;
 
 # The words of `s' as written (see $WORD).  Whatever is not one (an
 # unfinished ${, say) is the last, for _subst to say what is wrong.
@@ -733,8 +743,9 @@ sub _read_rules
 				$_ .= $next;
 			}
 		}
-		if (/^\t/) {
-			@node or die "E: $where: unexpected tabulation\n";
+		# A line of the recipe of the rule above (or of this one)
+		my $recipe = sub {
+			my ($text) = @_;
 			for my $node (@node) {
 				my $rule = $rule{$node->[0]};
 				if (defined $rule->{stanza} && $rule->{stanza} != $stanza) {
@@ -742,12 +753,21 @@ sub _read_rules
 				}
 				$rule->{stanza} = $stanza;
 				# (not yet: ${<} may be said further down)
-				push @{ $rule->{raw} }, [ $_, $where ];
+				push @{ $rule->{raw} }, [ $text, $where ];
 			}
+		};
+		if (/^\t/) {
+			@node or die "E: $where: unexpected tabulation\n";
+			$recipe->($_);
 			next;
 		}
 		if (/:/) {
 			my ($src, $dep) = split /:/, $_, 2;
+			# After a `;' is the first line of the recipe, and a tab
+			# line after this one is the next
+			my $cmd;
+			$dep =~ /\A($PREREQ);[ \t]*(.*)\z/so
+				and ($dep, $cmd) = ($1, "\t$2");
 			@node = map { [ $self->_read_target($_, $where) ] } _words($src)
 				or die "E: $where: null target list\n";
 			$stanza = $line;
@@ -789,6 +809,7 @@ sub _read_rules
 						_words($self->_subst($word, $name, $where));
 				}
 			}
+			$recipe->($cmd) if defined $cmd;
 			next;
 		}
 		die "E: $where: invalid line: $_";

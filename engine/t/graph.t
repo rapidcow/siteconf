@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 202;
+use Test::More tests => 207;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -81,7 +81,23 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		is_deeply($rules->{'a.html'}{deps}, [qw(x #y z)], '#y is a word, "# c" a comment');
 	}
 
+	# a `;' begins the recipe, and a tab line goes on with it
+	$dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "a.html b.css: \${A}/x \${A}/\${e:S/;/,/} ; cp \${a}/\${\@} \${B}/\${b}/\${\@}\n"
+			. "\ttouch \${B}/\${b}/\${\@}\n"
+			. "c.css: \${A}/x;echo \"a; b\"\n",
+		'html/a.html' => '', y => '',
+	});
+	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
+	is_deeply($rules->{'a.html'}{deps}, [qw(x .ok)], 'a ; ends the prerequisites (but not in a \${...})');
+	is($rules->{'a.html'}{recipe}, "\tcp html/a.html site/a.html\n\ttouch site/a.html\n",
+		'... and begins the recipe, which a tab line goes on with');
+	is_deeply($rules->{'c.css'}{deps}, ['x'], '... touching or not');
+	is($rules->{'c.css'}{recipe}, "\techo \"a; b\"\n", '... and only the first ;');
+
 	for my $case (
+		["a.html: x ; true\n\ttrue\na.html: ; false\n", qr/line 3: more than one recipe/],
 		["# rules\na.html \\\n  b.css: \${missing}\n", qr/line 2: undefined variable/],
 		["# rules\na.html: \\\n", qr/line 2: unfinished line continuation/],
 	) {

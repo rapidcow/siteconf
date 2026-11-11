@@ -2,6 +2,10 @@ Revision history of WwW-SiteConf
 
 
 0.03_00  2026-11-10  RC
+    + A ; in a rule ends its prerequisites, and what follows
+      is the first line of its recipe (a: b ; cp b a), as it
+      is to make; a tab line after it is the next.  It used
+      to be read as more prerequisites.
     + -P tem: a Template Toolkit render with D and O, and no
       web (no GenLib, no site_url, no location).  It needs
       GenGenLib 0.0100 (and so may not be pinned below it).

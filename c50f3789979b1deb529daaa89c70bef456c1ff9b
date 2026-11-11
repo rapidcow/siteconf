@@ -1,0 +1,79 @@
+let's move un_fs and to_fs into RdKw/I18N/CodeSets.pm (still in the same repo, but create a 'codesets' directory). this will implement `-C ...` in most commands we have in ../engine/ .
+
+the idea is to have a process global CS object, retrievable with CodeSets->locale (and settable via CodeSets->locale( ... ))
+
+```
+# diag is a pseudo-category, either 'ascii' or 'unicode'.
+#   diag defaults to 'unicode' but is automatically downgraded
+#   to 'ascii' when Encode::find_encoding( stderr ) is the
+#   canonically also ascii.
+# console is short for stdin/stdout/stderr
+#   overrides all previous settings, though can be individually overridden.
+# console_in is short for stdin
+#   the default "locale" is a pseudo-encoding. it is short for "console_in" for these.
+# console_out is short for stdout/stderr
+#   "locale" is short for "console_out".
+# argv is for @ARGV
+#   "locale" is just itself
+# env is for %ENV
+#   "locale" for itself as well
+# filesys is for syscall args/retvals of file operations
+#   "locale" is short for "locale_fs"
+#
+# all of these can be get/set with $cs->$name, with the
+# sole exception of diag, which is get/set via $cs->diag_mode.
+CodeSets->new(
+    diag => 'ascii',
+    console => 'locale',
+    argv => 'UTF-8',
+    env => 'UTF-8',
+    filesys => 'UTF-8',
+);
+
+# Omitted means "UTF-8"
+Getopt::Long::GetOptions( 'C=s@' => \my @C );
+$cs = CodeSets->parse(@C);  # -C diag:ascii -C console:locale -C argv:UTF-8 -C filesys
+$cs = eval { CodeSets->parse(@C); } or die "E: codeset error: $@";   # re-throwing error in a CLI
+CodeSets->locale($cs);
+
+# inherit stdout from argv (for siteconf -l)
+$cs->stdout( $cs->argv ) if !defined $cs->stdout;
+
+# In a method elsewhere...
+$cs = CodeSets->locale;
+$cs->initstd;   # sets standard files (all of them default to their locales defined by Encode::Locale)
+$cs->initstd(
+   stdout => Encode::FB_CROAK(),   # sets $PerlIO::encoding::fallback
+   stderr => Encode::FB_PERLQQ(),
+);
+
+$cs->diag_mode();  # shows 'unicode' or 'ascii' (this can be individually set to unicode, even if stderr encoding is UTF-8! this variable is not glued to stderr whatsoever. it's a general-purpose diagnostics method that happens to be usually meant for stderr.)
+$cs->diag_name("a.png");  # safe characters get their usual `...' quoting
+$cs->diag_name("\x89PNG\r\n\x1a\n");  # unsafe ASCII always becomes QQ quoted (Dumper Useqq)
+use utf8; $cs->diag_name("炒饭.png");  # also quote as \x{...} unless we are under diag:unicode
+use utf8; $cs->diag_name("炒饭\x{a0}pic.png\r\n");  # becomes "炒饭\x{a0}.png\r\n" under diag:unicode -- we use double quotes, but only manually escape dangerous characters (the same class Python escapes, /[\p{C}\p{Z}]/ (with ASCII space being the sole exception)
+die $cs->diag("cannot open file %q: %s\n", $file, "$!");  # %q calls diag_name, %s interpolates directly.
+
+$cs->un_argv(\@ARGV);  # die with something more helpful: e.g. cannot decode argv 3: $@  (error message from Encode::decode)
+                       # when no arguments passed, mutate @ARGV  (future args may be added, so leave those alone)
+$cs->to_argv(\@ARGV);  # similarly to encode to argv.
+
+open $cs->to_fs( $file );
+$cs->un_fs( getcwd() );
+
+# refer to the syntax in ~/my/lib/perl5/IPC-Unix, minus their return values which are VOID here. ask me if i am contradicting myself. :c
+$cs->getenv(qw( ONE TWO THREE ));  # get by keys. in scalar context, return the first. undef if not exists
+$cs->setenv( KEY => "VALUE", ... ); # set keys; return nothing
+$cs->unsetenv(qw( ONE TWO THREE ));  # clear by names; return nothing
+```
+
+this is pretty big work, so create the library first. the project root is in ../, so you'd mkdir ../codesets... for versioning, set $VERSION = '0.00_00'. then cp -R xt ../codesets for author tests should be fine. then you know how to do the rest, i believe in you....
+
+
+
+what claude did differently afaik:
+
+*  all bad chars are encoded as `\x{...}`, even the C0 controls.
+   (but this is fair; perl uses demarcating to disambiguate utf8
+   strings from ordinary strings; deciding to go all-characters
+   is a more consistent policy to follow.)

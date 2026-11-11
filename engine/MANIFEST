@@ -24,6 +24,7 @@ t/e2e-ninja.t
 t/general.t
 t/graph.t
 t/init.t
+t/list.t
 t/manifest.t
 t/modifiers.t
 t/ninja.t

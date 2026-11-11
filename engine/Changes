@@ -2,6 +2,17 @@ Revision history of WwW-SiteConf
 
 
 0.03_00  2026-11-10  RC
+    + siteconf -l (list) [-F manifest] [-t [goal][:NEED|:WANT]]
+      [-0[octal]]: the names a goal of the manifest NEEDs
+      and WANTs (the default one, both, if not said), once
+      each, unescaped, and as the file system spells them
+      (a name it cannot is an error, not \x{...}), each
+      ended by a newline, or what -0 says (a NUL; -072, :),
+      for tar --null -T or xargs -0.
+    + MANIFEST: a NEED or WANT is unescaped as a header is
+      (${$}, ${U+hex}; read by GenGenLib's read_manifest);
+      what that comes to is checked as it was.  A $ in one
+      that is no escape is an error of its own now.
     + A ; in a rule ends its prerequisites, and what follows
       is the first line of its recipe (a: b ; cp b a), as it
       is to make; a tab line after it is the next.  It used

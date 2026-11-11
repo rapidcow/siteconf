@@ -18,7 +18,7 @@ use E2E;
 my $script = E2E::setup();
 my $make = E2E::make();
 # (only now: we may have skipped all)
-plan tests => 62;
+plan tests => 65;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build
 	-MRdKw::WwW::GenLib=0 ));
@@ -77,6 +77,12 @@ like($err, qr/WANTs `ghost\.html', but cannot be made/, 'WANT without a rule is 
 like(slurp('build/MY/MANIFEST.all'), qr/\A.*^MAKE all\n\tNEED index\.html\n\tNEED sub\/index\.html\n\tNEED robots\.txt\n/ms,
 	'MY/MANIFEST.all');
 like(slurp('build/MY/MANIFEST.basic'), qr/NEED sub\/index\.html/, 'WANT that can be had is kept');
+# (what was dropped is a comment, and so is not listed: only what is made)
+my $listed = run('siteconf -l, of what was resolved', $^X, $script,
+	qw( -l -F build/MY/MANIFEST.all ));
+is($listed, join('', map { "$_\n" } slurp('build/MY/MANIFEST.all') =~ /^\tNEED (\S+)$/mg),
+	'... is what it NEEDs');
+unlike($listed, qr/extra\/index\.html|ghost\.html/, '... and not what was dropped');
 unlike($err = run('siteconf make (alias)', $^X, $script, qw( make -B build )),
 	qr/Writing|Updating/, 'regenerating changes nothing');
 

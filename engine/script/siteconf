@@ -48,6 +48,11 @@ siteconf - configurable incremental build script generator
     siteconf make ...                         # same
     cd ${B} && [make|gmake|ninja] [goal]   # ninja -t clean to clean
 
+    siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+    siteconf list ...                         # same
+    siteconf -l -0 -F ${B}/MY/MANIFEST.all |
+        tar -c -f site.tar -C ${B}/${b} --null -T -
+
 =head1 DESCRIPTION
 
 C<siteconf -i> writes F<configure>.  F<configure> writes
@@ -80,6 +85,7 @@ File names and arguments are read as the locale says, and messages
 are written that way too (what cannot be said there is written as
 C<\x{...}>).  An argument or a name that the locale cannot spell is
 an error.  What is in the files we read and write is always UTF-8.
+(What C<-l> writes is no message, but names: see there.)
 
 =head1 OPTIONS
 
@@ -196,6 +202,41 @@ Specifies a different rulebook to use.
 Overrides the configured C<R>.  Like it, this is a path from the
 current directory.
 
+=item B<-l>, B<list>
+
+Print the names that the manifest (F<MANIFEST>, or C<-F>; nothing is
+configured for this) gives its default goal, the first: what it
+C<NEED>s, then what it C<WANT>s, as they are written there --
+unescaped, but not resolved (a C<WANT> that would be dropped is still
+listed), and each once.  They are relative to C<${a}>, and to
+C<${B}/${b}> once made.
+
+Each name is followed by a newline (or C<-0>), and is written as the
+file system spells it (as F<siteconf> would open it: see
+L<RdKw::WwW::GenGenLib/to_fs>): in the locale's encoding, but on
+macOS always in UTF-8, as its file names are.  A name it cannot spell
+is an error, and nothing is written; so is one with the separator in
+it.
+
+To list what a build made, list what F<siteconf -g> resolved, from
+which every C<WANT> that could not be made is gone:
+C<-F /MY/MANIFEST.>I<goal>.  The manifest itself still has them.
+
+=item B<-t> [I<goal>][B<:NEED>|B<:WANT>]
+
+With C<-l>, list what I<goal> (the default one, if left out) says,
+instead: both C<NEED> and C<WANT>, or only the one that is given.
+May be given more than once, in which case the lists are joined (and
+a name is still listed once).  So C<-t :NEED> is what the default goal
+needs, and C<-t all -t small> everything that either of them says.
+
+=item B<-0>[I<octal>]
+
+With C<-l>, end each name with the character of that octal number
+(up to C<377>, a byte), instead of a newline, as with L<perl(1)>'s
+C<-0>: a NUL by itself, as for C<xargs -0> and C<tar --null>, or
+C<-072> for a colon.  C<-012> is the default.
+
 =back
 
 =cut
@@ -211,7 +252,7 @@ use Getopt::Long qw( GetOptionsFromArray );
 use Encode ();
 use Encode::Locale ();
 use PerlIO::encoding ();
-use RdKw::WwW::GenGenLib qw( to_fs un_fs escape_dep );
+use RdKw::WwW::GenGenLib qw( to_fs un_fs escape_dep read_manifest );
 use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
@@ -241,6 +282,7 @@ my $usage = <<EOM;
 usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
                 [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
        $prog -g [-B builddir] [-G generator] [-F manifest] [-R rulebook] [-o file] [-q]
+       $prog -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
        $prog -V [-V]
 EOM
 
@@ -249,13 +291,14 @@ eval { $_ = Encode::decode(locale => $_, Encode::FB_CROAK()) for @ARGV; 1 }
 	or die "$prog: cannot decode argv in current locale"
 		. " ($Encode::Locale::ENCODING_LOCALE)\n";
 
-my %opt = (S => {}, D => {}, O => {}, M => [], outputs => []);
+my %opt = (S => {}, D => {}, O => {}, M => [], outputs => [], t => []);
 # What `-i' was told, in the order it was told, for the header of
 # configure.  (Leaving out what does not alter its text: -i, -o, -f, -q.)
 my @written;
 GetOptions(
 	'i|init'   => sub { $opt{mode} = 'init' },
 	'g|make'   => sub { $opt{mode} = 'make' },
+	'l|list'   => sub { $opt{mode} = 'list' },
 	'P=s'      => sub { $opt{P} = $_[1]; push @written, "-P", $_[1] },
 	'o=s'      => sub { push @{ $opt{outputs} }, $_[1] },
 	'M=s'      => sub { push @{ $opt{M} }, $_[1]; push @written, "-M$_[1]" },
@@ -266,6 +309,9 @@ GetOptions(
 	'O=s%'     => sub { $opt{O}{$_[1]} = $_[2]; push @written, "-O$_[1]=$_[2]" },
 	'F=s'      => \$opt{F},
 	'R=s'      => \$opt{R},
+	't=s'      => $opt{t},
+	# (-0 alone is a NUL, -072 a colon: an octal number, as perl's -0 takes)
+	'0:s'      => \$opt{0},
 	'h|help'   => sub { print $usage; exit 0 },
 	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
@@ -293,8 +339,8 @@ LVER
 	exit;
 }
 
-# `siteconf init', `siteconf make'
-if (@ARGV and $ARGV[0] =~ /\A(?:init|make)\z/) {
+# `siteconf init', `siteconf make', `siteconf list'
+if (@ARGV and $ARGV[0] =~ /\A(?:init|make|list)\z/) {
 	my $word = shift @ARGV;
 	defined $opt{mode} and $opt{mode} ne $word
 		and die "$prog: conflicting modes: $opt{mode} and $word\n";
@@ -317,12 +363,25 @@ for my $output (@{ $opt{outputs} }) {
 	$opt{mode} eq 'init' ? ($opt{output}{$name} = $path) : ($opt{o} = $path);
 }
 
+if ($opt{mode} ne 'list') {
+	@{ $opt{t} } and die "$prog: -t is only for list\n";
+	defined $opt{0} and die "$prog: -0 is only for list\n";
+}
 if ($opt{mode} eq 'init') {
 	for my $k (qw( B F G R )) {
 		defined $opt{$k} and die "$prog: -$k is not for init\n";
 	}
 	$opt{written} = \@written;
 	exit do_init(\%opt);
+} elsif ($opt{mode} eq 'list') {
+	for my $k (qw( P f B G R o )) {
+		defined $opt{$k} and die "$prog: -$k is not for list\n";
+	}
+	@{ $opt{M} } and die "$prog: -M is not for list\n";
+	for my $S (qw( S D O )) {
+		%{ $opt{$S} } and die "$prog: -$S is not for list\n";
+	}
+	exit do_list(\%opt);
 } else {
 	for my $k (qw( P f )) {
 		defined $opt{$k} and die "$prog: -$k is not for make\n";
@@ -348,6 +407,50 @@ if ($opt{mode} eq 'init') {
 exit;
 
 # ---
+
+# `siteconf -l': the names, for other programs (tar -T, xargs -0), so
+# they are spelled as the file system does -- and not as a message is,
+# with \x{...} for what cannot be: a name we cannot spell is an error.
+sub do_list
+{
+	my ($opt) = @_;
+	my $sep = "\n";
+	if (defined $opt->{0}) {
+		$opt->{0} =~ /\A[0-7]{0,3}\z/ && oct($opt->{0} || 0) <= 0377
+			or die "$prog: -0$opt->{0}: an octal number up to 377, please\n";
+		# (a byte, as it is to perl)
+		$sep = chr oct($opt->{0} || 0);
+	}
+	my $file = defined $opt->{F} ? $opt->{F} : 'MANIFEST';
+	my $out = '';
+	eval {
+		my $mf = read_manifest($file);
+		my (%seen, @name);
+		for my $t (@{ $opt->{t} } ? @{ $opt->{t} } : ':') {
+			my ($goal, $type) = split /:/, $t, 2;
+			length $goal or undef $goal;
+			my @kind = !defined $type || $type eq '' ? qw( needed wanted )
+				: $type eq 'NEED' ? 'needed'
+				: $type eq 'WANT' ? 'wanted'
+				: die "-t $t: NEED or WANT, not `$type'\n";
+			push @name, grep { !$seen{$_}++ } map { $mf->$_($goal) } @kind;
+		}
+		for my $name (@name) {
+			my $fs = to_fs($name, $mf->file);
+			index($fs, $sep) < 0 or die "$file: `$name' has the separator"
+				. " in it (" . sprintf('-0%o', ord $sep) . ")\n";
+			$out .= $fs . $sep;
+		}
+		1;
+	} or do {
+		(my $why = $@) =~ s/\Aread_manifest: //;
+		die "$prog: $why";
+	};
+	binmode STDOUT, ':raw';
+	print STDOUT $out or die "$prog: write: $!\n";
+	close STDOUT or die "$prog: write: $!\n";
+	0;
+}
 
 # `share' lives where File::ShareDir finds it: alongside the modules
 # we were loaded from (so under blib/ in a built checkout), and nowhere

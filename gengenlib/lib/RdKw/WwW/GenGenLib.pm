@@ -52,6 +52,7 @@ our @EXPORT_OK = qw(
 	split_dep walk_deps follow_ok
 	enroot uproot
 	to_fs un_fs
+	read_manifest
 );
 
 =head1 ROUTINES
@@ -939,6 +940,23 @@ sub walk_deps
 	}
 
 	@pool;
+}
+
+=item B<read_manifest> I<file>
+
+The goals in I<file> (a name, or a reference to the text), as an
+L<RdKw::WwW::GenGenLib::Manifest>, which says what that looks like.
+The names in it are unescaped, as B<subs_dep> does without definitions:
+C<${U+0020}> is a space, and C<${$}> a C<$>.
+
+Added in 0.0100.
+
+=cut
+
+sub read_manifest
+{
+	require RdKw::WwW::GenGenLib::Manifest;
+	RdKw::WwW::GenGenLib::Manifest->read(@_);
 }
 
 =back

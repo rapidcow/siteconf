@@ -3,6 +3,12 @@ Revision history of WwW-GenGenLib
 
 0.01_00  2026-11-10  RC
     *** Perl 5.8 is required, and so is Encode::Locale.
+    + read_manifest: the goals of a MANIFEST (MAKE, NEED, WANT),
+      as an RdKw::WwW::GenGenLib::Manifest: target (the default
+      one in scalar context, all in list), default_target,
+      targets, needed, wanted, goals.  Names are unescaped as
+      subs_dep (strict, with no definitions) does: ${U+0020}
+      is a space, ${$} a $; any other variable is an error.
     + escape_deps, escape_dep: a literal name as a spec, which
       subs_deps gives back (with or without definitions, which
       are optional now), and read_deps reads as one name: a $

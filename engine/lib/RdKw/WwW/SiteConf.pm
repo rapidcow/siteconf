@@ -155,6 +155,15 @@ Indentation is only for the eyes.  A C<#> preceded by whitespace
 (or at the start of the line) begins a comment.  File names are
 relative to C<${a}> (and made in C<${b}>).
 
+A file name is unescaped as a header's is (see
+L<RdKw::WwW::GenGenLib::Manifest>): C<${$}> is a C<$> and
+C<${U+>I<hex>C<}> a character, as in C<r${U+00E9}sum${U+00E9}.html>; and
+there are no variables.  A goal name is not.  What it comes to must
+still be a name that we would put into a Makefile, as it must in a
+target: no blanks, C<$>, C<#>, C<:> and the like, nothing absolute,
+and no C<..> (so far, the escape is good for C<siteconf -l>, and what
+is not ASCII).
+
 =item the files themselves
 
 A source file declares its place in the graph in a header (see
@@ -524,7 +533,11 @@ sub _check_file
 
 Returns the goals in I<file>, a list of C<{ name, need, want }>
 hash references, where the latter two are lists of C<{ file, line }>.
-You can also give a scalar reference instead of a file name.
+You can also give a scalar reference instead of a file name.  It is
+read by L<RdKw::WwW::GenGenLib/read_manifest> (so names are unescaped),
+and then what we cannot have is an error: a reserved goal name, and a
+file name we would not put into a Makefile (one with blanks or what
+make would make something of, an absolute one, one with C<..>).
 
 =cut
 
@@ -551,45 +564,21 @@ sub _is_clean
 sub read_manifest
 {
 	my ($self, $file) = @_;
-	my $fh;
-	if (ref $file) {
-		open $fh, '<:encoding(UTF-8)', $file or die "E: open <string: $!\n";
-		$file = 'MANIFEST';
-	} else {
-		open $fh, '<:encoding(UTF-8)', to_fs($file, 'E')
-			or die "E: open <$file: $!\n";
-	}
+	my $mf = eval { RdKw::WwW::GenGenLib::read_manifest($file) } or do {
+		(my $why = $@) =~ s/\Aread_manifest: //;
+		die "E: $why";
+	};
+	$file = $mf->file;
 
-	my (@goal, %seen, $goal);
-	while (<$fh>) {
-		chomp;
-		s/(?:^|[$SP])#.*//o;
-		next if /\A[$SP]*\z/o;
-		my $where = "$file line $.";
-		my ($kw, @arg) = _words($_);
-		if ($kw eq 'MAKE') {
-			@arg == 1 or die "E: $where: MAKE takes exactly one goal name\n";
-			my $name = $arg[0];
-			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
-				or die "E: $where: bad goal name `$name'\n";
-			$reserved_goal{$name} || $self->_is_clean($name)
-				and die "E: $where: `$name' is a reserved goal name\n";
-			$seen{$name}++ and die "E: $where: goal `$name' is already made\n";
-			push @goal, $goal = { name => $name, need => [], want => [], line => $. };
-			next;
-		}
-		if ($kw eq 'NEED' or $kw eq 'WANT') {
-			$goal or die "E: $where: $kw before any MAKE\n";
-			@arg == 1 or die "E: $where: $kw takes exactly one file"
-				. " (use # for comments)\n";
-			_check_file($arg[0], $where);
-			push @{ $goal->{lc $kw} }, { file => $arg[0], line => $. };
-			next;
-		}
-		die "E: $where: expected MAKE, NEED or WANT, not `$kw'\n";
+	# (what it reads, it reads; what we cannot have, in the order it is said)
+	my @goal = $mf->goals;
+	for my $goal (@goal) {
+		my $name = $goal->{name};
+		$reserved_goal{$name} || $self->_is_clean($name)
+			and die "E: $file line $goal->{line}: `$name' is a reserved goal name\n";
+		_check_file($_->{file}, "$file line $_->{line}")
+			for sort { $a->{line} <=> $b->{line} } @{ $goal->{need} }, @{ $goal->{want} };
 	}
-	close $fh;
-	@goal or die "E: $file: no goals; what should I make?\n";
 	@goal;
 }
 

@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 1;
+use Test::More tests => 2;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -13,6 +13,7 @@ use TestConsole;
 BEGIN {
 	my @module = qw(
 		RdKw::WwW::GenGenLib
+		RdKw::WwW::GenGenLib::Manifest
 	);
 	foreach my $module (@module) {
 		use_ok( $module ) or BAIL_OUT;

@@ -66,7 +66,7 @@ the standard files), B<console_in> (B<stdin>) and B<console_out>
 (B<stdout> and B<stderr>); and B<diag>, which is not a code set but a
 mode, C<unicode> or C<ascii>, for what we say (L</diag_mode>).
 
-What cannot be spelled is an error, never a guess.
+What cannot be spelled is an error, not mangled.
 
 =cut
 

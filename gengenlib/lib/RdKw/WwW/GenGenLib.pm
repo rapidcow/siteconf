@@ -709,11 +709,14 @@ B<read_deps> reads it as one name, whatever is in it.  The
 escaped dependency specifications are returned as a copy (in
 scalar context, the first).
 
-What is safe is left as it is: printable ASCII, from C<!> to
-C<~>, but for C<:>, which would end a header line's names.  A
-C<$> is C<${$}>, and anything else is C<${U+>I<HEX>C<}>, its
-code point (as in C<${U+0020}> for a space, or C<${U+003A}> for
-a colon).
+What is safe is left as it is: letters and digits (in ASCII), and
+C</ . _ - + @>.  A C<$> is C<${$}>, and anything else is
+C<${U+>I<HEX>C<}>, its code point (as in C<${U+0020}> for a space,
+or C<${U+003A}> for a colon).  That is any metacharacter (of the
+shell, make, a header line) and any comment character, whether or
+not it means anything where the name is going: C<;>, C<#>, C<:>,
+C<%>, quotes, globs, braces and the like.  It is uglier than it has
+to be, but it does not need to know where it is going.
 
 With C<< unicode => 1 >>, what is above C<~> is safe too, but for
 controls (C<DEL> and the C1s), surrogates, the line and
@@ -726,8 +729,9 @@ Added in 0.0100.
 
 =cut
 
-# What is left as it is: printable ASCII, but for $ and :
-my $ESCAPE = qr/[^!-#%-9;-~]/;
+# What is left as it is: what a file name is made of, and nothing
+# that means anything to a shell, make or a header line
+my $ESCAPE = qr/[^A-Za-z0-9\/._+\@-]/;
 
 sub _escape_char
 {

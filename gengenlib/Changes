@@ -6,8 +6,9 @@ Revision history of WwW-GenGenLib
     + escape_deps, escape_dep: a literal name as a spec, which
       subs_deps gives back (with or without definitions, which
       are optional now), and read_deps reads as one name: a $
-      is ${$}, and a : or what is not printable ASCII is
-      ${U+HEX}.
+      is ${$}, and what is not a letter, digit or one of
+      / . _ - + @ is ${U+HEX} (any metacharacter: ; # : %
+      quotes, globs and the like).
       { unicode => 1 } leaves what is not ASCII as it is (but
       for controls, surrogates, line breaks and white space,
       which { unicode_space => 1 } leaves too).

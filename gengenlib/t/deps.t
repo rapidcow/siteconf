@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 130;
+use Test::More tests => 132;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -225,7 +225,7 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 	is(escape_dep("a b\tc"), 'a${U+0020}b${U+0009}c', 'a blank is its code point');
 	is(escape_dep("r\x{e9}sum\x{e9}"), 'r${U+00E9}sum${U+00E9}', '... and so is what is not ASCII');
 	is(escape_dep("\x{1F600}"), '${U+1F600}', '... of as many digits as it takes');
-	is(escape_dep('{}!~'), '{}!~', 'printable ASCII is as it is');
+	is(escape_dep('{}!~'), '${U+007B}${U+007D}${U+0021}${U+007E}', '... and so is other printable ASCII');
 	is(escape_dep("r\x{e9}\x{1F600}", unicode => 1), "r\x{e9}\x{1F600}", 'unicode => 1: as it is');
 	is(escape_dep("\x{7f}\x{85}\x{d800}\x{2028}\x{2029}", unicode => 1),
 		'${U+007F}${U+0085}${U+D800}${U+2028}${U+2029}',
@@ -260,7 +260,7 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 	# one name, and that name
 	my @c = (' ', "\t", "\x{a0}", "\x{2028}", "\x{85}", "\x{1F600}", "\x{e9}",
 		'{', '}', '$', '/', 'a', '${a}', "\x{7f}", "\x{3000}", 'U+', '#',
-		':', '-->');
+		':', '-->', ';', '*', '"', "'", '\\', '%', '=', '`');
 	my @bad;
 	srand 42;
 	for (1 .. 2000) {
@@ -274,4 +274,7 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 		}
 	}
 	is_deeply(\@bad, [], 'escape_dep, read_deps, subs_dep: the name, whatever is in it');
+	is(escape_dep('a-b_c.d/e+f@2x'), 'a-b_c.d/e+f@2x', 'escape_dep: a plain name, as it is');
+	is(escape_dep(q{;#:%"'*?[]\\=~,}), join('', map { sprintf '${U+%04X}', ord }
+		split //, q{;#:%"'*?[]\\=~,}), '... metacharacters, by code point');
 }

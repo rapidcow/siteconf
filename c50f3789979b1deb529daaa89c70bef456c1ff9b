@@ -75,8 +75,6 @@
   set $VERSION = '0.00_00'. then cp -R xt ../codesets for author tests should be fine. then you know how to do the rest, i believe
   in you....
 
-
-
 what claude did differently afaik:
 
 *  all bad chars are encoded as `\x{...}`, even the C0 controls.

@@ -677,10 +677,11 @@ NEW
 # => [qw( \${a} \${B}/\${b} \${B}/\${c} \${custom} ... )].
 # To have more prefixes considered for display in diag-
 # nostic messages, pass PREFIXES => [qw( \${a} \${B}/\${b}
-# \${B}/\${c} \${custom} ... )].  Note that in both options,
-# the standard prefixes must be explicitly enumerated.
+# \${B}/\${c} \${custom} ... )].  Note that in both cases
+# you must explicitly enumerate the standard prefixes if
+# you just want to append or prepend to the list.
 #
-# More options documented in the perldoc of
+# Options are documented in the perldoc of
 # $PROVIDER.
 #
 my \$provider = $PROVIDER->new({

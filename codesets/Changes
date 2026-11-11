@@ -7,7 +7,7 @@ Revision history of I18N-CodeSets
       and the diag mode (unicode or ascii), from new or from -C
       specs (parse), and the process's own (locale).
     + initstd, to_fs, un_fs (as in RdKw::WwW::GenGenLib 0.01_00),
-      un_argv, to_argv, un_arg, to_arg, getenv, setenv, unsetenv:
-      in and out of the process, or an error.
+      un_argv, to_argv, decode_argv, encode_argv, getenv, setenv,
+      unsetenv: in and out of the process, or an error.
     + diag_name, diag: names for people, quoted to show what would
       not (according to the diag mode).

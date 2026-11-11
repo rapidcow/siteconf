@@ -6,7 +6,7 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 32;
+use Test::More tests => 40;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -31,26 +31,31 @@ is($@, qq{cannot decode "\\x{e9}" in US-ASCII\n}, '... and says so');
 # --- un_argv, to_argv
 {
 	my @args = ("r\xe9sum\xe9", 'x');
-	$lat->un_argv(\@args);
-	is_deeply(\@args, ['résumé', 'x'], 'un_argv: in place');
-	$lat->to_argv(\@args);
-	is_deeply(\@args, ["r\xe9sum\xe9", 'x'], 'to_argv: and back');
-	ok(!eval { $asc->un_argv(\@args); 1 }, 'un_argv: cannot read one');
-	like($@, qr/\Acannot decode argv 1: .+\n\z/, '... says which');
-	is_deeply(\@args, ["r\xe9sum\xe9", 'x'], '... leaving them all be');
-	local @ARGV = ("\xe9");
-	$lat->un_argv;
-	is_deeply(\@ARGV, ['é'], 'un_argv: @ARGV by default');
+	is_deeply([ $lat->un_argv(@args) ], ['résumé', 'x'], 'un_argv: a list');
+	is_deeply(\@args, ["r\xe9sum\xe9", 'x'], '... leaving it be');
+	is_deeply([ $lat->to_argv('résumé', 'x') ], \@args, 'to_argv: and back');
+	is(scalar $lat->un_argv("r\xe9sum\xe9", 'x'), 'résumé', 'un_argv: the first in scalar context');
+	is(scalar $lat->to_argv("r\x{e9}sum\x{e9}", 'x'), "r\xe9sum\xe9", 'to_argv: the first in scalar context');
+	is_deeply([ $lat->un_argv ], [], 'un_argv: nothing');
+	ok(!eval { $asc->un_argv('x', @args); 1 }, 'un_argv: cannot read one');
+	like($@, qr/\Acannot decode argv 1: .+\n\z/, '... says which, from 0');
+	ok(!eval { $asc->un_argv(@args, { start => 1 }); 1 }, 'un_argv: start');
+	like($@, qr/\Acannot decode argv 1: .+\n\z/, '... from there');
+	ok(!eval { $asc->to_argv('é'); 1 }, 'to_argv: cannot spell one');
+	like($@, qr/\Acannot encode argv 0: .+\n\z/, '... says which');
+	ok(!eval { $lat->un_argv('x', { begin => 1 }); 1 }, 'un_argv: unknown option');
 }
 
-# --- un_arg, to_arg
+# --- decode_argv, encode_argv
 {
-	my $arg = "r\xe9sum\xe9";
-	is($lat->un_arg($arg), 'résumé', 'un_arg: returned');
-	is($arg, "r\xe9sum\xe9", '... leaving it be');
-	is($lat->to_arg('résumé'), "r\xe9sum\xe9", 'to_arg: and back');
-	ok(!eval { $asc->un_arg($arg); 1 }, 'un_arg: cannot read it');
-	like($@, qr/\Acannot decode arg: .+\n\z/, '... says so');
+	local @ARGV = ("r\xe9sum\xe9", 'x');
+	is(scalar $lat->decode_argv, undef, 'decode_argv: returns nothing');
+	is_deeply(\@ARGV, ['résumé', 'x'], '... in @ARGV');
+	$lat->encode_argv;
+	is_deeply(\@ARGV, ["r\xe9sum\xe9", 'x'], 'encode_argv: and back');
+	ok(!eval { $asc->decode_argv; 1 }, 'decode_argv: cannot read one');
+	like($@, qr/\Acannot decode argv 1: .+\n\z/, '... says which, from 1');
+	is_deeply(\@ARGV, ["r\xe9sum\xe9", 'x'], '... leaving @ARGV be');
 }
 
 # --- getenv, setenv, unsetenv

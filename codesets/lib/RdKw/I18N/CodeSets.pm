@@ -361,68 +361,72 @@ sub un_fs
 	$name;
 }
 
-=item I<cs>->B<un_argv>([ \@args ])
+=item I<cs>->B<un_argv>( I<bytes>, ...[, { start => I<n> }] )
 
-=item I<cs>->B<to_argv>([ \@args ])
+=item I<cs>->B<to_argv>( I<arg>, ...[, { start => I<n> }] )
 
-Decodes the arguments (B<argv>) in place, or encodes them; C<@ARGV>
-if none are given.  Dies, saying which one could not be, if one
-cannot be, leaving them all as they were.
+The arguments, decoded (as B<argv>) or encoded; the first one, in
+scalar context.  Dies, saying which one could not be, if one cannot
+be: B<argv> I<n> is the first (C<0> unless given, as for C<$0>),
+and so on.
+
+    my $prog = $cs->un_argv($0);
+    my @args = $cs->un_argv(@ARGV, { start => 1 });
 
 =cut
 
 sub un_argv
 {
-	my ($self, $args) = @_;
-	$self->_argv(\&Encode::decode, decode => $args);
+	my $self = shift;
+	$self->_argv(\&Encode::decode, decode => @_);
 }
 
 sub to_argv
 {
-	my ($self, $args) = @_;
-	$self->_argv(\&Encode::encode, encode => $args);
+	my $self = shift;
+	$self->_argv(\&Encode::encode, encode => @_);
 }
 
 sub _argv
 {
-	my ($self, $code, $what, $args) = @_;
-	$args = \@ARGV unless defined $args;
+	my ($self, $code, $what, @args) = @_;
+	my %opt = @args && ref $args[-1] eq 'HASH' ? %{ pop @args } : ();
+	my $start = exists $opt{start} ? delete $opt{start} : 0;
+	Carp::croak("${what}_argv: unknown option $_") for sort keys %opt;
+	Carp::croak("${what}_argv: start is not a number")
+		unless defined $start && $start =~ /\A[0-9]+\z/;
+	my $enc = $self->_encoding('argv');
 	my @new;
-	for my $i (0 .. $#$args) {
-		push @new, $self->_arg($code, $what, "argv @{[ $i + 1 ]}", $args->[$i]);
+	for my $i (0 .. $#args) {
+		my $new = eval { $code->($enc, $args[$i], $CHECK) };
+		defined $new or die "cannot $what argv @{[ $start + $i ]}: "
+			. (defined $args[$i] ? _encode_error($@) : 'undefined') . "\n";
+		push @new, $new;
 	}
-	@$args = @new;
-	return;
+	wantarray ? @new : $new[0];
 }
 
-=item I<cs>->B<un_arg>( I<bytes> )
+=item I<cs>->B<decode_argv>
 
-=item I<cs>->B<to_arg>( I<arg> )
+=item I<cs>->B<encode_argv>
 
-One argument, decoded (as B<argv>) or encoded, and returned: for
-what is not in C<@ARGV>, such as C<$0>.  Dies if it cannot be.
+Decodes C<@ARGV> (as B<argv>), or encodes it; or dies, leaving it as
+it was, if one argument cannot be.
 
 =cut
 
-sub un_arg
+sub decode_argv
 {
-	my ($self, $arg) = @_;
-	$self->_arg(\&Encode::decode, decode => arg => $arg);
+	my $self = shift;
+	@ARGV = $self->un_argv(@ARGV, { start => 1 });
+	return;
 }
 
-sub to_arg
+sub encode_argv
 {
-	my ($self, $arg) = @_;
-	$self->_arg(\&Encode::encode, encode => arg => $arg);
-}
-
-sub _arg
-{
-	my ($self, $code, $what, $which, $arg) = @_;
-	my $new = eval { $code->($self->_encoding('argv'), $arg, $CHECK) };
-	defined $new or die "cannot $what $which: "
-		. (defined $arg ? _encode_error($@) : 'undefined') . "\n";
-	$new;
+	my $self = shift;
+	@ARGV = $self->to_argv(@ARGV, { start => 1 });
+	return;
 }
 
 =item I<cs>->B<getenv>( I<name>, ... )

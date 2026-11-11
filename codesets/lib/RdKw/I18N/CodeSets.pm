@@ -331,20 +331,25 @@ sub initstd
 	return;
 }
 
-=item I<cs>->B<to_fs>( I<name>[, I<who>] )
+=item I<cs>->B<to_fs>( I<name>[, I<who>][, { check => I<check> }] )
 
-=item I<cs>->B<un_fs>( I<bytes>[, I<who>] )
+=item I<cs>->B<un_fs>( I<bytes>[, I<who>][, { check => I<check> }] )
 
 I<name>, a character string, as the file system spells it
 (B<filesys>), or the other way around.  Dies (saying I<who> did it,
-if given) if that cannot be done: we do not make up names for files.
+if given) if that cannot be done: we do not make up names for files,
+unless told to with a I<check> (as L<Encode> takes it, C<FB_CROAK> by
+default; the source is never modified, whatever it says).
 
 =cut
 
 sub to_fs
 {
-	my ($self, $name, $who) = @_;
-	my $fs = eval { Encode::encode($self->_encoding('filesys'), $name, $CHECK) };
+	my ($self, @args) = @_;
+	my $opt = _opt(to_fs => \@args, 'check');
+	my ($name, $who) = @args;
+	my ($fs) = _code(\&Encode::encode, $self->_encoding('filesys'),
+		$name, $opt->{check});
 	defined $fs or die +(defined $who ? "$who: " : "")
 		. "cannot encode @{[ _qq_ascii($name) ]}"
 		. " in @{[ $self->_say_encoding('filesys') ]}\n";
@@ -353,22 +358,38 @@ sub to_fs
 
 sub un_fs
 {
-	my ($self, $fs, $who) = @_;
-	my $name = eval { Encode::decode($self->_encoding('filesys'), $fs, $CHECK) };
+	my ($self, @args) = @_;
+	my $opt = _opt(un_fs => \@args, 'check');
+	my ($fs, $who) = @args;
+	my ($name) = _code(\&Encode::decode, $self->_encoding('filesys'),
+		$fs, $opt->{check});
 	defined $name or die +(defined $who ? "$who: " : "")
 		. "cannot decode @{[ _qq_ascii($fs) ]}"
 		. " in @{[ $self->_say_encoding('filesys') ]}\n";
 	$name;
 }
 
-=item I<cs>->B<un_argv>( I<bytes>, ...[, { start => I<n> }] )
+=item I<cs>->B<un_argv>( I<bytes>, ...[, { I<option> => I<value>, ... }] )
 
-=item I<cs>->B<to_argv>( I<arg>, ...[, { start => I<n> }] )
+=item I<cs>->B<to_argv>( I<arg>, ...[, { I<option> => I<value>, ... }] )
 
 The arguments, decoded (as B<argv>) or encoded; the first one, in
 scalar context.  Dies, saying which one could not be, if one cannot
 be: B<argv> I<n> is the first (C<0> unless given, as for C<$0>),
-and so on.
+and so on.  The options are:
+
+=over
+
+=item B<start> => I<n>
+
+What the first argument is called (C<0>).
+
+=item B<check> => I<check>
+
+What to do with what cannot be spelled, as L<Encode> takes it
+(C<FB_CROAK>).
+
+=back
 
     my $prog = $cs->un_argv($0);
     my @args = $cs->un_argv(@ARGV, { start => 1 });
@@ -390,54 +411,55 @@ sub to_argv
 sub _argv
 {
 	my ($self, $code, $what, @args) = @_;
-	my %opt = @args && ref $args[-1] eq 'HASH' ? %{ pop @args } : ();
-	my $start = exists $opt{start} ? delete $opt{start} : 0;
-	Carp::croak("${what}_argv: unknown option $_") for sort keys %opt;
+	my $opt = _opt("${what}_argv" => \@args, qw( start check ));
+	my $start = exists $opt->{start} ? $opt->{start} : 0;
 	Carp::croak("${what}_argv: start is not a number")
 		unless defined $start && $start =~ /\A[0-9]+\z/;
 	my $enc = $self->_encoding('argv');
 	my @new;
 	for my $i (0 .. $#args) {
-		my $new = eval { $code->($enc, $args[$i], $CHECK) };
-		defined $new or die "cannot $what argv @{[ $start + $i ]}: "
-			. (defined $args[$i] ? _encode_error($@) : 'undefined') . "\n";
+		my ($new, $err) = _code($code, $enc, $args[$i], $opt->{check});
+		defined $new or die "cannot $what argv @{[ $start + $i ]}: $err\n";
 		push @new, $new;
 	}
 	wantarray ? @new : $new[0];
 }
 
-=item I<cs>->B<decode_argv>
+=item I<cs>->B<decode_argv>([ I<check> ])
 
-=item I<cs>->B<encode_argv>
+=item I<cs>->B<encode_argv>([ I<check> ])
 
-Decodes C<@ARGV> (as B<argv>), or encodes it; or dies, leaving it as
-it was, if one argument cannot be.
+Decodes C<@ARGV> (as B<argv>), or encodes it, as B<un_argv> and
+B<to_argv> would from B<argv> C<1>; or dies, leaving it as it was, if
+one argument cannot be.  (As L<Encode::Locale/decode_argv>.)
 
 =cut
 
 sub decode_argv
 {
-	my $self = shift;
-	@ARGV = $self->un_argv(@ARGV, { start => 1 });
+	my ($self, $check) = @_;
+	@ARGV = $self->un_argv(@ARGV, { start => 1, check => $check });
 	return;
 }
 
 sub encode_argv
 {
-	my $self = shift;
-	@ARGV = $self->to_argv(@ARGV, { start => 1 });
+	my ($self, $check) = @_;
+	@ARGV = $self->to_argv(@ARGV, { start => 1, check => $check });
 	return;
 }
 
-=item I<cs>->B<getenv>( I<name>, ... )
+=item I<cs>->B<getenv>( I<name>, ...[, { check => I<check> }] )
 
 The values of the environment variables (B<env>) by those names,
 undef for each that is not set; the first one, in scalar context.
-Dies if a name or a value cannot be spelled.
+Dies if a name or a value cannot be spelled.  A I<check> is for the
+values; a name is always spelled as it is, or not at all.
 
-=item I<cs>->B<setenv>( I<name> => I<value>, ... )
+=item I<cs>->B<setenv>( I<name> => I<value>, ...[, { check => I<check> }] )
 
-Sets the environment variables; a I<value> of undef unsets it.
+Sets the environment variables; a I<value> of undef unsets it.  Sets
+none of them if one cannot be spelled.
 
 =item I<cs>->B<unsetenv>( I<name>, ... )
 
@@ -448,16 +470,15 @@ Unsets them.
 sub getenv
 {
 	my ($self, @names) = @_;
+	my $opt = _opt(getenv => \@names, 'check');
 	my $enc = $self->_encoding('env');
 	my @values;
 	for my $name (@names) {
-		my $key = $self->_env_key($enc, $name);
-		my $value = $ENV{$key};
+		my $value = $ENV{ $self->_env_key($enc, $name) };
 		if (defined $value) {
-			my $chars = eval { Encode::decode($enc, $value, $CHECK) };
-			defined $chars or die "cannot decode environment variable"
+			($value) = _code(\&Encode::decode, $enc, $value, $opt->{check});
+			defined $value or die "cannot decode environment variable"
 				. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}\n";
-			$value = $chars;
 		}
 		push @values, $value;
 	}
@@ -467,13 +488,14 @@ sub getenv
 sub setenv
 {
 	my ($self, @pairs) = @_;
+	my $opt = _opt(setenv => \@pairs, 'check');
 	Carp::croak('setenv: odd number of arguments') if @pairs % 2;
 	my $enc = $self->_encoding('env');
 	my %set;
 	while (my ($name, $value) = splice @pairs, 0, 2) {
 		my $key = $self->_env_key($enc, $name);
 		if (defined $value) {
-			my $bytes = eval { Encode::encode($enc, $value, $CHECK) };
+			my ($bytes) = _code(\&Encode::encode, $enc, $value, $opt->{check});
 			defined $bytes or die "cannot encode the value of"
 				. " environment variable @{[ _qq_ascii($name) ]}"
 				. " in @{[ $self->_say_encoding('env') ]}\n";
@@ -500,10 +522,35 @@ sub _env_key
 {
 	my ($self, $enc, $name) = @_;
 	Carp::croak('undefined environment variable name') unless defined $name;
-	my $key = eval { Encode::encode($enc, $name, $CHECK) };
+	my ($key) = _code(\&Encode::encode, $enc, $name);
 	defined $key or die "cannot encode environment variable name"
 		. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}\n";
 	$key;
+}
+
+# The options at the end of a list, { name => value }, by these names
+sub _opt
+{
+	my ($who, $args, @names) = @_;
+	return {} unless @$args && ref $args->[-1] eq 'HASH';
+	my $opt = pop @$args;
+	my %ok = map { $_ => 1 } @names;
+	for (sort keys %$opt) {
+		Carp::croak("$who: unknown option $_") unless $ok{$_};
+	}
+	$opt;
+}
+
+# What Encode makes of the source (which it is not given to modify),
+# or undef and why not
+sub _code
+{
+	my ($code, $enc, $src, $check) = @_;
+	$check = $CHECK unless defined $check;
+	my $copy = $src;
+	my $res = eval { $code->($enc, $copy, $check) };
+	return ($res) if defined $res;
+	(undef, $@ ne '' ? _encode_error($@) : 'undefined');
 }
 
 =item I<cs>->B<diag_name>( I<name> )

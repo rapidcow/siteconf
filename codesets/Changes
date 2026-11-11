@@ -8,6 +8,8 @@ Revision history of I18N-CodeSets
       specs (parse), and the process's own (locale).
     + initstd, to_fs, un_fs (as in RdKw::WwW::GenGenLib 0.01_00),
       un_argv, to_argv, decode_argv, encode_argv, getenv, setenv,
-      unsetenv: in and out of the process, or an error.
+      unsetenv: in and out of the process, or an error (FB_CROAK,
+      unless { check => ... } says otherwise; decode_argv and
+      encode_argv take it as Encode::Locale's do).
     + diag_name, diag: names for people, quoted to show what would
       not (according to the diag mode).

@@ -6,7 +6,7 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 40;
+use Test::More tests => 55;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -56,6 +56,41 @@ is($@, qq{cannot decode "\\x{e9}" in US-ASCII\n}, '... and says so');
 	ok(!eval { $asc->decode_argv; 1 }, 'decode_argv: cannot read one');
 	like($@, qr/\Acannot decode argv 1: .+\n\z/, '... says which, from 1');
 	is_deeply(\@ARGV, ["r\xe9sum\xe9", 'x'], '... leaving @ARGV be');
+}
+
+# --- check: FB_CROAK, unless told otherwise
+{
+	my $s = "r\xe9";
+	is(scalar $asc->un_argv($s, { check => Encode::FB_DEFAULT() }), "r\x{fffd}",
+		'un_argv: check');
+	is(scalar $asc->to_argv('é', { check => Encode::FB_PERLQQ() }), '\x{00e9}',
+		'to_argv: check');
+	ok(!eval { $asc->un_argv($s, { check => Encode::FB_QUIET() | Encode::DIE_ON_ERR() }); 1 },
+		'un_argv: check without LEAVE_SRC');
+	is($s, "r\xe9", '... leaving the source be all the same');
+	scalar $asc->un_argv($s, { check => Encode::FB_QUIET() });
+	is($s, "r\xe9", '... even if Encode would not');
+	local @ARGV = ("r\xe9");
+	$asc->decode_argv(Encode::FB_DEFAULT());
+	is_deeply(\@ARGV, ["r\x{fffd}"], 'decode_argv: check');
+	@ARGV = ('é');
+	$asc->encode_argv(Encode::FB_PERLQQ());
+	is_deeply(\@ARGV, ['\x{00e9}'], 'encode_argv: check');
+	is($asc->un_fs("r\xe9", { check => Encode::FB_DEFAULT() }), "r\x{fffd}", 'un_fs: check');
+	is($asc->to_fs('é', 'here', { check => Encode::FB_PERLQQ() }), '\x{00e9}',
+		'to_fs: check, after who');
+	ok(!eval { $asc->to_fs('é', 'here', { check => Encode::FB_CROAK() }); 1 },
+		'to_fs: FB_CROAK');
+	like($@, qr/\Ahere: cannot encode/, '... still says who');
+	ok(!eval { $asc->to_fs('é', { chekc => 0 }); 1 }, 'to_fs: unknown option');
+	local %ENV = %ENV;
+	$lat->setenv(CS_ONE => 'é');
+	is(scalar $asc->getenv('CS_ONE', { check => Encode::FB_DEFAULT() }), "\x{fffd}",
+		'getenv: check');
+	$asc->setenv(CS_ONE => 'é', { check => Encode::FB_PERLQQ() });
+	is($ENV{CS_ONE}, '\x{00e9}', 'setenv: check');
+	ok(!eval { $asc->getenv('CS_é', { check => Encode::FB_DEFAULT() }); 1 },
+		'getenv: names, never checked otherwise');
 }
 
 # --- getenv, setenv, unsetenv

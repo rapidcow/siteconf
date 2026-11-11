@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 207;
+use Test::More tests => 210;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -95,6 +95,18 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		'... and begins the recipe, which a tab line goes on with');
 	is_deeply($rules->{'c.css'}{deps}, ['x'], '... touching or not');
 	is($rules->{'c.css'}{recipe}, "\techo \"a; b\"\n", '... and only the first ;');
+
+	# ... and ${U+003B} is a ; that ends nothing, in :S too (where a
+	# lexer that split at the character would split)
+	$dir = project({
+		MANIFEST => $manifest,
+		'Makefile.in' => "x.y: \${A}/\${\@:S/./\${U+003B}/} \${A}/\${\@:S/x/\${U+003B}/:S/\${U+003B}/,/}"
+			. " ; echo \${\@:S/./\${U+003B}/} \${U+003B} done\n",
+	});
+	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
+	is_deeply([keys %$rules], ['x.y'], '${U+003B} in :S/old/ and :S/new/ ends no prerequisites');
+	is_deeply($rules->{'x.y'}{deps}, ['x;y', ',.y'], '... and is a ;');
+	is($rules->{'x.y'}{recipe}, "\techo x;y ; done\n", '... which is in the recipe as it is');
 
 	for my $case (
 		["a.html: x ; true\n\ttrue\na.html: ; false\n", qr/line 3: more than one recipe/],

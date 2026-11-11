@@ -6,7 +6,7 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 27;
+use Test::More tests => 32;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -41,6 +41,16 @@ is($@, qq{cannot decode "\\x{e9}" in US-ASCII\n}, '... and says so');
 	local @ARGV = ("\xe9");
 	$lat->un_argv;
 	is_deeply(\@ARGV, ['é'], 'un_argv: @ARGV by default');
+}
+
+# --- un_arg, to_arg
+{
+	my $arg = "r\xe9sum\xe9";
+	is($lat->un_arg($arg), 'résumé', 'un_arg: returned');
+	is($arg, "r\xe9sum\xe9", '... leaving it be');
+	is($lat->to_arg('résumé'), "r\xe9sum\xe9", 'to_arg: and back');
+	ok(!eval { $asc->un_arg($arg); 1 }, 'un_arg: cannot read it');
+	like($@, qr/\Acannot decode arg: .+\n\z/, '... says so');
 }
 
 # --- getenv, setenv, unsetenv

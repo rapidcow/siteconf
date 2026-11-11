@@ -387,17 +387,42 @@ sub _argv
 {
 	my ($self, $code, $what, $args) = @_;
 	$args = \@ARGV unless defined $args;
-	my $enc = $self->_encoding('argv');
 	my @new;
 	for my $i (0 .. $#$args) {
-		my $new = eval { $code->($enc, $args->[$i], $CHECK) };
-		defined $new or die "cannot $what argv @{[ $i + 1 ]}: "
-			. (defined $args->[$i] ? _encode_error($@) : 'undefined')
-			. "\n";
-		push @new, $new;
+		push @new, $self->_arg($code, $what, "argv @{[ $i + 1 ]}", $args->[$i]);
 	}
 	@$args = @new;
 	return;
+}
+
+=item I<cs>->B<un_arg>( I<bytes> )
+
+=item I<cs>->B<to_arg>( I<arg> )
+
+One argument, decoded (as B<argv>) or encoded, and returned: for
+what is not in C<@ARGV>, such as C<$0>.  Dies if it cannot be.
+
+=cut
+
+sub un_arg
+{
+	my ($self, $arg) = @_;
+	$self->_arg(\&Encode::decode, decode => arg => $arg);
+}
+
+sub to_arg
+{
+	my ($self, $arg) = @_;
+	$self->_arg(\&Encode::encode, encode => arg => $arg);
+}
+
+sub _arg
+{
+	my ($self, $code, $what, $which, $arg) = @_;
+	my $new = eval { $code->($self->_encoding('argv'), $arg, $CHECK) };
+	defined $new or die "cannot $what $which: "
+		. (defined $arg ? _encode_error($@) : 'undefined') . "\n";
+	$new;
 }
 
 =item I<cs>->B<getenv>( I<name>, ... )

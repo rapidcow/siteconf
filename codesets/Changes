@@ -6,7 +6,8 @@ Revision history of I18N-CodeSets
       argv, env and filesys (by default, as Encode::Locale says),
       and the diag mode (unicode or ascii), from new or from -C
       specs (parse), and the process's own (locale).
-    + initstd, to_fs, un_fs (as in RdKw::WwW::GenGenLib 0.01_00),
+    + initstd, to_fs, un_fs (as in RdKw::WwW::GenGenLib 0.01_00,
+      but of lists, and with { prog => ... } for who could not),
       un_argv, to_argv, decode_argv, encode_argv, getenv, setenv,
       unsetenv: in and out of the process, or an error (FB_CROAK,
       unless { check => ... } says otherwise; decode_argv and

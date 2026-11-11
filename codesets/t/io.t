@@ -6,7 +6,7 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 55;
+use Test::More tests => 61;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -22,11 +22,17 @@ my $asc = $CS->new(filesys => 'ascii', argv => 'ascii', env => 'ascii');
 is($lat->to_fs('résumé'), "r\xe9sum\xe9", 'to_fs: as filesys spells it');
 is($lat->un_fs("r\xe9sum\xe9"), 'résumé', 'un_fs: and back');
 my $bad = 'résumé';
-ok(!eval { $asc->to_fs($bad, 'here'); 1 }, 'to_fs: cannot spell it');
+ok(!eval { $asc->to_fs($bad, { prog => 'here' }); 1 }, 'to_fs: cannot spell it');
 is($@, qq{here: cannot encode "r\\x{e9}sum\\x{e9}" in US-ASCII\n}, '... and says who could not');
 is($bad, 'résumé', '... leaving the name be');
 ok(!eval { $asc->un_fs("\xe9"); 1 }, 'un_fs: cannot read it');
 is($@, qq{cannot decode "\\x{e9}" in US-ASCII\n}, '... and says so');
+is_deeply([ $lat->to_fs('résumé', 'é') ], ["r\xe9sum\xe9", "\xe9"], 'to_fs: a list');
+is_deeply([ $lat->un_fs("r\xe9sum\xe9", "\xe9") ], ['résumé', 'é'], 'un_fs: a list');
+is(scalar $lat->un_fs("\xe9", 'x'), 'é', '... the first in scalar context');
+is_deeply([ $lat->to_fs ], [], 'to_fs: nothing');
+ok(!eval { $asc->to_fs('ok', 'é'); 1 }, 'to_fs: one cannot be spelled');
+like($@, qr/\Acannot encode "\\x\{e9\}"/, '... says which');
 
 # --- un_argv, to_argv
 {
@@ -77,9 +83,9 @@ is($@, qq{cannot decode "\\x{e9}" in US-ASCII\n}, '... and says so');
 	$asc->encode_argv(Encode::FB_PERLQQ());
 	is_deeply(\@ARGV, ['\x{00e9}'], 'encode_argv: check');
 	is($asc->un_fs("r\xe9", { check => Encode::FB_DEFAULT() }), "r\x{fffd}", 'un_fs: check');
-	is($asc->to_fs('é', 'here', { check => Encode::FB_PERLQQ() }), '\x{00e9}',
-		'to_fs: check, after who');
-	ok(!eval { $asc->to_fs('é', 'here', { check => Encode::FB_CROAK() }); 1 },
+	is($asc->to_fs('é', { prog => 'here', check => Encode::FB_PERLQQ() }), '\x{00e9}',
+		'to_fs: check, with prog');
+	ok(!eval { $asc->to_fs('é', { prog => 'here', check => Encode::FB_CROAK() }); 1 },
 		'to_fs: FB_CROAK');
 	like($@, qr/\Ahere: cannot encode/, '... still says who');
 	ok(!eval { $asc->to_fs('é', { chekc => 0 }); 1 }, 'to_fs: unknown option');

@@ -331,42 +331,59 @@ sub initstd
 	return;
 }
 
-=item I<cs>->B<to_fs>( I<name>[, I<who>][, { check => I<check> }] )
+=item I<cs>->B<to_fs>( I<name>, ...[, { I<option> => I<value>, ... }] )
 
-=item I<cs>->B<un_fs>( I<bytes>[, I<who>][, { check => I<check> }] )
+=item I<cs>->B<un_fs>( I<bytes>, ...[, { I<option> => I<value>, ... }] )
 
-I<name>, a character string, as the file system spells it
-(B<filesys>), or the other way around.  Dies (saying I<who> did it,
-if given) if that cannot be done: we do not make up names for files,
-unless told to with a I<check> (as L<Encode> takes it, C<FB_CROAK> by
-default; the source is never modified, whatever it says).
+The I<name>s, character strings, as the file system spells them
+(B<filesys>), or the other way around; the first one, in scalar
+context.  Dies if one cannot be: we do not make up names for files,
+unless told to.  The options are:
+
+=over
+
+=item B<prog> => I<prog>
+
+Who could not, said before the error (C<prog: cannot encode ...>).
+
+=item B<check> => I<check>
+
+What to do with what cannot be spelled, as L<Encode> takes it
+(C<FB_CROAK>).  The source is never modified, whatever it says.
+
+=back
+
+    open my $fh, '<', $cs->to_fs($file, { prog => $prog }) or die ...;
+    my @names = $cs->un_fs(readdir $dh);
 
 =cut
 
 sub to_fs
 {
-	my ($self, @args) = @_;
-	my $opt = _opt(to_fs => \@args, 'check');
-	my ($name, $who) = @args;
-	my ($fs) = _code(\&Encode::encode, $self->_encoding('filesys'),
-		$name, $opt->{check});
-	defined $fs or die +(defined $who ? "$who: " : "")
-		. "cannot encode @{[ _qq_ascii($name) ]}"
-		. " in @{[ $self->_say_encoding('filesys') ]}\n";
-	$fs;
+	my $self = shift;
+	$self->_fs(\&Encode::encode, encode => to_fs => @_);
 }
 
 sub un_fs
 {
-	my ($self, @args) = @_;
-	my $opt = _opt(un_fs => \@args, 'check');
-	my ($fs, $who) = @args;
-	my ($name) = _code(\&Encode::decode, $self->_encoding('filesys'),
-		$fs, $opt->{check});
-	defined $name or die +(defined $who ? "$who: " : "")
-		. "cannot decode @{[ _qq_ascii($fs) ]}"
-		. " in @{[ $self->_say_encoding('filesys') ]}\n";
-	$name;
+	my $self = shift;
+	$self->_fs(\&Encode::decode, decode => un_fs => @_);
+}
+
+sub _fs
+{
+	my ($self, $code, $what, $sub, @names) = @_;
+	my $opt = _opt($sub => \@names, qw( prog check ));
+	my $enc = $self->_encoding('filesys');
+	my @new;
+	for my $name (@names) {
+		my ($new) = _code($code, $enc, $name, $opt->{check});
+		defined $new or die +(defined $opt->{prog} ? "$opt->{prog}: " : '')
+			. "cannot $what @{[ _qq_ascii($name) ]}"
+			. " in @{[ $self->_say_encoding('filesys') ]}\n";
+		push @new, $new;
+	}
+	wantarray ? @new : $new[0];
 }
 
 =item I<cs>->B<un_argv>( I<bytes>, ...[, { I<option> => I<value>, ... }] )

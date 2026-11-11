@@ -607,9 +607,9 @@ sub norm_dep
 	scalar norm_deps($spec, \%opt);
 }
 
-=item B<subs_dep> \%D, I<spec>, [ strict => 0 ]
+=item B<subs_dep> \%D, I<spec>, [ strict => 0, on_missing => 'vanish' ]
 
-=item B<subs_deps> \%D, I<spec>... { strict => 0 }
+=item B<subs_deps> \%D, I<spec>... { strict => 0, on_missing => 'vanish' }
 
 Substitute dependency specifications with
 the given definitions.  C<norm_deps> is
@@ -617,6 +617,25 @@ called to normalize the specification (and
 is given the options, if any).  The map is
 optional since 0.0100, so this could be an
 inverse operation of C<escape_deps>.
+C<strict> is passed to B<norm_deps>.
+The C<on_missing> option may be one of:
+
+=over
+
+=item C<"croak">
+
+Missing variables result in an error.
+
+=item C<"vanish"> (default)
+
+Missing variables are the empty string.
+
+=item a unary callback
+
+Missing variables invoke the callback to get
+a string suitable for substitution.
+
+=back
 
 A variable that makes up a whole path segment
 and is followed by a slash is a directory, and
@@ -637,6 +656,11 @@ Added in 0.0002.
 
 =cut
 
+sub _bad_subs
+{
+	die "subs_deps: bad substitution: \${$_[0]}\n";
+}
+
 sub subs_deps
 {
 	my $D = shift;
@@ -646,6 +670,18 @@ sub subs_deps
 	if ($opt->{pass_thru}) {
 		$opt = {%$opt};
 		delete $opt->{pass_thru};
+	}
+	my $fb;
+	if (defined $opt->{on_missing}) {
+		my $missing = delete $opt->{on_missing};
+		if (ref($missing) eq 'CODE') {
+			$fb = $missing;
+		} elsif ($missing eq 'croak') {
+			$fb = \&_bad_subs;
+		} else {
+			# $missing could be "vanish"
+			# but i don't really care.
+		}
 	}
 	my @ret;
 	foreach my $spec (norm_deps(@_, $opt)) {
@@ -674,7 +710,9 @@ SSS:		while ($spec =~ /\G([^\$]*)\$\{([^}]+)\}/gc) {
 			}
 			my $value = $D ? $D->{$name} : undef;
 			# Undefined = empty to us.
-			defined $value or $value = '';
+			unless (defined $value) {
+				$value = $fb ? $fb->($name) : '';
+			}
 			if ($seg && $spec =~ /\G\//gc) {
 				# A whole directory: it brings its own trailing slash
 				# (or none, if it is the current directory)

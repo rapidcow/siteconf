@@ -670,16 +670,14 @@ NEW
 # with such a dependency header with CHECK_DEPS => 1,
 # in case that helps keeping your templates up-to-date.
 #
-# By default, any symbolic prefix is permitted, though
-# only the standard \${a}, \${B}/\${b}, \${B}/\${c} are tried
-# for composing diagnostic messages.  To set an explicit
-# whitelist of symbolic prefixes, specify ALLOW_PREFIXES
-# => [qw( \${a} \${B}/\${b} \${B}/\${c} \${custom} ... )].
-# To have more prefixes considered for display in diag-
-# nostic messages, pass PREFIXES => [qw( \${a} \${B}/\${b}
-# \${B}/\${c} \${custom} ... )].  Note that in both cases
-# you must explicitly enumerate the standard prefixes if
-# you just want to append or prepend to the list.
+# By default, any symbolic prefix is permitted, although
+# only the standard `\${a} \${B}/\${b} \${B}/\${c}' are tried
+# for constructing a plausible symbolic name.  To define
+# an explicit whitelist of symbolic prefixes, specify
+# ALLOW_PREFIXES.  To have additional prefixes considered
+# for a symbolic names, specify PREFIXES.  In both cases
+# the list is comprehensive, so it is possible to remove
+# a standard prefix by omitting it from the list.
 #
 # Options are documented in the perldoc of
 # $PROVIDER.

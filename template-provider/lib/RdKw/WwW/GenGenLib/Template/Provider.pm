@@ -143,7 +143,8 @@ use File::Spec ();
 use Template::Constants qw( STATUS_ERROR STATUS_DECLINED );
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_deps walk_deps follow_ok
-	norm_dep subs_dep split_dep escape_dep uproot to_fs un_fs );
+	norm_dep subs_dep split_dep
+	escape_dep uproot to_fs un_fs );
 
 my %default = (
 	ALLOW_DEPS => 1,

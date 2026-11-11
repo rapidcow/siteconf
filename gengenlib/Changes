@@ -6,7 +6,8 @@ Revision history of WwW-GenGenLib
     + escape_deps, escape_dep: a literal name as a spec, which
       subs_deps gives back (with or without definitions, which
       are optional now), and read_deps reads as one name: a $
-      is ${$}, and what is not printable ASCII is ${U+HEX}.
+      is ${$}, and a : or what is not printable ASCII is
+      ${U+HEX}.
       { unicode => 1 } leaves what is not ASCII as it is (but
       for controls, surrogates, line breaks and white space,
       which { unicode_space => 1 } leaves too).
@@ -34,6 +35,10 @@ Revision history of WwW-GenGenLib
     *** read_deps: names are split at blanks (space and tab)
         only: a no-break space, form feed and so on are part
         of a name.  A CR at the end of a line is not.
+    *** read_deps: a colon ends a line's names, as in a vim
+        modeline (NEED: a b: or NEED: a b :), and what follows
+        is not read, so block comments work (<!-- ... : -->).
+        A colon in a name is ${U+003A}.
     - Tests say what they say as the locale does (\x{...}
       where it cannot), not with a Wide character warning.
 

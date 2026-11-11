@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 128;
+use Test::More tests => 130;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -93,9 +93,18 @@ HTML
 		'names split at blanks only');
 	$f = spew('crlf', "# HAVE: a\r\n# NEED: b c\r\n");
 	is_deeply({ read_deps($f) }, { HAVE => 'a', NEED => [qw( b c )] }, 'CRLF');
-	$f = spew('later', "x = 1  # NEED: a.html  -- why: b\n");
-	is_deeply({ read_deps($f) }, { NEED => [qw( a.html -- why: b )] },
+	$f = spew('later', "x = 1  # NEED: a.html  -- why b\n");
+	is_deeply({ read_deps($f) }, { NEED => [qw( a.html -- why b )] },
 		'the first comment that works is the one');
+	$f = spew('modeline', "<!-- NEED: to-get-some-sleep: -->\n"
+		. "/*** WANT: evil\${U+0020}file: ***/\n"
+		. "[%# HAVE: \${a}/abc :  # Or even this; but this just seems -%]\n");
+	is_deeply({ read_deps($f) }, { NEED => ['to-get-some-sleep'],
+		WANT => ['evil${U+0020}file'], HAVE => '${a}/abc' },
+		'a colon ends the names, touching or not: block comments');
+	$f = spew('colons', "# NEED: a:b c\n# NEED: :d\n# WANT:: e\n# HAVE: x : y z\n# NEED: f\n");
+	is_deeply({ read_deps($f) }, { NEED => [qw( a f )], HAVE => 'x' },
+		'... the first colon, and only for that line');
 	$f = spew('theorem', "theorem NEED: a\n");
 	is_deeply({ read_deps($f) }, {}, 'REM, still a word after anything');
 	$f = spew('nospace', "#HAVE: a\n");
@@ -250,7 +259,8 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 	# Through a header, which is split at blanks: what is escaped is
 	# one name, and that name
 	my @c = (' ', "\t", "\x{a0}", "\x{2028}", "\x{85}", "\x{1F600}", "\x{e9}",
-		'{', '}', '$', '/', 'a', '${a}', "\x{7f}", "\x{3000}", 'U+', '#');
+		'{', '}', '$', '/', 'a', '${a}', "\x{7f}", "\x{3000}", 'U+', '#',
+		':', '-->');
 	my @bad;
 	srand 42;
 	for (1 .. 2000) {

@@ -286,9 +286,18 @@ capitals; a field of any other name (C<USE:>, C<vim:>, C<Have:>)
 is someone else's, and is skipped: it neither ends the header nor
 begins one.  The names a field lists are separated by blanks (spaces
 and tabs) and by nothing else, so a no-break space is part of a name.
+They end at the end of the line, or at a colon (touching the last
+name or not), as a vim modeline does; what follows is not read.
+That is what makes a block comment work:
+
+   <!-- NEED: to-get-some-sleep: -->
+   /*** WANT: evil${U+0020}file: ***/
+   [%# HAVE: ${a}/abc :  # and anything else at all -%]
+
+and so a colon in a name is C<${U+003A}> (see B<escape_dep>).
 (Since 0.0100; before, only C<HAVE>, C<NEED> and C<WANT> after
-exactly one space were header lines, and names were split at any
-white space.)
+exactly one space were header lines, names were split at any
+white space, and a colon was part of a name.)
 
 The names undergo no parameter expansions.  So:
 
@@ -381,8 +390,10 @@ sub read_deps
 				next;
 			}
 			# Names are split at blanks (space and tab), and only
-			# at blanks: anything else is part of a name.
-			my @list = /\G[\t ]*([^\t ]+)/gc;
+			# at blanks: anything else is part of a name, but for
+			# a colon, which ends them (as it does a vim modeline),
+			# so that what closes a comment is not one.
+			my @list = /\G[\t ]*([^\t :]+)/gc;
 			$onit = 1;
 			next unless @list;
 
@@ -687,9 +698,10 @@ escaped dependency specifications are returned as a copy (in
 scalar context, the first).
 
 What is safe is left as it is: printable ASCII, from C<!> to
-C<~>.  A C<$> is C<${$}>, and anything else is
-C<${U+>I<HEX>C<}>, its code point (as in C<${U+0020}> for a
-space).
+C<~>, but for C<:>, which would end a header line's names.  A
+C<$> is C<${$}>, and anything else is C<${U+>I<HEX>C<}>, its
+code point (as in C<${U+0020}> for a space, or C<${U+003A}> for
+a colon).
 
 With C<< unicode => 1 >>, what is above C<~> is safe too, but for
 controls (C<DEL> and the C1s), surrogates, the line and
@@ -702,8 +714,8 @@ Added in 0.0100.
 
 =cut
 
-# What is left as it is: printable ASCII, but for $
-my $ESCAPE = qr/[^!-#%-~]/;
+# What is left as it is: printable ASCII, but for $ and :
+my $ESCAPE = qr/[^!-#%-9;-~]/;
 
 sub _escape_char
 {

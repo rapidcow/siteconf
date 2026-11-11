@@ -333,9 +333,11 @@ be forgiven.  Defaults to 0 (false; do not forgive).
 # name and a colon.  What other tools put in their headers looks like
 # this too, and should, so that the one does not end the other's.
 my $header_field = qr{
-	\A .*?			# anything at all before the comment, as in
-				# `x = 1  # NEED: ...' -- but the first
-				# comment that works is the one
+	\A .*?			# anything at all before the comment,
+				# as in `x = 1  # NEED: ...' -- but stop
+				# first comment that works is the one,
+				# so we're not chasing the comments after
+				# this comment.
 	(?:
 		\#		# UNIX sh, scripting languages
 	|	;		# BIND zone, DOS-INI, Lisp, ledger
@@ -343,20 +345,30 @@ my $header_field = qr{
 	|	//		# C++, Java, C99 line-comment
 	|	"		# vimscript
 	|	'		# VBScript (aughhhhhh!!! >n<!)
-	|	--		# lua, SQL
+	|	--		# lua, SQL (also covers SGML!)
 	|	%		# TeX, lilypond
 	|	(?<![A-Za-z0-9_])
 		\@?(?i:rem)	# BASIC, DOS batch; any case (but a word
-				# of its own, unlike theorem)
-	|	::		# DOS batch, the label that is not
-	)
+				# of its own; e.g. not theorem or harem.)
+	|	::		# DOS batch, the empty label?
+	)			# This one is powerful beyond DOS,
+		# actually, since you can end with the same sequence at the
+		# end; so this gives you symmetry on even the esoteric block
+		# comments not listed here!  e.g.:
+		#
+		#    {-:: HAVE: file.hs  ::-}     Haskell
+		#    #=:: HAVE: file.jl  ::=#     Julia
+		#    #|:: HAVE: file.scm ::|#     Scheme
+		#
+		# (Of course, you could also just use the line comment
+		# syntax in those respective languages. ;)
 	[\t ]+			# Blanks are necessary both due to my
 				# subjective aesthetics and preventing
 				# false positives (e.g. a quoted string or
 				# part of a word, in the case of REMember.)
 	([A-Za-z._-]+)		# The field: any name, in any case (ours
 				# are HAVE, NEED, WANT, and only so)
-	[\t ]* : [\t ]*		# and then what it says
+	[\t ]* : [\t ]*		# ... and then what it says.
 }x;
 
 sub read_deps

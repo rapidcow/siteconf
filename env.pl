@@ -16,6 +16,7 @@ my @modules = qw(
 	gengenlib-l10n
 	genlib
 	template-provider
+	textdomain
 );
 
 my $Me = basename($0);

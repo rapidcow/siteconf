@@ -10,6 +10,9 @@ use utf8;
 use Cwd ();
 use File::Spec;
 use Test::More;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use TestConsole;
 
 my $mo = File::Spec->rel2abs('mo');
 plan skip_all => 'no catalogs made (perl Makefile.PL LINGUAS="en zh")'

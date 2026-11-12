@@ -4,9 +4,10 @@ use strict;
 use warnings;
 use Test::More ();
 
-# What Test::More says (names, and got and expected when a test fails)
-# is said as the locale says, with \x{...} where it cannot, as siteconf
-# says it.  It prints to its own handles, not to STDOUT and STDERR.
+# Use locale encoding for wide-characters, since console
+# output/error is often meant for humans and not machine-
+# consumable.  Fall back to ASCII \x{...} when a Unicode
+# character cannot be encoded, however.
 {
 	require Encode;
 	require Encode::Locale;

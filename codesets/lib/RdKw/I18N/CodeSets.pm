@@ -62,11 +62,16 @@ The pseudo-encoding C<locale> means exactly that, for whichever
 category it is given to.
 
 When setting, there are also the pseudo-categories B<console> (all of
-the standard files), B<console_in> (B<stdin>) and B<console_out>
-(B<stdout> and B<stderr>); and B<diag>, which is not a code set but a
-mode, C<unicode> or C<ascii>, for what we say (L</diag_mode>).
+the standard files), B<console_in> (B<stdin>), B<console_out>
+(B<stdout> and B<stderr>) and B<all> (every category, and B<diag>
+follows B<stderr> again); and B<diag>, which is not a code set but a
+mode, C<unicode> or C<ascii>, for what we say (L</diag_mode>).  An
+B<stderr> set to ASCII (by any of its names) makes B<diag> follow it
+again, and so C<ascii>, until it is told otherwise.  C<0> is short for C<ascii>, and
+C<1> for C<UTF-8> (or, for B<diag>, C<unicode>).
 
-What cannot be spelled is an error, not mangled.
+What cannot be spelled is an error, not mangled; but what we say is
+said so that it can be (L</diag>).
 
 =cut
 
@@ -95,6 +100,10 @@ my %PSEUDO = (
 
 my %STD = ( stdin => \*STDIN, stdout => \*STDOUT, stderr => \*STDERR );
 
+# What 0 and 1 are short for
+my %NUMBER = ( 0 => 'ascii', 1 => 'UTF-8' );
+my %DIAG_NUMBER = ( 0 => 'ascii', 1 => 'unicode' );
+
 my $CHECK = Encode::FB_CROAK() | Encode::LEAVE_SRC();
 
 # (our, so that it may be local()ized: local $RdKw::I18N::CodeSets::LOCALE)
@@ -106,19 +115,22 @@ our $LOCALE;
 
 =item I<CLASS>->B<new>( I<category> => I<encoding>, ... )
 
+=item I<cs>->B<new>( I<category> => I<encoding>, ... )
+
 A new set of code sets: I<encoding> is anything L<Encode> knows by
 name, or C<locale>; B<diag> is C<unicode> or C<ascii> instead.  They
 are applied in order, so that a later one overrides what came before
 (a pseudo-category, the categories it sets).  Dies if a category or
-an encoding is unknown.
+an encoding is unknown.  Of a I<cs>, they are applied to a copy of
+it, which is returned; I<cs> itself is left as it was.
 
 =cut
 
 sub new
 {
-	my ($class, @pairs) = @_;
+	my ($proto, @pairs) = @_;
 	Carp::croak('new: odd number of arguments') if @pairs % 2;
-	my $self = bless {}, $class;
+	my $self = ref $proto ? bless({ %$proto }, ref $proto) : bless({}, $proto);
 	while (my ($name, $enc) = splice @pairs, 0, 2) {
 		$self->_set($name, $enc);
 	}
@@ -127,27 +139,52 @@ sub new
 
 =item I<CLASS>->B<parse>( I<spec>, ... )
 
+=item I<cs>->B<parse>( I<spec>, ... )
+
 As L</new>, from what C<-C> was told: each I<spec> is a
-I<category>B<:>I<encoding>, or a I<category> alone, which means
-C<UTF-8> (and, for B<diag>, C<unicode>).  They are applied in order,
-so that a later one overrides what came before:
-C<-C console:locale -C stderr:ascii>.  Dies (with a newline, so that
-the message can be said again as it is) if a I<spec> makes no sense.
+I<category>B<:>I<encoding>; a I<category> alone, which means
+C<UTF-8> (and, for B<diag>, C<unicode>); or an I<encoding> alone,
+which means B<all:>I<encoding>.  A I<spec> may also be several, split
+by commas.  They are applied in order, so that a later one overrides
+what came before: C<-C console:locale -C stderr:ascii>, or the same as
+C<console:locale,stderr:ascii>.  Dies (with a newline, so that the
+message can be said again as it is) if a I<spec> makes no sense.
+
+    # SITECONF_CODESETS=0, =UTF-8, =filesys:UTF-8,console:ascii, ...
+    $cs = $cs->parse($ENV{SITECONF_CODESETS})
+        if exists $ENV{SITECONF_CODESETS};
 
 =cut
 
 sub parse
 {
-	my ($class, @spec) = @_;
+	my ($proto, @spec) = @_;
 	my @pairs;
-	for my $spec (@spec) {
+	for my $spec (map { defined $_ ? split(/,/, $_) : $_ } @spec) {
 		defined $spec or die "undefined codeset\n";
 		my ($name, $enc) = $spec =~ /\A([^:]*)(?::(.*))?\z/s;
 		length $name or die "no category in codeset @{[ _qq_ascii($spec) ]}\n";
+		if (!defined $enc && !_is_category($name)) {
+			_is_encoding($name)
+				or die "unknown category or encoding @{[ _qq_ascii($name) ]}\n";
+			($name, $enc) = (all => $name);
+		}
 		$enc = $name eq 'diag' ? 'unicode' : 'UTF-8' unless defined $enc;
 		push @pairs, $name, $enc;
 	}
-	$class->new(@pairs);
+	$proto->new(@pairs);
+}
+
+sub _is_category
+{
+	my ($name) = @_;
+	$name eq 'diag' || $name eq 'all' || $PSEUDO{$name} || $LOCALE{$name};
+}
+
+sub _is_encoding
+{
+	my ($enc) = @_;
+	exists $NUMBER{$enc} || $enc eq 'locale' || Encode::find_encoding($enc);
 }
 
 sub _set
@@ -155,17 +192,33 @@ sub _set
 	my ($self, $name, $enc) = @_;
 	defined $name or die "undefined category\n";
 	if ($name eq 'diag') {
+		$enc = $DIAG_NUMBER{$enc} if defined $enc && exists $DIAG_NUMBER{$enc};
 		$self->diag_mode($enc);
+	}
+	elsif ($name eq 'all') {
+		$self->diag_mode(undef);
+		$self->_set($_, $enc) for @CATEGORIES;
 	}
 	elsif ($PSEUDO{$name}) {
 		$self->_set($_, $enc) for @{$PSEUDO{$name}};
 	}
 	elsif ($LOCALE{$name}) {
+		$enc = $NUMBER{$enc} if defined $enc && exists $NUMBER{$enc};
 		$self->$name($enc);
+		# (what is said in ASCII, we say in ASCII: diag follows it)
+		$self->diag_mode(undef) if $name eq 'stderr' && _is_ascii($self->{stderr});
 	}
 	else {
 		die "unknown category @{[ _qq_ascii($name) ]}\n";
 	}
+}
+
+# Whether an encoding, by its canonical name, is ASCII (as every name
+# of it is in Encode: US-ASCII, ANSI_X3.4-1968, 646, ...)
+sub _is_ascii
+{
+	my ($enc) = @_;
+	defined $enc && $enc eq 'ascii';
 }
 
 =item I<CLASS>->B<locale>([ I<codesets> ])
@@ -308,7 +361,7 @@ sub diag_mode
 		}
 	}
 	return $self->{diag} if defined $self->{diag};
-	$self->_encoding('stderr') eq 'ascii' ? 'ascii' : 'unicode';
+	_is_ascii($self->_encoding('stderr')) ? 'ascii' : 'unicode';
 }
 
 =item I<cs>->B<initstd>([ I<file> => I<fallback>, ... ])
@@ -581,7 +634,8 @@ I<name>, for people: C<`name'> if it is all printable ASCII, and
 quoted as Perl would otherwise, with escapes (C<\n>, C<\x{a0}>) for
 what would not show.  Under C<diag_mode> C<ascii>, that is all but
 printable ASCII; under C<unicode>, it is only controls, separators
-and the like (C<\p{C}> and C<\p{Z}>, but for the ASCII space).
+and the like (C<\p{C}> and C<\p{Z}>, but for the ASCII space), and
+what B<stderr> cannot spell.
 
 =cut
 
@@ -590,25 +644,30 @@ sub diag_name
 	my ($self, $name) = @_;
 	return 'undef' unless defined $name;
 	return "`$name'" if $name =~ /\A[\x20-\x7e]*\z/;
-	$self->diag_mode eq 'ascii' ? _qq_ascii($name) : _qq_unicode($name);
+	$self->diag_mode eq 'ascii' ? _qq_ascii($name)
+		: _qq_unicode($name, $self->_encoding('stderr'));
 }
 
 =item I<cs>->B<diag>( I<format>, I<arg>, ... )
 
 The I<format>, with each C<%q> replaced by the L</diag_name> of its
 I<arg>, each C<%s> by its I<arg> as it is, and each C<%%> by C<%>.
-Dies on any other C<%>.
+Dies on any other C<%>.  What B<stderr> cannot spell, in the
+I<format> or in an I<arg> of C<%s>, is escaped (C<\x{7092}>), as
+C<FB_PERLQQ> would have it; so that the message can be said, whatever
+B<stderr> was opened with, and the more so if it dies.
 
 =cut
 
 sub diag
 {
 	my ($self, $format, @args) = @_;
+	my $enc = $self->_encoding('stderr');
 	my $out = '';
 	pos $format = 0;
 	while ($format =~ /\G([^%]*)%(.?)/gcs) {
 		my ($text, $conv) = ($1, $2);
-		$out .= $text;
+		$out .= _perlqq($enc, $text);
 		if ($conv eq '%') {
 			$out .= '%';
 		}
@@ -616,13 +675,29 @@ sub diag
 			Carp::croak('diag: missing argument for %' . $conv) unless @args;
 			my $arg = shift @args;
 			$out .= $conv eq 'q' ? $self->diag_name($arg)
-				: defined $arg ? $arg : '';
+				: defined $arg ? _perlqq($enc, $arg) : '';
 		}
 		else {
 			Carp::croak("diag: unknown conversion %$conv");
 		}
 	}
-	$out . substr($format, pos $format);
+	$out . _perlqq($enc, substr($format, pos $format));
+}
+
+# Whether the encoding can spell all of the string
+sub _spellable
+{
+	my ($enc, $s) = @_;
+	defined((_code(\&Encode::encode, $enc, $s))[0]);
+}
+
+# The string, with what the encoding cannot spell escaped as \x{...}
+sub _perlqq
+{
+	my ($enc, $s) = @_;
+	return $s if $s =~ /\A[\x00-\x7f]*\z/ || _spellable($enc, $s);
+	$s =~ s/([^\x00-\x7f])/_spellable($enc, $1) ? $1 : sprintf('\x{%x}', ord $1)/ge;
+	$s;
 }
 
 # "..." as Perl would quote it, with what is not printable ASCII
@@ -647,12 +722,15 @@ sub _qq_ascii
 	qq{"$q"};
 }
 
-# Ditto, but with only what would not show escaped
+# Ditto, but with only what would not show, or could not be spelled
+# in the encoding, escaped
 # (This is inspired by Python str.isprintable())
 sub _qq_unicode
 {
-	my ($s) = @_;
-	(my $q = $s) =~ s/((?! )[\p{C}\p{Z}]|["\\\$\@])/_qq_char($1)/ge;
+	my ($s, $enc) = @_;
+	(my $q = $s) =~ s{((?! )[\p{C}\p{Z}]|["\\\$\@])|([^\x00-\x7f])}{
+		defined $1 ? _qq_char($1) : _spellable($enc, $2) ? $2 : _qq_char($2)
+	}ge;
 	qq{"$q"};
 }
 

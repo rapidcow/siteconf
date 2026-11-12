@@ -4,9 +4,11 @@ Revision history of WwW-SiteConf-L10N
 0.00_00  2026-11-12  AI
     + RdKw::WwW::SiteConf::L10N: $LOCALEDIR, where the catalogs of
       the siteconf text domain are (bytes, as the system spells
-      it), as WwW-GenGenLib-L10N has them for gengenlib: by
-      default, share/locale under INSTALL_BASE or PREFIX; perl
-      Makefile.PL LOCALEDIR=... says otherwise.
+      it): by default, share/locale under INSTALL_BASE or PREFIX;
+      perl Makefile.PL LOCALEDIR=... says otherwise.  It is the
+      domain of GenLib and GenGenLib too (and so of
+      GenGenLib::Template::Provider), whose catalogs were
+      WwW-GenGenLib-L10N's, which is no more.
     + perl Makefile.PL LINGUAS="en zh" makes and installs those
       catalogs too (none, unless told), with msgfmt(1) if it is
       there, or Locale::Msgfmt if it is not.
@@ -15,7 +17,8 @@ Revision history of WwW-SiteConf-L10N
       the catalogs (of LINGUAS, or all of po/), and only in
       LOCALEDIR, which it must be told.
     + make pot, make update-po: po/siteconf.pot from the sources
-      of siteconf (in ../engine: the modules, the script, and the
-      configure and presets it writes) and of GenLib (in
-      ../genlib), and the catalogs merged with it, for the
-      maintainer.
+      of siteconf (in ../siteconf: the modules, the script, and
+      the configure and presets it writes), of GenLib (in
+      ../genlib), and of GenGenLib (in ../gengenlib and
+      ../template-provider), and the catalogs merged with it, for
+      the maintainer.

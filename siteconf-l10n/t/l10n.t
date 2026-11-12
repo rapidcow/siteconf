@@ -58,7 +58,7 @@ else {
 	plan skip_all => 'no non-C locale found :(' unless defined $locale;
 	diag "Using non-C locale: $locale";
 }
-plan tests => 11;
+plan tests => 13;
 diag("Locale::Messages $Locale::Messages::VERSION ($INC{'Locale/gettext_pp.pm'})");
 
 my $cs = RdKw::I18N::CodeSets->new(stderr => 'UTF-8', filesys => 'UTF-8', diag => 'unicode');
@@ -108,6 +108,18 @@ is(in(en => sub { RdKw::WwW::SiteConf::__n(@problems, 1) }), $problems[0], '__n:
 is(in(en => sub { RdKw::WwW::SiteConf::__n(@problems, 2) }), $problems[1], '__n: more, in en');
 # (what configure says of its help, which it says later, as N__ marks it)
 is(in(zh => sub { RdKw::WwW::SiteConf::__('Disable tips') }), '关闭提示', 'a msgid that is N__ there');
+
+# GenGenLib says what it says from the same catalogs
+sub gengenlib_says
+{
+	my ($language) = @_;
+	in($language, sub {
+		eval { RdKw::WwW::GenGenLib::read_deps("nope\x{e9}"); 1 } and return;
+		$@;
+	});
+}
+like(gengenlib_says('zh'), qr/\Aread_deps: 无法打开文件 "nope\x{e9}"：/, 'GenGenLib, in zh');
+like(gengenlib_says('en'), qr/\Aread_deps: cannot open file "nope\x{e9}": /, 'GenGenLib, in en');
 
 # gettext may set $! (as libintl does, failing to open the catalogs
 # that are not there; gettext_pp does not), but $! is as it was after

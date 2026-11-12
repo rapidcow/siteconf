@@ -15,7 +15,7 @@ L10N::TextDomain - UTF-8 gettext text domain
 
     # The domain and where its catalogs are, as a module of its
     # own says ($DOMAIN, $LOCALEDIR), if it is there:
-    use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::GenGenLib::L10N';
+    use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
     # or as they are given:
     use RdKw::L10N::TextDomain 'siteconf', '/usr/local/share/locale';

@@ -94,14 +94,16 @@ EXTRA_TEST_FILES=	xt/*
 xtest :: subdirs-test_dynamic
 MAKE_FRAG
 
-	# For the maintainer: po/siteconf.pot from the sources (what
-	# siteconf writes, configure and the presets, included: they are
-	# Perl, and @PLACEHOLDER@s are nothing to xgettext), and the
-	# catalogs brought up to date with it
+	# For the maintainer: po/siteconf.pot from the sources, of GenLib
+	# and GenGenLib too (what siteconf writes, configure and the
+	# presets, included: they are Perl, and @PLACEHOLDER@s are nothing
+	# to xgettext), and the catalogs brought up to date with it
 	$text .= <<'MAKE_FRAG';
 
-ENGINE = ../engine
+SITECONF = ../siteconf
 GENLIB = ../genlib
+GENGENLIB = ../gengenlib
+PROVIDER = ../template-provider
 XGETTEXT = xgettext
 MSGMERGE = msgmerge
 
@@ -109,13 +111,16 @@ pot :
 	$(XGETTEXT) -L Perl --from-code=UTF-8 -k__ -k__n:1,2 -kN__ \
 		--package-name=WwW-SiteConf --add-comments='HEY!' \
 		-o po/siteconf.pot \
-		$(ENGINE)/script/siteconf \
-		$(ENGINE)/lib/RdKw/WwW/SiteConf.pm \
-		$(ENGINE)/lib/RdKw/WwW/SiteConf/*.pm \
-		$(ENGINE)/share/configure.in \
-		$(ENGINE)/share/presets/*.config \
-		$(ENGINE)/share/presets/*.render \
-		$(GENLIB)/lib/RdKw/WwW/GenLib.pm
+		$(SITECONF)/script/siteconf \
+		$(SITECONF)/lib/RdKw/WwW/SiteConf.pm \
+		$(SITECONF)/lib/RdKw/WwW/SiteConf/*.pm \
+		$(SITECONF)/share/configure.in \
+		$(SITECONF)/share/presets/*.config \
+		$(SITECONF)/share/presets/*.render \
+		$(GENLIB)/lib/RdKw/WwW/GenLib.pm \
+		$(GENGENLIB)/lib/RdKw/WwW/GenGenLib.pm \
+		$(GENGENLIB)/lib/RdKw/WwW/GenGenLib/Manifest.pm \
+		$(PROVIDER)/lib/RdKw/WwW/GenGenLib/Template/Provider.pm
 
 update-po : pot
 	for po in po/*.po; do \

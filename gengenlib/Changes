@@ -10,10 +10,11 @@ Revision history of WwW-GenGenLib
     *** RdKw::L10N::TextDomain is required (which needs nothing
         but what comes with Perl): __ and __n are its.
     + What we say is said in the language of the locale, from the
-      catalogs of the gengenlib text domain, if WwW-GenGenLib-L10N
-      says where they are and Locale::Messages (libintl-perl) is
-      there to read them; as it is written, if not.  Neither is
-      required.
+      catalogs of the siteconf text domain (which has what
+      GenGenLib says, with what siteconf says), if
+      WwW-SiteConf-L10N says where they are and Locale::Messages
+      (libintl-perl) is there to read them; as it is written, if
+      not.  Neither is required.
     * read_make, update_file, read_deps, read_manifest: `cannot
       open file NAME: why' (and so on), not `open <NAME: why'.
     + read_manifest: the goals of a MANIFEST (MAKE, NEED, WANT),

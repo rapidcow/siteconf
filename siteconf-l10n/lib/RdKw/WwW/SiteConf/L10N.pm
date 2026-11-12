@@ -24,10 +24,11 @@ B<$DOMAIN> is the text domain, C<siteconf>.
 B<$LOCALEDIR> is the directory its message catalogs are installed in
 (I<LOCALEDIR>F</>I<lang>F</LC_MESSAGES/siteconf.mo>), as the system
 spells it: bytes, not characters.  L<siteconf>, L<RdKw::WwW::SiteConf>,
-L<RdKw::WwW::GenLib>, and the F<configure> and F<render> that siteconf
-writes read it, if this module is there; if it is not, or there is no
-catalog for the language of the locale, their messages are said as
-they are written.
+L<RdKw::WwW::GenLib>, L<RdKw::WwW::GenGenLib> (and so
+L<RdKw::WwW::GenGenLib::Template::Provider>), and the F<configure>
+and F<render> that siteconf writes read it, if this module is there;
+if it is not, or there is no catalog for the language of the locale,
+their messages are said as they are written.
 
 It is set when this module is built: by default,
 F<share/locale> under C<INSTALL_BASE> or C<PREFIX>, or else

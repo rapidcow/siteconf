@@ -128,7 +128,7 @@ PO
 		or skip 'msgfmt failed', 6;
 
 	# A locale that is not C, by an XPG name: LANGUAGE is not heard in C
-	# (see gengenlib-l10n's t/l10n.t)
+	# (see siteconf-l10n's t/l10n.t)
 	my $XPG = qr/\A[a-z][a-z](?:_[A-Z][A-Z](?:\.[-_A-Za-z0-9]+)?)?(?:\@[-_A-Za-z0-9]+)?\z/;
 	my $locale = POSIX::setlocale(POSIX::LC_MESSAGES());
 	unless (defined $locale && $locale =~ $XPG) {

@@ -33,8 +33,8 @@ C<< RdKw::I18N::CodeSets->locale >>) only on their way to the system,
 and a name that cannot be spelled there is an error, never a guess.  What is I<in> the files is always UTF-8.
 
 What we say (when we die) is said in the language of the locale, from
-the catalogs of the C<gengenlib> text domain, if
-L<RdKw::WwW::GenGenLib::L10N> says where they are and
+the catalogs of the C<siteconf> text domain, if
+L<RdKw::WwW::SiteConf::L10N> says where they are and
 L<Locale::Messages> is there to read them; and as it is written, if
 not, or if no catalog has it.  The names in it are said as
 L<RdKw::I18N::CodeSets> says: C<< RdKw::I18N::CodeSets->locale >>, or
@@ -53,10 +53,10 @@ use File::Spec;
 use RdKw::I18N::CodeSets ();
 
 # What we say is said in the language of the locale, if
-# RdKw::WwW::GenGenLib::L10N says where the catalogs are (and
+# RdKw::WwW::SiteConf::L10N says where the catalogs are (and
 # Locale::Messages is there to read them); else, and for what no
 # catalog has, as it is written (see RdKw::L10N::TextDomain).
-use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::GenGenLib::L10N';
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 # A message: %q is a name, %s as it is (see RdKw::I18N::CodeSets)
 sub _diag

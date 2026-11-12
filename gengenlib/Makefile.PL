@@ -28,7 +28,7 @@ my %WriteMakefileArgs = (
 		'meta-spec' => { version => 2 },
 		prereqs => { runtime => { recommends => {
 			'Locale::Messages' => '0',
-			'RdKw::WwW::GenGenLib::L10N' => '0',
+			'RdKw::WwW::SiteConf::L10N' => '0',
 		} } },
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },

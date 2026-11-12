@@ -35,7 +35,7 @@ sub script_path
 {
 	my $script = File::Spec->catfile($root, 'blib', 'script', 'siteconf');
 	-f $script or Test::More::plan(skip_all =>
-		'not built: perl Makefile.PL && make, in engine/ and genlib/');
+		'not built: perl Makefile.PL && make, in siteconf/ and genlib/');
 	$script;
 }
 

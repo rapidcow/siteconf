@@ -11,10 +11,9 @@ use Getopt::Long;
 
 my @modules = qw(
 	codesets
-	engine
 	gengenlib
-	gengenlib-l10n
 	genlib
+	siteconf
 	siteconf-l10n
 	template-provider
 	textdomain

@@ -22,4 +22,4 @@ In templates (TT2): D.* (config.mk), O.* (option.mk), location
 ./render are generated deterministically (provided the same flags
 are passed), so it's possible to keep local changes in a patch.
 
-Tests: ./env.pl prove -r gengenlib/t genlib/t template-provider/t engine/t
+Tests: ./env.pl prove -r gengenlib/t genlib/t template-provider/t siteconf/t

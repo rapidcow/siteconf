@@ -9,7 +9,7 @@ $VERSION = eval $VERSION;
 
 =head1 NAME
 
-I18N::CodeSets - what the process speaks, and to whom
+I18N::CodeSets - character encoding context and parser
 
 =head1 SYNOPSIS
 

@@ -22,6 +22,7 @@ my %WriteMakefileArgs = (
 	PREREQ_PM => {
 		'Cwd' => '0',
 		'File::Spec' => '0',
+		'RdKw::I18N::CodeSets' => '0',
 		'RdKw::WwW::GenGenLib' => '0.0100',
 		'Template' => '0',
 		'Template::Constants' => '0',

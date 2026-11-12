@@ -1,7 +1,19 @@
 Revision history of WwW-SiteConf
 
 
-0.03_00  2026-11-10  RC
+0.03_00  2026-11-12  PULLED
+    BIG Unicode (I18N) update!
+
+    *** File names, arguments and messages are spelled as
+        RdKw::I18N::CodeSets says, which is required now (and
+        Encode::Locale no longer is, but by it): as the locale
+        says, but for what SITECONF_CODESETS says -- in siteconf,
+        configure and render alike.  configure and render take
+        -C codeset too, after it, for the whole command line.
+        configure checks for CodeSets, not Encode::Locale.
+    * render reads its options with Getopt::Long (-B, -C; still
+      -- before the files), not Getopt::Std.
+    + siteconf -V -V: I18N::CodeSets' version, too.
     + siteconf -l (list) [-F manifest] [-t [goal][:NEED|:WANT]]
       [-0[octal]]: the names a goal of the manifest NEEDs
       and WANTs (the default one, both, if not said), once

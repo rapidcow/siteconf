@@ -50,50 +50,8 @@ BEGIN {
 }
 
 use Encode ();
-use Encode::Locale ();
-use PerlIO::encoding ();
-
-# Use locale encoding for wide-characters, since console
-# output/error is often meant for humans and not machine-
-# consumable.  Fall back to ASCII \x{...} when a Unicode
-# character cannot be encoded, however.
-{
-	local $PerlIO::encoding::fallback = Encode::PERLQQ();
-	binmode STDOUT, ':encoding(console_out)';
-	binmode STDERR, ':encoding(console_out)';
-}
-
+use RdKw::I18N::CodeSets ();
 use RdKw::WwW::GenGenLib qw( read_make write_make );
-
-# File name utilities!  (GenGenLib 0.01 has these too,
-# but we don't know if the one we have is new enough.)
-sub to_fs
-{
-	my ($name) = @_;
-	my $fs = eval { Encode::encode(locale_fs => $name,
-		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
-	defined $fs or die "E: cannot encode @{[_perlqq($name)]}"
-		. " in current locale"
-		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
-	$fs;
-}
-
-sub un_fs
-{
-	my ($fs) = @_;
-	my $name = eval { Encode::decode(locale_fs => $fs,
-		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
-	defined $name or die "E: cannot decode @{[_perlqq($fs)]}"
-		. " in current locale"
-		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
-	$name;
-}
-
-sub _perlqq
-{
-	require Data::Dumper;
-	Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Useqq(1)->Dump();
-}
 
 # How can ./configure work without siteconf -g afterwards?
 # Anyways, let's just port this one function in the (very
@@ -111,7 +69,56 @@ sub shell_quote
 	"'$s'";
 }
 
-my $prog = un_fs(basename($0));
+my (%D, %O, $reset, $shutup, $mkpath, $prog, $usage);
+
+# -Dname=val, -Oname=val (a lone -Dname is -Dname=)
+sub setter
+{
+	my ($S, $H) = @_;
+	sub {
+		my ($k, $v) = split(/=/, $_[1], 2);
+		length $k or die "$prog: -$S: empty name.\n";
+		$H->{$k} = defined $v ? $v : "";
+	};
+}
+
+my %getopt = (
+	'h|help|?' => sub { print $usage; exit 0 },
+	'reset'    => sub { %D = (); %O = (); $reset = 1 },
+	'q|quiet'  => \$shutup,
+	'mkpath'   => \$mkpath,
+	'D=s'      => setter(D => \%D),
+	'O=s'      => setter(O => \%O),
+);
+
+# The code sets: as the locale says, but for what SITECONF_CODESETS
+# and then -C say (see RdKw::I18N::CodeSets).  `use utf8' covers our
+# source, but not @ARGV: those arrive as bytes, and would be encoded
+# a second time on their way into MY/*.mk.  So -C is looked for
+# first, as bytes (as the option names, it is ASCII); then they are
+# all decoded, and read for good.  What cannot be decoded is an error.
+# Console output/error is meant for humans, so what it cannot spell
+# is written as ASCII \x{...}.
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+my @C;
+{
+	local @ARGV = @ARGV;
+	Getopt::Long::Configure('pass_through');
+	GetOptions((map { $_ => sub {} } keys %getopt), 'C=s' => \@C);
+	Getopt::Long::Configure('no_pass_through');
+}
+my $cs = eval {
+	RdKw::I18N::CodeSets->parse(
+		exists $ENV{SITECONF_CODESETS} ? $ENV{SITECONF_CODESETS} : (), @C)
+} or die "E: $@";
+RdKw::I18N::CodeSets->locale($cs);
+$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
+
+# File names, as the file system spells them, and back
+sub to_fs { $cs->to_fs($_[0], { prog => 'E' }) }
+sub un_fs { $cs->un_fs($_[0], { prog => 'E' }) }
+
+$prog = un_fs(basename($0));
 
 # Baked in by `@PROG@ -i'.
 #   D   definitions, which are filesystem routing and nothing else
@@ -128,8 +135,8 @@ sub isnull
 	!(defined $_[0]) || !(length $_[0]);
 }
 
-my $usage = <<EOM;
-usage: $prog [-Dvar=val ...] [-Ovar=val ...] [--reset] [--mkpath] [-hq]
+$usage = <<EOM;
+usage: $prog [-Dvar=val ...] [-Ovar=val ...] [-C codeset ...] [--reset] [--mkpath] [-hq]
 
 The following variables may be defined:
 
@@ -146,6 +153,7 @@ The following variables may be defined:
 Anything else you may -D or -O goes into MY/config.mk or MY/option.mk
 respectively, for the rulebook or for the files being transformed.
 
+  -C          Code sets, after SITECONF_CODESETS (see RdKw::I18N::CodeSets)
   -h          This help message (alias: --help, -?)
   --reset     Clear all configuration at this point
   -q          Disable tips (alias: --quiet)
@@ -154,35 +162,8 @@ respectively, for the rulebook or for the files being transformed.
 See also `perldoc RdKw::WwW::SiteConf::Configure'.
 EOM
 
-# `use utf8' covers our source, but not @ARGV: those arrive as bytes
-# in the locale's encoding, and would be encoded a second time on
-# their way into MY/*.mk.  What cannot be decoded now is an error.
-eval { $_ = Encode::decode(locale => $_, Encode::FB_CROAK()) for @ARGV; 1 }
-	or die "$prog: cannot decode argv in current locale"
-		. " ($Encode::Locale::ENCODING_LOCALE): $@";
-
-my (%D, %O, $reset, $shutup, $mkpath);
-
-# -Dname=val, -Oname=val (a lone -Dname is -Dname=)
-sub setter
-{
-	my ($S, $H) = @_;
-	sub {
-		my ($k, $v) = split(/=/, $_[1], 2);
-		length $k or die "$prog: -$S: empty name.\n";
-		$H->{$k} = defined $v ? $v : "";
-	};
-}
-
-Getopt::Long::Configure(qw( bundling no_ignore_case ));
-GetOptions(
-	'h|help|?' => sub { print $usage; exit 0 },
-	'reset'    => sub { %D = (); %O = (); $reset = 1 },
-	'q|quiet'  => \$shutup,
-	'mkpath'   => \$mkpath,
-	'D=s'      => setter(D => \%D),
-	'O=s'      => setter(O => \%O),
-) or die +( split(/^/, $usage, 2) )[0];
+eval { $cs->decode_argv; 1 } or die "$prog: $@";
+GetOptions(%getopt, 'C=s' => sub {}) or die +( split(/^/, $usage, 2) )[0];
 @ARGV and die "$prog: too many arguments\n";
 
 # Store the starting directory: for the

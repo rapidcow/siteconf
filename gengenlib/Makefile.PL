@@ -19,7 +19,6 @@ my %WriteMakefileArgs = (
 	PREREQ_PM => {
 		'Exporter' => '0',
 		'Encode' => '0',
-		'Encode::Locale' => '0',
 		'RdKw::I18N::CodeSets' => '0',
 	},
 	# What we say is said in the language of the locale, with these

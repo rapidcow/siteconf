@@ -1,6 +1,6 @@
 #!perl
 #
-# t/unicode.t - file names are characters, spelled as the locale says
+# t/unicode.t - file names are characters, spelled as CodeSets says
 
 use 5.008;
 use strict;
@@ -14,9 +14,10 @@ use Encode ();
 use Encode::Locale ();
 use File::Temp qw( tempdir );
 
+use RdKw::I18N::CodeSets ();
 use RdKw::WwW::GenGenLib qw(
 	read_make write_make update_file load_state
-	read_deps walk_deps to_fs un_fs );
+	read_deps walk_deps );
 
 # What we name files here; if the locale cannot spell them, there is
 # nothing for us to test (and we would rather not guess).
@@ -27,18 +28,21 @@ for my $name (@names) {
 		or plan skip_all => "locale_fs ($Encode::Locale::ENCODING_LOCALE_FS)"
 			. " cannot spell our file names";
 }
-plan tests => 15;
+plan tests => 14;
 
 my $dir = tempdir(CLEANUP => 1);
-my $udir = un_fs($dir);
+my $udir = Encode::decode(locale_fs => $dir);
 sub fs { Encode::encode(locale_fs => $_[0]) }
-
-# --- to_fs, un_fs
-is(to_fs('résumé.html'), fs('résumé.html'), 'to_fs: as the locale spells it');
-is(un_fs(fs('résumé.html')), 'résumé.html', 'un_fs: and back');
 my $bad = "x\x{D800}";
-ok(!eval { to_fs($bad, 'here'); 1 }, 'to_fs: no surrogates');
-like($@, qr/\Ahere: cannot encode "x\\x\{d800\}"/, '... and says who could not');
+
+# --- names are spelled as CodeSets says, and who could not says so
+{
+	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->new(filesys => 'ascii');
+	ok(!eval { read_make("$udir/ß.mk"); 1 }, 'read_make: filesys of CodeSets');
+	like($@, qr/\Aread_make: cannot encode "[^"]*\\x\{df\}\.mk" in US-ASCII\n\z/,
+		'... and says who could not');
+}
+ok(!eval { read_make("$udir/$bad"); 1 }, 'read_make: no surrogates');
 is($bad, "x\x{D800}", '... leaving the name be');
 
 # --- update_file, write_make, read_make: the name on disk is the locale's

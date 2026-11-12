@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-GenGenLib\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 05:07-0600\n"
+"POT-Creation-Date: 2026-11-12 06:20-0600\n"
 "PO-Revision-Date: 2026-11-11 00:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -16,21 +16,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:135
-#, perl-format
-msgid "cannot encode %s in current locale (%s)"
-msgstr "无法编码 %s：当前区域代码（%s）中没有对应的编码"
-
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:146
-#, perl-format
-msgid "cannot decode %s in current locale (%s)"
-msgstr "无法解码 %s：当前区域代码（%s）中没有对应的编码"
-
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:176
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:140
 msgid "read_make: cannot open file %q: %s"
 msgstr "read_make: 无法打开文件 %q：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:183
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:147
 msgid "read_make: %q line %s: no `='"
 msgstr "read_make: %q 第 %s 行：没有 `='"
 
@@ -40,28 +30,28 @@ msgstr "read_make: %q 第 %s 行：没有 `='"
 #. is allowed... like IL-legal in the sense of invalid.
 #. (but let's not get into the topic of identity crisis...
 #. we're talking about SYNTACTICALLY invalid names here.))
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:213
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:177
 msgid "write_make: bad name: %q"
 msgstr "write_make: 非法变量名：%q"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:214
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:178
 msgid "write_make: %q: value has a newline"
 msgstr "write_make: %q：值中有换行符"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:246
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:210
 msgid "update_file: cannot create file %q: %s"
 msgstr "update_file: 无法创建文件 %q：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:248
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:250
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:212
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:214
 msgid "update_file: cannot write file %q: %s"
 msgstr "update_file: 无法写入文件 %q：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:257
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:221
 msgid "update_file: cannot rename %q to %q: %s"
 msgstr "update_file: 无法将 %q 重命名为 %q：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:286
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:250
 msgid ""
 "error: You have not configured! (no %q)\n"
 "error: You should ./configure first. ;)"
@@ -69,7 +59,7 @@ msgstr ""
 "error: 你还没有配置！（没有 %q）\n"
 "error: 请先运行 ./configure。(⸝⸝> ᴗ•⸝⸝)"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:452
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:416
 msgid "read_deps: cannot open file %q: %s"
 msgstr "read_deps: 无法打开文件 %q：%s"
 
@@ -79,27 +69,27 @@ msgstr "read_deps: 无法打开文件 %q：%s"
 #. in... "you HAVE too many.  The hell are
 #. you tryin' to be, the whole universe?"
 #. Like that.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:486
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:450
 msgid "read_deps: %q line %s: You HAVE too many."
 msgstr "read_deps: %q 第 %s 行：你 HAVE 太多了。(ಠ_ಠ)"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:501
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:465
 msgid "read_deps: cannot read file %q: %s"
 msgstr "read_deps: 无法读取文件 %q：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:647
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:611
 msgid "norm_deps: %s is no code point in %q"
 msgstr "norm_deps: %s 不是码位（在 %q 中）"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:659
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:623
 msgid "norm_deps: trailing $ in %q"
 msgstr "norm_deps: %q 末尾有多余的 $"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:661
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:625
 msgid "norm_deps: unterminated or empty ${ in %q"
 msgstr "norm_deps: %q 中有未闭合或为空的 ${"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:663
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:627
 msgid "norm_deps: stray $ in %q"
 msgstr "norm_deps: %q 中有多余的 $"
 
@@ -110,74 +100,74 @@ msgstr "norm_deps: %q 中有多余的 $"
 #. pure decode operation... in which case a named
 #. substitution that is not an escape at all as "bad"
 #. as in, "wait.... that's illegal."
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:742
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:706
 #, perl-format
 msgid "subs_deps: bad substitution: %s"
 msgstr "subs_deps: 替换错误：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:106
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:107
 #, perl-format
 msgid "read_manifest: cannot open string: %s"
 msgstr "read_manifest: 无法打开字符串：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:110
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:111
 msgid "read_manifest: cannot open file %q: %s"
 msgstr "read_manifest: 无法打开文件 %q：%s"
 
 #. HEY!  %q is the file name of the faulty
 #. MANIFEST and %s is its lineno.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:117
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:118
 msgid "%q line %s"
 msgstr "%q 第 %s 行"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:119
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:120
 #, perl-format
 msgid "read_manifest: %s: not UTF-8"
 msgstr "read_manifest: %s：不是 UTF-8"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:124
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:125
 #, perl-format
 msgid "read_manifest: %s: MAKE takes exactly one goal name"
 msgstr "read_manifest: %s：MAKE 只接受一个目标名"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:128
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:129
 msgid "read_manifest: %s: bad goal name %q"
 msgstr "read_manifest: %s：目标名有误：%q"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:129
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:130
 msgid "read_manifest: %s: goal %q is already made"
 msgstr "read_manifest: %s：目标 %q 已经有了"
 
 #. HEY!  the second %s is the string "NEED" or "WANT"
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:137
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:138
 #, perl-format
 msgid "read_manifest: %s: %s before any MAKE"
 msgstr "read_manifest: %s：%s 出现在任何 MAKE 之前"
 
 #. HEY!  the second %s is the string "NEED" or "WANT"
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:139
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:140
 #, perl-format
 msgid "read_manifest: %s: %s takes exactly one file (use # for comments)"
 msgstr "read_manifest: %s：%s 只接受一个文件（注释请用 #）"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:145
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:146
 #, perl-format
 msgid "read_manifest: %s: %s"
 msgstr "read_manifest: %s：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:147
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:148
 msgid "read_manifest: %s: %q is no name"
 msgstr "read_manifest: %s：%q 不是名称"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:149
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:150
 msgid "read_manifest: %s: %q has a NUL in it"
 msgstr "read_manifest: %s：%q 中有 NUL"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:154
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:155
 msgid "read_manifest: %s: expected MAKE, NEED or WANT, not %q"
 msgstr "read_manifest: %s：应为 MAKE、NEED 或 WANT，而不是 %q"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:157
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:158
 msgid "read_manifest: cannot read file %q: %s"
 msgstr "read_manifest: 无法读取文件 %q：%s"
 
@@ -185,10 +175,18 @@ msgstr "read_manifest: 无法读取文件 %q：%s"
 #. I'm frankly a bit surprised Claude made it
 #. a question... anyways go wild at it i don't
 #. really have any idea lol :v
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:162
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:163
 msgid "read_manifest: %q: no goals; what should I make?"
 msgstr "read_manifest: %q：没有目标；我该构建什么呢？"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:207
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:208
 msgid "read_manifest: %q: no goal %q"
 msgstr "read_manifest: %q：不存在目标 %q"
+
+#, perl-format
+#~ msgid "cannot encode %s in current locale (%s)"
+#~ msgstr "无法编码 %s：当前区域代码（%s）中没有对应的编码"
+
+#, perl-format
+#~ msgid "cannot decode %s in current locale (%s)"
+#~ msgstr "无法解码 %s：当前区域代码（%s）中没有对应的编码"

@@ -28,30 +28,12 @@ use strict;
 use warnings;
 
 use Encode ();
-use Encode::Locale ();
-use PerlIO::encoding ();
-use Getopt::Std;
-use RdKw::WwW::GenGenLib 0.0100 qw( load_state to_fs );
+use RdKw::I18N::CodeSets ();
+use Getopt::Long qw( GetOptions );
+use RdKw::WwW::GenGenLib 0.0100 qw( load_state );
 use Template;
 @USE_PROVIDER@
-# Use locale encoding for wide-characters, since console
-# output/error is often meant for humans and not machine-
-# consumable.  Fall back to ASCII \x{...} when a Unicode
-# character cannot be encoded, however.
-{
-	local $PerlIO::encoding::fallback = Encode::PERLQQ();
-	binmode STDOUT, ':encoding(console_out)';
-	binmode STDERR, ':encoding(console_out)';
-}
-
-eval { Encode::Locale::decode_argv(Encode::FB_CROAK()); 1 }
-	or die "$0: cannot read the arguments in this locale\n";
-my %o;
-getopts('B:', \%o) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
-my $B = defined $o{B} ? $o{B} : '.';
-@ARGV == 2 or die "$0: need exactly two args\n";
-my ($apath, $bpath) = @ARGV;
-
+@GETOPT@
 my %S = load_state($B);
 my %v = (
 	D => $S{config},
@@ -64,7 +46,7 @@ my $D = $S{config};
 # and what it INCLUDEs), binmode for what is written.
 #
 @TT_NEW@
-$tt->process(@APATH_FS@, \%v, to_fs($bpath, 'E'),
+$tt->process(@APATH_FS@, \%v, $cs->to_fs($bpath, { prog => 'E' }),
 	{ binmode => ':encoding(UTF-8)' })
 	or die "[TT] ", $tt->error(), "\n";
 

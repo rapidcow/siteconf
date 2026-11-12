@@ -77,12 +77,13 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 =cut
 
 use Encode ();
-use RdKw::WwW::GenGenLib qw( to_fs subs_dep );
+use RdKw::WwW::GenGenLib qw( subs_dep );
 
-# (what is said is said as RdKw::WwW::GenGenLib says it)
+# (what is said is said, and names spelled, as RdKw::WwW::GenGenLib does)
 BEGIN {
 	*__ = \&RdKw::WwW::GenGenLib::__;
 	*_diag = \&RdKw::WwW::GenGenLib::_diag;
+	*_to_fs = \&RdKw::WwW::GenGenLib::_to_fs;
 }
 
 # White space, as make and the shell know it: these six, and nothing else
@@ -90,7 +91,7 @@ my $SP = '\t\n\cK\f\r ';
 
 =item B<read> I<file>
 
-Reads I<file> (a name, which is spelled as the file system's locale
+Reads I<file> (a name, which is spelled as L<RdKw::I18N::CodeSets>
 says, or a reference to the text itself, which is then called
 F<MANIFEST>).  B<RdKw::WwW::GenGenLib::read_manifest> is the same.
 
@@ -106,7 +107,7 @@ sub read
 			or die _diag(__("read_manifest: cannot open string: %s"), "$!") . "\n";
 		$file = 'MANIFEST';
 	} else {
-		open $fh, '<', to_fs($file, 'read_manifest')
+		open $fh, '<', _to_fs($file, 'read_manifest')
 			or die _diag(__("read_manifest: cannot open file %q: %s"), $file, "$!") . "\n";
 	}
 

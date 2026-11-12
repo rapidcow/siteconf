@@ -6,8 +6,8 @@ Revision history of WwW-GenGenLib-Template-Provider
      mostly written by Claude... but what else is new eh.)
 
     + RdKw::WwW::GenGenLib::Template::Provider: a Template
-      Toolkit provider that names files as the locale does
-      (to_fs of GenGenLib 0.0100), and knows what the source
+      Toolkit provider that names files as RdKw::I18N::CodeSets
+      says (filesys of its locale), and knows what the source
       declares in its header, and what those declare in
       theirs (walk_deps):
         ALLOW_DEPS (on): what is declared may be loaded, even

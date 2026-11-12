@@ -32,17 +32,12 @@ use @PERL_MIN@;
 use strict;
 use warnings;
 @USE_LOCALE@
-use Getopt::Std;
+use Getopt::Long qw( GetOptions );
 @USE_GENGENLIB@
 @USE_GENLIB@
 use Template;
 @USE_TT_EXC@@USE_PROVIDER@
-@DECODE_ARGV@my %o;
-getopts('B:', \%o) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
-my $B = defined $o{B} ? $o{B} : '.';
-@ARGV == 2 or die "$0: need exactly two args\n";
-my ($apath, $bpath) = @ARGV;
-
+@GETOPT@
 #
 # Load configuration parameters and build options, so
 # we can expose them to the template.

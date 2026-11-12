@@ -1,8 +1,8 @@
 Revision history of WwW-GenGenLib
 
 
-0.01_00  2026-11-10  RC
-    *** Perl 5.8 is required, and so is Encode::Locale.
+0.01_00  2026-11-12  PULLED
+    *** Perl 5.8 is required.
     *** RdKw::I18N::CodeSets is required: what we say says names
         as it does (%q of diag: `name' if it is printable ASCII,
         "quoted" as Perl would, with escapes, if not), as its
@@ -36,13 +36,13 @@ Revision history of WwW-GenGenLib
     * split_dep: an escaped $ (${$}) or character (${U+...}) is
       no root.
     *** File names are character strings: read_make, write_make,
-        update_file, load_state, read_deps and walk_deps encode
-        them to the file system locale (locale_fs), and die if
-        a name cannot be spelled there.  Pass decoded names; a
-        UTF-8 byte string will be encoded a second time.  What
-        is in the files is UTF-8, as it always was.
-    + to_fs, un_fs: the same, for anyone else (un_fs is
-      for what the system gives back: getcwd, glob, ...).
+        update_file, load_state, read_deps, walk_deps and
+        read_manifest spell them as RdKw::I18N::CodeSets says
+        (filesys of its locale: by default, locale_fs), and die
+        if a name cannot be spelled there.  Pass decoded names;
+        a UTF-8 byte string will be encoded a second time.  What
+        is in the files is UTF-8, as it always was.  (For anyone
+        else, to_fs and un_fs are CodeSets', not ours.)
     *** read_deps: a header line is any comment (after anything
         at all), blanks, a field name of letters, `.', `_' or
         `-', and a colon.  Fields not ours (USE:, vim:, Have:,

@@ -28,9 +28,9 @@ L<URI> and L<URI::Escape>).  For the web-specific parts see
 L<RdKw::WwW::GenLib>.
 
 File names are character strings, as is everything else: they are
-encoded to the file system's locale (see L<Encode::Locale>) only on
-their way to the system, and a name that cannot be spelled there is
-an error, never a guess.  What is I<in> the files is always UTF-8.
+spelled as L<RdKw::I18N::CodeSets> says (B<filesys> of
+C<< RdKw::I18N::CodeSets->locale >>) only on their way to the system,
+and a name that cannot be spelled there is an error, never a guess.  What is I<in> the files is always UTF-8.
 
 What we say (when we die) is said in the language of the locale, from
 the catalogs of the C<gengenlib> text domain, if
@@ -46,7 +46,6 @@ L<RdKw::I18N::CodeSets> says: C<< RdKw::I18N::CodeSets->locale >>, or
 
 use utf8;
 use Encode ();
-use Encode::Locale ();
 use IO::Handle ();
 use File::Basename qw( basename dirname );
 use File::Compare ();
@@ -95,6 +94,13 @@ sub _diag
 	RdKw::I18N::CodeSets->locale->diag(@_);
 }
 
+# A name, as the file system spells it, or an error said by who
+sub _to_fs
+{
+	my ($name, $who) = @_;
+	RdKw::I18N::CodeSets->locale->to_fs($name, { prog => $who });
+}
+
 our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
 	read_make write_make
@@ -105,54 +111,12 @@ our @EXPORT_OK = qw(
 	escape_deps escape_dep
 	split_dep walk_deps follow_ok
 	enroot uproot
-	to_fs un_fs
 	read_manifest
 );
 
 =head1 ROUTINES
 
 =over
-
-=item B<to_fs> I<name>[, I<who>]
-
-=item B<un_fs> I<bytes>[, I<who>]
-
-I<name>, a character string, as the file system spells it
-(C<locale_fs> of L<Encode::Locale>), or the other way around.  Dies
-(saying I<who> did it, if given) if that cannot be done: we do not
-make up names for files.
-
-Added in 0.0100.
-
-=cut
-
-sub to_fs
-{
-	my ($name, $who) = @_;
-	my $fs = eval { Encode::encode(locale_fs => $name,
-		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
-	defined $fs or die +(defined $who ? "$who: " : "")
-		. _diag(__("cannot encode %s in current locale (%s)"),
-			_perlqq($name), $Encode::Locale::ENCODING_LOCALE_FS) . "\n";
-	$fs;
-}
-
-sub un_fs
-{
-	my ($fs, $who) = @_;
-	my $name = eval { Encode::decode(locale_fs => $fs,
-		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
-	defined $name or die +(defined $who ? "$who: " : "")
-		. _diag(__("cannot decode %s in current locale (%s)"),
-			_perlqq($fs), $Encode::Locale::ENCODING_LOCALE_FS) . "\n";
-	$name;
-}
-
-sub _perlqq
-{
-	require Data::Dumper;
-	Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Useqq(1)->Dump();
-}
 
 =item B<read_make> I<file>
 
@@ -172,7 +136,7 @@ sub read_make
 	local ($_, $.);
 	my ($file) = @_;
 
-	open my $fh, '<', to_fs($file, 'read_make')
+	open my $fh, '<', _to_fs($file, 'read_make')
 		or die _diag(__("read_make: cannot open file %q: %s"), $file, "$!") . "\n";
 	binmode $fh, ':encoding(UTF-8)';
 
@@ -240,7 +204,7 @@ sub update_file
 	#
 	my $tmp = File::Spec->catfile(dirname($file), 'tmp-' . basename($file));
 
-	my ($tmp_fs, $file_fs) = map { to_fs($_, 'update_file') } $tmp, $file;
+	my ($tmp_fs, $file_fs) = map { _to_fs($_, 'update_file') } $tmp, $file;
 
 	open my $fh, '>:encoding(UTF-8)', $tmp_fs
 		or die _diag(__("update_file: cannot create file %q: %s"), $tmp, "$!") . "\n";
@@ -278,7 +242,7 @@ sub load_state
 	my %S;
 	for my $f (qw( config option )) {
 		my $file = "$Bdir/MY/$f.mk";
-		-f to_fs($file, 'load_state')
+		-f _to_fs($file, 'load_state')
 			# HEY!  Keep a winky face in the translation ;)
 			# This message is likely to get seen by newbies,
 			# so we want to keep it fun.
@@ -386,8 +350,8 @@ but stops at the first line that is malformed UTF-8.
 This means that B<read_deps> is safe to call on binary
 files.  (This feature was added in 0.0001.)
 
-I<file> is a character string (see B<to_fs>); one that cannot be
-named in this locale is an error, forgiven or not.
+I<file> is a character string (see L</DESCRIPTION>); one that cannot
+be named on the file system is an error, forgiven or not.
 
 C<forgive_missing> is an optional boolean that decides
 whether a file that cannot be opened to begin with can
@@ -447,7 +411,7 @@ sub read_deps
 	my %I = ();
 
 	# (A name we cannot even spell is not missing: it is an error.)
-	open (my $fh, '<', to_fs($file, 'read_deps')) or ($missing_ok
+	open (my $fh, '<', _to_fs($file, 'read_deps')) or ($missing_ok
 		? return ()
 		: die _diag(__("read_deps: cannot open file %q: %s"), $file, "$!") . "\n");
 
@@ -1006,7 +970,7 @@ sub walk_deps
 				# Only a regular file has a header to read: a directory
 				# opens fine but cannot be read, and a FIFO would hang
 				my $file = subs_deps($D, $spec);
-				$G->{$spec} = -f to_fs($file, 'walk_deps')
+				$G->{$spec} = -f _to_fs($file, 'walk_deps')
 					? { read_deps($file, { forgive_missing => 1 }) }
 					: {};
 			} else {

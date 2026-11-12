@@ -14,7 +14,7 @@ use TestPaths qw( script_path perl5lib );
 use Encode ();
 use Encode::Locale ();
 use File::Temp qw( tempdir );
-use RdKw::WwW::GenGenLib qw( read_deps subs_dep );
+use RdKw::WwW::GenGenLib qw( read_deps read_make subs_dep );
 
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
@@ -54,7 +54,7 @@ for (@args) {
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
-plan tests => 19;
+plan tests => 24;
 
 local $ENV{PERL5LIB} = perl5lib();
 
@@ -167,4 +167,16 @@ unlike($out, qr/[^\x00-\x7f]/, '... in nothing but ASCII');
 # (bytes, as a UTF-8 locale would have said `-Sa=é')
 ($status, $out) = run($C, { LC_ALL => 'C' }, $script, 'init', '-o', '/dev/null',
 	Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
-like($out, qr/cannot decode argv in current locale/, 'unreadable arguments are an error');
+like($out, qr/: cannot decode argv 4: /, 'unreadable arguments are an error');
+
+# --- SITECONF_CODESETS, and configure's -C, say otherwise than the locale
+($status, $out) = run($C, { SITECONF_CODESETS => 'console:ascii' }, $script, '-g', '-B', 'build');
+like($out, qr/\\x\{306a\}\\x\{3044\}\\x\{3082\}\\x\{306e\}\.html/,
+	'SITECONF_CODESETS=console:ascii: \\x{...}');
+($status, $out) = run($C, { SITECONF_CODESETS => 'nope' }, $script, '-V');
+like($out, qr/SITECONF_CODESETS: unknown category or encoding "nope"/, '... which is checked');
+($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-DB=build', '-Dx=é');
+like($out, qr/: cannot decode argv 3: /, 'configure: unreadable arguments are an error');
+($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-C', 'argv:UTF-8', '-DB=build', '-Dx=é');
+is($status, 0, 'configure -C argv:UTF-8: reads them') or diag $out;
+is({ read_make("$C/build/MY/config.mk") }->{x}, 'é', '... as it says');

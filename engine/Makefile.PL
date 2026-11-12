@@ -17,6 +17,7 @@ my %WriteMakefileArgs = (
 	},
 	TEST_REQUIRES => {
 		'Test::More' => '0',
+		'Encode::Locale' => '0',
 		# RdKw::WwW::GenLib (and Template, URI) are optional:
 		# the web preset tests skip themselves without them.
 	},
@@ -24,7 +25,7 @@ my %WriteMakefileArgs = (
 		'version' => '0',
 		'File::ShareDir' => '0',
 		'Encode' => '0',
-		'Encode::Locale' => '0',
+		'RdKw::I18N::CodeSets' => '0',
 		'RdKw::WwW::GenGenLib' => '0.0100',
 		# RdKw::WwW::GenLib isn't a dependency, though
 		# for those who use the web preset it is when

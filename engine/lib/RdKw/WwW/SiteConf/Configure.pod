@@ -44,10 +44,12 @@ F<configure> checks its required Perl modules before configuring anything.
 The project author can add requirements with C<siteconf init -MModule>
 or C<-MModule=version>; a preset can supply its own requirements too.
 
-Arguments and file names are read as the locale says (see
-L<Encode::Locale>), and messages are written that way, with C<\x{...}>
-for what it cannot say; an argument or a name the locale cannot spell
-is an error.  F<MY/config.mk> and F<MY/option.mk> are always UTF-8.
+Arguments and file names are read as L<RdKw::I18N::CodeSets> says:
+as the locale says, but for what C<SITECONF_CODESETS> and then C<-C>
+say (see L</ENVIRONMENT>).  Messages are written that way, with
+C<\x{...}> for what cannot be said; an argument or a name that cannot
+be spelled is an error.  F<MY/config.mk> and F<MY/option.mk> are
+always UTF-8.
 
 =head1 DEFINITIONS AND OPTIONS
 
@@ -196,7 +198,8 @@ F<configure> prints a generation command with the appropriate C<-B>.
 C<siteconf -i -P web> adds the web preset's checks to F<configure> and
 writes a Template Toolkit renderer if one is not already present.
 The preset requires Template, URI, and RdKw::WwW::GenLib in addition to
-RdKw::WwW::GenGenLib, which every generated configure script needs.
+RdKw::WwW::GenGenLib and RdKw::I18N::CodeSets, which every generated
+configure script needs.
 
 C<site_url> is required and C<base_url> defaults to C</>.  The preset uses
 L<RdKw::WwW::GenLib> to validate and normalize these URL options.  They are
@@ -260,6 +263,13 @@ text for custom definitions and options.
 
 Set a definition or option as described above.
 
+=item C<-C> I<codeset>
+
+Read arguments and file names, and write messages, in these code sets,
+after what C<SITECONF_CODESETS> says (see L</ENVIRONMENT>).  May be
+given more than once; a later one overrides what came before.  It
+applies to the whole command line, wherever it is on it.
+
 =item C<--reset>
 
 Ignore saved configuration and clear earlier command-line assignments.
@@ -281,6 +291,21 @@ C<most> leave the leaf directory to configure to create it.
 
 Added in 0.02_01, since C<./configure> stopped creating
 non-leaf components then.
+
+=back
+
+=head1 ENVIRONMENT
+
+=over
+
+=item C<SITECONF_CODESETS>
+
+What code sets to read and write in, instead of the locale's, as
+L<RdKw::I18N::CodeSets/parse> takes them, split by commas: an
+encoding alone for everything (C<UTF-8>; C<0> is short for ASCII,
+C<1> for UTF-8), or I<category>B<:>I<encoding> for one thing
+(C<filesys:UTF-8,console:ascii>).  F<siteconf> and the renderers the
+presets write read it too; the renderers also take C<-C>.
 
 =back
 
@@ -309,6 +334,6 @@ rewritten, preserving timestamps for incremental builds.
 =head1 SEE ALSO
 
 L<siteconf>, L<RdKw::WwW::SiteConf>, L<RdKw::WwW::GenGenLib>,
-L<RdKw::WwW::GenLib>.
+L<RdKw::WwW::GenLib>, L<RdKw::I18N::CodeSets>.
 
 =cut

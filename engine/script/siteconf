@@ -81,10 +81,11 @@ asks for no options (nor GenLib).  It needs GenGenLib 0.0100.
 
 For the generated script, see L<RdKw::WwW::SiteConf::Configure>.
 
-File names and arguments are read as the locale says, and messages
-are written that way too (what cannot be said there is written as
-C<\x{...}>).  An argument or a name that the locale cannot spell is
-an error.  What is in the files we read and write is always UTF-8.
+File names and arguments are read as L<RdKw::I18N::CodeSets> says:
+as the locale says, but for what C<SITECONF_CODESETS> says (see
+L</ENVIRONMENT>).  Messages are written that way too (what cannot be
+said there is written as C<\x{...}>).  An argument or a name that
+cannot be spelled is an error.  What is in the files we read and write is always UTF-8.
 (What C<-l> writes is no message, but names: see there.)
 
 =head1 OPTIONS
@@ -100,11 +101,12 @@ Write F<configure> (or whatever I<-o> says).
 Have F<configure> check that I<module> can be loaded (and is at
 least I<version>, if given) before doing anything else.  May be
 given more than once; a later one for the same module replaces
-the earlier.  F<configure> always checks for L<Encode::Locale> and
-L<RdKw::WwW::GenGenLib> (version 0.0100, which spells file names as
-the locale does, and which F<render> needs; give
+the earlier.  F<configure> always checks for L<RdKw::I18N::CodeSets>
+and L<RdKw::WwW::GenGenLib> (version 0.0100, which spells file names
+as CodeSets says, and which F<render> needs; give
 C<-MRdKw::WwW::GenGenLib=0> to get an older F<render> that works with
-any version, and C<=0.0002> for one that does not mind the locale),
+any version, and C<=0.0002> for one that leaves names and arguments
+as they are),
 and so does the preset for what it needs (C<# USE:>
 lines in its config).  C<-M>I<module>C<=> with nothing after the C<=>
 drops I<module> from the list, even one the preset asked for.
@@ -113,7 +115,7 @@ C<-MRdKw::WwW::GenGenLib::Template::Provider> (which nothing asks for,
 and nothing needs) has F<render> load templates through it: what a page
 C<INCLUDE>s (or C<PROCESS>es, C<WRAPPER>s, C<INSERT>s) must be declared
 in its header, or in the header of what that declares, and so on; and
-the names are spelled as the locale says.  It needs GenGenLib 0.0100.
+the names are spelled as CodeSets says.  It needs GenGenLib 0.0100.
 
 =item B<-g>, B<make>
 
@@ -212,8 +214,8 @@ listed), and each once.  They are relative to C<${a}>, and to
 C<${B}/${b}> once made.
 
 Each name is followed by a newline (or C<-0>), and is written as the
-file system spells it (as F<siteconf> would open it: see
-L<RdKw::WwW::GenGenLib/to_fs>): in the locale's encoding, but on
+file system spells it (as F<siteconf> would open it: B<filesys> of
+L<RdKw::I18N::CodeSets>): by default in the locale's encoding, but on
 macOS always in UTF-8, as its file names are.  A name it cannot spell
 is an error, and nothing is written; so is one with the separator in
 it.
@@ -239,6 +241,18 @@ C<-072> for a colon.  C<-012> is the default.
 
 =back
 
+=head1 ENVIRONMENT
+
+=over
+
+=item C<SITECONF_CODESETS>
+
+What code sets to read and write in, instead of the locale's: see
+L<RdKw::WwW::SiteConf::Configure/ENVIRONMENT>.  F<configure> and
+F<render> read it too (and take C<-C>, after it; F<siteconf> does not).
+
+=back
+
 =cut
 
 use version;
@@ -250,9 +264,8 @@ use File::Spec;
 use Getopt::Long qw( GetOptionsFromArray );
 
 use Encode ();
-use Encode::Locale ();
-use PerlIO::encoding ();
-use RdKw::WwW::GenGenLib qw( to_fs un_fs escape_dep read_manifest );
+use RdKw::I18N::CodeSets ();
+use RdKw::WwW::GenGenLib qw( escape_dep read_manifest );
 use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
@@ -269,17 +282,16 @@ our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
 # been around for much longer.
 my %PRESET_GENGENLIB = ( tem => $GENGENLIB_LOCALE );
 
-# Use locale encoding for wide-characters, since console
-# output/error is often meant for humans and not machine-
-# consumable.  Fall back to ASCII \x{...} when a Unicode
-# character cannot be encoded, however.
-{
-	local $PerlIO::encoding::fallback = Encode::PERLQQ();
-	binmode STDOUT, ':encoding(console_out)';
-	binmode STDERR, ':encoding(console_out)';
-}
+# The code sets: as the locale says, but for what SITECONF_CODESETS
+# says (see RdKw::I18N::CodeSets).  Console output/error is meant for
+# humans, so what it cannot spell is written as ASCII \x{...}.
+my $cs = eval {
+	RdKw::I18N::CodeSets->parse(exists $ENV{SITECONF_CODESETS} ? $ENV{SITECONF_CODESETS} : ())
+} or die basename($0) . ": SITECONF_CODESETS: $@";
+RdKw::I18N::CodeSets->locale($cs);
+$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
 
-my $prog = un_fs(basename($0));
+my $prog = $cs->un_fs(basename($0));
 my $usage = <<EOM;
 usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
                 [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
@@ -289,9 +301,7 @@ usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
 EOM
 
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
-eval { $_ = Encode::decode(locale => $_, Encode::FB_CROAK()) for @ARGV; 1 }
-	or die "$prog: cannot decode argv in current locale"
-		. " ($Encode::Locale::ENCODING_LOCALE)\n";
+eval { $cs->decode_argv; 1 } or die "$prog: $@";
 
 my %opt = (S => {}, D => {}, O => {}, M => [], outputs => [], t => []);
 # What `-i' was told, in the order it was told, for the header of
@@ -327,8 +337,9 @@ VAR
 
 	exit unless $vee > 1;
 	print <<LVER;
-perl version $], @{[ un_fs($^X) ]}
+perl version $], @{[ $cs->un_fs($^X) ]}
 WwW::GenGenLib version $RdKw::WwW::GenGenLib::VERSION
+I18N::CodeSets version $RdKw::I18N::CodeSets::VERSION
 LVER
 
 	foreach my $fren (qw( Template URI URI::Escape RdKw::WwW::GenLib )) {
@@ -438,7 +449,7 @@ sub do_list
 			push @name, grep { !$seen{$_}++ } map { $mf->$_($goal) } @kind;
 		}
 		for my $name (@name) {
-			my $fs = to_fs($name, $mf->file);
+			my $fs = $cs->to_fs($name, { prog => $mf->file });
 			index($fs, $sep) < 0 or die "$file: `$name' has the separator"
 				. " in it (" . sprintf('-0%o', ord $sep) . ")\n";
 			$out .= $fs . $sep;
@@ -462,13 +473,13 @@ sub share_file
 	my ($file) = @_;
 	my $path = eval { File::ShareDir::dist_file('WwW-SiteConf', $file) };
 	defined $path or die "$prog: cannot find share/$file (is WwW-SiteConf installed?)\n";
-	un_fs($path, $prog);
+	$cs->un_fs($path, { prog => $prog });
 }
 
 sub slurp
 {
 	my ($file) = @_;
-	open my $fh, '<:encoding(UTF-8)', to_fs($file, $prog)
+	open my $fh, '<:encoding(UTF-8)', $cs->to_fs($file, { prog => $prog })
 		or die "$prog: open <$file: $!\n";
 	my $text = do { local $/; readline $fh };
 	close $fh or die "$prog: read <$file: $!\n";
@@ -571,7 +582,7 @@ sub do_init
 	# by module, so that a later one replaces the earlier.  -Mmodule= with
 	# nothing after the = drops it.
 	my %mods = (
-		'Encode::Locale' => 0,
+		'RdKw::I18N::CodeSets' => 0,
 		'RdKw::WwW::GenGenLib' => $GENGENLIB_LOCALE,
 	);
 	my @spec = ($preset =~ /^# USE: (\S+)$/mg, @{ $opt->{M} });
@@ -582,7 +593,7 @@ sub do_init
 		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: -M$m: bad module name\n";
 		$min =~ /\A(?:v?[0-9][0-9._]*|0|)\z/ or die "$prog: -M$m: bad version\n";
 		if ($min eq '') {
-			$module eq 'RdKw::WwW::GenGenLib' || $module eq 'Encode::Locale'
+			$module eq 'RdKw::WwW::GenGenLib' || $module eq 'RdKw::I18N::CodeSets'
 				and die "$prog: -M$m: configure always needs it\n";
 			delete $mods{$module};
 		} else {
@@ -655,7 +666,7 @@ sub do_init
 	my %written;
 out:	while (my ($name, $dest) = each %out) {
 		next if $dest eq '/dev/null';
-		my $dest_fs = to_fs($dest, $prog);
+		my $dest_fs = $cs->to_fs($dest, { prog => $prog });
 		my $exists = (-e $dest_fs || -l $dest_fs);
 		if (!$opt->{f} && $exists) {
 			print STDERR "Not changing $dest\n" unless $opt->{q};
@@ -731,27 +742,45 @@ sub render_text
 		USE_LOCALE => $can_locale ? <<\NEW : '',
 
 use Encode ();
-use Encode::Locale ();
-use PerlIO::encoding ();
-
-# Use locale encoding for wide-characters, since console
-# output/error is often meant for humans and not machine-
-# consumable.  Fall back to ASCII \x{...} when a Unicode
-# character cannot be encoded, however.
+use RdKw::I18N::CodeSets ();
+NEW
+		GETOPT => $can_locale ? <<\NEW : <<\OLD,
+# The arguments are read as the code sets say: as the locale says,
+# but for what SITECONF_CODESETS and then -C say (see
+# RdKw::I18N::CodeSets).  So -C is looked for first, as bytes (as the
+# option names, it is ASCII); then they are all decoded, and read for
+# good.  What the console cannot spell is written as \x{...}.
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+my ($B, @C) = ('.');
+my %getopt = ( 'B=s' => \$B );
 {
-	local $PerlIO::encoding::fallback = Encode::PERLQQ();
-	binmode STDOUT, ':encoding(console_out)';
-	binmode STDERR, ':encoding(console_out)';
+	local @ARGV = @ARGV;
+	Getopt::Long::Configure('pass_through');
+	GetOptions((map { $_ => sub {} } keys %getopt), 'C=s' => \@C);
+	Getopt::Long::Configure('no_pass_through');
 }
+my $cs = eval {
+	RdKw::I18N::CodeSets->parse(
+		exists $ENV{SITECONF_CODESETS} ? $ENV{SITECONF_CODESETS} : (), @C)
+} or die "$0: $@";
+RdKw::I18N::CodeSets->locale($cs);
+$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
+eval { $cs->decode_argv; 1 } or die "$0: $@";
+GetOptions(%getopt, 'C=s' => sub {})
+	or die "usage: $0 [-B BUILDDIR] [-C CODESET ...] apath bpath\n";
+@ARGV == 2 or die "$0: need exactly two args\n";
+my ($apath, $bpath) = @ARGV;
 NEW
-		DECODE_ARGV => $can_locale ? <<\NEW : '',
-eval { Encode::Locale::decode_argv(Encode::FB_CROAK()); 1 }
-	or die "$0: cannot read the arguments in this locale\n";
-NEW
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+my $B = '.';
+GetOptions('B=s' => \$B) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
+@ARGV == 2 or die "$0: need exactly two args\n";
+my ($apath, $bpath) = @ARGV;
+OLD
 		USE_GENGENLIB => $can_locale
 			? "use RdKw::WwW::GenGenLib $GENGENLIB_LOCALE qw(
 	read_deps load_state
-	norm_dep subs_dep uproot to_fs );"
+	norm_dep subs_dep uproot );"
 			: $can_subst
 			? "use RdKw::WwW::GenGenLib $GENGENLIB_NEW qw(
 	read_deps load_state
@@ -760,7 +789,7 @@ NEW
 		# Template opens the files itself: by the names
 		# the file system knows them by.
 		# (the provider names files itself)
-		APATH_FS => $can_locale && !$provider ? "to_fs(\$apath, 'E')" : '$apath',
+		APATH_FS => $can_locale && !$provider ? "\$cs->to_fs(\$apath, { prog => 'E' })" : '$apath',
 		USE_PROVIDER => $provider ? "use $PROVIDER;\n" : '',
 		TT_NEW => $provider
 			? <<"NEW"
@@ -800,11 +829,11 @@ NEW
 			: <<"OLD",
 my \$tt = Template->new({
 	ENCODING => 'UTF-8',
-	INCLUDE_PATH => [ '.', @{[ $can_locale ? "to_fs(\$D->{a}, 'E')" : '$D->{a}' ]} ],
+	INCLUDE_PATH => [ '.', @{[ $can_locale ? "\$cs->to_fs(\$D->{a}, { prog => 'E' })" : '$D->{a}' ]} ],
 })
 	or die "[TT] ", \$Template::ERROR, "\\n";
 OLD
-		BPATH_FS => $can_locale ? "to_fs(\$bpath, 'E')" : '$bpath',
+		BPATH_FS => $can_locale ? "\$cs->to_fs(\$bpath, { prog => 'E' })" : '$bpath',
 		USE_GENLIB => $can_valoc
 			? "use RdKw::WwW::GenLib $GENLIB_NEW qw( locate );"
 			: 'use RdKw::WwW::GenLib qw( locate );',

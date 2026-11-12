@@ -1,6 +1,6 @@
 #!perl
 #
-# t/unicode.t - template names are characters, spelled as the locale says
+# t/unicode.t - template names are characters, spelled as CodeSets says
 
 use 5.008;
 use strict;
@@ -68,7 +68,7 @@ is($out, 'secret', '... unchecked, all the same');
 
 # A name we cannot spell is an error, not a guess
 ($ok, $out, $err) = run("x\x{D800}");
-ok(!$ok, 'a name the locale cannot spell is not loaded');
+ok(!$ok, 'a name the file system cannot spell is not loaded');
 like("$err", qr/\Aundef error - \S+: cannot encode "\\x\{30b5\}\\x\{30a4\}\\x\{30c8\}\/x\\x\{d800\}"/, '... and says so');
 ($ok, $out, $err) = run("x\x{D800}", CHECK_DEPS => 0);
 like("$err", qr/\Aundef error - \S+: cannot encode "\\x\{30b5\}\\x\{30a4\}\\x\{30c8\}\/x\\x\{d800\}"/, '... unchecked, too');

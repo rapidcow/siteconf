@@ -31,8 +31,9 @@ WwW::GenGenLib::Template::Provider - Template Toolkit provider for declared depe
 
 =head1 DESCRIPTION
 
-A L<Template::Provider> that names files as the file system's locale
-does (see L<RdKw::WwW::GenGenLib/to_fs>): template names are character
+A L<Template::Provider> that names files as the file system spells
+them, as L<RdKw::I18N::CodeSets> says (B<filesys> of
+C<< RdKw::I18N::CodeSets->locale >>): template names are character
 strings, and one that cannot be spelled there is an error, not a guess.
 
 And it knows what the source declares.  The header of I<SOURCE> (see
@@ -141,10 +142,15 @@ those write files by names this provider does not spell.
 use Cwd ();
 use File::Spec ();
 use Template::Constants qw( STATUS_ERROR STATUS_DECLINED );
+use RdKw::I18N::CodeSets ();
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_deps walk_deps follow_ok
 	norm_dep subs_dep split_dep
-	escape_dep uproot to_fs un_fs );
+	escape_dep uproot );
+
+# A name as the file system spells it, and back (see RdKw::I18N::CodeSets)
+sub _to_fs { RdKw::I18N::CodeSets->locale->to_fs($_[0], { prog => __PACKAGE__ }) }
+sub _un_fs { RdKw::I18N::CodeSets->locale->un_fs($_[0], { prog => __PACKAGE__ }) }
 
 my %default = (
 	ALLOW_DEPS => 1,
@@ -324,7 +330,7 @@ sub _resolve
 	my $paths = $self->paths or return;
 	for my $dir (@$paths) {
 		my $path = "$dir/$name";
-		return $path if -f to_fs($path, __PACKAGE__);
+		return $path if -f _to_fs($path);
 	}
 	return;
 }
@@ -342,7 +348,7 @@ sub _find
 {
 	my ($self, $name) = @_;
 	_kind($name) or return $self->_resolve($name);
-	-f to_fs($name, __PACKAGE__) ? $name : undef;
+	-f _to_fs($name) ? $name : undef;
 }
 
 sub _entry
@@ -389,11 +395,11 @@ sub access
 		if ($kind && !($self->{ALLOW_DEPS} && $declared) && !$self->{"TT_$kind"}) {
 			return (undef, lc($kind) . " paths are not allowed ($kind is unset)");
 		}
-		-f to_fs($path, __PACKAGE__) or return;
+		-f _to_fs($path) or return;
 	}
-	my $abs = Cwd::abs_path(to_fs($path, __PACKAGE__));
+	my $abs = Cwd::abs_path(_to_fs($path));
 	defined $abs or return (undef, "$path: $!");
-	(un_fs($abs, __PACKAGE__), undef);
+	(_un_fs($abs), undef);
 }
 
 =item B<fetch> I<name>
@@ -435,7 +441,7 @@ sub _template_modified
 {
 	my ($self, $path) = @_;
 	defined $path && length $path or return;
-	(stat(to_fs($path, __PACKAGE__)))[9];
+	(stat(_to_fs($path)))[9];
 }
 
 sub _template_content
@@ -443,7 +449,7 @@ sub _template_content
 	my ($self, $path) = @_;
 	defined $path && length $path
 		or return (undef, "No path specified to fetch content from ");
-	my $fs = to_fs($path, __PACKAGE__);
+	my $fs = _to_fs($path);
 	my ($data, $error, $mod_date);
 	if (-d $fs) {
 		$error = "$path: not a file";

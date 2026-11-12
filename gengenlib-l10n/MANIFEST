@@ -9,3 +9,4 @@ po/gengenlib.pot
 po/zh.po
 t/00-load.t
 t/l10n.t
+t/lib/TestConsole.pm

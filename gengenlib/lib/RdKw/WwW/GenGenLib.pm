@@ -56,26 +56,29 @@ use RdKw::I18N::CodeSets ();
 # What we say is said in the language of the locale, if
 # RdKw::WwW::GenGenLib::L10N says where the catalogs are (and
 # Locale::Messages is there to read them); else, and for what no
-# catalog has, as it is written.  A catalog is spelled in UTF-8 (we
-# bind the domain so), and is decoded as such: as for the file
+# catalog has, as it is written.  What gettext gives back is UTF-8
+# (we bind the domain so, whatever OUTPUT_CHARSET or the locale's
+# codeset would say), and is decoded as such: as for the file
 # system, CodeSets is not asked.  (The source is left as it is, or
 # Encode would empty it -- and a literal cannot be emptied.)
 BEGIN {
 	my $CHECK = Encode::FB_CROAK() | Encode::LEAVE_SRC();
+	my $domain;
 	if (eval {
 		require Locale::Messages;
 		require RdKw::WwW::GenGenLib::L10N;
-		Locale::Messages::bindtextdomain(gengenlib =>
+		$domain = $RdKw::WwW::GenGenLib::L10N::DOMAIN;
+		Locale::Messages::bindtextdomain($domain,
 			$RdKw::WwW::GenGenLib::L10N::LOCALEDIR);
-		Locale::Messages::bind_textdomain_codeset(gengenlib => 'UTF-8');
+		Locale::Messages::bind_textdomain_codeset($domain, 'UTF-8');
 		1;
 	}) {
 		*__ = sub {
-			Encode::decode('UTF-8', Locale::Messages::dgettext(gengenlib =>
+			Encode::decode('UTF-8', Locale::Messages::dgettext($domain,
 				Encode::encode('UTF-8', $_[0], $CHECK)), $CHECK);
 		};
 		*__n = sub {
-			Encode::decode('UTF-8', Locale::Messages::dngettext(gengenlib =>
+			Encode::decode('UTF-8', Locale::Messages::dngettext($domain,
 				Encode::encode('UTF-8', $_[0], $CHECK),
 				Encode::encode('UTF-8', $_[1], $CHECK), $_[2]), $CHECK);
 		};

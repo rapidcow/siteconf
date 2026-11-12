@@ -14,13 +14,14 @@ WwW::GenGenLib::L10N - gengenlib locale directory config
 =head1 SYNOPSIS
 
     require RdKw::WwW::GenGenLib::L10N;
-    Locale::Messages::bindtextdomain(gengenlib =>
+    Locale::Messages::bindtextdomain($RdKw::WwW::GenGenLib::L10N::DOMAIN,
         $RdKw::WwW::GenGenLib::L10N::LOCALEDIR);
 
 =head1 DESCRIPTION
 
-B<$LOCALEDIR> is the directory the message catalogs of the
-C<gengenlib> text domain are installed in
+B<$DOMAIN> is the text domain, C<gengenlib>.
+
+B<$LOCALEDIR> is the directory its message catalogs are installed in
 (I<LOCALEDIR>F</>I<lang>F</LC_MESSAGES/gengenlib.mo>), as the system
 spells it: bytes, not characters.  L<RdKw::WwW::GenGenLib> reads it,
 if this module is there; if it is not, or there is no catalog for the
@@ -39,6 +40,8 @@ or by themselves, by F<mkintl.pl> (which must be told the same
 I<LOCALEDIR>; see there).
 
 =cut
+
+our $DOMAIN = 'gengenlib';
 
 # (filled in by pm_filter.pl; this is no Perl until it is built)
 our $LOCALEDIR = @localedir@;

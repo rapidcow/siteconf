@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-GenGenLib\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 04:07-0600\n"
+"POT-Creation-Date: 2026-11-12 05:07-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,21 +17,21 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:132
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:135
 #, perl-format
 msgid "cannot encode %s in current locale (%s)"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:143
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:146
 #, perl-format
 msgid "cannot decode %s in current locale (%s)"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:173
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:176
 msgid "read_make: cannot open file %q: %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:180
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:183
 msgid "read_make: %q line %s: no `='"
 msgstr ""
 
@@ -41,34 +41,34 @@ msgstr ""
 #. is allowed... like IL-legal in the sense of invalid.
 #. (but let's not get into the topic of identity crisis...
 #. we're talking about SYNTACTICALLY invalid names here.))
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:210
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:213
 msgid "write_make: bad name: %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:211
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:214
 msgid "write_make: %q: value has a newline"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:243
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:246
 msgid "update_file: cannot create file %q: %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:245
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:247
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:248
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:250
 msgid "update_file: cannot write file %q: %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:254
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:257
 msgid "update_file: cannot rename %q to %q: %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:283
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:286
 msgid ""
 "error: You have not configured! (no %q)\n"
 "error: You should ./configure first. ;)"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:449
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:452
 msgid "read_deps: cannot open file %q: %s"
 msgstr ""
 
@@ -78,27 +78,27 @@ msgstr ""
 #. in... "you HAVE too many.  The hell are
 #. you tryin' to be, the whole universe?"
 #. Like that.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:483
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:486
 msgid "read_deps: %q line %s: You HAVE too many."
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:498
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:501
 msgid "read_deps: cannot read file %q: %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:644
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:647
 msgid "norm_deps: %s is no code point in %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:656
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:659
 msgid "norm_deps: trailing $ in %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:658
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:661
 msgid "norm_deps: unterminated or empty ${ in %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:660
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:663
 msgid "norm_deps: stray $ in %q"
 msgstr ""
 
@@ -109,7 +109,7 @@ msgstr ""
 #. pure decode operation... in which case a named
 #. substitution that is not an escape at all as "bad"
 #. as in, "wait.... that's illegal."
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:739
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:742
 #, perl-format
 msgid "subs_deps: bad substitution: %s"
 msgstr ""

@@ -78,10 +78,13 @@ ok(!eval { $u->diag('%2$s', 'a'); 1 }, '... not even by number');
 	my $enoent = RdKw::I18N::CodeSets::_strerror(ENOENT);
 	Test::More::note("ENOENT: $enoent (perl said it "
 		. (Encode::is_utf8($raw) ? 'as characters' : 'in bytes') . ')');
-	ok(Encode::is_utf8($enoent) || $enoent !~ /[^\x00-\x7f]/, '$! as characters');
-	is(Encode::encode('locale', $enoent),
-		Encode::is_utf8($raw) ? Encode::encode('locale', $raw) : $raw,
-		'... which are what libc said, in the locale\'s code set');
+	ok((Encode::is_utf8($enoent) || $enoent !~ /[^\x00-\x7f]/) && $enoent !~ /\x{fffd}/,
+		'$! as characters (and none of them U+FFFD)');
+	# (strictly, as a substitution would make what libc said of what it did not)
+	my $strict = Encode::FB_CROAK() | Encode::LEAVE_SRC();
+	is(eval { Encode::encode('locale', $enoent, $strict) },
+		Encode::is_utf8($raw) ? Encode::encode('locale', $raw, $strict) : $raw,
+		'... which are what libc said, in the locale\'s code set') or diag $@;
 	$! = ENOENT;
 	is($u->diag('%q: %m', 'a'), "`a': $enoent", 'diag: %m, $! as it was');
 	my $eacces = RdKw::I18N::CodeSets::_strerror(EACCES);

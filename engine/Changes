@@ -9,7 +9,9 @@ Revision history of WwW-SiteConf
         Encode::Locale no longer is, but by it): as the locale
         says, but for what SITECONF_CODESETS says -- in siteconf,
         configure and render alike.  All three take -C codeset
-        too, after it, for the whole command line.
+        too, but only at the beginning of the command line argv.
+        (The rationale is that certain encodings like Shift_JIS,
+        Big5, GBK may re-use ASCII bytes for high code points.)
         configure checks for CodeSets, not Encode::Locale.
         Their own names ($0) are read as arguments, and \xHH
         where they cannot be.
@@ -102,6 +104,8 @@ Revision history of WwW-SiteConf
       gettext translation like Debian adduser... but this
       will do the trick for now.)
     * reworked comments in generated scripts
+    + -M-module is understood to mean -Mmodule=  (for those
+      who may prefer the perl syntax for `no module'...)
 
 
 0.02_03  2026-11-09  RC

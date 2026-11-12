@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-GenGenLib\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 04:02-0600\n"
+"POT-Creation-Date: 2026-11-12 04:07-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -147,11 +147,13 @@ msgstr ""
 msgid "read_manifest: %s: goal %q is already made"
 msgstr ""
 
+#. HEY!  the second %s is the string "NEED" or "WANT"
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:137
 #, perl-format
 msgid "read_manifest: %s: %s before any MAKE"
 msgstr ""
 
+#. HEY!  the second %s is the string "NEED" or "WANT"
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:139
 #, perl-format
 msgid "read_manifest: %s: %s takes exactly one file (use # for comments)"

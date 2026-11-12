@@ -133,9 +133,9 @@ sub read
 			next;
 		}
 		if ($kw eq 'NEED' or $kw eq 'WANT') {
-			# TRANSLATORS: the second %s is NEED or WANT
+			# HEY!  the second %s is the string "NEED" or "WANT"
 			$goal or die _diag(__("read_manifest: %s: %s before any MAKE"), $where, $kw) . "\n";
-			# TRANSLATORS: the second %s is NEED or WANT
+			# HEY!  the second %s is the string "NEED" or "WANT"
 			@arg == 1 or die _diag(__("read_manifest: %s: %s takes exactly one file"
 				. " (use # for comments)"), $where, $kw) . "\n";
 			my $name = eval { subs_dep(undef, $arg[0],

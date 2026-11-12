@@ -104,7 +104,7 @@ MSGMERGE = msgmerge
 
 pot :
 	$(XGETTEXT) -L Perl --from-code=UTF-8 -k__ -k__n:1,2 \
-		--package-name=WwW-GenGenLib --add-comments=TRANSLATORS: \
+		--package-name=WwW-GenGenLib --add-comments='HEY!' \
 		-o po/gengenlib.pot \
 		$(GENGENLIB)/lib/RdKw/WwW/GenGenLib.pm \
 		$(GENGENLIB)/lib/RdKw/WwW/GenGenLib/Manifest.pm

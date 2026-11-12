@@ -112,7 +112,8 @@ sub read
 
 	my (@goal, %goal, $goal);
 	while (<$fh>) {
-		# TRANSLATORS: where in a MANIFEST: its name, and a line number
+		# HEY!  %q is the file name of the faulty
+		# MANIFEST and %s is its lineno.
 		my $where = _diag(__("%q line %s"), $file, $.);
 		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
 			or die _diag(__("read_manifest: %s: not UTF-8"), $where) . "\n";
@@ -154,6 +155,10 @@ sub read
 			$where, $kw) . "\n";
 	}
 	close $fh or die _diag(__("read_manifest: cannot read file %q: %s"), $file, "$!") . "\n";
+	# HEY!  I (ethan/rc) didn't write this message.
+	# I'm frankly a bit surprised Claude made it
+	# a question... anyways go wild at it i don't
+	# really have any idea lol :v
 	@goal or die _diag(__("read_manifest: %q: no goals; what should I make?"), $file) . "\n";
 	bless { file => $file, goals => \@goal, goal => \%goal }, $class;
 }

@@ -201,6 +201,12 @@ sub write_make
 	my $text = "#\n# configured by `$prog'\n#\n";
 	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
 		my $v = defined $H->{$k} ? $H->{$k} : '';
+		# HEY!  by bad we mean the make variable name contains
+		# metacharacters which should not exist in a legal name.
+		# (Not your "legal name", of course, i mean a name that
+		# is allowed... like IL-legal in the sense of invalid.
+		# (but let's not get into the topic of identity crisis...
+		# we're talking about SYNTACTICALLY invalid names here.))
 		$k =~ /\A[^\s=#]+\z/ or die _diag(__("write_make: bad name: %q"), $k) . "\n";
 		$v =~ /[\r\n]/ and die _diag(__("write_make: %q: value has a newline"), $k) . "\n";
 		$text .= "$k=\t$v\n";
@@ -269,7 +275,11 @@ sub load_state
 	my %S;
 	for my $f (qw( config option )) {
 		my $file = "$Bdir/MY/$f.mk";
-		-f to_fs($file, 'load_state') or die _diag(__(
+		-f to_fs($file, 'load_state')
+			# HEY!  Keep a winky face in the translation ;)
+			# This message is likely to get seen by newbies,
+			# so we want to keep it fun.
+			or die _diag(__(
 			"error: You have not configured! (no %q)\n"
 			. "error: You should ./configure first. ;)"), $file) . "\n";
 		$S{$f} = { read_make($file) };
@@ -464,6 +474,12 @@ sub read_deps
 			next unless @list;
 
 			if ($type eq 'HAVE') {
+				# HEY!  Keep the second-person pronoun.
+				# It's mildly sarcastic (with that period
+				# at the end) -- imagine a "wtf" stare as
+				# in... "you HAVE too many.  The hell are
+				# you tryin' to be, the whole universe?"
+				# Like that.
 				die _diag(__("read_deps: %q line %s: You HAVE too many."), $file, $.) . "\n"
 					if @list > 1 or exists $I{$type};
 				$I{HAVE} = $list[0];
@@ -713,6 +729,13 @@ Added in 0.0002.
 
 sub _bad_subs
 {
+	# HEY!  "bad" means undefined in the substitution
+	# map here -- think `set -u' in your Bourne shell.
+	# It is technically also double entendre, since
+	# the map-less version of subs_deps is used as a
+	# pure decode operation... in which case a named
+	# substitution that is not an escape at all as "bad"
+	# as in, "wait.... that's illegal."
 	die _diag(__("subs_deps: bad substitution: %s"), "\${$_[0]}") . "\n";
 }
 

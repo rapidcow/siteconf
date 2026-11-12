@@ -15,8 +15,6 @@
 #
 # Makefile.PL does this file too, for the routines below.
 
-package RdKw::MkIntl;
-
 use 5.008;
 use strict;
 use warnings;

@@ -12,9 +12,9 @@ use ExtUtils::MakeMaker 6.31;
 # unless given).  They are ours, not MakeMaker's.
 #
 do './mkintl.pl' or die "mkintl.pl: " . ($@ || "$!\n");
-my %intl = RdKw::MkIntl::take_args(\@ARGV);
-my @linguas = RdKw::MkIntl::linguas($intl{LINGUAS});
-my $msgfmt = @linguas ? RdKw::MkIntl::find_msgfmt() : undef;
+my %intl = take_args(\@ARGV);
+my @linguas = linguas($intl{LINGUAS});
+my $msgfmt = @linguas ? find_msgfmt() : undef;
 if (defined $intl{LOCALEDIR}) {
 	File::Spec->file_name_is_absolute($intl{LOCALEDIR})
 		or die "LOCALEDIR=$intl{LOCALEDIR} is not absolute\n";
@@ -79,7 +79,7 @@ sub post_initialize
 {
 	my $self = shift;
 	my $dir = defined $intl{LOCALEDIR}
-		? RdKw::MkIntl::make_path($intl{LOCALEDIR})
+		? ::make_path($intl{LOCALEDIR})
 		: ($self->{INSTALL_BASE} || $self->{PREFIX}) . '/share/locale';
 	$self->{PM_FILTER} = '$(PERLRUN) pm_filter.pl "$(LOCALEDIR)"';
 	$self->SUPER::post_initialize(@_) . "LOCALEDIR = $dir\n";
@@ -116,7 +116,7 @@ update-po : pot
 MAKE_FRAG
 
 	@linguas or return $text;
-	$text . "\n" . RdKw::MkIntl::rules(linguas => \@linguas, po => 'po', msgfmt => $msgfmt)
+	$text . "\n" . ::rules(linguas => \@linguas, po => 'po', msgfmt => $msgfmt)
 		. <<'MAKE_FRAG';
 
 pure_all :: intl

@@ -6,7 +6,7 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 27;
+use Test::More tests => 33;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -35,6 +35,11 @@ my $a = $CS->new(stderr => 'UTF-8', diag => 'ascii');
 # --- diag_name
 is($u->diag_name('a.png'), "`a.png'", 'diag_name: printable ASCII');
 is($a->diag_name('a b.png'), "`a b.png'", '... with a space');
+is($a->diag_name("it's.png"), q{"it's.png"}, 'diag_name: a quote is no printable ASCII');
+is($u->diag_name("it's.png"), q{"it's.png"}, '... unicode, the same');
+is($a->diag_name("`a'"), q{"`a'"}, '... nor a backquote');
+is($u->diag_name("`a'"), q{"`a'"}, '... unicode, the same');
+is($u->diag_name("炒饭's"), q{"炒饭's"}, '... with what is not ASCII');
 is($u->diag_name("\x89PNG\r\n\x1a\n"), '"\x{89}PNG\r\n\x{1a}\n"', 'diag_name: unicode, controls');
 is($a->diag_name("\x89PNG\r\n\x1a\n"), '"\x{89}PNG\r\n\x{1a}\n"', '... ascii, the same');
 is($u->diag_name('炒饭.png'), '"炒饭.png"', 'diag_name: unicode, as it is');
@@ -50,6 +55,7 @@ is($u->diag_name(undef), 'undef', 'diag_name: undef');
 is($a->diag("cannot open file %q: %s\n", "炒饭", "No such file"),
 	qq{cannot open file "\\x{7092}\\x{996d}": No such file\n}, 'diag: %q and %s');
 is($u->diag('100%% %q', 'a'), "100% `a'", 'diag: %%');
+is($a->diag('no %q', "a'b"), q{no "a'b"}, 'diag: %q of a quote');
 ok(!eval { $u->diag('%d', 1); 1 }, 'diag: no other conversion');
 ok(!eval { $u->diag('%q'); 1 }, 'diag: no missing argument');
 

@@ -712,7 +712,8 @@ sub _code
 
 =item I<cs>->B<diag_name>( I<name> )
 
-I<name>, for people: C<`name'> if it is all printable ASCII, and
+I<name>, for people: C<`name'> if it is all printable ASCII but for
+C<`> and C<'> (which would confuse the quotes), and
 quoted as Perl would otherwise, with escapes (C<\n>, C<\x{a0}>) for
 what would not show.  Under C<diag_mode> C<ascii>, that is all but
 printable ASCII; under C<unicode>, it is only controls, separators
@@ -725,7 +726,7 @@ sub diag_name
 {
 	my ($self, $name) = @_;
 	return 'undef' unless defined $name;
-	return "`$name'" if $name =~ /\A[\x20-\x7e]*\z/;
+	return "`$name'" if $name =~ /\A(?:(?![`'])[\x20-\x7e])*\z/;
 	$self->diag_mode eq 'ascii' ? _qq_ascii($name)
 		: _qq_unicode($name, $self->_encoding('stderr'));
 }

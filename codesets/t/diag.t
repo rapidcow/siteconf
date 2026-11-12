@@ -6,11 +6,12 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 49;
+use Test::More tests => 51;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
 
+use Encode ();
 use RdKw::I18N::CodeSets;
 my $CS = 'RdKw::I18N::CodeSets';
 
@@ -70,10 +71,20 @@ ok(!eval { $u->diag('%2$s', 'a'); 1 }, '... not even by number');
 # --- %m
 {
 	use Errno qw( ENOENT EACCES );
-	my $enoent = do { local $! = ENOENT; "$!" };
+	# $! as libc says it in the locale (which is English but where libc
+	# translates it, as glibc does: try LC_ALL=zh_CN.UTF-8, and a locale
+	# that is not UTF-8, LC_ALL=zh_CN.GB18030), as characters
+	my $raw = do { use if $] >= 5.022, locale => ':messages'; local $! = ENOENT; "$!" };
+	my $enoent = RdKw::I18N::CodeSets::_strerror(ENOENT);
+	Test::More::note("ENOENT: $enoent (perl said it "
+		. (Encode::is_utf8($raw) ? 'as characters' : 'in bytes') . ')');
+	ok(Encode::is_utf8($enoent) || $enoent !~ /[^\x00-\x7f]/, '$! as characters');
+	is(Encode::encode('locale', $enoent),
+		Encode::is_utf8($raw) ? Encode::encode('locale', $raw) : $raw,
+		'... which are what libc said, in the locale\'s code set');
 	$! = ENOENT;
 	is($u->diag('%q: %m', 'a'), "`a': $enoent", 'diag: %m, $! as it was');
-	my $eacces = do { local $! = EACCES; "$!" };
+	my $eacces = RdKw::I18N::CodeSets::_strerror(EACCES);
 	$! = EACCES;
 	is($u->diag('%m; %2$s %1$q, %m', 'a', 'b'), "$eacces; b `a', $eacces",
 		'... any number of times, among the others');

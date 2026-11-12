@@ -80,7 +80,7 @@ like(says('en'), qr/\Aread_deps: cannot open file "nope\x{e9}": /, 'en');
 like(says('xx'), qr/\Aread_deps: cannot open file "nope\x{e9}": /,
 	'no catalog: as it is written');
 {
-	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->new(diag => 'ascii');
+	local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'ascii');
 	like(says('zh'), qr/\Aread_deps: 无法打开文件 "nope\\x\{e9\}"：/,
 		'the name is said as CodeSets says');
 }

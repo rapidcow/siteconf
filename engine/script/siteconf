@@ -291,7 +291,8 @@ my $cs = eval {
 RdKw::I18N::CodeSets->locale($cs);
 $cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
 
-my $prog = $cs->un_fs(basename($0));
+# Our name came as an argument; it is only said, so it need not decode
+my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 my $usage = <<EOM;
 usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
                 [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
@@ -765,10 +766,11 @@ my $cs = eval {
 } or die "$0: $@";
 RdKw::I18N::CodeSets->locale($cs);
 $cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
-eval { $cs->decode_argv; 1 } or die "$0: $@";
+my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ() });
+eval { $cs->decode_argv; 1 } or die "$prog: $@";
 GetOptions(%getopt, 'C=s' => sub {})
-	or die "usage: $0 [-B BUILDDIR] [-C CODESET ...] apath bpath\n";
-@ARGV == 2 or die "$0: need exactly two args\n";
+	or die "usage: $prog [-B BUILDDIR] [-C CODESET ...] apath bpath\n";
+@ARGV == 2 or die "$prog: need exactly two args\n";
 my ($apath, $bpath) = @ARGV;
 NEW
 Getopt::Long::Configure(qw( bundling no_ignore_case ));

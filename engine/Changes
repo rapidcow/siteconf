@@ -11,6 +11,8 @@ Revision history of WwW-SiteConf
         configure and render alike.  configure and render take
         -C codeset too, after it, for the whole command line.
         configure checks for CodeSets, not Encode::Locale.
+        Their own names ($0) are read as arguments, and \xHH
+        where they cannot be.
     * render reads its options with Getopt::Long (-B, -C; still
       -- before the files), not Getopt::Std.
     + siteconf -V -V: I18N::CodeSets' version, too.

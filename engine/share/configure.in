@@ -118,7 +118,8 @@ $cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
 sub to_fs { $cs->to_fs($_[0], { prog => 'E' }) }
 sub un_fs { $cs->un_fs($_[0], { prog => 'E' }) }
 
-$prog = un_fs(basename($0));
+# Our name came as an argument; it is only said, so it need not decode
+$prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 
 # Baked in by `@PROG@ -i'.
 #   D   definitions, which are filesystem routing and nothing else

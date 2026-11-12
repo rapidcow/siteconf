@@ -28,7 +28,7 @@ for my $name (@names) {
 		or plan skip_all => "locale_fs ($Encode::Locale::ENCODING_LOCALE_FS)"
 			. " cannot spell our file names";
 }
-plan tests => 6;
+plan tests => 7;
 
 sub fs { Encode::encode(locale_fs => $_[0]) }
 sub spew
@@ -62,7 +62,16 @@ sub run
 my ($ok, $out, $err) = run('ヘッダー.html');
 is($out, 'résumé', 'a source and an INCLUDE of any name') or diag $err;
 ($ok, $out, $err) = run('秘密');
-like("$err", qr/undeclared dependency: `サイト\/秘密' \(aka `\$\{a\}\/秘密'\)/, 'and undeclared, of any name');
+like("$err", qr/\A\S+ error - "秘密": undeclared dependency: "サイト\/秘密" \(aka "\\\$\{a\}\/秘密"\)/,
+	'and undeclared, of any name');
+{
+	# (names said as -C diag:ascii would have them)
+	no warnings 'once';
+	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->locale->new(diag => 'ascii');
+	($ok, $out, $err) = run('秘密');
+	like("$err", qr/"\\x\{79d8\}\\x\{5bc6\}": undeclared dependency: "\\x\{30b5\}\\x\{30a4\}\\x\{30c8\}\/\\x\{79d8\}\\x\{5bc6\}" \(aka "\\\$\{a\}\/\\x\{79d8\}\\x\{5bc6\}"\)/,
+		'... and said in ASCII, if diag is');
+}
 ($ok, $out, $err) = run('秘密', CHECK_DEPS => 0);
 is($out, 'secret', '... unchecked, all the same');
 

@@ -148,6 +148,12 @@ use RdKw::WwW::GenGenLib 0.0100 qw(
 	norm_dep subs_dep split_dep
 	escape_dep uproot );
 
+# (what is said is said, and names spelled, as RdKw::WwW::GenGenLib does)
+BEGIN {
+	*__ = \&RdKw::WwW::GenGenLib::__;
+	*_diag = \&RdKw::WwW::GenGenLib::_diag;
+}
+
 # A name as the file system spells it, and back (see RdKw::I18N::CodeSets)
 sub _to_fs { RdKw::I18N::CodeSets->locale->to_fs($_[0], { prog => __PACKAGE__ }) }
 sub _un_fs { RdKw::I18N::CodeSets->locale->un_fs($_[0], { prog => __PACKAGE__ }) }
@@ -177,10 +183,12 @@ sub new
 	my ($class, $args) = @_;
 	$args = { %{ $args || {} } };
 	for my $k (qw( COMPILE_DIR COMPILE_EXT )) {
-		defined $args->{$k} and die "$class: $k is not supported\n";
+		# HEY!  the first %s is the class name (in every message
+		# that starts so), and the second is an option name
+		defined $args->{$k} and die _diag(__("%s: %s is not supported"), $class, $k) . "\n";
 	}
 	defined $args->{SOURCE}
-		or die "$class: SOURCE (the template to process) is required\n";
+		or die _diag(__("%s: SOURCE (the template to process) is required"), $class) . "\n";
 	# We give Template::Provider whole paths, once we have said yes;
 	# its own ABSOLUTE and RELATIVE are ours to say.
 	my $self = $class->SUPER::new({ %$args, ABSOLUTE => 1, RELATIVE => 1 }) or return;
@@ -194,7 +202,7 @@ sub new
 		for (@{ $args->{ALLOW_PREFIXES} }) {
 			my ($root, $rest) = split_dep($_);
 			$rest =~ m{\A/*\z}
-				or die "$class: ALLOW_PREFIXES: `$_' is not a symbolic root\n";
+				or die _diag(__("%s: ALLOW_PREFIXES: %q is not a symbolic root"), $class, $_) . "\n";
 			$self->{ALLOW_PREFIXES}{$root} = 1;
 		}
 	}
@@ -205,12 +213,13 @@ sub new
 		or return $self;
 
 	my $source = $self->_entry;
-	defined $source or die "$class: source `$args->{SOURCE}' not found\n";
+	defined $source or die _diag(__("%s: source %q not found"), $class, $args->{SOURCE}) . "\n";
 	my %I = read_deps($source);
 	if ($self->{CHECK_HAVE}) {
-		defined $I{HAVE} or die "$class: $source: no HAVE\n";
+		defined $I{HAVE} or die _diag(__("%s: %q: no HAVE"), $class, $source) . "\n";
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
-			or die "$class: $source: You HAVE `$I{HAVE}', but it is actually @{[ $self->_named($source) ]}\n";
+			or die _diag(__("%s: %q: You HAVE %q, but it is actually %s"),
+				$class, $source, $I{HAVE}, $self->_named($source)) . "\n";
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;
 
@@ -245,7 +254,8 @@ sub _vars
 	my ($self, $spec) = @_;
 	for my $x (norm_dep($spec) =~ /\$\{([^}]+)\}/g) {
 		$x eq '$' || $x =~ /\AU\+/ || defined $self->{DEFINITION}{$x}
-			or die __PACKAGE__ . ": `$spec': no such variable \${$x}\n";
+			# HEY!  the last %s is the variable, as ${name}
+			or die _diag(__("%s: %q: no such variable %s"), __PACKAGE__, $spec, "\${$x}") . "\n";
 	}
 	1;
 }
@@ -294,7 +304,8 @@ sub _named
 	my ($self, $path) = @_;
 	$path = File::Spec->canonpath($path);
 	my $alias = $self->_alias($path);
-	"`$path'" . (defined $alias ? " (aka `$alias')" : '');
+	# HEY!  a path, and how a header would name it (${a}/x)
+	defined $alias ? _diag(__("%q (aka %q)"), $path, $alias) : _diag('%q', $path);
 }
 
 # The longest of the PREFIXES that `path' is under (as they expand),
@@ -387,18 +398,25 @@ sub access
 		my $declared = $self->{DECLARED}{$dep};
 		if ($self->{CHECK_DEPS} && !$declared) {
 			my $why = $self->{REFUSED}{$dep};
-			return (undef, defined $why
-				? "@{[ $self->_named($dep) ]} is declared, but forbidden because $why "
-					. ($why eq 'ALLOW_PREFIXES' ? 'does not permit its root' : 'is unset')
-				: "undeclared dependency: @{[ $self->_named($dep) ]}");
+			# HEY!  the first (or only) %s is a name, as "%q (aka %q)"
+			# says it, and a second is an option name, as it is
+			return (undef, !defined $why
+				? _diag(__("undeclared dependency: %s"), $self->_named($dep))
+				: $why eq 'ALLOW_PREFIXES'
+				? _diag(__("%s is declared, but forbidden because %s does not permit its root"),
+					$self->_named($dep), $why)
+				: _diag(__("%s is declared, but forbidden because %s is unset"),
+					$self->_named($dep), $why));
 		}
 		if ($kind && !($self->{ALLOW_DEPS} && $declared) && !$self->{"TT_$kind"}) {
-			return (undef, lc($kind) . " paths are not allowed ($kind is unset)");
+			return (undef, $kind eq 'ABSOLUTE'
+				? __("absolute paths are not allowed (ABSOLUTE is unset)")
+				: __("relative paths are not allowed (RELATIVE is unset)"));
 		}
 		-f _to_fs($path) or return;
 	}
 	my $abs = Cwd::abs_path(_to_fs($path));
-	defined $abs or return (undef, "$path: $!");
+	defined $abs or return (undef, _diag('%q: %s', $path, "$!"));
 	(_un_fs($abs), undef);
 }
 
@@ -417,7 +435,7 @@ sub fetch
 	my ($self, $name, @rest) = @_;
 	ref $name and return $self->SUPER::fetch($name, @rest);
 	my ($path, $error) = $self->access($name);
-	defined $error and return ("$name: $error", STATUS_ERROR);
+	defined $error and return (_diag('%q: %s', $name, $error), STATUS_ERROR);
 	defined $path or return (undef, STATUS_DECLINED);
 	$self->SUPER::fetch($path, @rest);
 }
@@ -427,7 +445,7 @@ sub load
 	my ($self, $name, @rest) = @_;
 	ref $name and return $self->SUPER::load($name, @rest);
 	my ($path, $error) = $self->access($name);
-	defined $error and return ("$name: $error", STATUS_ERROR);
+	defined $error and return (_diag('%q: %s', $name, $error), STATUS_ERROR);
 	defined $path or return (undef, STATUS_DECLINED);
 	$self->SUPER::load($path, @rest);
 }
@@ -452,7 +470,7 @@ sub _template_content
 	my $fs = _to_fs($path);
 	my ($data, $error, $mod_date);
 	if (-d $fs) {
-		$error = "$path: not a file";
+		$error = _diag(__("%q: not a file"), $path);
 	} elsif (open my $fh, '<', $fs) {
 		local $/;
 		binmode $fh;
@@ -460,7 +478,7 @@ sub _template_content
 		$mod_date = (stat $fh)[9];
 		close $fh;
 	} else {
-		$error = "$path: $!";
+		$error = _diag('%q: %s', $path, "$!");
 	}
 	wantarray ? ($data, $error, $mod_date) : $data;
 }

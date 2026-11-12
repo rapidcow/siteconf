@@ -99,6 +99,7 @@ MAKE_FRAG
 	$text .= <<'MAKE_FRAG';
 
 GENGENLIB = ../gengenlib
+PROVIDER = ../template-provider
 XGETTEXT = xgettext
 MSGMERGE = msgmerge
 
@@ -107,7 +108,8 @@ pot :
 		--package-name=WwW-GenGenLib --add-comments='HEY!' \
 		-o po/gengenlib.pot \
 		$(GENGENLIB)/lib/RdKw/WwW/GenGenLib.pm \
-		$(GENGENLIB)/lib/RdKw/WwW/GenGenLib/Manifest.pm
+		$(GENGENLIB)/lib/RdKw/WwW/GenGenLib/Manifest.pm \
+		$(PROVIDER)/lib/RdKw/WwW/GenGenLib/Template/Provider.pm
 
 update-po : pot
 	for po in po/*.po; do \

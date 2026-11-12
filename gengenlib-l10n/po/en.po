@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-GenGenLib\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 06:20-0600\n"
+"POT-Creation-Date: 2026-11-12 09:16-0600\n"
 "PO-Revision-Date: 2026-11-11 00:00-0600\n"
 "Last-Translator: rapidcow\n"
 "Language-Team: none\n"
@@ -182,6 +182,73 @@ msgstr "read_manifest: %q: no goals; what should I make?"
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:208
 msgid "read_manifest: %q: no goal %q"
 msgstr "read_manifest: %q: no goal %q"
+
+#. HEY!  the first %s is the class name (in every message
+#. that starts so), and the second is an option name
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:188
+#, perl-format
+msgid "%s: %s is not supported"
+msgstr "%s: %s is not supported"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:191
+#, perl-format
+msgid "%s: SOURCE (the template to process) is required"
+msgstr "%s: SOURCE (the template to process) is required"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:205
+msgid "%s: ALLOW_PREFIXES: %q is not a symbolic root"
+msgstr "%s: ALLOW_PREFIXES: %q is not a symbolic root"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:216
+msgid "%s: source %q not found"
+msgstr "%s: source %q not found"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:219
+msgid "%s: %q: no HAVE"
+msgstr "%s: %q: no HAVE"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:221
+msgid "%s: %q: You HAVE %q, but it is actually %s"
+msgstr "%s: %q: You HAVE %q, but it is actually %s"
+
+#. HEY!  the last %s is the variable, as ${name}
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:258
+msgid "%s: %q: no such variable %s"
+msgstr "%s: %q: no such variable %s"
+
+#. HEY!  a path, and how a header would name it (${a}/x)
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:308
+msgid "%q (aka %q)"
+msgstr "%q (aka %q)"
+
+#. HEY!  the first (or only) %s is a name, as "%q (aka %q)"
+#. says it, and a second is an option name, as it is
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:404
+#, perl-format
+msgid "undeclared dependency: %s"
+msgstr "undeclared dependency: %s"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:406
+#, perl-format
+msgid "%s is declared, but forbidden because %s does not permit its root"
+msgstr "%s is declared, but forbidden because %s does not permit its root"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:408
+#, perl-format
+msgid "%s is declared, but forbidden because %s is unset"
+msgstr "%s is declared, but forbidden because %s is unset"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:413
+msgid "absolute paths are not allowed (ABSOLUTE is unset)"
+msgstr "absolute paths are not allowed (ABSOLUTE is unset)"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:414
+msgid "relative paths are not allowed (RELATIVE is unset)"
+msgstr "relative paths are not allowed (RELATIVE is unset)"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:473
+msgid "%q: not a file"
+msgstr "%q: not a file"
 
 #, perl-format
 #~ msgid "cannot encode %s in current locale (%s)"

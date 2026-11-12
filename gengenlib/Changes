@@ -3,6 +3,17 @@ Revision history of WwW-GenGenLib
 
 0.01_00  2026-11-10  RC
     *** Perl 5.8 is required, and so is Encode::Locale.
+    *** RdKw::I18N::CodeSets is required: what we say says names
+        as it does (%q of diag: `name' if it is printable ASCII,
+        "quoted" as Perl would, with escapes, if not), as its
+        locale has it, which may be local()ized.
+    + What we say is said in the language of the locale, from the
+      catalogs of the gengenlib text domain, if WwW-GenGenLib-L10N
+      says where they are and Locale::Messages (libintl-perl) is
+      there to read them; as it is written, if not.  Neither is
+      required.
+    * read_make, update_file, read_deps, read_manifest: `cannot
+      open file NAME: why' (and so on), not `open <NAME: why'.
     + read_manifest: the goals of a MANIFEST (MAKE, NEED, WANT),
       as an RdKw::WwW::GenGenLib::Manifest: target (the default
       one in scalar context, all in list), default_target,

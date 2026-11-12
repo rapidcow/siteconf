@@ -97,7 +97,8 @@ my %STD = ( stdin => \*STDIN, stdout => \*STDOUT, stderr => \*STDERR );
 
 my $CHECK = Encode::FB_CROAK() | Encode::LEAVE_SRC();
 
-my $LOCALE;
+# (our, so that it may be local()ized: local $RdKw::I18N::CodeSets::LOCALE)
+our $LOCALE;
 
 =head1 METHODS
 
@@ -171,6 +172,10 @@ sub _set
 
 The process's code sets, which are those of a plain L</new> until
 they are set.  Returns them (the new ones, if set).
+They are C<$RdKw::I18N::CodeSets::LOCALE>, which may be set for a
+while, and no longer:
+
+    local $RdKw::I18N::CodeSets::LOCALE = $CS->new(diag => 'ascii');
 
 =cut
 

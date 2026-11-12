@@ -16,3 +16,5 @@ Revision history of I18N-CodeSets
       encode_argv take it as Encode::Locale's do).
     + diag_name, diag: names for people, quoted to show what would
       not (according to the diag mode).
+    + $RdKw::I18N::CodeSets::LOCALE is what locale says, and may be
+      local()ized.

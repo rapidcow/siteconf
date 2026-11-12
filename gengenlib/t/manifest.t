@@ -45,7 +45,7 @@ is_deeply([ $mf->wanted('third') ], ['sunshine'], 'WANT');
 is_deeply([ map $mf->needed($_), $mf->target ], [qw( sunshine rainbow a/b.c )], 'all NEEDs');
 is_deeply([ map $mf->wanted($_), $mf->target ], [qw( disco_ball sunshine )], 'all WANTs');
 ok(!eval { $mf->needed('nope'); 1 }, 'needed: no such goal');
-like($@, qr/\Aread_manifest: MANIFEST: no goal `nope'$/, '... says so');
+like($@, qr/\Aread_manifest: `MANIFEST': no goal `nope'$/, '... says so');
 
 my @g = $mf->goals;
 is_deeply($g[0], { name => 'goal', line => 3,
@@ -77,14 +77,14 @@ sub bad {
 	ok(!eval { parse($text); 1 }, "$what: dies");
 	like($@, $re, "$what: says why");
 }
-bad("NEED x\n", qr/\Aread_manifest: MANIFEST line 1: NEED before any MAKE$/, 'orphan');
+bad("NEED x\n", qr/\Aread_manifest: `MANIFEST' line 1: NEED before any MAKE$/, 'orphan');
 bad("MAKE a\nNEED x y\n", qr/line 2: NEED takes exactly one file/, 'two files');
 bad("MAKE a\nNEED x\cKy\n", qr/exactly one file/, 'vertical tab is a blank');
 bad("MAKE a\nMAKE a\n", qr/line 2: goal `a' is already made/, 'duplicate goal');
 bad("MAKE\n", qr/exactly one goal/, 'nameless goal');
 bad("MAKE a\${U+0020}b\n", qr/bad goal name/, 'goal names are not unescaped');
 bad("FROB x\n", qr/expected MAKE, NEED or WANT, not `FROB'/, 'unknown keyword');
-bad("# nothing\n", qr/\Aread_manifest: MANIFEST: no goals/, 'empty');
+bad("# nothing\n", qr/\Aread_manifest: `MANIFEST': no goals/, 'empty');
 bad("MAKE a\nNEED a\$b\n", qr/line 2: bad substitution: \$\{b\}$/, 'a variable');
 bad("MAKE a\nNEED \${a}/x\n", qr/bad substitution: \$\{a\}/, '... even a well-known one');
 bad("MAKE a\nNEED a\$\n", qr/line 2: trailing \$/, 'a stray $');
@@ -107,5 +107,5 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	is($mf->file, "$dir/MANIFEST", 'file: as it was named');
 	is_deeply([ $mf->needed ], ['x'], 'read from a file');
 	ok(!eval { read_manifest("$dir/nope"); 1 }, 'missing: dies');
-	like($@, qr/\Aread_manifest: open <\Q$dir\E\/nope: /, 'missing: says why');
+	like($@, qr/\Aread_manifest: cannot open file `\Q$dir\E\/nope': /, 'missing: says why');
 }

@@ -3,6 +3,7 @@ package RdKw::WwW::GenGenLib::Manifest;
 use 5.008;
 use strict;
 use warnings;
+use utf8;
 
 our $VERSION = '0.01_00';
 $VERSION = eval $VERSION;
@@ -78,6 +79,12 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 use Encode ();
 use RdKw::WwW::GenGenLib qw( to_fs subs_dep );
 
+# (what is said is said as RdKw::WwW::GenGenLib says it)
+BEGIN {
+	*__ = \&RdKw::WwW::GenGenLib::__;
+	*_diag = \&RdKw::WwW::GenGenLib::_diag;
+}
+
 # White space, as make and the shell know it: these six, and nothing else
 my $SP = '\t\n\cK\f\r ';
 
@@ -95,50 +102,59 @@ sub read
 	my ($class, $file) = @_;
 	my $fh;
 	if (ref $file) {
-		open $fh, '<', $file or die "read_manifest: open <string: $!\n";
+		open $fh, '<', $file
+			or die _diag(__("read_manifest: cannot open string: %s"), "$!") . "\n";
 		$file = 'MANIFEST';
 	} else {
 		open $fh, '<', to_fs($file, 'read_manifest')
-			or die "read_manifest: open <$file: $!\n";
+			or die _diag(__("read_manifest: cannot open file %q: %s"), $file, "$!") . "\n";
 	}
 
 	my (@goal, %goal, $goal);
 	while (<$fh>) {
-		my $where = "$file line $.";
+		# TRANSLATORS: where in a MANIFEST: its name, and a line number
+		my $where = _diag(__("%q line %s"), $file, $.);
 		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
-			or die "read_manifest: $where: not UTF-8\n";
+			or die _diag(__("read_manifest: %s: not UTF-8"), $where) . "\n";
 		s/(?:^|[$SP])#.*//so;
 		my ($kw, @arg) = /([^$SP]+)/go;
 		defined $kw or next;
 		if ($kw eq 'MAKE') {
-			@arg == 1 or die "read_manifest: $where: MAKE takes exactly one goal name\n";
+			@arg == 1 or die _diag(__("read_manifest: %s: MAKE takes exactly one goal name"),
+				$where) . "\n";
 			my $name = $arg[0];
 			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
-				or die "read_manifest: $where: bad goal name `$name'\n";
-			$goal{$name} and die "read_manifest: $where: goal `$name' is already made\n";
+				or die _diag(__("read_manifest: %s: bad goal name %q"), $where, $name) . "\n";
+			$goal{$name} and die _diag(__("read_manifest: %s: goal %q is already made"),
+				$where, $name) . "\n";
 			push @goal, $goal = $goal{$name}
 				= { name => $name, need => [], want => [], line => $. };
 			next;
 		}
 		if ($kw eq 'NEED' or $kw eq 'WANT') {
-			$goal or die "read_manifest: $where: $kw before any MAKE\n";
-			@arg == 1 or die "read_manifest: $where: $kw takes exactly one file"
-				. " (use # for comments)\n";
+			# TRANSLATORS: the second %s is NEED or WANT
+			$goal or die _diag(__("read_manifest: %s: %s before any MAKE"), $where, $kw) . "\n";
+			# TRANSLATORS: the second %s is NEED or WANT
+			@arg == 1 or die _diag(__("read_manifest: %s: %s takes exactly one file"
+				. " (use # for comments)"), $where, $kw) . "\n";
 			my $name = eval { subs_dep(undef, $arg[0],
 				strict => 1, on_missing => 'croak') };
 			defined $name or do {
 				(my $why = $@) =~ s/\A\w+: //;
-				die "read_manifest: $where: $why";
+				die _diag(__("read_manifest: %s: %s"), $where, $why);
 			};
-			length $name or die "read_manifest: $where: `$arg[0]' is no name\n";
-			$name =~ /\0/ and die "read_manifest: $where: `$arg[0]' has a NUL in it\n";
+			length $name or die _diag(__("read_manifest: %s: %q is no name"),
+				$where, $arg[0]) . "\n";
+			$name =~ /\0/ and die _diag(__("read_manifest: %s: %q has a NUL in it"),
+				$where, $arg[0]) . "\n";
 			push @{ $goal->{lc $kw} }, { file => $name, line => $. };
 			next;
 		}
-		die "read_manifest: $where: expected MAKE, NEED or WANT, not `$kw'\n";
+		die _diag(__("read_manifest: %s: expected MAKE, NEED or WANT, not %q"),
+			$where, $kw) . "\n";
 	}
-	close $fh or die "read_manifest: read <$file: $!\n";
-	@goal or die "read_manifest: $file: no goals; what should I make?\n";
+	close $fh or die _diag(__("read_manifest: cannot read file %q: %s"), $file, "$!") . "\n";
+	@goal or die _diag(__("read_manifest: %q: no goals; what should I make?"), $file) . "\n";
 	bless { file => $file, goals => \@goal, goal => \%goal }, $class;
 }
 
@@ -183,7 +199,8 @@ sub _goal
 {
 	my ($self, $name) = @_;
 	defined $name or return $self->{goals}[0];
-	$self->{goal}{$name} or die "read_manifest: $self->{file}: no goal `$name'\n";
+	$self->{goal}{$name} or die _diag(__("read_manifest: %q: no goal %q"),
+		$self->{file}, $name) . "\n";
 }
 
 sub needed { map { $_->{file} } @{ $_[0]->_goal($_[1])->{need} } }

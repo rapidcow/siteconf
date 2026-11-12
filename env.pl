@@ -10,8 +10,10 @@ use FindBin;
 use Getopt::Long;
 
 my @modules = qw(
+	codesets
 	engine
 	gengenlib
+	gengenlib-l10n
 	genlib
 	template-provider
 );

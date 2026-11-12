@@ -32,14 +32,65 @@ encoded to the file system's locale (see L<Encode::Locale>) only on
 their way to the system, and a name that cannot be spelled there is
 an error, never a guess.  What is I<in> the files is always UTF-8.
 
+What we say (when we die) is said in the language of the locale, from
+the catalogs of the C<gengenlib> text domain, if
+L<RdKw::WwW::GenGenLib::L10N> says where they are and
+L<Locale::Messages> is there to read them; and as it is written, if
+not, or if no catalog has it.  The names in it are said as
+L<RdKw::I18N::CodeSets> says: C<< RdKw::I18N::CodeSets->locale >>, or
+
+    local $RdKw::I18N::CodeSets::LOCALE
+        = RdKw::I18N::CodeSets->new(diag => 'ascii');
+
 =cut
 
+use utf8;
 use Encode ();
 use Encode::Locale ();
 use IO::Handle ();
 use File::Basename qw( basename dirname );
 use File::Compare ();
 use File::Spec;
+use RdKw::I18N::CodeSets ();
+
+# What we say is said in the language of the locale, if
+# RdKw::WwW::GenGenLib::L10N says where the catalogs are (and
+# Locale::Messages is there to read them); else, and for what no
+# catalog has, as it is written.  A catalog is spelled in UTF-8 (we
+# bind the domain so), and is decoded as such: as for the file
+# system, CodeSets is not asked.  (The source is left as it is, or
+# Encode would empty it -- and a literal cannot be emptied.)
+BEGIN {
+	my $CHECK = Encode::FB_CROAK() | Encode::LEAVE_SRC();
+	if (eval {
+		require Locale::Messages;
+		require RdKw::WwW::GenGenLib::L10N;
+		Locale::Messages::bindtextdomain(gengenlib =>
+			$RdKw::WwW::GenGenLib::L10N::LOCALEDIR);
+		Locale::Messages::bind_textdomain_codeset(gengenlib => 'UTF-8');
+		1;
+	}) {
+		*__ = sub {
+			Encode::decode('UTF-8', Locale::Messages::dgettext(gengenlib =>
+				Encode::encode('UTF-8', $_[0], $CHECK)), $CHECK);
+		};
+		*__n = sub {
+			Encode::decode('UTF-8', Locale::Messages::dngettext(gengenlib =>
+				Encode::encode('UTF-8', $_[0], $CHECK),
+				Encode::encode('UTF-8', $_[1], $CHECK), $_[2]), $CHECK);
+		};
+	}
+	else {
+		*__ = sub { $_[0] };
+		*__n = sub { $_[2] == 1 ? $_[0] : $_[1] };
+	}
+}
+
+# A message: %q is a name, %s as it is (see RdKw::I18N::CodeSets)
+sub _diag
+{
+	RdKw::I18N::CodeSets->locale->diag(@_);
+}
 
 our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
@@ -78,8 +129,8 @@ sub to_fs
 	my $fs = eval { Encode::encode(locale_fs => $name,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
 	defined $fs or die +(defined $who ? "$who: " : "")
-		. "cannot encode @{[_perlqq($name)]} in current locale"
-		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
+		. _diag(__("cannot encode %s in current locale (%s)"),
+			_perlqq($name), $Encode::Locale::ENCODING_LOCALE_FS) . "\n";
 	$fs;
 }
 
@@ -89,8 +140,8 @@ sub un_fs
 	my $name = eval { Encode::decode(locale_fs => $fs,
 		Encode::FB_CROAK() | Encode::LEAVE_SRC()) };
 	defined $name or die +(defined $who ? "$who: " : "")
-		. "cannot decode @{[_perlqq($fs)]} in current locale"
-		. " ($Encode::Locale::ENCODING_LOCALE_FS)\n";
+		. _diag(__("cannot decode %s in current locale (%s)"),
+			_perlqq($fs), $Encode::Locale::ENCODING_LOCALE_FS) . "\n";
 	$name;
 }
 
@@ -119,14 +170,14 @@ sub read_make
 	my ($file) = @_;
 
 	open my $fh, '<', to_fs($file, 'read_make')
-		or die "read_make: open <$file: $!\n";
+		or die _diag(__("read_make: cannot open file %q: %s"), $file, "$!") . "\n";
 	binmode $fh, ':encoding(UTF-8)';
 
 	my %O;
 	while (<$fh>) {
 		next if /^\s*#/ or /^\s*$/;
 		my ($k, $v) = split /=/, $_, 2;
-		defined $v or die "read_make: $file line $.: no `='\n";
+		defined $v or die _diag(__("read_make: %q line %s: no `='"), $file, $.) . "\n";
 		$k =~ s/^\s+|\s+$//g;
 		$v =~ s/^\s+|\s+$//g;
 		$O{$k} = $v;
@@ -150,8 +201,8 @@ sub write_make
 	my $text = "#\n# configured by `$prog'\n#\n";
 	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
 		my $v = defined $H->{$k} ? $H->{$k} : '';
-		$k =~ /\A[^\s=#]+\z/ or die "write_make: bad name: $k\n";
-		$v =~ /[\r\n]/ and die "write_make: $k: value has a newline\n";
+		$k =~ /\A[^\s=#]+\z/ or die _diag(__("write_make: bad name: %q"), $k) . "\n";
+		$v =~ /[\r\n]/ and die _diag(__("write_make: %q: value has a newline"), $k) . "\n";
 		$text .= "$k=\t$v\n";
 	}
 	update_file($file, $text);
@@ -183,16 +234,19 @@ sub update_file
 	my ($tmp_fs, $file_fs) = map { to_fs($_, 'update_file') } $tmp, $file;
 
 	open my $fh, '>:encoding(UTF-8)', $tmp_fs
-		or die "update_file: open >$tmp: $!\n";
-	print $fh $text or die "update_file: write >$tmp: $!\n";
-	close $fh or die "update_file: write >$tmp: $!\n";
+		or die _diag(__("update_file: cannot create file %q: %s"), $tmp, "$!") . "\n";
+	print $fh $text
+		or die _diag(__("update_file: cannot write file %q: %s"), $tmp, "$!") . "\n";
+	close $fh
+		or die _diag(__("update_file: cannot write file %q: %s"), $tmp, "$!") . "\n";
 
 	my $exists = -e $file_fs;
 	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0) {
 		unlink $tmp_fs;
 		return 0;  # make it numeric so `>' isn't upset
 	}
-	rename $tmp_fs, $file_fs or die "update_file: mv $tmp $file: $!\n";
+	rename $tmp_fs, $file_fs or die _diag(__("update_file: cannot rename %q to %q: %s"),
+		$tmp, $file, "$!") . "\n";
 	$exists ? 1 : 2;
 }
 
@@ -215,10 +269,9 @@ sub load_state
 	my %S;
 	for my $f (qw( config option )) {
 		my $file = "$Bdir/MY/$f.mk";
-		-f to_fs($file, 'load_state') or die <<RUSH;
-error: You have not configured! (no $file)
-error: You should ./configure first. ;)
-RUSH
+		-f to_fs($file, 'load_state') or die _diag(__(
+			"error: You have not configured! (no %q)\n"
+			. "error: You should ./configure first. ;)"), $file) . "\n";
 		$S{$f} = { read_make($file) };
 	}
 	%S;
@@ -383,7 +436,7 @@ sub read_deps
 	# (A name we cannot even spell is not missing: it is an error.)
 	open (my $fh, '<', to_fs($file, 'read_deps')) or ($missing_ok
 		? return ()
-		: die "read_deps: open $file: $!\n");
+		: die _diag(__("read_deps: cannot open file %q: %s"), $file, "$!") . "\n");
 
 	while (<$fh>) {
 		# Not UTF-8 is not text, and so has no header: give up on the
@@ -411,7 +464,7 @@ sub read_deps
 			next unless @list;
 
 			if ($type eq 'HAVE') {
-				die "read_deps: $file line $.: You HAVE too many.\n"
+				die _diag(__("read_deps: %q line %s: You HAVE too many."), $file, $.) . "\n"
 					if @list > 1 or exists $I{$type};
 				$I{HAVE} = $list[0];
 			} else {
@@ -426,7 +479,7 @@ sub read_deps
 	}
 
 	if ($fh->error()) {
-		die "read_deps: read $file: $!\n";
+		die _diag(__("read_deps: cannot read file %q: %s"), $file, "$!") . "\n";
 	}
 
 	close $fh;
@@ -572,7 +625,8 @@ sub norm_deps
 					$out .= sprintf '${U+%04X}', $n;
 				} else {
 					$opt->{strict}
-						and die "norm_deps: \${$name} is no code point in `$_'\n";
+						and die _diag(__("norm_deps: %s is no code point in %q"),
+							"\${$name}", $_) . "\n";
 					$out .= ($opt->{pass_thru} ? '$' : '${$}') . "{$name}";
 				}
 			} elsif ($spec =~ /\G\$\{([^}]+)\}/gc) {
@@ -583,11 +637,11 @@ sub norm_deps
 			} elsif ($spec =~ /\G\$/gc) {
 				# Anything else is not a variable we recognize
 				if ($opt->{strict}) {
-					die "norm_deps: trailing \$ in `$_'\n"
+					die _diag(__("norm_deps: trailing \$ in %q"), $_) . "\n"
 						if $spec =~ /\G\z/gc;
-					die "norm_deps: unterminated or empty \${ in `$_'\n"
+					die _diag(__("norm_deps: unterminated or empty \${ in %q"), $_) . "\n"
 						if $spec =~ /\G\{/gc;
-					die "norm_deps: stray \$ in `$_'\n";
+					die _diag(__("norm_deps: stray \$ in %q"), $_) . "\n";
 				}
 				$out .= $opt->{pass_thru} ? '$' : '${$}';
 			} else {
@@ -659,7 +713,7 @@ Added in 0.0002.
 
 sub _bad_subs
 {
-	die "subs_deps: bad substitution: \${$_[0]}\n";
+	die _diag(__("subs_deps: bad substitution: %s"), "\${$_[0]}") . "\n";
 }
 
 sub subs_deps

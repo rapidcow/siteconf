@@ -6,6 +6,8 @@ use strict;
 use warnings;
 use Test::More tests => 40;
 use File::Temp qw( tempdir );
+# (what is said is said as it is written, whatever the locale)
+BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf;
 
 # read_manifest does not look at the configuration; fake an object.
@@ -40,7 +42,7 @@ bad("MAKE a\nNEED x y\n", qr/exactly one file/, 'two files (old format?)');
 bad("MAKE a\nNEED x\tdescription\n", qr/exactly one file/, 'description');
 bad("MAKE a\nNEED /etc/passwd\n", qr/must be relative/, 'absolute');
 bad("MAKE a\nNEED ../x\n", qr/climbs out/, 'dotdot');
-bad("MAKE a\nNEED a\$b\n", qr/\AE: MANIFEST line 2: bad substitution: \$\{b\}$/, 'a variable');
+bad("MAKE a\nNEED a\$b\n", qr/\AE: `MANIFEST' line 2: bad substitution: \$\{b\}$/, 'a variable');
 bad("MAKE a\nNEED a\${\$}b\n", qr/line 2: bad file name `a\$b'/, 'an escaped $, unescaped');
 bad("MAKE a\nNEED a\${U+0020}b\n", qr/bad file name `a b'/, 'an escaped blank');
 bad("MAKE a\nNEED \${U+002E}\${U+002E}/x\n", qr/climbs out/, 'an escaped ..');

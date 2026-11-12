@@ -16,4 +16,8 @@ use Test::More ();
 	binmode $tb->$_, ':encoding(console_out)' for qw( output failure_output todo_output );
 }
 
+# What gengenlib says is said as it is written, whatever the locale
+# and whatever catalogs are installed.
+$ENV{LANGUAGE} = 'C';
+
 1;

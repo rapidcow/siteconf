@@ -20,6 +20,16 @@ my %WriteMakefileArgs = (
 		'Exporter' => '0',
 		'Encode' => '0',
 		'Encode::Locale' => '0',
+		'RdKw::I18N::CodeSets' => '0',
+	},
+	# What we say is said in the language of the locale, with these
+	# (and as it is written, without them)
+	META_MERGE => {
+		'meta-spec' => { version => 2 },
+		prereqs => { runtime => { recommends => {
+			'Locale::Messages' => '0',
+			'RdKw::WwW::GenGenLib::L10N' => '0',
+		} } },
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
 	clean => { FILES => 'WwW-GenGenLib-*' },

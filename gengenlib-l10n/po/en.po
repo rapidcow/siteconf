@@ -1,0 +1,170 @@
+# English messages of gengenlib
+# Copyright (C) 2026 rapidcow
+# This file is distributed under the same license as the WwW-GenGenLib package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: WwW-GenGenLib\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-11 23:07-0600\n"
+"PO-Revision-Date: 2026-11-11 00:00-0600\n"
+"Last-Translator: rapidcow\n"
+"Language-Team: none\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:122
+#, perl-format
+msgid "cannot encode %s in current locale (%s)"
+msgstr "cannot encode %s in current locale (%s)"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:133
+#, perl-format
+msgid "cannot decode %s in current locale (%s)"
+msgstr "cannot decode %s in current locale (%s)"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:163
+msgid "read_make: cannot open file %q: %s"
+msgstr "read_make: cannot open file %q: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:170
+msgid "read_make: %q line %s: no `='"
+msgstr "read_make: %q line %s: no `='"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:194
+msgid "write_make: bad name: %q"
+msgstr "write_make: bad name: %q"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:195
+msgid "write_make: %q: value has a newline"
+msgstr "write_make: %q: value has a newline"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:227
+msgid "update_file: cannot create file %q: %s"
+msgstr "update_file: cannot create file %q: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:229
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:231
+msgid "update_file: cannot write file %q: %s"
+msgstr "update_file: cannot write file %q: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:238
+msgid "update_file: cannot rename %q to %q: %s"
+msgstr "update_file: cannot rename %q to %q: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:263
+msgid ""
+"error: You have not configured! (no %q)\n"
+"error: You should ./configure first. ;)"
+msgstr ""
+"error: You have not configured! (no %q)\n"
+"error: You should ./configure first. ;)"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:429
+msgid "read_deps: cannot open file %q: %s"
+msgstr "read_deps: cannot open file %q: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:457
+msgid "read_deps: %q line %s: You HAVE too many."
+msgstr "read_deps: %q line %s: You HAVE too many."
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:472
+msgid "read_deps: cannot read file %q: %s"
+msgstr "read_deps: cannot read file %q: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:618
+msgid "norm_deps: %s is no code point in %q"
+msgstr "norm_deps: %s is no code point in %q"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:630
+msgid "norm_deps: trailing $ in %q"
+msgstr "norm_deps: trailing $ in %q"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:632
+msgid "norm_deps: unterminated or empty ${ in %q"
+msgstr "norm_deps: unterminated or empty ${ in %q"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:634
+msgid "norm_deps: stray $ in %q"
+msgstr "norm_deps: stray $ in %q"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:706
+#, perl-format
+msgid "subs_deps: bad substitution: %s"
+msgstr "subs_deps: bad substitution: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:106
+#, perl-format
+msgid "read_manifest: cannot open string: %s"
+msgstr "read_manifest: cannot open string: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:110
+msgid "read_manifest: cannot open file %q: %s"
+msgstr "read_manifest: cannot open file %q: %s"
+
+#. TRANSLATORS: where in a MANIFEST: its name, and a line number
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:116
+msgid "%q line %s"
+msgstr "%q line %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:118
+#, perl-format
+msgid "read_manifest: %s: not UTF-8"
+msgstr "read_manifest: %s: not UTF-8"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:123
+#, perl-format
+msgid "read_manifest: %s: MAKE takes exactly one goal name"
+msgstr "read_manifest: %s: MAKE takes exactly one goal name"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:127
+msgid "read_manifest: %s: bad goal name %q"
+msgstr "read_manifest: %s: bad goal name %q"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:128
+msgid "read_manifest: %s: goal %q is already made"
+msgstr "read_manifest: %s: goal %q is already made"
+
+#. TRANSLATORS: the second %s is NEED or WANT
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:136
+#, perl-format
+msgid "read_manifest: %s: %s before any MAKE"
+msgstr "read_manifest: %s: %s before any MAKE"
+
+#. TRANSLATORS: the second %s is NEED or WANT
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:138
+#, perl-format
+msgid "read_manifest: %s: %s takes exactly one file (use # for comments)"
+msgstr "read_manifest: %s: %s takes exactly one file (use # for comments)"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:144
+#, perl-format
+msgid "read_manifest: %s: %s"
+msgstr "read_manifest: %s: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:146
+msgid "read_manifest: %s: %q is no name"
+msgstr "read_manifest: %s: %q is no name"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:148
+msgid "read_manifest: %s: %q has a NUL in it"
+msgstr "read_manifest: %s: %q has a NUL in it"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:153
+msgid "read_manifest: %s: expected MAKE, NEED or WANT, not %q"
+msgstr "read_manifest: %s: expected MAKE, NEED or WANT, not %q"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:156
+msgid "read_manifest: cannot read file %q: %s"
+msgstr "read_manifest: cannot read file %q: %s"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:157
+msgid "read_manifest: %q: no goals; what should I make?"
+msgstr "read_manifest: %q: no goals; what should I make?"
+
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:202
+msgid "read_manifest: %q: no goal %q"
+msgstr "read_manifest: %q: no goal %q"

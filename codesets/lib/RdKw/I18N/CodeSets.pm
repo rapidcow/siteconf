@@ -648,6 +648,7 @@ sub _qq_ascii
 }
 
 # Ditto, but with only what would not show escaped
+# (This is inspired by Python str.isprintable())
 sub _qq_unicode
 {
 	my ($s) = @_;

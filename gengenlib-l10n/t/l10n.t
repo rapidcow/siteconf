@@ -17,7 +17,7 @@ plan skip_all => 'no catalogs made (perl Makefile.PL LINGUAS="en zh")'
 plan skip_all => 'Locale::Messages required'
 	unless eval { require Locale::Messages; 1 };
 plan skip_all => 'POSIX::LC_MESSAGES required'
-	unless eval { require POSIX; POSIX::LC_MESSAGES(); 1 };
+	unless eval { require POSIX; defined POSIX::LC_MESSAGES(); };
 
 require RdKw::WwW::GenGenLib::L10N;
 {

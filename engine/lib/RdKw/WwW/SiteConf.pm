@@ -870,11 +870,11 @@ sub _node
 	my $done = sub { delete $node->{visiting}; pop @{ $self->{stack} }; $node };
 
 	unless ($rule) {
-		$fail->("No rule to make it ($D->{R})");
+		$fail->("no rule to make it ($D->{R})");
 		return $done->();
 	}
 	unless ($nosrc or -f _to_fs($self->_fs($apath))) {
-		$fail->("Source `$apath' is missing"
+		$fail->("source `$apath' is missing"
 			. ($rule->{line} ? " (rule at $D->{R} line $rule->{line})" : ""));
 		return $done->();
 	}

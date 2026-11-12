@@ -61,7 +61,7 @@ else {
 plan tests => 7;
 diag("Locale::Messages $Locale::Messages::VERSION ($INC{'Locale/gettext_pp.pm'})");
 
-my $cs = RdKw::I18N::CodeSets->new(diag => 'unicode');
+my $cs = RdKw::I18N::CodeSets->new(stderr => 'UTF-8', diag => 'unicode');
 local $RdKw::I18N::CodeSets::LOCALE = $cs;
 
 # What read_deps says of a file that is not there, in LANGUAGE

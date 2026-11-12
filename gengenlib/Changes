@@ -7,6 +7,8 @@ Revision history of WwW-GenGenLib
         as it does (%q of diag: `name' if it is printable ASCII,
         "quoted" as Perl would, with escapes, if not), as its
         locale has it, which may be local()ized.
+    *** RdKw::L10N::Utf8TextDomain is required (which needs nothing
+        but what comes with Perl): __ and __n are its.
     + What we say is said in the language of the locale, from the
       catalogs of the gengenlib text domain, if WwW-GenGenLib-L10N
       says where they are and Locale::Messages (libintl-perl) is

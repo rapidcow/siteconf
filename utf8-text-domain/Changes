@@ -1,0 +1,15 @@
+Revision history of L10N-Utf8TextDomain
+
+
+0.00_00  2026-11-12  UNTAGGED
+    [ This version is entirely generated. ]
+
+    + RdKw::L10N::Utf8TextDomain: __, __n and N__ of a text domain,
+      put in the package that uses it: the domain and its
+      LOCALEDIR given (use ... DOMAIN[, LOCALEDIR]), or as a module
+      says ($DOMAIN and $LOCALEDIR of use ... ':module' => MODULE;
+      none, if it cannot be loaded).  As RdKw::WwW::GenGenLib 0.01_00
+      had them: messages are characters, the domain is bound to
+      UTF-8, and both ways are strict; as they are written, without
+      Locale::Messages (libintl-perl); and $! (and $^E) as they were
+      after them, for a %m.  Nothing but what comes with Perl.

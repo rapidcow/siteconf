@@ -10,7 +10,9 @@ siteconf - configurable incremental build script generator
 
 =head1 SYNOPSIS
 
-    siteconf [-C codeset ...] -i [-P preset] [-o [name:]path ...] [-f]
+    siteconf [-C codeset ...] [-q] [-i|-g|-l|-V] [<args>]
+
+    siteconf -i [-P preset] [-o [name:]path ...] [-f]
              [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
     siteconf init ...                         # same
 
@@ -44,11 +46,11 @@ siteconf - configurable incremental build script generator
 
     ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
 
-    siteconf [-C codeset ...] -g [-B outdir] [-G make|gmake|ninja] [-q]
+    siteconf -g [-B outdir] [-G make|gmake|ninja] [-q]
     siteconf make ...                         # same
     cd ${B} && [make|gmake|ninja] [goal]   # ninja -t clean to clean
 
-    siteconf [-C codeset ...] -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+    siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
     siteconf list ...                         # same
     siteconf -l -0 -F ${B}/MY/MANIFEST.all |
         tar -c -f site.tar -C ${B}/${b} --null -T -
@@ -343,11 +345,12 @@ $cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
 # Our name came as an argument; it is only said, so it need not decode
 my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 $usage = <<EOM;
-usage: $prog [-C codeset ...] -i [-P preset] [-o [name:]path ...] [-fq]
-                [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
-       $prog [-C codeset ...] -g [-B builddir] [-G generator] [-F manifest] [-R rulebook]
-                [-o file] [-q]
-       $prog [-C codeset ...] -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+usage: $prog [-C codeset ...] [-q] [-i|-g|-l|-V] [<args>]
+       $prog -i [-P preset] [-o [name:]path ...] [-f] [-Mmodule[=version] ...]
+                [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+       $prog -g [-B builddir] [-G generator] [-F manifest] [-R rulebook]
+                [-o file]
+       $prog -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
        $prog -V [-V]
 EOM
 

@@ -1,4 +1,4 @@
-package RdKw::L10N::Utf8TextDomain;
+package RdKw::L10N::TextDomain;
 
 use 5.008;
 use strict;
@@ -9,16 +9,16 @@ $VERSION = eval $VERSION;
 
 =head1 NAME
 
-L10N::Utf8TextDomain - gettext of a text domain, in characters, or not at all
+L10N::TextDomain - UTF-8 gettext text domain
 
 =head1 SYNOPSIS
 
     # The domain and where its catalogs are, as a module of its
     # own says ($DOMAIN, $LOCALEDIR), if it is there:
-    use RdKw::L10N::Utf8TextDomain ':module' => 'RdKw::WwW::GenGenLib::L10N';
+    use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::GenGenLib::L10N';
 
     # or as they are given:
-    use RdKw::L10N::Utf8TextDomain 'siteconf', '/usr/local/share/locale';
+    use RdKw::L10N::TextDomain 'siteconf', '/usr/local/share/locale';
 
     die _diag(__("cannot open file %q: %m"), $file) . "\n";
     print __n("one file", "%d files", $n);
@@ -44,7 +44,7 @@ C<%m> (see L<RdKw::I18N::CodeSets/diag>).
 
 =over
 
-=item C<use RdKw::L10N::Utf8TextDomain ':module' =E<gt> I<module>;>
+=item C<use RdKw::L10N::TextDomain ':module' =E<gt> I<module>;>
 
 The domain is I<module>'s C<$DOMAIN>, and its catalogs are in its
 C<$LOCALEDIR> (as the system spells it: bytes, not characters).  If
@@ -52,7 +52,7 @@ I<module> cannot be loaded (it is not installed, or not built), or
 does not say C<$DOMAIN>, there are no catalogs: the messages are said
 as they are written.
 
-=item C<use RdKw::L10N::Utf8TextDomain> I<domain>[, I<localedir>]C<;>
+=item C<use RdKw::L10N::TextDomain> I<domain>[, I<localedir>]C<;>
 
 The domain is I<domain>, and its catalogs are in I<localedir>, or
 wherever gettext looks for them, if that is not given (or undef).
@@ -62,6 +62,10 @@ wherever gettext looks for them, if that is not given (or undef).
 Dies on anything else.
 
 =head1 FUNCTIONS
+
+In all of the following, I<msgid> is a UTF-8 string whose encoded
+bytes will constitute the real msgid.  The distinction is subtle,
+but will matter if non-ASCII characters are used.
 
 =over
 

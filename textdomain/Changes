@@ -1,10 +1,10 @@
-Revision history of L10N-Utf8TextDomain
+Revision history of L10N-TextDomain
 
 
 0.00_00  2026-11-12  UNTAGGED
     [ This version is entirely generated. ]
 
-    + RdKw::L10N::Utf8TextDomain: __, __n and N__ of a text domain,
+    + RdKw::L10N::TextDomain: __, __n and N__ of a text domain,
       put in the package that uses it: the domain and its
       LOCALEDIR given (use ... DOMAIN[, LOCALEDIR]), or as a module
       says ($DOMAIN and $LOCALEDIR of use ... ':module' => MODULE;

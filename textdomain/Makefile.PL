@@ -4,10 +4,10 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %WriteMakefileArgs = (
-	NAME             => 'L10N::Utf8TextDomain',
+	NAME             => 'L10N::TextDomain',
 	AUTHOR           => q{rapidcow},
-	VERSION_FROM     => 'lib/RdKw/L10N/Utf8TextDomain.pm',
-	ABSTRACT_FROM    => 'lib/RdKw/L10N/Utf8TextDomain.pm',
+	VERSION_FROM     => 'lib/RdKw/L10N/TextDomain.pm',
+	ABSTRACT_FROM    => 'lib/RdKw/L10N/TextDomain.pm',
 	LICENSE          => 'gpl_3',
 	MIN_PERL_VERSION => '5.008',
 	CONFIGURE_REQUIRES => {
@@ -32,7 +32,7 @@ my %WriteMakefileArgs = (
 		} } },
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-	clean => { FILES => 'L10N-Utf8TextDomain-*' },
+	clean => { FILES => 'L10N-TextDomain-*' },
 	test => { TESTS => 't/*.t' },
 );
 

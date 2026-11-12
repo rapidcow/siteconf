@@ -20,7 +20,7 @@ my %WriteMakefileArgs = (
 		'Exporter' => '0',
 		'Encode' => '0',
 		'RdKw::I18N::CodeSets' => '0',
-		'RdKw::L10N::Utf8TextDomain' => '0',
+		'RdKw::L10N::TextDomain' => '0',
 	},
 	# What we say is said in the language of the locale, with these
 	# (and as it is written, without them)

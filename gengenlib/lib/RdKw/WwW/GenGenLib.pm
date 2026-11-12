@@ -55,8 +55,8 @@ use RdKw::I18N::CodeSets ();
 # What we say is said in the language of the locale, if
 # RdKw::WwW::GenGenLib::L10N says where the catalogs are (and
 # Locale::Messages is there to read them); else, and for what no
-# catalog has, as it is written (see RdKw::L10N::Utf8TextDomain).
-use RdKw::L10N::Utf8TextDomain ':module' => 'RdKw::WwW::GenGenLib::L10N';
+# catalog has, as it is written (see RdKw::L10N::TextDomain).
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::GenGenLib::L10N';
 
 # A message: %q is a name, %s as it is (see RdKw::I18N::CodeSets)
 sub _diag

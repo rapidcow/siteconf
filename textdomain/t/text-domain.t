@@ -11,8 +11,8 @@ use Test::More;
 use File::Spec;
 use File::Temp qw( tempdir );
 
-use RdKw::L10N::Utf8TextDomain ();
-my $TD = 'RdKw::L10N::Utf8TextDomain';
+use RdKw::L10N::TextDomain ();
+my $TD = 'RdKw::L10N::TextDomain';
 my $HAVE_GETTEXT = eval { require Locale::Messages; 1 };
 
 # `use' it in package `pkg', with @args
@@ -69,7 +69,7 @@ for my $bad ([], [':moduel', 'T::L10N'], [':module'], [':module', 'T::L10N', 'x'
 # --- without Locale::Messages, as it is written
 {
 	my $code = 'BEGIN { unshift @INC, sub { die "hidden\n" if $_[1] eq "Locale/Messages.pm"; return } }'
-		. ' package P; use RdKw::L10N::Utf8TextDomain "test", $ARGV[0];'
+		. ' package P; use RdKw::L10N::TextDomain "test", $ARGV[0];'
 		. ' binmode STDOUT, ":encoding(UTF-8)";'
 		. ' print join "|", __("hello"), __n("one file", "%d files", 2), N__("x"),'
 		. ' eval { require Locale::Messages; 1 } ? "has" : "hasnot"';

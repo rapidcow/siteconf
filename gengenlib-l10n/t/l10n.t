@@ -16,7 +16,7 @@ use lib "$FindBin::Bin/lib";
 use TestConsole;
 
 my $mo = File::Spec->rel2abs('mo');
-plan skip_all => 'no catalogs made (perl Makefile.PL LINGUAS="en zh")'
+plan skip_all => q[no catalogs made (re-run with `perl Makefile.PL LINGUAS="en zh"'?)]
 	unless -f "$mo/zh/LC_MESSAGES/gengenlib.mo" && -f "$mo/en/LC_MESSAGES/gengenlib.mo";
 plan skip_all => 'Locale::Messages required'
 	unless eval { require Locale::Messages; 1 };
@@ -57,7 +57,7 @@ else {
 	# en_US is on Termux, en_GB is stock Raspberry Pi...
 	push @try, qw( en_US.UTF-8 en_GB.UTF-8 );
 	$locale = List::Util::first { POSIX::setlocale(POSIX::LC_MESSAGES(), $_) } @try;
-	plan skip_all => 'no UTF-8 locale (but C) installed' unless defined $locale;
+	plan skip_all => 'no non-C UTF-8 locale found :(' unless defined $locale;
 	diag "Using non-C locale: $locale";
 }
 plan tests => 7;

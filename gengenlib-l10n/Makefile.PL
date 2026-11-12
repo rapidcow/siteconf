@@ -19,7 +19,7 @@ if (defined $intl{LOCALEDIR}) {
 	File::Spec->file_name_is_absolute($intl{LOCALEDIR})
 		or die "LOCALEDIR=$intl{LOCALEDIR} is not absolute\n";
 	# (or dies, before MakeMaker begins)
-	RdKw::MkIntl::make_path($intl{LOCALEDIR});
+	make_path($intl{LOCALEDIR});
 }
 
 my %WriteMakefileArgs = (

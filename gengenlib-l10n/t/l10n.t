@@ -98,7 +98,7 @@ is(RdKw::WwW::GenGenLib::__n('one file', '%s files', 2), '%s files', '__n: more'
 # __, for a %m
 {
 	use Errno qw( EACCES ENOENT );
-	no warnings 'redefine';
+	no warnings 'once', 'redefine';
 	local *Locale::Messages::dgettext = sub { $! = ENOENT; $_[1] };
 	local *Locale::Messages::dngettext = sub { $! = ENOENT; $_[3] == 1 ? $_[1] : $_[2] };
 	$! = EACCES;

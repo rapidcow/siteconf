@@ -10,8 +10,8 @@ siteconf - configurable incremental build script generator
 
 =head1 SYNOPSIS
 
-    siteconf -i [-P preset] [-o [name:]path ...] [-f] [-Sopt=val ...]
-             [-Dvar=val ...] [-Ovar=val ...]
+    siteconf [-C codeset ...] -i [-P preset] [-o [name:]path ...] [-f]
+             [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
     siteconf init ...                         # same
 
     #
@@ -44,11 +44,11 @@ siteconf - configurable incremental build script generator
 
     ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
 
-    siteconf -g [-B outdir] [-G make|gmake|ninja] [-q]
+    siteconf [-C codeset ...] -g [-B outdir] [-G make|gmake|ninja] [-q]
     siteconf make ...                         # same
     cd ${B} && [make|gmake|ninja] [goal]   # ninja -t clean to clean
 
-    siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+    siteconf [-C codeset ...] -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
     siteconf list ...                         # same
     siteconf -l -0 -F ${B}/MY/MANIFEST.all |
         tar -c -f site.tar -C ${B}/${b} --null -T -
@@ -82,8 +82,8 @@ asks for no options (nor GenLib).  It needs GenGenLib 0.0100.
 For the generated script, see L<RdKw::WwW::SiteConf::Configure>.
 
 File names and arguments are read as L<RdKw::I18N::CodeSets> says:
-as the locale says, but for what C<SITECONF_CODESETS> says (see
-L</ENVIRONMENT>).  Messages are written that way too (what cannot be
+as the locale says, but for what C<SITECONF_CODESETS> and then C<-C>
+say (see L</ENVIRONMENT>).  Messages are written that way too (what cannot be
 said there is written as C<\x{...}>).  An argument or a name that
 cannot be spelled is an error.  What is in the files we read and write is always UTF-8.
 (What C<-l> writes is no message, but names: see there.)
@@ -91,6 +91,14 @@ cannot be spelled is an error.  What is in the files we read and write is always
 =head1 OPTIONS
 
 =over
+
+=item B<-C> I<codeset>
+
+Read arguments and file names, and write messages, in these code sets,
+after what C<SITECONF_CODESETS> says (see L</ENVIRONMENT>), whatever
+else is done.  May be given more than once; a later one overrides what
+came before.  It applies to the whole command line, wherever it is on
+it.  It is not written into F<configure>, which takes C<-C> of its own.
 
 =item B<-i>, B<init>
 
@@ -248,8 +256,8 @@ C<-072> for a colon.  C<-012> is the default.
 =item C<SITECONF_CODESETS>
 
 What code sets to read and write in, instead of the locale's: see
-L<RdKw::WwW::SiteConf::Configure/ENVIRONMENT>.  F<configure> and
-F<render> read it too (and take C<-C>, after it; F<siteconf> does not).
+L<RdKw::WwW::SiteConf::Configure/ENVIRONMENT>.  C<-C> overrides it.
+F<configure> and F<render> read it too (and take C<-C> as well).
 
 =back
 
@@ -282,33 +290,12 @@ our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
 # been around for much longer.
 my %PRESET_GENGENLIB = ( tem => $GENGENLIB_LOCALE );
 
-# The code sets: as the locale says, but for what SITECONF_CODESETS
-# says (see RdKw::I18N::CodeSets).  Console output/error is meant for
-# humans, so what it cannot spell is written as ASCII \x{...}.
-my $cs = eval {
-	RdKw::I18N::CodeSets->parse(exists $ENV{SITECONF_CODESETS} ? $ENV{SITECONF_CODESETS} : ())
-} or die basename($0) . ": SITECONF_CODESETS: $@";
-RdKw::I18N::CodeSets->locale($cs);
-$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
-
-# Our name came as an argument; it is only said, so it need not decode
-my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
-my $usage = <<EOM;
-usage: $prog -i [-P preset] [-o [name:]path ...] [-fq] [-Mmodule[=version] ...]
-                [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
-       $prog -g [-B builddir] [-G generator] [-F manifest] [-R rulebook] [-o file] [-q]
-       $prog -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
-       $prog -V [-V]
-EOM
-
-Getopt::Long::Configure(qw( bundling no_ignore_case ));
-eval { $cs->decode_argv; 1 } or die "$prog: $@";
-
 my %opt = (S => {}, D => {}, O => {}, M => [], outputs => [], t => []);
 # What `-i' was told, in the order it was told, for the header of
 # configure.  (Leaving out what does not alter its text: -i, -o, -f, -q.)
 my @written;
-GetOptions(
+my ($vee, $usage);
+my %getopt = (
 	'i|init'   => sub { $opt{mode} = 'init' },
 	'g|make'   => sub { $opt{mode} = 'make' },
 	'l|list'   => sub { $opt{mode} = 'list' },
@@ -326,10 +313,46 @@ GetOptions(
 	# (-0 alone is a NUL, -072 a colon: an octal number, as perl's -0 takes)
 	'0:s'      => \$opt{0},
 	'h|help'   => sub { print $usage; exit 0 },
-	'V|version+' => \( my $vee ),
+	'V|version+' => \$vee,
 	'q|quiet'  => \$opt{q},
 	'f'        => \$opt{f},
-) or die $usage;
+);
+
+# The code sets: as the locale says, but for what SITECONF_CODESETS
+# and then -C say (see RdKw::I18N::CodeSets).  -C must be known before
+# the arguments can be decoded, so it is picked out first, as bytes
+# (as the option names, it is ASCII; the others are known, so that
+# -D-C is not taken for it); then they are all decoded, and read for
+# good.  Console output/error is meant for humans, so what it cannot
+# spell is written as ASCII \x{...}.
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+my @C;
+{
+	local @ARGV = @ARGV;
+	Getopt::Long::Configure('pass_through');
+	GetOptions((map { $_ => sub {} } keys %getopt), 'C=s' => \@C);
+	Getopt::Long::Configure('no_pass_through');
+}
+my $cs = eval {
+	RdKw::I18N::CodeSets->parse(exists $ENV{SITECONF_CODESETS} ? $ENV{SITECONF_CODESETS} : ())
+} or die basename($0) . ": SITECONF_CODESETS: $@";
+$cs = eval { $cs->parse(@C) } or die basename($0) . ": -C: $@";
+RdKw::I18N::CodeSets->locale($cs);
+$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
+
+# Our name came as an argument; it is only said, so it need not decode
+my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
+$usage = <<EOM;
+usage: $prog [-C codeset ...] -i [-P preset] [-o [name:]path ...] [-fq]
+                [-Mmodule[=version] ...] [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+       $prog [-C codeset ...] -g [-B builddir] [-G generator] [-F manifest] [-R rulebook]
+                [-o file] [-q]
+       $prog [-C codeset ...] -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+       $prog -V [-V]
+EOM
+
+eval { $cs->decode_argv; 1 } or die "$prog: $@";
+GetOptions(%getopt, 'C=s' => sub {}) or die $usage;
 
 if ($vee) {
 	print <<VAR;

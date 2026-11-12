@@ -54,7 +54,7 @@ for (@args) {
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
-plan tests => 24;
+plan tests => 28;
 
 local $ENV{PERL5LIB} = perl5lib();
 
@@ -169,12 +169,21 @@ unlike($out, qr/[^\x00-\x7f]/, '... in nothing but ASCII');
 	Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
 like($out, qr/: cannot decode argv 4: /, 'unreadable arguments are an error');
 
-# --- SITECONF_CODESETS, and configure's -C, say otherwise than the locale
+# --- SITECONF_CODESETS, and -C, say otherwise than the locale
 ($status, $out) = run($C, { SITECONF_CODESETS => 'console:ascii' }, $script, '-g', '-B', 'build');
 like($out, qr/\\x\{306a\}\\x\{3044\}\\x\{3082\}\\x\{306e\}\.html/,
 	'SITECONF_CODESETS=console:ascii: \\x{...}');
 ($status, $out) = run($C, { SITECONF_CODESETS => 'nope' }, $script, '-V');
 like($out, qr/SITECONF_CODESETS: unknown category or encoding "nope"/, '... which is checked');
+($status, $out) = run($C, { LC_ALL => 'C' }, $script, '-C', 'argv:UTF-8', 'init', '-o', '/dev/null',
+	Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
+is($status, 0, 'siteconf -C argv:UTF-8: reads them') or diag $out;
+($status, $out) = run($C, { SITECONF_CODESETS => 'argv:ascii' }, $script, 'init', '-o', '/dev/null', '-Sa=é');
+like($out, qr/: cannot decode argv 4: /, 'SITECONF_CODESETS=argv:ascii: cannot read them');
+($status, $out) = run($C, { SITECONF_CODESETS => 'argv:ascii' }, $script, 'init', '-o', '/dev/null', '-Sa=é', '-C1');
+is($status, 0, '... but -C1, after it, overrides it (and where it is does not matter)') or diag $out;
+($status, $out) = run($C, {}, $script, '-C', 'nope', '-V');
+like($out, qr/-C: unknown category or encoding "nope"/, '-C is checked too');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-DB=build', '-Dx=é');
 like($out, qr/: cannot decode argv 3: /, 'configure: unreadable arguments are an error');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-C', 'argv:UTF-8', '-DB=build', '-Dx=é');

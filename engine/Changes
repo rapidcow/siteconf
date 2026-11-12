@@ -8,8 +8,8 @@ Revision history of WwW-SiteConf
         RdKw::I18N::CodeSets says, which is required now (and
         Encode::Locale no longer is, but by it): as the locale
         says, but for what SITECONF_CODESETS says -- in siteconf,
-        configure and render alike.  configure and render take
-        -C codeset too, after it, for the whole command line.
+        configure and render alike.  All three take -C codeset
+        too, after it, for the whole command line.
         configure checks for CodeSets, not Encode::Locale.
         Their own names ($0) are read as arguments, and \xHH
         where they cannot be.

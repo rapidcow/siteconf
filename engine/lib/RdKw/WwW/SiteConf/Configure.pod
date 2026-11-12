@@ -305,7 +305,7 @@ L<RdKw::I18N::CodeSets/parse> takes them, split by commas: an
 encoding alone for everything (C<UTF-8>; C<0> is short for ASCII,
 C<1> for UTF-8), or I<category>B<:>I<encoding> for one thing
 (C<filesys:UTF-8,console:ascii>).  F<siteconf> and the renderers the
-presets write read it too; the renderers also take C<-C>.
+presets write read it too, and take C<-C> as well.
 
 =back
 

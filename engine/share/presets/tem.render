@@ -32,7 +32,7 @@ use RdKw::I18N::CodeSets ();
 use Getopt::Long qw( GetOptions );
 use RdKw::WwW::GenGenLib 0.0100 qw( load_state );
 use Template;
-@USE_PROVIDER@
+@USE_PROVIDER@@USE_L10N@
 @GETOPT@
 my %S = load_state($B);
 my %v = (

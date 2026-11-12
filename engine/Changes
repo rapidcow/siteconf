@@ -106,6 +106,19 @@ Revision history of WwW-SiteConf
     * reworked comments in generated scripts
     + -M-module is understood to mean -Mmodule=  (for those
       who may prefer the perl syntax for `no module'...)
+    + What siteconf, configure and render say is said in the
+      language of the locale, from the catalogs of the siteconf
+      text domain, if WwW-SiteConf-L10N says where they are and
+      Locale::Messages is there to read them; as it is written,
+      if not.  RdKw::L10N::TextDomain is required.
+    *** Messages quote names as CodeSets' %q does (`name', or
+        "escaped" if not printable ASCII), and say why with %m.
+    * configure -h: its tables (and what -D, -O say of
+      themselves) are translated as well, aligned in columns.
+      English is as it was.
+    * configure and render written for GenGenLib 0.0100 or later
+      say things in the locale's language; those for older ones,
+      as before.
 
 
 0.02_03  2026-11-09  RC

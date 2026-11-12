@@ -1,6 +1,11 @@
 Revision history of WwW-GenLib
 
 
+0.03_00  2026-11-12  UNTAGGED
+    *** Perl 5.8 is required, and so are RdKw::I18N::CodeSets
+        and RdKw::L10N::TextDomain.
+
+
 0.02_03  2026-11-09  RC
     + locate absolute/site-relative specifications
       also resolves relative to your location if you
@@ -22,6 +27,9 @@ Revision history of WwW-GenLib
         (On the bright side, it is variadic now. :)
 
     * Fix very-out-of-date synopsis
+
+    + parse_base says what is wrong in the language of the
+      locale (the siteconf text domain), quoting names as %q.
 
 0.02_02  2026-11-07  RC
     + locate now preserves relative paths!

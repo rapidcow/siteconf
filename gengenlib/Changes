@@ -61,6 +61,7 @@ Revision history of WwW-GenGenLib
         A colon in a name is ${U+003A}.
     - Tests say what they say as the locale does (\x{...}
       where it cannot), not with a Wide character warning.
+    * Why something failed is said with %m of diag, not "$!".
 
 
 0.00_03  2026-11-08  RC

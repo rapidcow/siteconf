@@ -4,13 +4,15 @@
 
 use strict;
 use warnings;
-use Test::More tests => 210;
+use Test::More tests => 214;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
 use Cwd ();
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
+use Encode ();
+use RdKw::I18N::CodeSets ();
 use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 use RdKw::WwW::SiteConf;
 
@@ -162,7 +164,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		'html/c.css' => lines( NEED => [qw[ ${B}/${b}/b.css ]] ),
 	});
 	ok(!eval { plan_of($dir); 1 }, 'cycle: dies');
-	like($@, qr/dependency cycle: b\.css -> c\.css -> b\.css/, '... showing it');
+	like($@, qr/dependency cycle: `b\.css' -> `c\.css' -> `b\.css'/, '... showing it');
 }
 
 # --- an edge to something that cannot be made
@@ -174,7 +176,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		# no html/c.css
 	});
 	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
-	like($@, qr/goal `all' NEEDs `a\.html', but cannot be made:\nE: {3}NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE: {5}source `html\/c\.css' is missing \(rule at \S*Makefile\.in line 1\)/,
+	like($@, qr/goal `all' NEEDs `a\.html', but cannot be made:\nE: {3}NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE: {5}source `html\/c\.css' is missing \(rule at \S*Makefile\.in' line 1\)/,
 		'... and why, a cause per line, deeper as it goes');
 
 	$dir = project({
@@ -209,7 +211,7 @@ bad(lines( NEED => [qw[ ${z}/b.css ]] ), qr/no such variable \$\{z\}/, 'no such 
 		'any configured variable: ${tem}') or diag $@;
 }
 bad(lines( NEED => [qw[ x$/y ]] ), qr/stray \$/, 'stray dollar');
-bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\)/, 'the old MY/');
+bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\?\)/, 'the old MY/');
 
 {
 	my $dir = project({
@@ -289,7 +291,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it \$\{B\}\/MY\/option\.mk\?\
 
 	$dir = project({ %f, 'gen/tool' => lines( HAVE => [qw[ gen/other ]] ) });
 	eval { plan_of($dir) };
-	like($@, qr/gen\/tool: You HAVE `gen\/other'.*\nE: but I need `gen\/tool' for the rule for `a\.html' \(\S*Makefile\.in line 1\)\?/, 'tools: HAVE must agree');
+	like($@, qr/gen\/tool': You HAVE `gen\/other'.*\nE: but I need `gen\/tool' for the rule for `a\.html' \(\S*Makefile\.in' line 1\)\?/, 'tools: HAVE must agree');
 
 	$dir = project({ %f, 'gen/tool' => "\x00\x01\x02# NEED: nowhere\n" x 4 });
 	$plan = eval { plan_of($dir) };
@@ -424,6 +426,32 @@ SKIP:	{
 	});
 	eval { plan_of($dir) };
 	like($@, qr/source `html\/s\.scss' is missing/, 'missing source is named');
+
+	# ... as CodeSets says names: "quoted" if not ASCII, and with
+	# \x{...} under diag ascii (the files are UTF-8, as are the names)
+	$dir = project({
+		MANIFEST => Encode::encode('UTF-8', "MAKE all\n\tNEED r\x{e9}sum\x{e9}.css\n"),
+		'Makefile.in' => Encode::encode('UTF-8',
+			"r\x{e9}sum\x{e9}.css: \${a}/r\x{e9}sum\x{e9}.scss\n\ttrue\n"),
+	});
+	my $cs = RdKw::I18N::CodeSets->locale->new(filesys => 'UTF-8', stderr => 'UTF-8');
+	{
+		local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'unicode');
+		eval { plan_of($dir) };
+		like($@, qr/source "html\/r\x{e9}sum\x{e9}\.scss" is missing/,
+			'a name that is not ASCII is "quoted"');
+	}
+	{
+		local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'ascii');
+		eval { plan_of($dir) };
+		like($@, qr/source "html\/r\\x\{e9\}sum\\x\{e9\}\.scss" is missing/,
+			'... and said in ASCII under diag ascii');
+		like($@, qr/\A[\x00-\x7f]*\z/, '... as is everything else');
+	}
+	# (a quote in it would confuse `the quotes')
+	$dir = project({ MANIFEST => "MAKE all\n\tNEED it's.css\n" });
+	eval { plan_of($dir) };
+	like($@, qr/bad file name "it's\.css"/, 'a name with a quote is "quoted"');
 
 	# ${<} cannot be in a prerequisite
 	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${<}\n\ttrue\n" });
@@ -563,7 +591,7 @@ SKIP:	{
 	$t =~ s/^c=.*\n//m;
 	open $fh, '>', "$dir/MY/config.mk" or die; print $fh $t; close $fh;
 	eval { plan_of($dir) };
-	like($@, qr/config\.mk: `c' is missing\.  Try reconfiguring/, 'no c, no plan');
+	like($@, qr/config\.mk': `c' is missing\.  Try reconfiguring/, 'no c, no plan');
 }
 
 # --- a WANT that is missing: said once, with where it was said
@@ -672,7 +700,7 @@ MSG
 	is_deeply($p && $p->{node}{'a.html'}{kids}, ['b.css'], '... is an edge when it can be made');
 
 	($p, $err) = $rule->('NEED:${A}/gone');
-	like($err, qr/NEEDs `gone' \(prerequisite in \S*Makefile\.in line 1\), which we don't seem to have/,
+	like($err, qr/NEEDs `gone' \(prerequisite in \S*Makefile\.in' line 1\), which we don't seem to have/,
 		'NEED: is as firm as no prefix at all');
 
 	($p, $err) = $rule->('NEED:NEED:', 'NEED:' => '');

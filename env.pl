@@ -15,6 +15,7 @@ my @modules = qw(
 	gengenlib
 	gengenlib-l10n
 	genlib
+	siteconf-l10n
 	template-provider
 	textdomain
 );

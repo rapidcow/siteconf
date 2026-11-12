@@ -32,6 +32,15 @@ only say how else to spell them.
 
 =cut
 
+use RdKw::I18N::CodeSets ();
+# (said as RdKw::WwW::SiteConf says it: see there)
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
+
+sub _diag
+{
+	RdKw::I18N::CodeSets->locale->diag(@_);
+}
+
 sub _emit
 {
 	my ($class, $plan) = @_;
@@ -82,8 +91,10 @@ sub _name
 	my $c = $1;
 	require RdKw::WwW::SiteConf::GMake;
 	my $gnu = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
-	die "E: make cannot name `$s' (with " . $class->_char($c) . " in it)"
-		. ($gnu ? "; GNU make can (-G gmake)" : "") . "\n";
+	die "E: " . _diag($gnu
+		# HEY!  the %s is a character, as `$' or U+0020
+		? __("make cannot name %q (with %s in it); GNU make can (-G gmake)")
+		: __("make cannot name %q (with %s in it)"), $s, $class->_char($c)) . "\n";
 }
 
 # A character, as one would see it said

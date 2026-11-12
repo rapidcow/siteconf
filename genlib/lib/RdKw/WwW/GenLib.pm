@@ -1,11 +1,11 @@
 package RdKw::WwW::GenLib;
 
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 use Exporter ();
 
-our $VERSION = '0.02_03';
+our $VERSION = '0.03_00';
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -84,6 +84,19 @@ use File::Compare ();
 use File::Spec ();
 use URI ();
 use URI::Escape qw( uri_unescape );
+use RdKw::I18N::CodeSets ();
+
+# What we say is said as siteconf says it: in the language of the
+# locale, if RdKw::WwW::SiteConf::L10N says where the catalogs are
+# (and Locale::Messages is there to read them); else, and for what no
+# catalog has, as it is written (see RdKw::L10N::TextDomain).
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
+
+# A message: %q is a name, %s as it is (see RdKw::I18N::CodeSets)
+sub _diag
+{
+	RdKw::I18N::CodeSets->locale->diag(@_);
+}
 
 our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
@@ -270,17 +283,17 @@ sub parse_base
 {
 	my ($D) = @_;
 	my ($base_url, $site_url);
-	my $Me = "parse_base";
 
 	# site_url cannot be derived, so it is required.
 	defined $D->{site_url} and $D->{site_url} ne ''
-		or die "$Me: missing site_url\n";
+		or die __("parse_base: missing site_url") . "\n";
 	$site_url = URI->new($D->{site_url});
 
 	{
 		my $proto = $site_url->scheme;
 		unless (defined $proto and grep { lc($proto) eq $_ } qw( file http https )) {
-			die "$Me: site_url has no file or www URI scheme: $D->{site_url}\n";
+			die _diag(__("parse_base: site_url has no file or www URI scheme: %q"),
+				$D->{site_url}) . "\n";
 		}
 	}
 
@@ -296,16 +309,16 @@ sub parse_base
 	) {
 		$base_url = $D->{base_url};
 		unless ($base_url =~ m!^/!) {
-			die "$Me: base_url must begin with a slash\n";
+			die __("parse_base: base_url must begin with a slash") . "\n";
 		}
 		unless ($site_url->path eq '' or $base_url eq $site_url->path) {
 			# This is probably one of the more grave cases;
 			# so report it thoroughly to the console.
-			my $path = $site_url->path;
-			die <<EUGH;
-$Me: site_url has a nonempty path ($path), and
-$Me: is inconsistent with base_url ($base_url)
-EUGH
+			# HEY!  the first %q is the path of site_url, and the
+			# second is base_url
+			die _diag(__("parse_base: site_url has a nonempty path (%q), and\n"
+				. "parse_base: is inconsistent with base_url (%q)"),
+				$site_url->path, $base_url) . "\n";
 		}
 	} else {
 		# An empty site_url path leaves nothing to inherit,
@@ -316,10 +329,8 @@ EUGH
 		$base_url = $site_url->path;
 		if ($base_url eq '') {
 			defined $D->{base_url} and $D->{base_url} eq '/'
-				or die <<EUGH;
-$Me: base_url cannot be inferred from site_url,
-$Me: as the latter has an empty path
-EUGH
+				or die __("parse_base: base_url cannot be inferred from site_url,\n"
+					. "parse_base: as the latter has an empty path") . "\n";
 			$base_url = '/';
 		}
 	}

@@ -45,3 +45,4 @@ Revision history of WwW-GenGenLib-Template-Provider
 
     - Tests say what they say as the locale does (\x{...}
       where it cannot), not with a Wide character warning.
+    * Why something failed is said with %m of diag, not "$!".

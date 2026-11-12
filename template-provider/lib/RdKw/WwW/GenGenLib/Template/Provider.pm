@@ -416,7 +416,7 @@ sub access
 		-f _to_fs($path) or return;
 	}
 	my $abs = Cwd::abs_path(_to_fs($path));
-	defined $abs or return (undef, _diag('%q: %s', $path, "$!"));
+	defined $abs or return (undef, _diag('%q: %m', $path));
 	(_un_fs($abs), undef);
 }
 
@@ -478,7 +478,7 @@ sub _template_content
 		$mod_date = (stat $fh)[9];
 		close $fh;
 	} else {
-		$error = _diag('%q: %s', $path, "$!");
+		$error = _diag('%q: %m', $path);
 	}
 	wantarray ? ($data, $error, $mod_date) : $data;
 }

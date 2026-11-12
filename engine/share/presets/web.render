@@ -36,7 +36,7 @@ use Getopt::Long qw( GetOptions );
 @USE_GENGENLIB@
 @USE_GENLIB@
 use Template;
-@USE_TT_EXC@@USE_PROVIDER@
+@USE_TT_EXC@@USE_PROVIDER@@USE_L10N@
 @GETOPT@
 #
 # Load configuration parameters and build options, so
@@ -52,8 +52,7 @@ my ($D, $O) = @S{qw( config option )};
 # as a predefined constant (like how ${A} is).
 #
 my %I = read_deps($apath);
-defined $I{HAVE} or die "E: $apath: HAVE declaration not found\n";
-@LOCATE@
+@HAVE_NOT_FOUND@@LOCATE@
 #
 # Define Template variables (see also Template::Stash
 # if you want access to these from a plugin/filter).

@@ -16,3 +16,4 @@ Revision history of WwW-GenGenLib-L10N
     + make pot, make update-po: po/gengenlib.pot from the sources
       of gengenlib (in ../gengenlib), and the catalogs merged with
       it, for the maintainer.
+    * Catalogs updated for %m (in place of %s for $!).

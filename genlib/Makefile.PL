@@ -1,4 +1,4 @@
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -9,7 +9,7 @@ my %WriteMakefileArgs = (
 	VERSION_FROM     => 'lib/RdKw/WwW/GenLib.pm',
 	ABSTRACT         => q{Web site transformation rulebook configuration utilties},
 	LICENSE          => 'gpl_3',
-	MIN_PERL_VERSION => '5.006',
+	MIN_PERL_VERSION => '5.008',
 	CONFIGURE_REQUIRES => {
 		'ExtUtils::MakeMaker' => '0',
 	},
@@ -20,6 +20,17 @@ my %WriteMakefileArgs = (
 		'Exporter' => '0',
 		'URI' => '0',
 		'URI::Escape' => '0',
+		'RdKw::I18N::CodeSets' => '0',
+		'RdKw::L10N::TextDomain' => '0',
+	},
+	# What we say is said in the language of the locale, with these
+	# (and as it is written, without them)
+	META_MERGE => {
+		'meta-spec' => { version => 2 },
+		prereqs => { runtime => { recommends => {
+			'Locale::Messages' => '0',
+			'RdKw::WwW::SiteConf::L10N' => '0',
+		} } },
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
 	clean => { FILES => 'WwW-GenLib-*' },

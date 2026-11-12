@@ -27,10 +27,21 @@ my %WriteMakefileArgs = (
 		'Encode' => '0',
 		'RdKw::I18N::CodeSets' => '0',
 		'RdKw::WwW::GenGenLib' => '0.0100',
+		'RdKw::L10N::TextDomain' => '0',
 		# RdKw::WwW::GenLib isn't a dependency, though
 		# for those who use the web preset it is when
 		# they run the render script (... which we don't
 		# seem to generate so it's likely known dep :v)
+	},
+	# What we say (and what configure and render say) is said in the
+	# language of the locale, with these (and as it is written, without
+	# them)
+	META_MERGE => {
+		'meta-spec' => { version => 2 },
+		prereqs => { runtime => { recommends => {
+			'Locale::Messages' => '0',
+			'RdKw::WwW::SiteConf::L10N' => '0',
+		} } },
 	},
 	EXE_FILES => [
 		'script/siteconf',

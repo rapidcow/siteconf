@@ -1,0 +1,821 @@
+# Chinese (Simplified) messages of siteconf
+# Copyright (C) 2026 rapidcow
+# This file is distributed under the same license as the WwW-SiteConf package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: WwW-SiteConf\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-12 12:19-0600\n"
+"PO-Revision-Date: 2026-11-12 00:00-0600\n"
+"Last-Translator: Claude (machine draft, needs review)\n"
+"Language-Team: none\n"
+"Language: zh\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. HEY!  %s is the program and what it takes, as a command
+#. line (siteconf -g [-B builddir] ...); the lines under it
+#. are lined up with where it begins
+#: ../engine/script/siteconf:331 ../engine/script/siteconf:881
+#: ../engine/share/configure.in:205
+#, perl-format
+msgid "usage: %s"
+msgstr "用法：%s"
+
+#: ../engine/script/siteconf:382 ../engine/script/siteconf:880
+#: ../engine/share/configure.in:219
+msgid "too late to -C now."
+msgstr "现在给 -C 已经太晚了。"
+
+#: ../engine/script/siteconf:414
+#, perl-format
+msgid "conflicting modes: %s and %s"
+msgstr "模式冲突：%s 和 %s"
+
+#: ../engine/script/siteconf:418 ../engine/share/configure.in:221
+msgid "too many arguments"
+msgstr "参数太多"
+
+#: ../engine/script/siteconf:426
+msgid "named outputs are only for init"
+msgstr "命名的输出只适用于 init"
+
+#: ../engine/script/siteconf:428
+msgid "unknown output name: %q"
+msgstr "未知的输出名：%q"
+
+#: ../engine/script/siteconf:430
+msgid "empty output path"
+msgstr "输出路径为空"
+
+#. HEY!  init, make and list are what siteconf does (-i, -g, -l),
+#. as they are written on the command line: keep them
+#: ../engine/script/siteconf:437 ../engine/script/siteconf:438
+#, perl-format
+msgid "%s is only for %s"
+msgstr "%s 只适用于 %s"
+
+#. HEY!  an option, and init, make or list, as above
+#: ../engine/script/siteconf:443 ../engine/script/siteconf:449
+#: ../engine/script/siteconf:451 ../engine/script/siteconf:453
+#: ../engine/script/siteconf:458 ../engine/script/siteconf:460
+#: ../engine/script/siteconf:462
+#, perl-format
+msgid "%s is not for %s"
+msgstr "%s 不适用于 %s"
+
+#: ../engine/script/siteconf:491
+#, perl-format
+msgid "%s: an octal number up to 377, please"
+msgstr "%s：请给出不超过 377 的八进制数"
+
+#: ../engine/script/siteconf:507
+msgid "%s: NEED or WANT, not %q"
+msgstr "%s：应为 NEED 或 WANT，而不是 %q"
+
+#. HEY!  the %s is the separator, as the option that
+#. says it: -0 for a NUL, -012 for a newline
+#: ../engine/script/siteconf:514
+msgid "%q: %q has the separator in it (%s)"
+msgstr "%q：%q 中有分隔符（%s）"
+
+#: ../engine/script/siteconf:524 ../engine/script/siteconf:525
+msgid "cannot write to standard output: %m"
+msgstr "无法写入标准输出：%m"
+
+#: ../engine/script/siteconf:536
+msgid "cannot find %q (is WwW-SiteConf installed?)"
+msgstr "找不到 %q（WwW-SiteConf 安装了吗？）"
+
+#: ../engine/script/siteconf:545 ../engine/lib/RdKw/WwW/SiteConf.pm:772
+msgid "cannot open file %q: %m"
+msgstr "无法打开文件 %q：%m"
+
+#: ../engine/script/siteconf:547
+msgid "cannot read file %q: %m"
+msgstr "无法读取文件 %q：%m"
+
+#: ../engine/script/siteconf:601
+msgid "Host-relative base URL"
+msgstr "相对于主机的基础 URL"
+
+#: ../engine/script/siteconf:602
+msgid "Absolute base URL"
+msgstr "绝对基础 URL"
+
+#. HEY!  %s is the option (-Sx), and then what it may be
+#: ../engine/script/siteconf:606
+#, perl-format
+msgid "%s: no such thing (valid: %s)"
+msgstr "%s：没有这一项（有效的有：%s）"
+
+#. HEY!  %s is an option, as -Sa (and likewise in the next few)
+#: ../engine/script/siteconf:610 ../engine/script/siteconf:630
+#, perl-format
+msgid "%s may not be empty."
+msgstr "%s 不能为空。"
+
+#: ../engine/script/siteconf:613 ../engine/script/siteconf:617
+#, perl-format
+msgid "%s must be a relative path."
+msgstr "%s 必须是相对路径。"
+
+#: ../engine/script/siteconf:622
+#, perl-format
+msgid "%s and %s are the same thing; pick one."
+msgstr "%s 和 %s 是同一回事；请选一个。"
+
+#: ../engine/script/siteconf:636
+msgid "bad preset name: %q"
+msgstr "预设名有误：%q"
+
+#: ../engine/script/siteconf:638
+msgid "no such preset: %q"
+msgstr "没有这个预设：%q"
+
+#. HEY!  %s is the option, as -MModule=version (here and
+#. in the next three)
+#: ../engine/script/siteconf:657
+#, perl-format
+msgid "%s: bad module name"
+msgstr "%s：模块名有误"
+
+#: ../engine/script/siteconf:659
+#, perl-format
+msgid "%s: no version for what is dropped"
+msgstr "%s：去掉的模块不能带版本"
+
+#: ../engine/script/siteconf:661
+#, perl-format
+msgid "%s: bad version"
+msgstr "%s：版本有误"
+
+#: ../engine/script/siteconf:664
+#, perl-format
+msgid "%s: configure always needs it"
+msgstr "%s：configure 总是需要它"
+
+#: ../engine/script/siteconf:679 ../engine/script/siteconf:834
+#, perl-format
+msgid "%s needs RdKw::WwW::GenGenLib %s"
+msgstr "%s 需要 RdKw::WwW::GenGenLib %s"
+
+#: ../engine/script/siteconf:689
+msgid "preset does not supply a render output"
+msgstr "该预设不提供 render 输出"
+
+#: ../engine/script/siteconf:695
+msgid "dangerous name for render: %q is not supported (yet)"
+msgstr "render 的名字很危险：（暂时）不支持 %q"
+
+#: ../engine/script/siteconf:768
+msgid "Not changing %q"
+msgstr "不更改 %q"
+
+#: ../engine/script/siteconf:772
+msgid "cannot remove %q: %m"
+msgstr "无法删除 %q：%m"
+
+#: ../engine/script/siteconf:783
+msgid "cannot create file %q: %m"
+msgstr "无法创建文件 %q：%m"
+
+#: ../engine/script/siteconf:784 ../engine/script/siteconf:785
+msgid "cannot write file %q: %m"
+msgstr "无法写入文件 %q：%m"
+
+#: ../engine/script/siteconf:787
+msgid "cannot chmod %q: %m"
+msgstr "无法修改 %q 的权限：%m"
+
+#. HEY!  Overwrote is what was there (and -f said to), and
+#. Wrote what was not
+#: ../engine/script/siteconf:792
+msgid "Overwrote %q"
+msgstr "已覆盖 %q"
+
+#: ../engine/script/siteconf:792
+msgid "Wrote %q"
+msgstr "已写入 %q"
+
+#: ../engine/script/siteconf:796
+msgid "You already have configure."
+msgstr "你已经有 configure 了。"
+
+#: ../engine/script/siteconf:797
+msgid "You already have configure at %q."
+msgstr "你已经在 %q 有 configure 了。"
+
+#: ../engine/script/siteconf:798
+msgid ""
+"Pass -o /dev/null if you did mean to not generate configure,\n"
+"or -f to overwrite the existing one."
+msgstr ""
+"如果你确实不想生成 configure，请传 -o /dev/null；\n"
+"要覆盖现有的，请传 -f。"
+
+#. HEY!  the two are what to render (apath), and what to render it to (bpath)
+#: ../engine/script/siteconf:883
+msgid "need exactly two args"
+msgstr "需要恰好两个参数"
+
+#: ../engine/script/siteconf:958
+msgid "%q: HAVE declaration not found"
+msgstr "%q：找不到 HAVE 声明"
+
+#. HEY!  ${a} is the source tree, and (aka %q) is what
+#. it is (or what the HAVE expands to, after it)
+#: ../engine/script/siteconf:985
+#, perl-brace-format
+msgid "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
+msgstr "%q：你的 HAVE %q（又名 %q）不在 ${a}（又名 %q）之下"
+
+#: ../engine/script/siteconf:987
+#, perl-brace-format
+msgid "%q: Your HAVE %q is not under ${a} (aka %q)"
+msgstr "%q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:284
+msgid "%q line %s"
+msgstr "%q 第 %s 行"
+
+#. HEY!  Keep a winky face in the translation ;)
+#. (as GenGenLib's load_state does: newbies see it)
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:349
+msgid ""
+"You have not configured!  (no %q)\n"
+"You should ./configure first. ;)"
+msgstr ""
+"你还没有配置！（没有 %q）\n"
+"请先运行 ./configure。(⸝⸝> ᴗ•⸝⸝)"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:365
+msgid "%q: %q is missing.  Try reconfiguring."
+msgstr "%q：缺少 %q。请尝试重新配置。"
+
+#. HEY!  %q is a variable of config.mk: `b' or `c', which are where
+#. what we make goes (the target tree, and the cache)
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:370
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:374 ../engine/share/configure.in:315
+#: ../engine/share/configure.in:324
+msgid "%q prefix must be a relative path."
+msgstr "%q 前缀必须是相对路径。"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:376
+msgid "%q prefix may not climb out of the build directory."
+msgstr "%q 前缀不能跑出构建目录。"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:378
+msgid "%q (directory marker) may not contain a slash."
+msgstr "%q（目录标记）不能含有斜杠。"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:380
+msgid "%q may be made of letters, digits and -_.+& only: %q"
+msgstr "%q 只能由字母、数字和 -_.+& 组成：%q"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:388
+msgid "cannot find the build directory %q: %m"
+msgstr "找不到构建目录 %q：%m"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:391
+msgid "cannot find the source tree %q: %m"
+msgstr "找不到源代码树 %q：%m"
+
+#. HEY!  The first %s is where (a file, or `file' line 3), and
+#. the second is b or c (a variable of config.mk, as in ${b}).
+#. Leave the ${...}s alone: they are what is written in a header.
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:456
+#, perl-brace-format
+msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; write ${B}/${%3$s}"
+msgstr "%1$s：%2$q：${%3$s} 是相对于 ${B} 的；请写 ${B}/${%3$s}"
+
+#. HEY!  the last %s is what is in a header, as ${U+...}
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:473
+msgid "%s: %q: %s is no code point"
+msgstr "%s：%q：%s 不是码位"
+
+#. HEY!  the last %s is the variable, as ${name}
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:479
+msgid "%s: %q: no such variable %s"
+msgstr "%s：%q：没有变量 %s"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:483
+msgid "%s: stray $ in %q"
+msgstr "%s：%q 中有多余的 $"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:488
+#, perl-format
+msgid "%s: empty path"
+msgstr "%s：路径为空"
+
+#. HEY!  The first %s is always where (a file, or `file' line 3),
+#. in this message and in those that follow it
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:575
+msgid "%s: bad file name %q"
+msgstr "%s：文件名有误：%q"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:577
+msgid "%s: file name %q must be relative"
+msgstr "%s：文件名 %q 必须是相对的"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:579
+msgid "%s: file name %q climbs out of the tree"
+msgstr "%s：文件名 %q 跑出了树"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:629
+msgid "%s: %q is a reserved goal name"
+msgstr "%s：%q 是保留的目标名"
+
+#. HEY!  the second %s is what is in Makefile.in, as ${U+...}
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:681
+#, perl-format
+msgid "%s: %s is no code point"
+msgstr "%s：%s 不是码位"
+
+#. HEY!  the second %s is a variable, as ${@} (or ${.TARGET}),
+#. in this message and in those that follow it
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:686
+#, perl-format
+msgid "%s: %s outside of a recipe"
+msgstr "%s：%s 出现在配方之外"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:690
+#, perl-format
+msgid "%s: %s is not known here (the source is what the prerequisites say)"
+msgstr "%s：这里还不知道 %s（源文件要看先决条件怎么说）"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:692
+#, perl-format, perl-brace-format
+msgid "%s: %s: this rule has no source (its first prerequisite is ${a})"
+msgstr "%s：%s：这条规则没有源文件（它的第一个先决条件是 ${a}）"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:698
+#, perl-format
+msgid "%s: undefined variable: %s"
+msgstr "%s：未定义的变量：%s"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:740
+#, perl-brace-format
+msgid ""
+"%s: %q: a target is a name, optionally after ${b}/ or ${c}/; nowhere else "
+"under ${B}"
+msgstr ""
+"%s：%q：目标是一个名字，前面可以有 ${b}/ 或 ${c}/；${B} 下的其他地方都不行"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:787
+#, perl-format
+msgid "%s: unfinished line continuation"
+msgstr "%s：续行没有结束"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:798
+msgid "%s: more than one recipe for %q"
+msgstr "%s：%q 有不止一个配方"
+
+#. HEY!  a recipe line (one that begins with a tab)
+#. with no rule above it to be the recipe of
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:809
+#, perl-format
+msgid "%s: unexpected tabulation"
+msgstr "%s：意外的制表符"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:821
+#, perl-format
+msgid "%s: null target list"
+msgstr "%s：目标列表为空"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:837
+#, perl-brace-format
+msgid "%s: %q must be one name in ${a}"
+msgstr "%s：%q 必须是 ${a} 中的一个名字"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:853
+msgid "%s: %q: a prerequisite must either NEED: or WANT: before a colon"
+msgstr "%s：%q：先决条件在冒号前只能是 NEED: 或 WANT:"
+
+#. HEY!  %q is NEED: or WANT:, with no name after it
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:857
+msgid "%s: %q of nothing"
+msgstr "%s：%q 后面什么都没有"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:868
+msgid "%s: invalid line: %q"
+msgstr "%s：无效的行：%q"
+
+#. HEY!  %s is the files, as `a' -> `b' -> `a'
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:900
+#, perl-format
+msgid "dependency cycle: %s"
+msgstr "依赖循环：%s"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:915
+msgid "%q: %q is reserved for directory markers."
+msgstr "%q：%q 是保留给目录标记的。"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:934
+msgid "no rule to make it (%q)"
+msgstr "没有生成它的规则（%q）"
+
+#. HEY!  the %s is where the rule is (`file' line 3)
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:940
+msgid "source %q is missing (rule at %s)"
+msgstr "缺少源文件 %q（规则在 %s）"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:941
+msgid "source %q is missing"
+msgstr "缺少源文件 %q"
+
+#. HEY!  Keep the question mark: we are as puzzled as
+#. anyone.  The (aka %q) is what the HAVE says, expanded
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:956
+msgid ""
+"%q: You HAVE %q (aka %q),\n"
+"but I need %q?"
+msgstr ""
+"%q：你 HAVE %q（又名 %q），\n"
+"但我需要的是 %q？"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:958
+msgid ""
+"%q: You HAVE %q,\n"
+"but I need %q?"
+msgstr ""
+"%q：你 HAVE %q，\n"
+"但我需要的是 %q？"
+
+#. HEY!  This and the next three are where a NEED (or a WANT)
+#. was said, and are said in parentheses after what is needed
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:965
+msgid "in header"
+msgstr "在头部中"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:965
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1141
+msgid "in header of %q"
+msgstr "在 %q 的头部中"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:969
+#, perl-format
+msgid "prerequisite in %s"
+msgstr "%s 中的先决条件"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:970
+#, perl-format
+msgid "WANT: in %s"
+msgstr "%s 中的 WANT:"
+
+#. HEY!  %s is where it was needed (in header of `file'),
+#. here and in the next two
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1028
+msgid "NEEDs %q (%s), but cannot be made:"
+msgstr "NEED %q（%s），但它无法生成："
+
+#. HEY!  The last %q is the name it may have meant: a
+#. header says MY/option.mk, when it is ${B}/MY/option.mk
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1040
+msgid "NEEDs %q (%s), which we don't seem to have (is it %q?)"
+msgstr "NEED %q（%s），但我们似乎没有它（是 %q 吗？）"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1042
+msgid "NEEDs %q (%s), which we don't seem to have"
+msgstr "NEED %q（%s），但我们似乎没有它"
+
+#. HEY!  Keep the sad face :(  The %s, in parentheses,
+#. is where it was wanted (in header of `file')
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1055
+msgid ""
+"target %q WANTs %q\n"
+"  (%s)\n"
+"... but it is missing; going on without it :("
+msgstr ""
+"目标 %q WANT %q\n"
+"  （%s）\n"
+"……但它不存在；只好不要它继续了 :("
+
+#. HEY!  As above, for a tool of the rule; the last %s
+#. is where the rule is (`file' line 3)
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1135
+msgid ""
+"%q: You HAVE %q (aka %q),\n"
+"but I need %q for the rule for %q (%s)?"
+msgstr ""
+"%1$q：你 HAVE %2$q（又名 %3$q），\n"
+"但 %5$q 的规则（%6$s）需要的是 %4$q？"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1137
+msgid ""
+"%q: You HAVE %q,\n"
+"but I need %q for the rule for %q (%s)?"
+msgstr ""
+"%1$q：你 HAVE %2$q，\n"
+"但 %4$q 的规则（%5$s）需要的是 %3$q？"
+
+#. HEY!  the %s is where (`file' line 3); what
+#. follows the colon is why, a line each
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1202
+msgid "%s: goal %q NEEDs %q, but cannot be made:"
+msgstr "%s：目标 %q NEED %q，但它无法生成："
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1207
+msgid "goal %q WANTs %q, but cannot be made:"
+msgstr "目标 %q WANT %q，但它无法生成："
+
+#. HEY!  "no soup for you!" (Seinfeld), but a Makefile
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1215
+#, perl-format
+msgid "%d problem; no Makefile for you."
+msgid_plural "%d problems; no Makefile for you."
+msgstr[0] "%d 个问题；不给你 Makefile。"
+
+#. HEY!  %s is the option, as -Dclean=clean-&
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1282
+msgid "%s: %q is also the name of a goal or another rule"
+msgstr "%s：%q 也是某个目标或另一条规则的名字"
+
+#. HEY!  %s is the generators (make, gmake, ninja)
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1338
+msgid "unknown generator %q.  Choose one of: %s"
+msgstr "未知的生成器 %q。请从这些中选一个：%s"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1344
+msgid "bad output name %q: a file in the build directory, please"
+msgstr "输出名 %q 有误：请给出构建目录中的一个文件"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1365
+msgid "Removing %q"
+msgstr "正在删除 %q"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1383 ../engine/share/configure.in:342
+msgid "Done!"
+msgstr "完成！"
+
+#. HEY!  %s is a command line, as the shell would read it
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1385
+#, perl-format
+msgid "To build, run: %s"
+msgstr "要构建，请运行：%s"
+
+#. HEY!  Writing is what was not there, and Updating what was
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1395 ../engine/share/configure.in:331
+msgid "Writing %q"
+msgstr "正在写入 %q"
+
+#: ../engine/lib/RdKw/WwW/SiteConf.pm:1395 ../engine/share/configure.in:331
+msgid "Updating %q"
+msgstr "正在更新 %q"
+
+#. HEY!  the %s is a character, as `;' or U+000A
+#: ../engine/lib/RdKw/WwW/SiteConf/GMake.pm:48
+msgid "GNU make cannot name %q (with %s in it)"
+msgstr "GNU make 无法表示 %q（其中有 %s）"
+
+#. HEY!  lib(member.o) is how make names a member of an archive
+#: ../engine/lib/RdKw/WwW/SiteConf/GMake.pm:52
+msgid "GNU make cannot name %q (it would be an archive member)"
+msgstr "GNU make 无法表示 %q（它会被当成归档成员）"
+
+#. HEY!  the %s is a character, as `$' or U+0020
+#: ../engine/lib/RdKw/WwW/SiteConf/Make.pm:96
+msgid "make cannot name %q (with %s in it); GNU make can (-G gmake)"
+msgstr "make 无法表示 %q（其中有 %s）；GNU make 可以（-G gmake）"
+
+#: ../engine/lib/RdKw/WwW/SiteConf/Make.pm:97
+msgid "make cannot name %q (with %s in it)"
+msgstr "make 无法表示 %q（其中有 %s）"
+
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:112
+msgid "unterminated %q"
+msgstr "%q 没有结束"
+
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:163
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:229
+msgid "unterminated :S modifier"
+msgstr ":S 修饰符没有结束"
+
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:220
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:261
+msgid "empty modifier"
+msgstr "修饰符为空"
+
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:231
+msgid "bad delimiter %q for :S"
+msgstr ":S 的分隔符 %q 有误"
+
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:238
+msgid "unknown flag %q for :S"
+msgstr ":S 的未知标志 %q"
+
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:253
+#: ../engine/lib/RdKw/WwW/SiteConf/Modifiers.pm:258
+msgid "unknown modifier %q"
+msgstr "未知的修饰符 %q"
+
+#: ../engine/lib/RdKw/WwW/SiteConf/Ninja.pm:77
+msgid "%q: no recipe to make it (and ninja has no way to make nothing)"
+msgstr "%q：没有生成它的配方（而 ninja 没法从无到有地生成）"
+
+#. HEY!  the %s is a character, as `|' or U+000A
+#: ../engine/lib/RdKw/WwW/SiteConf/Ninja.pm:112
+msgid "ninja cannot name %q (with %s in it)"
+msgstr "ninja 无法表示 %q（其中有 %s）"
+
+#: ../engine/share/configure.in:41
+#, perl-format
+msgid "missing %s"
+msgstr "缺少 %s"
+
+#. HEY!  the first %s is a module, then the version we need,
+#. and the version there is
+#: ../engine/share/configure.in:45
+#, perl-format
+msgid "%s: version %s required (this is %s)"
+msgstr "%s：需要版本 %s（现有的是 %s）"
+
+#: ../engine/share/configure.in:50
+#, perl-format
+msgid "%d module missing.  Looks like you got some work to do..."
+msgid_plural "%d modules missing.  Looks like you got some work to do..."
+msgstr[0] "缺少 %d 个模块。看来你有活要干了……"
+
+#. HEY!  %s is the option, -D or -O
+#: ../engine/share/configure.in:91
+#, perl-format
+msgid "%s: empty name."
+msgstr "%s：名字为空。"
+
+#: ../engine/share/configure.in:145
+msgid "Project root, seen from current directory"
+msgstr "项目根目录，相对于当前目录"
+
+#: ../engine/share/configure.in:146
+msgid "Build directory, seen from the source tree"
+msgstr "构建目录，相对于源代码树"
+
+#: ../engine/share/configure.in:147
+msgid "Source directory, seen from the source tree"
+msgstr "源目录，相对于源代码树"
+
+#: ../engine/share/configure.in:148
+msgid "Target directory, seen from the build directory"
+msgstr "目标目录，相对于构建目录"
+
+#: ../engine/share/configure.in:149
+msgid "Cache directory, seen from the build directory"
+msgstr "缓存目录，相对于构建目录"
+
+#: ../engine/share/configure.in:151
+msgid "Transformation rules, from current directory"
+msgstr "转换规则，相对于当前目录"
+
+#: ../engine/share/configure.in:152
+msgid "Manifest, from current directory"
+msgstr "清单，相对于当前目录"
+
+#: ../engine/share/configure.in:153
+msgid "Directory marker"
+msgstr "目录标记"
+
+#: ../engine/share/configure.in:154
+msgid "Clean rule template"
+msgstr "清理规则模板"
+
+#: ../engine/share/configure.in:159
+msgid ""
+"Code sets, after SITECONF_CODESETS; first, or not at all\n"
+"(see RdKw::I18N::CodeSets)"
+msgstr ""
+"代码集，在 SITECONF_CODESETS 之后；要么放在最前，要么不给\n"
+"（见 RdKw::I18N::CodeSets）"
+
+#: ../engine/share/configure.in:161
+msgid "This help message"
+msgstr "本帮助信息"
+
+#: ../engine/share/configure.in:162
+msgid "Clear all configuration at this point"
+msgstr "在此处清除所有配置"
+
+#: ../engine/share/configure.in:163
+msgid "Disable tips"
+msgstr "关闭提示"
+
+#: ../engine/share/configure.in:164
+msgid "Create non-leaf build directory components"
+msgstr "创建构建目录的上层目录"
+
+#. HEY!  what an option is, if it is not said: the first %s
+#. is what the option is for (the last line of it, if it is
+#. more), and the second the default (as -Db, say)
+#: ../engine/share/configure.in:183
+#, perl-format
+msgid "%s (default: %s)"
+msgstr "%s（默认：%s）"
+
+#. HEY!  the same, for an option with nothing said of it
+#: ../engine/share/configure.in:185
+#, perl-format
+msgid "(default: %s)"
+msgstr "（默认：%s）"
+
+#. HEY!  the other ways to say an option (--help, -?), after
+#. what it is for
+#: ../engine/share/configure.in:191
+#, perl-format
+msgid "%s (alias: %s)"
+msgstr "%s（别名：%s）"
+
+#: ../engine/share/configure.in:207
+msgid "The following variables may be defined:"
+msgstr "可以定义以下变量："
+
+#: ../engine/share/configure.in:209
+msgid "Options with defaults:"
+msgstr "有默认值的选项："
+
+#: ../engine/share/configure.in:210
+msgid ""
+"Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
+"respectively, for the rulebook or for the files being transformed."
+msgstr ""
+"其他用 -D 或 -O 给出的内容分别写入 MY/config.mk 或 MY/option.mk，\n"
+"供规则手册或被转换的文件使用。"
+
+#: ../engine/share/configure.in:213
+msgid "See also `perldoc RdKw::WwW::SiteConf::Configure'."
+msgstr "另见 `perldoc RdKw::WwW::SiteConf::Configure'。"
+
+#: ../engine/share/configure.in:232
+msgid "cannot find $A (aka %q): %m"
+msgstr "找不到 $A（又名 %q）：%m"
+
+#: ../engine/share/configure.in:234
+msgid "cannot chdir to $A (aka %q): %m"
+msgstr "无法进入 $A（又名 %q）：%m"
+
+#. HEY!  %s is why, as File::Path says it
+#: ../engine/share/configure.in:255
+msgid "cannot create %q: %s"
+msgstr "无法创建 %q：%s"
+
+#. HEY!  non-leaf: a directory above it (as in mkdir -p)
+#: ../engine/share/configure.in:265
+msgid "cannot mkdir %q: %m (missing non-leaf components?)"
+msgstr "无法创建目录 %q：%m（缺少上层目录？）"
+
+#: ../engine/share/configure.in:266 ../engine/share/configure.in:327
+msgid "cannot mkdir %q: %m"
+msgstr "无法创建目录 %q：%m"
+
+#: ../engine/share/configure.in:269
+msgid "cannot chdir to $B (aka %q): %m"
+msgstr "无法进入 $B（又名 %q）：%m"
+
+#: ../engine/share/configure.in:309 ../engine/share/configure.in:321
+msgid "%q may not be empty."
+msgstr "%q 不能为空。"
+
+#: ../engine/share/configure.in:325
+msgid "%q may not contain a slash."
+msgstr "%q 不能含有斜杠。"
+
+#. HEY!  %s is a command line, as the shell would read it
+#: ../engine/share/configure.in:344
+#, perl-format
+msgid "To generate build script, run: %s"
+msgstr "要生成构建脚本，请运行：%s"
+
+#: ../engine/share/presets/web.config:20
+msgid "missing %q option"
+msgstr "缺少 %q 选项"
+
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:289
+msgid "parse_base: missing site_url"
+msgstr "parse_base: 缺少 site_url"
+
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:295
+msgid "parse_base: site_url has no file or www URI scheme: %q"
+msgstr "parse_base: site_url 没有 file 或 www 的 URI 协议：%q"
+
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:312
+msgid "parse_base: base_url must begin with a slash"
+msgstr "parse_base: base_url 必须以斜杠开头"
+
+#. HEY!  the first %q is the path of site_url, and the
+#. second is base_url
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:319
+msgid ""
+"parse_base: site_url has a nonempty path (%q), and\n"
+"parse_base: is inconsistent with base_url (%q)"
+msgstr ""
+"parse_base: site_url 的路径不为空（%q），\n"
+"parse_base: 与 base_url（%q）不一致"
+
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:332
+msgid ""
+"parse_base: base_url cannot be inferred from site_url,\n"
+"parse_base: as the latter has an empty path"
+msgstr ""
+"parse_base: 无法从 site_url 推断出 base_url，\n"
+"parse_base: 因为后者的路径为空"

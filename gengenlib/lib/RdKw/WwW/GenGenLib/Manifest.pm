@@ -104,11 +104,11 @@ sub read
 	my $fh;
 	if (ref $file) {
 		open $fh, '<', $file
-			or die _diag(__("read_manifest: cannot open string: %s"), "$!") . "\n";
+			or die _diag(__("read_manifest: cannot open string: %m")) . "\n";
 		$file = 'MANIFEST';
 	} else {
 		open $fh, '<', _to_fs($file, 'read_manifest')
-			or die _diag(__("read_manifest: cannot open file %q: %s"), $file, "$!") . "\n";
+			or die _diag(__("read_manifest: cannot open file %q: %m"), $file) . "\n";
 	}
 
 	my (@goal, %goal, $goal);
@@ -155,7 +155,7 @@ sub read
 		die _diag(__("read_manifest: %s: expected MAKE, NEED or WANT, not %q"),
 			$where, $kw) . "\n";
 	}
-	close $fh or die _diag(__("read_manifest: cannot read file %q: %s"), $file, "$!") . "\n";
+	close $fh or die _diag(__("read_manifest: cannot read file %q: %m"), $file) . "\n";
 	# HEY!  I (ethan/rc) didn't write this message.
 	# I'm frankly a bit surprised Claude made it
 	# a question... anyways go wild at it i don't

@@ -133,9 +133,9 @@ for my $k (sort keys %Q) {
 }
 
 for my $c (
-	['${W:Z}',         qr/test: unknown modifier :Z/],
-	['${W:R:Z:Q}',     qr/unknown modifier :Z/],
-	['${W:RQ}',        qr/unknown modifier :RQ/],
+	['${W:Z}',         qr/test: unknown modifier `:Z'/],
+	['${W:R:Z:Q}',     qr/unknown modifier `:Z'/],
+	['${W:RQ}',        qr/unknown modifier `:RQ'/],
 	['${W:R:}',        qr/empty modifier/],
 	['${W:}',          qr/empty modifier/],
 	['${W:S/a/b}',     qr/unterminated :S/],

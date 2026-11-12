@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-GenGenLib\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 09:16-0600\n"
+"POT-Creation-Date: 2026-11-12 11:53-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:140
-msgid "read_make: cannot open file %q: %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:110
+msgid "read_make: cannot open file %q: %m"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:147
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:117
 msgid "read_make: %q line %s: no `='"
 msgstr ""
 
@@ -31,35 +31,35 @@ msgstr ""
 #. is allowed... like IL-legal in the sense of invalid.
 #. (but let's not get into the topic of identity crisis...
 #. we're talking about SYNTACTICALLY invalid names here.))
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:177
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:147
 msgid "write_make: bad name: %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:178
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:148
 msgid "write_make: %q: value has a newline"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:210
-msgid "update_file: cannot create file %q: %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:180
+msgid "update_file: cannot create file %q: %m"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:212
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:214
-msgid "update_file: cannot write file %q: %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:182
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:184
+msgid "update_file: cannot write file %q: %m"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:221
-msgid "update_file: cannot rename %q to %q: %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:191
+msgid "update_file: cannot rename %q to %q: %m"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:250
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:220
 msgid ""
 "error: You have not configured! (no %q)\n"
 "error: You should ./configure first. ;)"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:416
-msgid "read_deps: cannot open file %q: %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:386
+msgid "read_deps: cannot open file %q: %m"
 msgstr ""
 
 #. HEY!  Keep the second-person pronoun.
@@ -68,27 +68,27 @@ msgstr ""
 #. in... "you HAVE too many.  The hell are
 #. you tryin' to be, the whole universe?"
 #. Like that.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:450
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:420
 msgid "read_deps: %q line %s: You HAVE too many."
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:465
-msgid "read_deps: cannot read file %q: %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:435
+msgid "read_deps: cannot read file %q: %m"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:611
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:581
 msgid "norm_deps: %s is no code point in %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:623
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:593
 msgid "norm_deps: trailing $ in %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:625
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:595
 msgid "norm_deps: unterminated or empty ${ in %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:627
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:597
 msgid "norm_deps: stray $ in %q"
 msgstr ""
 
@@ -99,18 +99,17 @@ msgstr ""
 #. pure decode operation... in which case a named
 #. substitution that is not an escape at all as "bad"
 #. as in, "wait.... that's illegal."
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:706
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:676
 #, perl-format
 msgid "subs_deps: bad substitution: %s"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:107
-#, perl-format
-msgid "read_manifest: cannot open string: %s"
+msgid "read_manifest: cannot open string: %m"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:111
-msgid "read_manifest: cannot open file %q: %s"
+msgid "read_manifest: cannot open file %q: %m"
 msgstr ""
 
 #. HEY!  %q is the file name of the faulty
@@ -167,7 +166,7 @@ msgid "read_manifest: %s: expected MAKE, NEED or WANT, not %q"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:158
-msgid "read_manifest: cannot read file %q: %s"
+msgid "read_manifest: cannot read file %q: %m"
 msgstr ""
 
 #. HEY!  I (ethan/rc) didn't write this message.

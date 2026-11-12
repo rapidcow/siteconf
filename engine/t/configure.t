@@ -10,7 +10,7 @@ use Cwd ();
 my $script = script_path();
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
-plan tests => 36;
+plan tests => 38;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -39,8 +39,14 @@ ok(-d 'out/MY', 'configured there');
 
 ($status, $out) = run('configure', '-q', '-DB=a/b/c');
 isnt($status, 0, 'no intermediates by default');
-like($out, qr/^E: cannot mkdir a\/b\/c: .*non-leaf/, 'says why');
+like($out, qr/^E: cannot mkdir `a\/b\/c': .*non-leaf/, 'says why');
 ok(!-e 'a', 'and made nothing');
+
+# What configure says of a name, it says as CodeSets says it: under
+# diag ascii, what is not ASCII is \x{...} (the name is UTF-8 bytes)
+($status, $out) = run('configure', '-Cargv:UTF-8,stderr:UTF-8,diag:ascii', '-q', "-DB=r\xc3\xa9/x");
+isnt($status, 0, 'no intermediates, by any name');
+like($out, qr/^E: cannot mkdir "r\\x\{e9\}\/x": .*non-leaf/, '... said in ASCII under diag ascii');
 
 ($status, $out) = run('configure', '-q', '--mkpath', '-DB=a/b/c');
 is($status, 0, '--mkpath') or diag $out;
@@ -52,7 +58,7 @@ is($status, 0, '--mkpath where it all exists');
 open my $fh, '>', 'f' or die; close $fh;
 ($status, $out) = run('configure', '-q', '--mkpath', '-DB=f/x/y');
 isnt($status, 0, '--mkpath below a file');
-like($out, qr/^E: cannot create f: /, 'names the culprit');
+like($out, qr/^E: cannot create `f': /, 'names the culprit');
 unlike($out, qr/ at \S+ line \d+/, 'and has no position');
 
 ($status, $out) = run('configure', '-q', '-DB=');
@@ -74,9 +80,9 @@ SKIP: {
 	mkdir 'ro' or die; chmod 0555, 'ro';
 	($status, $out) = run('configure', '-q', '--mkpath', '-DB=ro/x/y');
 	isnt($status, 0, '--mkpath where we may not');
-	like($out, qr/^E: cannot create ro\/x: .*denied/i, 'says so');
+	like($out, qr/^E: cannot create `ro\/x': .*denied/i, 'says so');
 	($status, $out) = run('configure', '-q', '-DB=ro/x');
-	like($out, qr/^E: cannot mkdir ro\/x: .*denied/i, 'a leaf too');
+	like($out, qr/^E: cannot mkdir `ro\/x': .*denied/i, 'a leaf too');
 	chmod 0755, 'ro';
 }
 

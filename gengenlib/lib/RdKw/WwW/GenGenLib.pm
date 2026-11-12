@@ -107,7 +107,7 @@ sub read_make
 	my ($file) = @_;
 
 	open my $fh, '<', _to_fs($file, 'read_make')
-		or die _diag(__("read_make: cannot open file %q: %s"), $file, "$!") . "\n";
+		or die _diag(__("read_make: cannot open file %q: %m"), $file) . "\n";
 	binmode $fh, ':encoding(UTF-8)';
 
 	my %O;
@@ -177,19 +177,19 @@ sub update_file
 	my ($tmp_fs, $file_fs) = map { _to_fs($_, 'update_file') } $tmp, $file;
 
 	open my $fh, '>:encoding(UTF-8)', $tmp_fs
-		or die _diag(__("update_file: cannot create file %q: %s"), $tmp, "$!") . "\n";
+		or die _diag(__("update_file: cannot create file %q: %m"), $tmp) . "\n";
 	print $fh $text
-		or die _diag(__("update_file: cannot write file %q: %s"), $tmp, "$!") . "\n";
+		or die _diag(__("update_file: cannot write file %q: %m"), $tmp) . "\n";
 	close $fh
-		or die _diag(__("update_file: cannot write file %q: %s"), $tmp, "$!") . "\n";
+		or die _diag(__("update_file: cannot write file %q: %m"), $tmp) . "\n";
 
 	my $exists = -e $file_fs;
 	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0) {
 		unlink $tmp_fs;
 		return 0;  # make it numeric so `>' isn't upset
 	}
-	rename $tmp_fs, $file_fs or die _diag(__("update_file: cannot rename %q to %q: %s"),
-		$tmp, $file, "$!") . "\n";
+	rename $tmp_fs, $file_fs or die _diag(__("update_file: cannot rename %q to %q: %m"),
+		$tmp, $file) . "\n";
 	$exists ? 1 : 2;
 }
 
@@ -383,7 +383,7 @@ sub read_deps
 	# (A name we cannot even spell is not missing: it is an error.)
 	open (my $fh, '<', _to_fs($file, 'read_deps')) or ($missing_ok
 		? return ()
-		: die _diag(__("read_deps: cannot open file %q: %s"), $file, "$!") . "\n");
+		: die _diag(__("read_deps: cannot open file %q: %m"), $file) . "\n");
 
 	while (<$fh>) {
 		# Not UTF-8 is not text, and so has no header: give up on the
@@ -432,7 +432,7 @@ sub read_deps
 	}
 
 	if ($fh->error()) {
-		die _diag(__("read_deps: cannot read file %q: %s"), $file, "$!") . "\n";
+		die _diag(__("read_deps: cannot read file %q: %m"), $file) . "\n";
 	}
 
 	close $fh;

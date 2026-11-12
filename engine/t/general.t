@@ -13,7 +13,7 @@ use File::Temp qw( tempdir );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 my $script = script_path();
-plan tests => 16;
+plan tests => 21;
 # The preset comes from the built share
 local $ENV{PERL5LIB} = join ':', project_root() . '/blib/lib', perl5lib();
 
@@ -55,6 +55,21 @@ for my $pin ('0', '0.0003') {
 		"-MRdKw::WwW::GenGenLib=$pin");
 	like($o, qr/-P tem needs RdKw::WwW::GenGenLib 0\.0100/, "no tem for GenGenLib $pin");
 }
+
+# -M-module drops what the preset asked for; a later -Mmodule is back
+($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', 'configure:configure.m',
+	'-o', 'render:/dev/null', '-M-Template');
+unlike($status ? $out : slurp('configure.m'), qr/"Template"/, '-M-Template: dropped');
+($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', 'configure:configure.m',
+	'-o', 'render:/dev/null', '-M-Template', '-MTemplate=2');
+like($status ? $out : slurp('configure.m'), qr/\[ "Template", (?:2|"2") \]/, '... -MTemplate=2 after it: back');
+($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null',
+	'-M-RdKw::I18N::CodeSets');
+like($out, qr/-M-RdKw::I18N::CodeSets: configure always needs it/, '... but not CodeSets');
+($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null', '-M-Template=2');
+like($out, qr/-M-Template=2: no version for what is dropped/, '... nor with a version');
+($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null', '-M-');
+like($out, qr/-M-: bad module name/, '... nor nothing');
 
 ($status, $out) = run('configure', '-q', '-DB=build', '-Ogreeting=hello');
 is($status, 0, 'configure, with no site_url') or diag $out;

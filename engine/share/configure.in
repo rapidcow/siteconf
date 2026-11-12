@@ -92,25 +92,16 @@ my %getopt = (
 );
 
 # The code sets: as the locale says, but for what SITECONF_CODESETS
-# and then -C say (see RdKw::I18N::CodeSets).  `use utf8' covers our
-# source, but not @ARGV: those arrive as bytes, and would be encoded
-# a second time on their way into MY/*.mk.  So -C is looked for
-# first, as bytes (as the option names, it is ASCII); then they are
-# all decoded, and read for good.  What cannot be decoded is an error.
-# Console output/error is meant for humans, so what it cannot spell
-# is written as ASCII \x{...}.
-Getopt::Long::Configure(qw( bundling no_ignore_case ));
-my @C;
-{
-	local @ARGV = @ARGV;
-	Getopt::Long::Configure('pass_through');
-	GetOptions((map { $_ => sub {} } keys %getopt), 'C=s' => \@C);
-	Getopt::Long::Configure('no_pass_through');
-}
-my $cs = eval {
-	RdKw::I18N::CodeSets->parse(
-		exists $ENV{SITECONF_CODESETS} ? $ENV{SITECONF_CODESETS} : (), @C)
-} or die "E: $@";
+# and then -C (which must come first) say (see RdKw::I18N::CodeSets).
+# `use utf8' covers our source, but not @ARGV: those arrive as bytes,
+# and would be encoded a second time on their way into MY/*.mk.  So
+# -C is read first, as bytes, since it says how to read the rest; then
+# they are all decoded, and read for good.  What cannot be decoded is
+# an error.  Console output/error is meant for humans, so what it
+# cannot spell is written as ASCII \x{...}.
+my $cs = RdKw::I18N::CodeSets->new;
+$cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
+my $offset = $cs->parse_from_argv(\@ARGV, prog => 'E');
 RdKw::I18N::CodeSets->locale($cs);
 $cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
 
@@ -137,7 +128,7 @@ sub isnull
 }
 
 $usage = <<EOM;
-usage: $prog [-Dvar=val ...] [-Ovar=val ...] [-C codeset ...] [--reset] [--mkpath] [-hq]
+usage: $prog [-C codeset ...] [-Dvar=val ...] [-Ovar=val ...] [--reset] [--mkpath] [-hq]
 
 The following variables may be defined:
 
@@ -154,7 +145,8 @@ The following variables may be defined:
 Anything else you may -D or -O goes into MY/config.mk or MY/option.mk
 respectively, for the rulebook or for the files being transformed.
 
-  -C          Code sets, after SITECONF_CODESETS (see RdKw::I18N::CodeSets)
+  -C          Code sets, after SITECONF_CODESETS; first, or not at all
+              (see RdKw::I18N::CodeSets)
   -h          This help message (alias: --help, -?)
   --reset     Clear all configuration at this point
   -q          Disable tips (alias: --quiet)
@@ -163,8 +155,11 @@ respectively, for the rulebook or for the files being transformed.
 See also `perldoc RdKw::WwW::SiteConf::Configure'.
 EOM
 
-eval { $cs->decode_argv; 1 } or die "$prog: $@";
-GetOptions(%getopt, 'C=s' => sub {}) or die +( split(/^/, $usage, 2) )[0];
+eval { @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset }); 1 } or die "$prog: $@";
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+# (-C comes first, or not at all: the rest was read without it)
+GetOptions(%getopt, 'C:s' => sub { die "E: too late to -C now.\n" })
+	or die +( split(/^/, $usage, 2) )[0];
 @ARGV and die "$prog: too many arguments\n";
 
 # Store the starting directory: for the

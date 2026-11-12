@@ -16,15 +16,17 @@ I18N::CodeSets - what the process speaks, and to whom
     use RdKw::I18N::CodeSets;
     my $CS = 'RdKw::I18N::CodeSets';
 
-    # -C diag:ascii -C console:locale -C argv:UTF-8 -C filesys
-    Getopt::Long::GetOptions( 'C=s@' => \my @C );
-    my $cs = eval { $CS->parse(@C) } or die "E: codeset error: $@";
+    # SITECONF_CODESETS=filesys:UTF-8,console:ascii, and then
+    # -C diag:ascii -C console:locale -C argv:UTF-8 -C filesys ...
+    my $cs = $CS->new;
+    $cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
+    my $offset = $cs->parse_from_argv(\@ARGV, prog => 'E');
     $CS->locale($cs);
 
     # elsewhere
     my $cs = $CS->locale;
     $cs->initstd( stderr => Encode::FB_PERLQQ() );
-    $cs->un_argv;
+    @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset });
     open my $fh, '<', $cs->to_fs($file)
         or die $cs->diag("cannot open file %q: %s\n", $file, "$!");
 
@@ -154,6 +156,8 @@ message can be said again as it is) if a I<spec> makes no sense.
     $cs = $cs->parse($ENV{SITECONF_CODESETS})
         if exists $ENV{SITECONF_CODESETS};
 
+(Which is L</parse_from_env>, but for the copy.)
+
 =cut
 
 sub parse
@@ -173,6 +177,84 @@ sub parse
 		push @pairs, $name, $enc;
 	}
 	$proto->new(@pairs);
+}
+
+=item I<cs>->B<parse_from_env>( I<name>[, prog => I<prog> ] )
+
+As L</parse>, from what the environment variable I<name> says, if it
+is set; but applied to I<cs> itself, which is returned.  Dies (and
+leaves I<cs> as it was) if it makes no sense, saying I<prog> and
+I<name> first:
+
+    $cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
+    # E: SITECONF_CODESETS: unknown category or encoding "nope"
+
+=item I<cs>->B<parse_from_argv>( I<array>[, prog => I<prog> ] )
+
+As L</parse>, from the C<-C> I<spec>s (or C<-C>I<spec>, glued) that
+I<array> (C<\@ARGV>) starts with; but applied to I<cs> itself.  They
+are taken off I<array>; the rest is left as it was, from the first
+argument that is not one on (C<--> too, and C<-iC0>: a C<-C> after
+anything else is no longer ours).  Returns how many arguments were
+taken off, so that the rest can be counted from where they were:
+
+    my $cs = $CS->new;
+    $cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
+    my $offset = $cs->parse_from_argv(\@ARGV, prog => 'E');
+    @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset });
+
+The arguments are bytes still, as they must be: what they say is how
+to read them.  (Being options, they are ASCII.)  Dies (and leaves
+I<cs> and I<array> as they were) if one makes no sense, or C<-C> is
+the last argument, saying I<prog> and which argument it is, counting
+from 1 (C<$0> being 0):
+
+    # E: -C (argv 2): unknown category or encoding "nope"
+
+=cut
+
+sub parse_from_env
+{
+	my ($self, $name, @opt) = @_;
+	my $prog = _prog_opt(parse_from_env => $self, \@opt);
+	Carp::croak('parse_from_env: undefined environment variable name') unless defined $name;
+	return $self unless exists $ENV{$name};
+	my $new = eval { $self->parse($ENV{$name}) } or die "$prog$name: $@";
+	%$self = %$new;
+	$self;
+}
+
+sub parse_from_argv
+{
+	my ($self, $argv, @opt) = @_;
+	my $prog = _prog_opt(parse_from_argv => $self, \@opt);
+	Carp::croak('parse_from_argv: not an array reference') unless ref $argv eq 'ARRAY';
+	my ($new, $n) = ($self, 0);
+	while ($n < @$argv && defined $argv->[$n] && $argv->[$n] =~ /\A-C(.*)\z/s) {
+		my $spec = $1;
+		unless (length $spec) {
+			++$n < @$argv or die "$prog-C (argv $n): no codeset after it\n";
+			$spec = $argv->[$n];
+		}
+		$new = eval { $new->parse($spec) } or die "$prog-C (argv @{[ $n + 1 ]}): $@";
+		$n++;
+	}
+	splice @$argv, 0, $n;
+	%$self = %$new;
+	$n;
+}
+
+# prog => ..., the one option of parse_from_*: "prog: ", or ''
+sub _prog_opt
+{
+	my ($who, $self, $opt) = @_;
+	Carp::croak("$who: not of an object") unless ref $self;
+	Carp::croak("$who: odd number of options") if @$opt % 2;
+	my %opt = @$opt;
+	for (sort keys %opt) {
+		Carp::croak("$who: unknown option $_") unless $_ eq 'prog';
+	}
+	defined $opt{prog} ? "$opt{prog}: " : '';
 }
 
 sub _is_category

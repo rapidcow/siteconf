@@ -42,7 +42,8 @@ the build file.  Configuring alone does not generate or run it.
 
 F<configure> checks its required Perl modules before configuring anything.
 The project author can add requirements with C<siteconf init -MModule>
-or C<-MModule=version>; a preset can supply its own requirements too.
+or C<-MModule=version>; a preset can supply its own requirements too,
+which C<-M-Module> drops.
 
 Arguments and file names are read as L<RdKw::I18N::CodeSets> says:
 as the locale says, but for what C<SITECONF_CODESETS> and then C<-C>
@@ -268,7 +269,8 @@ Set a definition or option as described above.
 Read arguments and file names, and write messages, in these code sets,
 after what C<SITECONF_CODESETS> says (see L</ENVIRONMENT>).  May be
 given more than once; a later one overrides what came before.  It
-applies to the whole command line, wherever it is on it.
+must come first, before anything else (C<-C0>, glued, is fine): what
+comes after it is read as it says, and after that, it is too late.
 
 =item C<--reset>
 

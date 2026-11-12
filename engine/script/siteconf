@@ -13,7 +13,8 @@ siteconf - configurable incremental build script generator
     siteconf [-C codeset ...] [-q] [-i|-g|-l|-V] [<args>]
 
     siteconf -i [-P preset] [-o [name:]path ...] [-f]
-             [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+             [-M[-]module[=version] ...] [-Sopt=val ...]
+             [-Dvar=val ...] [-Ovar=val ...]
     siteconf init ...                         # same
 
     #
@@ -99,14 +100,16 @@ cannot be spelled is an error.  What is in the files we read and write is always
 Read arguments and file names, and write messages, in these code sets,
 after what C<SITECONF_CODESETS> says (see L</ENVIRONMENT>), whatever
 else is done.  May be given more than once; a later one overrides what
-came before.  It applies to the whole command line, wherever it is on
-it.  It is not written into F<configure>, which takes C<-C> of its own.
+came before.  It must come first, before anything else (C<-C0>, glued,
+is fine; C<-iC0> is not): what comes after it is read as it says, and
+after that, it is too late.  It is not written into F<configure>, which
+takes C<-C> of its own.
 
 =item B<-i>, B<init>
 
 Write F<configure> (or whatever I<-o> says).
 
-=item B<-M> I<module>[=I<version>]
+=item B<-M>[B<->]I<module>[=I<version>]
 
 Have F<configure> check that I<module> can be loaded (and is at
 least I<version>, if given) before doing anything else.  May be
@@ -118,8 +121,9 @@ C<-MRdKw::WwW::GenGenLib=0> to get an older F<render> that works with
 any version, and C<=0.0002> for one that leaves names and arguments
 as they are),
 and so does the preset for what it needs (C<# USE:>
-lines in its config).  C<-M>I<module>C<=> with nothing after the C<=>
-drops I<module> from the list, even one the preset asked for.
+lines in its config).  C<-M->I<module> drops I<module> from the list,
+even one the preset asked for (as C<-M>I<module>C<=> does, with
+nothing after the C<=>); a later C<-M>I<module> puts it back.
 
 C<-MRdKw::WwW::GenGenLib::Template::Provider> (which nothing asks for,
 and nothing needs) has F<render> load templates through it: what a page
@@ -292,12 +296,37 @@ our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
 # been around for much longer.
 my %PRESET_GENGENLIB = ( tem => $GENGENLIB_LOCALE );
 
+# The code sets: as the locale says, but for what SITECONF_CODESETS
+# and then -C (which must come first) say (see RdKw::I18N::CodeSets).
+# -C is read as bytes, before anything else is, since it says how to
+# read the rest.  Console output/error is meant for humans, so what it
+# cannot spell is written as ASCII \x{...}.
+my $cs = RdKw::I18N::CodeSets->new;
+$cs->parse_from_env('SITECONF_CODESETS', prog => basename($0));
+my $offset = $cs->parse_from_argv(\@ARGV, prog => basename($0));
+RdKw::I18N::CodeSets->locale($cs);
+$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
+
+# Our name came as an argument; it is only said, so it need not decode
+my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
+my $usage = <<EOM;
+usage: $prog [-C codeset ...] [-q] [-i|-g|-l|-V] [<args>]
+       $prog -i [-P preset] [-o [name:]path ...] [-f] [-M[-]module[=version] ...]
+                [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
+       $prog -g [-B builddir] [-G generator] [-F manifest] [-R rulebook]
+                [-o file]
+       $prog -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+       $prog -V [-V]
+EOM
+
+eval { @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset }); 1 } or die "$prog: $@";
+
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
 my %opt = (S => {}, D => {}, O => {}, M => [], outputs => [], t => []);
 # What `-i' was told, in the order it was told, for the header of
 # configure.  (Leaving out what does not alter its text: -i, -o, -f, -q.)
 my @written;
-my ($vee, $usage);
-my %getopt = (
+GetOptions(
 	'i|init'   => sub { $opt{mode} = 'init' },
 	'g|make'   => sub { $opt{mode} = 'make' },
 	'l|list'   => sub { $opt{mode} = 'list' },
@@ -315,47 +344,12 @@ my %getopt = (
 	# (-0 alone is a NUL, -072 a colon: an octal number, as perl's -0 takes)
 	'0:s'      => \$opt{0},
 	'h|help'   => sub { print $usage; exit 0 },
-	'V|version+' => \$vee,
+	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
 	'f'        => \$opt{f},
-);
-
-# The code sets: as the locale says, but for what SITECONF_CODESETS
-# and then -C say (see RdKw::I18N::CodeSets).  -C must be known before
-# the arguments can be decoded, so it is picked out first, as bytes
-# (as the option names, it is ASCII; the others are known, so that
-# -D-C is not taken for it); then they are all decoded, and read for
-# good.  Console output/error is meant for humans, so what it cannot
-# spell is written as ASCII \x{...}.
-Getopt::Long::Configure(qw( bundling no_ignore_case ));
-my @C;
-{
-	local @ARGV = @ARGV;
-	Getopt::Long::Configure('pass_through');
-	GetOptions((map { $_ => sub {} } keys %getopt), 'C=s' => \@C);
-	Getopt::Long::Configure('no_pass_through');
-}
-my $cs = eval {
-	RdKw::I18N::CodeSets->parse(exists $ENV{SITECONF_CODESETS} ? $ENV{SITECONF_CODESETS} : ())
-} or die basename($0) . ": SITECONF_CODESETS: $@";
-$cs = eval { $cs->parse(@C) } or die basename($0) . ": -C: $@";
-RdKw::I18N::CodeSets->locale($cs);
-$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
-
-# Our name came as an argument; it is only said, so it need not decode
-my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
-$usage = <<EOM;
-usage: $prog [-C codeset ...] [-q] [-i|-g|-l|-V] [<args>]
-       $prog -i [-P preset] [-o [name:]path ...] [-f] [-Mmodule[=version] ...]
-                [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]
-       $prog -g [-B builddir] [-G generator] [-F manifest] [-R rulebook]
-                [-o file]
-       $prog -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
-       $prog -V [-V]
-EOM
-
-eval { $cs->decode_argv; 1 } or die "$prog: $@";
-GetOptions(%getopt, 'C=s' => sub {}) or die $usage;
+	# (-C comes first, or not at all: the rest was read without it)
+	'C:s'      => sub { die "$prog: too late to -C now.\n" },
+) or die $usage;
 
 if ($vee) {
 	print <<VAR;
@@ -607,10 +601,10 @@ sub do_init
 		$preset =~ s/\n*\z/\n/;
 		$render = eval { share_file("presets/$opt->{P}.render") };
 	}
-	# configure must find these: what the preset says (in `# NEED:
+	# configure must find these: what the preset says (in `# USE:
 	# module[=version]' lines), then -Mmodule or -Mmodule=version.  Keyed
-	# by module, so that a later one replaces the earlier.  -Mmodule= with
-	# nothing after the = drops it.
+	# by module, so that a later one replaces the earlier.  -M-module
+	# (or -Mmodule=, with nothing after the =) drops it.
 	my %mods = (
 		'RdKw::I18N::CodeSets' => 0,
 		'RdKw::WwW::GenGenLib' => $GENGENLIB_LOCALE,
@@ -618,9 +612,10 @@ sub do_init
 	my @spec = ($preset =~ /^# USE: (\S+)$/mg, @{ $opt->{M} });
 	my %user;
 	for my $m (@spec) {
-		my ($module, $min) = split /=/, $m, 2;
-		$min = 0 unless defined $min;
+		my ($drop, $module, $min) = $m =~ /\A(-?)([^=]*)(?:=(.*))?\z/s;
 		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: -M$m: bad module name\n";
+		$drop && defined $min and die "$prog: -M$m: no version for what is dropped\n";
+		$min = $drop ? '' : 0 unless defined $min;
 		$min =~ /\A(?:v?[0-9][0-9._]*|0|)\z/ or die "$prog: -M$m: bad version\n";
 		if ($min eq '') {
 			$module eq 'RdKw::WwW::GenGenLib' || $module eq 'RdKw::I18N::CodeSets'
@@ -777,29 +772,24 @@ NEW
 		GETOPT => $can_locale
 			? <<\NEW
 # The arguments are read as the code sets say: as the locale says,
-# but for what SITECONF_CODESETS and then -C say (see
-# RdKw::I18N::CodeSets).  So -C is looked for first, as bytes (as the
-# option names, it is ASCII); then they are all decoded, and read for
-# good.  What the console cannot spell is written as \x{...}.
-Getopt::Long::Configure(qw( bundling no_ignore_case ));
-my ($B, @C) = ('.');
-my %getopt = ( 'B=s' => \$B );
-{
-	local @ARGV = @ARGV;
-	Getopt::Long::Configure('pass_through');
-	GetOptions((map { $_ => sub {} } keys %getopt), 'C=s' => \@C);
-	Getopt::Long::Configure('no_pass_through');
-}
-my $cs = eval {
-	RdKw::I18N::CodeSets->parse(
-		exists $ENV{SITECONF_CODESETS} ? $ENV{SITECONF_CODESETS} : (), @C)
-} or die "$0: $@";
+# but for what SITECONF_CODESETS and then -C (which must come first)
+# say (see RdKw::I18N::CodeSets).  -C is read first, as bytes, since it
+# says how to read the rest.  What the console cannot spell is written
+# as \x{...}.
+my $cs = RdKw::I18N::CodeSets->new;
+$cs->parse_from_env('SITECONF_CODESETS', prog => $0);
+my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
 RdKw::I18N::CodeSets->locale($cs);
 $cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
 my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ() });
-eval { $cs->decode_argv; 1 } or die "$prog: $@";
-GetOptions(%getopt, 'C=s' => sub {})
-	or die "usage: $prog [-B BUILDDIR] [-C CODESET ...] apath bpath\n";
+eval { @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset }); 1 } or die "$prog: $@";
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+my $B = '.';
+GetOptions(
+	'B=s' => \$B,
+	# (-C comes first, or not at all: the rest was read without it)
+	'C:s' => sub { die "$prog: too late to -C now.\n" },
+) or die "usage: $prog [-C CODESET ...] [-B BUILDDIR] apath bpath\n";
 @ARGV == 2 or die "$prog: need exactly two args\n";
 my ($apath, $bpath) = @ARGV;
 NEW

@@ -5,7 +5,7 @@
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 76;
+use Test::More tests => 103;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -128,6 +128,55 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs->argv, 'utf-8-strict', 'new of an object: overrides');
 	is($base->argv, 'ascii', '... the object left alone');
 	isa_ok($cs, $CS);
+}
+
+# --- parse_from_env: of the object itself
+{
+	my $cs = $CS->new(argv => 'ascii');
+	local $ENV{CS_TEST};
+	delete $ENV{CS_TEST};
+	is($cs->parse_from_env('CS_TEST'), $cs, 'parse_from_env: unset: the object');
+	is($cs->argv, 'ascii', '... as it was');
+	$ENV{CS_TEST} = 'filesys:latin1,stdout:0';
+	is($cs->parse_from_env('CS_TEST', prog => 'E'), $cs, 'parse_from_env: the object');
+	is($cs->filesys, 'iso-8859-1', '... told');
+	is($cs->stdout, 'ascii', '... split by commas');
+	is($cs->argv, 'ascii', '... over what it had');
+	$ENV{CS_TEST} = 'stdin:UTF-8,nope';
+	ok(!eval { $cs->parse_from_env('CS_TEST', prog => 'E'); 1 }, 'parse_from_env: nonsense');
+	is($@, qq{E: CS_TEST: unknown category or encoding "nope"\n}, '... said, by prog and name');
+	is($cs->stdin, undef, '... and nothing applied');
+	ok(!eval { $cs->parse_from_env('CS_TEST'); 1 }, 'parse_from_env: no prog');
+	is($@, qq{CS_TEST: unknown category or encoding "nope"\n}, '... said by name');
+	ok(!eval { $cs->parse_from_env('CS_TEST', nope => 1); 1 }, 'parse_from_env: unknown option');
+}
+
+# --- parse_from_argv: the -C at the front, and how many
+{
+	my $cs = $CS->new;
+	my @argv = ('-C', 'argv:ascii', '-C0', '-Cfilesys', '-i', '-C', 'stdin:UTF-8', 'x');
+	is($cs->parse_from_argv(\@argv, prog => 'E'), 4, 'parse_from_argv: how many');
+	is_deeply(\@argv, ['-i', '-C', 'stdin:UTF-8', 'x'], '... taken off, up to the first other');
+	is($cs->argv, 'ascii', '... -C 0: all, after argv:ascii');
+	is($cs->filesys, 'utf-8-strict', '... glued');
+	is($cs->stdin, 'ascii', '... and none after');
+
+	@argv = ('-iC0');
+	is($CS->new->parse_from_argv(\@argv), 0, 'parse_from_argv: -iC0 is not ours');
+	@argv = ('--', '-C0');
+	is($CS->new->parse_from_argv(\@argv), 0, '... nor what comes after --');
+	is_deeply(\@argv, ['--', '-C0'], '... which is left');
+
+	$cs = $CS->new(argv => 'ascii');
+	@argv = ('-C1', '-C', 'nope', 'x');
+	ok(!eval { $cs->parse_from_argv(\@argv, prog => 'E'); 1 }, 'parse_from_argv: nonsense');
+	is($@, qq{E: -C (argv 3): unknown category or encoding "nope"\n}, '... said, by prog and where');
+	is_deeply([ $cs->argv, scalar @argv ], ['ascii', 4], '... and nothing applied or taken');
+	@argv = ('-C1', '-C');
+	ok(!eval { $cs->parse_from_argv(\@argv); 1 }, 'parse_from_argv: -C last');
+	is($@, "-C (argv 2): no codeset after it\n", '... said, where');
+	ok(!eval { $cs->parse_from_argv('-C0'); 1 }, 'parse_from_argv: not an array');
+	ok(!eval { $CS->parse_from_argv([]); 1 }, '... nor of the class');
 }
 
 # --- the process's own

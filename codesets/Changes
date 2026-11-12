@@ -27,3 +27,7 @@ Revision history of I18N-CodeSets
       and so ascii.
     + diag escapes what stderr cannot spell (\x{...}), and diag_name
       under unicode quotes it so.
+    + parse_from_env(NAME, prog => ...) and parse_from_argv(\@ARGV,
+      prog => ...): parse of what an environment variable says, and
+      of the -C (or -Cglued) that @ARGV starts with, which it takes
+      off, saying how many; applied to the object itself.

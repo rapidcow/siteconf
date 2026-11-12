@@ -19,12 +19,12 @@ msgstr ""
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:122
 #, perl-format
 msgid "cannot encode %s in current locale (%s)"
-msgstr "无法编码 %s：当前区域设置（%s）中没有它的拼写"
+msgstr "无法编码 %s：当前区域代码（%s）中没有对应的编码"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:133
 #, perl-format
 msgid "cannot decode %s in current locale (%s)"
-msgstr "无法解码 %s：当前区域设置（%s）中没有它的拼写"
+msgstr "无法解码 %s：当前区域代码（%s）中没有对应的编码"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:163
 msgid "read_make: cannot open file %q: %s"
@@ -36,7 +36,7 @@ msgstr "read_make: %q 第 %s 行：没有 `='"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:194
 msgid "write_make: bad name: %q"
-msgstr "write_make: 名称有误：%q"
+msgstr "write_make: 非法变量名：%q"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:195
 msgid "write_make: %q: value has a newline"
@@ -61,7 +61,7 @@ msgid ""
 "error: You should ./configure first. ;)"
 msgstr ""
 "error: 你还没有配置！（没有 %q）\n"
-"error: 请先运行 ./configure。;)"
+"error: 请先运行 ./configure。(⸝⸝> ᴗ•⸝⸝)"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:429
 msgid "read_deps: cannot open file %q: %s"
@@ -69,7 +69,7 @@ msgstr "read_deps: 无法打开文件 %q：%s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:457
 msgid "read_deps: %q line %s: You HAVE too many."
-msgstr "read_deps: %q 第 %s 行：HAVE 太多了。"
+msgstr "read_deps: %q 第 %s 行：你 HAVE 太多了。(ಠ_ಠ)"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:472
 msgid "read_deps: cannot read file %q: %s"
@@ -94,7 +94,7 @@ msgstr "norm_deps: %q 中有多余的 $"
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:706
 #, perl-format
 msgid "subs_deps: bad substitution: %s"
-msgstr "subs_deps: 替换有误：%s"
+msgstr "subs_deps: 替换错误：%s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:106
 #, perl-format
@@ -163,8 +163,8 @@ msgstr "read_manifest: 无法读取文件 %q：%s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:157
 msgid "read_manifest: %q: no goals; what should I make?"
-msgstr "read_manifest: %q：没有目标；我该做什么呢？"
+msgstr "read_manifest: %q：没有目标；我该构建什么呢？"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:202
 msgid "read_manifest: %q: no goal %q"
-msgstr "read_manifest: %q：没有目标 %q"
+msgstr "read_manifest: %q：不存在目标 %q"

@@ -9,7 +9,7 @@ $VERSION = eval $VERSION;
 
 =head1 NAME
 
-WwW::GenGenLib::L10N - where the messages of gengenlib are kept
+WwW::GenGenLib::L10N - gengenlib locale directory config
 
 =head1 SYNOPSIS
 

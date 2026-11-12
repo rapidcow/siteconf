@@ -10,7 +10,7 @@ $VERSION = eval $VERSION;
 
 =head1 NAME
 
-RdKw::WwW::GenGenLib::Manifest - the goals of a build, as a MANIFEST says
+RdKw::WwW::GenGenLib::Manifest - siteconf manifest parser
 
 =head1 SYNOPSIS
 

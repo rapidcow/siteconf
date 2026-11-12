@@ -317,6 +317,8 @@ while, and no longer:
 sub locale
 {
 	my $class = shift;
+	# (as we are asked for on the way to a diag, which may say %m)
+	local ($!, $^E);
 	if (@_) {
 		my ($cs) = @_;
 		Carp::croak('locale: not a ' . __PACKAGE__)
@@ -733,38 +735,81 @@ sub diag_name
 
 =item I<cs>->B<diag>( I<format>, I<arg>, ... )
 
-The I<format>, with each C<%q> replaced by the L</diag_name> of its
-I<arg>, each C<%s> by its I<arg> as it is, and each C<%%> by C<%>.
-Dies on any other C<%>.  What B<stderr> cannot spell, in the
-I<format> or in an I<arg> of C<%s>, is escaped (C<\x{7092}>), as
-C<FB_PERLQQ> would have it; so that the message can be said, whatever
-B<stderr> was opened with, and the more so if it dies.
+The I<format>, as L<perlfunc/sprintf> would have it, with each C<%q>
+replaced by the L</diag_name> of its I<arg>, each C<%s> by its I<arg>
+as it is (or nothing, if it is undef), C<%d>, C<%i>, C<%u>, C<%o>,
+C<%x> and C<%X> as sprintf says, each C<%m> by C<$!> (as it was when
+we were called; it takes no I<arg>), and each C<%%> by C<%>.  An
+I<arg> may be named by number (C<%2$s %1$q>, for a translation that
+says them in another order), and the others are taken in order, as
+sprintf takes them; and flags, widths and precisions are as sprintf
+says (C<%-10q>).  Dies on any other C<%>, or an I<arg> that is not
+there.
+
+C<$!> is said in the language of the locale, as perl says it in the
+scope of C<use locale> (from 5.22; before, always), and is decoded
+from the locale's code set (L<Encode::Locale>), if perl has not.
+
+What B<stderr> cannot spell, in the I<format> or in an I<arg> of
+C<%s>, or C<%m>, is escaped (C<\x{7092}>), as C<FB_PERLQQ> would have
+it; so that the message can be said, whatever B<stderr> was opened
+with, and the more so if it dies.
 
 =cut
 
 sub diag
 {
 	my ($self, $format, @args) = @_;
+	my $errno = 0 + $!;
 	my $enc = $self->_encoding('stderr');
+	# What sprintf is given: the format, with what we say ourselves
+	# (%m, %%) said, and every other conversion numbered, and the
+	# arguments of those, one each (as %1$q and %1$s are not the same)
 	my $out = '';
+	my @out;
+	my $next = 0;
 	pos $format = 0;
-	while ($format =~ /\G([^%]*)%(.?)/gcs) {
-		my ($text, $conv) = ($1, $2);
+	while ($format =~ /\G([^%]*)%(?:([1-9][0-9]*)\$)?([-+ 0#]*[0-9]*(?:\.[0-9]+)?)(.?)/gcs) {
+		my ($text, $pos, $flags, $conv) = ($1, $2, $3, $4);
 		$out .= _perlqq($enc, $text);
-		if ($conv eq '%') {
-			$out .= '%';
+		my $spec = '%' . (defined $pos ? "$pos\$" : '') . $flags . $conv;
+		if ($conv eq '%' || $conv eq 'm') {
+			$spec eq "%$conv" or Carp::croak("diag: unknown conversion $spec");
+			(my $said = $conv eq '%' ? '%' : _perlqq($enc, _strerror($errno))) =~ s/%/%%/g;
+			$out .= $said;
 		}
-		elsif ($conv eq 's' || $conv eq 'q') {
-			Carp::croak('diag: missing argument for %' . $conv) unless @args;
-			my $arg = shift @args;
-			$out .= $conv eq 'q' ? $self->diag_name($arg)
-				: defined $arg ? _perlqq($enc, $arg) : '';
+		elsif ($conv =~ /\A[sqdiuoxX]\z/) {
+			my $i = defined $pos ? $pos - 1 : $next++;
+			$i < @args or Carp::croak("diag: missing argument for $spec");
+			my $arg = $args[$i];
+			if ($conv eq 'q') {
+				($arg, $conv) = ($self->diag_name($arg), 's');
+			}
+			elsif ($conv eq 's') {
+				$arg = defined $arg ? _perlqq($enc, $arg) : '';
+			}
+			push @out, $arg;
+			$out .= '%' . @out . '$' . $flags . $conv;
 		}
 		else {
-			Carp::croak("diag: unknown conversion %$conv");
+			Carp::croak("diag: unknown conversion $spec");
 		}
 	}
-	$out . _perlqq($enc, substr($format, pos $format));
+	sprintf $out . _perlqq($enc, substr($format, pos $format)), @out;
+}
+
+# $! of `errno', as characters: in the language of the locale, as perl
+# says it in the scope of `use locale' (from 5.22; before, always), and
+# decoded from the locale's code set if perl has not (which it does
+# only from 5.22, and only if that is UTF-8)
+sub _strerror
+{
+	my ($errno) = @_;
+	local $! = $errno;
+	my $msg = do { use if $] >= 5.022, locale => ':messages'; "$!" };
+	return $msg if Encode::is_utf8($msg) || $msg !~ /[^\x00-\x7f]/;
+	my ($s) = _code(\&Encode::decode, 'locale', $msg);
+	defined $s ? $s : Encode::decode('locale', $msg, Encode::FB_PERLQQ());
 }
 
 # Whether the encoding can spell all of the string

@@ -6,7 +6,7 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 33;
+use Test::More tests => 49;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -56,8 +56,32 @@ is($a->diag("cannot open file %q: %s\n", "炒饭", "No such file"),
 	qq{cannot open file "\\x{7092}\\x{996d}": No such file\n}, 'diag: %q and %s');
 is($u->diag('100%% %q', 'a'), "100% `a'", 'diag: %%');
 is($a->diag('no %q', "a'b"), q{no "a'b"}, 'diag: %q of a quote');
-ok(!eval { $u->diag('%d', 1); 1 }, 'diag: no other conversion');
+is($u->diag('%q line %d, %x', 'a', 3, 255), "`a' line 3, ff", 'diag: %d and %x');
+is($u->diag('[%-5q|%3s|%03d]', 'a', 'b', 7), "[`a'  |  b|007]", '... with flags and widths');
+is($u->diag('%2$s %1$q', 'a', 'b'), "b `a'", 'diag: in another order (%1$q)');
+is($a->diag('%1$q is %1$s', '炒'), '"\x{7092}" is 炒', '... the same argument twice');
+is($u->diag('%2$s, then %s', 'a', 'b'), 'b, then a', '... and in order, as sprintf does');
+for my $bad ('%n', '%v d', '%*d', '%c', '%5%', '%0$s', '%1$m', '%') {
+	ok(!eval { $u->diag($bad, 1, 2); 1 }, "diag: no $bad");
+}
 ok(!eval { $u->diag('%q'); 1 }, 'diag: no missing argument');
+ok(!eval { $u->diag('%2$s', 'a'); 1 }, '... not even by number');
+
+# --- %m
+{
+	use Errno qw( ENOENT EACCES );
+	my $enoent = do { local $! = ENOENT; "$!" };
+	$! = ENOENT;
+	is($u->diag('%q: %m', 'a'), "`a': $enoent", 'diag: %m, $! as it was');
+	my $eacces = do { local $! = EACCES; "$!" };
+	$! = EACCES;
+	is($u->diag('%m; %2$s %1$q, %m', 'a', 'b'), "$eacces; b `a', $eacces",
+		'... any number of times, among the others');
+	local $RdKw::I18N::CodeSets::LOCALE;
+	$! = ENOENT;
+	$CS->locale;
+	is(0 + $!, ENOENT, 'locale: $! as it was, even when it makes one');
+}
 
 # --- what stderr cannot spell
 {

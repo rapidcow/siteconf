@@ -58,7 +58,7 @@ else {
 	plan skip_all => 'no non-C locale found :(' unless defined $locale;
 	diag "Using non-C locale: $locale";
 }
-plan tests => 7;
+plan tests => 9;
 diag("Locale::Messages $Locale::Messages::VERSION ($INC{'Locale/gettext_pp.pm'})");
 
 my $cs = RdKw::I18N::CodeSets->new(stderr => 'UTF-8', diag => 'unicode');
@@ -92,3 +92,19 @@ like(says('xx'), qr/\Aread_deps: cannot open file "nope\x{e9}": /,
 
 is(RdKw::WwW::GenGenLib::__n('one file', '%s files', 1), 'one file', '__n: one');
 is(RdKw::WwW::GenGenLib::__n('one file', '%s files', 2), '%s files', '__n: more');
+
+# gettext may set $! (as libintl does, failing to open the catalogs
+# that are not there; gettext_pp does not), but $! is as it was after
+# __, for a %m
+{
+	use Errno qw( EACCES ENOENT );
+	no warnings 'redefine';
+	local *Locale::Messages::dgettext = sub { $! = ENOENT; $_[1] };
+	local *Locale::Messages::dngettext = sub { $! = ENOENT; $_[3] == 1 ? $_[1] : $_[2] };
+	$! = EACCES;
+	RdKw::WwW::GenGenLib::__('x');
+	is(0 + $!, EACCES, '__: $! as it was');
+	$! = EACCES;
+	RdKw::WwW::GenGenLib::__n('one file', '%s files', 2);
+	is(0 + $!, EACCES, '__n: likewise');
+}

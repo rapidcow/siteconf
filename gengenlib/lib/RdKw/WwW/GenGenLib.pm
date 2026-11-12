@@ -73,10 +73,13 @@ BEGIN {
 		1;
 	}) {
 		*__ = sub {
+			# (as we are asked on the way to a diag, which may say %m)
+			local ($!, $^E);
 			Encode::decode('UTF-8', Locale::Messages::dgettext($domain,
 				Encode::encode('UTF-8', $_[0], $CHECK)), $CHECK);
 		};
 		*__n = sub {
+			local ($!, $^E);
 			Encode::decode('UTF-8', Locale::Messages::dngettext($domain,
 				Encode::encode('UTF-8', $_[0], $CHECK),
 				Encode::encode('UTF-8', $_[1], $CHECK), $_[2]), $CHECK);

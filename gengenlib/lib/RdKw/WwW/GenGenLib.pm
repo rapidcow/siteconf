@@ -94,11 +94,11 @@ sub _diag
 	RdKw::I18N::CodeSets->locale->diag(@_);
 }
 
-# A name, as the file system spells it, or an error said by who
+# A name, as the file system spells it, or an error prefixed with $prog.
 sub _to_fs
 {
-	my ($name, $who) = @_;
-	RdKw::I18N::CodeSets->locale->to_fs($name, { prog => $who });
+	my ($name, $prog) = @_;
+	RdKw::I18N::CodeSets->locale->to_fs($name, { prog => $prog });
 }
 
 our @ISA = qw( Exporter );

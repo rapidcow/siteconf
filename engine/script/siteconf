@@ -745,7 +745,8 @@ sub render_text
 use Encode ();
 use RdKw::I18N::CodeSets ();
 NEW
-		GETOPT => $can_locale ? <<\NEW : <<\OLD,
+		GETOPT => $can_locale
+			? <<\NEW
 # The arguments are read as the code sets say: as the locale says,
 # but for what SITECONF_CODESETS and then -C say (see
 # RdKw::I18N::CodeSets).  So -C is looked for first, as bytes (as the
@@ -773,6 +774,7 @@ GetOptions(%getopt, 'C=s' => sub {})
 @ARGV == 2 or die "$prog: need exactly two args\n";
 my ($apath, $bpath) = @ARGV;
 NEW
+			: <<\OLD,
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 my $B = '.';
 GetOptions('B=s' => \$B) or die "usage: $0 [-B BUILDDIR] apath bpath\n";

@@ -343,7 +343,10 @@ WwW::GenGenLib version $RdKw::WwW::GenGenLib::VERSION
 I18N::CodeSets version $RdKw::I18N::CodeSets::VERSION
 LVER
 
-	foreach my $fren (qw( Template URI URI::Escape RdKw::WwW::GenLib )) {
+	foreach my $fren (qw(
+		Template URI URI::Escape RdKw::WwW::GenLib
+		RdKw::WwW::GenGenLib::Template::Provider
+	)) {
 		(my $path = "$fren.pm") =~ s!::!/!g;
 		eval { require $path; 1 } or next;
 		(my $cheeky = $fren) =~ s/^RdKw:://;

@@ -28,7 +28,7 @@
 # More information about Template Toolkit here:
 # https://template-toolkit.org/
 #
-@UTF8@use @PERL_MIN@;
+@UTF8@use 5.008;
 use strict;
 use warnings;
 @USE_LOCALE@

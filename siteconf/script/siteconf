@@ -835,7 +835,6 @@ sub render_text
 		# This may be breaking if folks have been using non-ASCII
 		# characters in their patches.
 		UTF8 => $can_locale ? "use utf8;\n" : '',
-		PERL_MIN => $can_locale ? '5.008' : '5.006',
 		USE_LOCALE => $can_locale ? <<\NEW : '',
 
 use Encode ();

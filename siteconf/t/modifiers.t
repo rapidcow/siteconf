@@ -9,6 +9,8 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
+# Pin LANGUAGE to C so gettext does not translate the messages matched below.
+BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
 

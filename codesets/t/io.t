@@ -1,12 +1,12 @@
 #!perl
 #
-# t/io.t - initstd, file names, arguments and the environment
+# t/io.t - initstd, reinitstd, file names, arguments and the environment
 
 use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 79;
+use Test::More tests => 89;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -160,4 +160,45 @@ EOP
 	like($out, qr/\A\xe9\\x\{263a\}/, 'initstd: once, however often, and with fallback');
 	like($out, qr/encoding\(\Q@{[ Encode::find_encoding('console_out')->name ]}\E\)\z/,
 		'... stderr as the locale says');
+}
+
+# --- reinitstd, likewise: only the files it is given
+{
+	my $lib = File::Spec->rel2abs("$FindBin::Bin/../lib");
+	my $prog = <<'EOP';
+use RdKw::I18N::CodeSets;
+my $cs = RdKw::I18N::CodeSets->new(stdout => 'latin1', stderr => 'latin1');
+sub layers { join '+', grep /encoding/, PerlIO::get_layers($_[0]) }
+my @r;
+$cs->reinitstd;
+push @r, 'none=' . layers(*STDOUT) . '/' . layers(*STDERR);
+$cs->reinitstd(stdout => undef) for 1, 2;
+push @r, 'stdout=' . layers(*STDOUT) . '/' . layers(*STDERR);
+print "\x{e9}\n";
+$cs->reinitstd(stdout => Encode::FB_PERLQQ());
+print "\x{263a}\n";
+$cs->stdout('ascii');
+print "\x{e9}\n";
+$cs->reinitstd(stdout => Encode::FB_PERLQQ());
+print "\x{e9}\n";
+push @r, 'bad=' . (eval { $cs->reinitstd(stdout => undef, stdfoo => undef, { prog => 'me' }); 1 } ? 'lived' : $@);
+push @r, 'odd=' . (eval { $cs->reinitstd('stdout'); 1 } ? 'lived' : $@);
+push @r, 'after=' . layers(*STDOUT) . '/' . layers(*STDERR);
+binmode STDOUT, ':raw';
+print "$_\n" for map { (my $r = $_) =~ s{\n\z}{}; $r } @r;
+EOP
+	open my $fh, '-|', $^X, "-I$lib", '-e', $prog or die "cannot run $^X: $!";
+	my @out = <$fh>;
+	close $fh;
+	chomp @out;
+	is($?, 0, 'reinitstd: ran');
+	is($out[0], "\xe9", 'reinitstd: stdout as it is set');
+	is($out[1], '\x{263a}', '... with fallback');
+	is($out[2], "\xe9", '... a code set changed later is not used yet');
+	is($out[3], '\x{00e9}', '... until it is told again');
+	is($out[4], 'none=/', 'reinitstd: nothing given, nothing touched');
+	is($out[5], 'stdout=encoding(iso-8859-1)/', '... stdout alone, once, however often');
+	like($out[6], qr/\Abad=me: not a standard file: stdfoo at /, 'reinitstd: not a standard file');
+	like($out[7], qr/\Aodd=reinitstd: odd number of arguments at /, 'reinitstd: odd number of arguments');
+	is($out[8], 'after=encoding(ascii)/', '... leaving the files as they were');
 }

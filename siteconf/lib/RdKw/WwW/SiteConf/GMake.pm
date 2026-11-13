@@ -18,7 +18,7 @@ RdKw::WwW::SiteConf::GMake - GNU Makefile backend for siteconf
 
 =head1 DESCRIPTION
 
-The very Makefile of L<RdKw::WwW::SiteConf::Make>, but for GNU make
+The very Makefile of L<RdKw::WwW::SiteConf::Make>, but for GNU Make
 (newer than 3.81, which cannot escape a C<:>), which can name more
 files: a C<$> is C<$$>; blanks, C<#>, C<:> and C<|> are escaped with
 a backslash (and so is a backslash before them); a wildcard is in
@@ -41,11 +41,11 @@ sub _name
 	my ($class, $s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029};=]|\\\z)/
 		# HEY!  the %s is a character, as `;' or U+000A
-		and die "E: " . diag(__("GNU make cannot name %q (with %s in it)"),
+		and die "E: " . diag(__("GNU Make cannot name %q (with inescapable %s)"),
 			$s, $class->_char($1)) . "\n";
 	$s =~ /\(.*\)\z/s
 		# HEY!  lib(member.o) is how make names a member of an archive
-		and die "E: " . diag(__("GNU make cannot name %q (it would be an archive member)"),
+		and die "E: " . diag(__("GNU Make cannot name %q (reserved for archive members)"),
 			$s) . "\n";
 	$s =~ s/\$/\$\$/g;
 	$s =~ s/(\\*)([\t #:|])/$1$1\\$2/g;

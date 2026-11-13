@@ -89,11 +89,12 @@ sub _name
 	$s =~ /([\p{Cc} \x{2028}\x{2029}\$#:;=|(){}\[\]*?]|\\\z|\A~)/ or return $s;
 	my $c = $1;
 	require RdKw::WwW::SiteConf::GMake;
-	my $gnu = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
-	die "E: " . diag($gnu
+	my $gnu_can = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
+	die RdKw::WwW::SiteConf::_say(E => diag($gnu_can
 		# HEY!  the %s is a character, as `$' or U+0020
-		? __("make cannot name %q (with %s in it); GNU make can (-G gmake)")
-		: __("make cannot name %q (with %s in it)"), $s, $class->_char($c)) . "\n";
+		? __("make cannot name %q (with inescapable %s),\n"
+		. "... but GNU Make can!  (Pass -G gmake if you want that. ;)")
+		: __("make cannot name %q (with inescapable %s)"), $s, $class->_char($c)));
 }
 
 # A character, as one would see it said

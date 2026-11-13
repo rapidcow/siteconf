@@ -2,7 +2,8 @@ Revision history of WwW-SiteConf
 
 
 0.03_00  2026-11-12  PULLED
-    BIG Unicode (I18N) update!
+    BIG Unicode (I18N) update!  Due to the sheer size of
+    this patch, many items aren't written by me.
 
     *** File names, arguments and messages are spelled as
         RdKw::I18N::CodeSets says, which is required now (and
@@ -83,10 +84,10 @@ Revision history of WwW-SiteConf
     *** configure and render are written for GenGenLib 0.0100
         or later, and for nothing older:
         -MRdKw::WwW::GenGenLib=VERSION is an error for a VERSION
-        below it.  (It used to get a render for that version: one
-        for any GenGenLib at all, or one that left names and
+        below it.  (It used to get a web render for that version:
+        one for any GenGenLib at all, or one that left names and
         arguments as they were.)  Pinning GenLib below 0.0203
-        still gets the render for it.
+        still gets the web render for it.
     *** Makefile.in and MANIFEST are split into words at white
         space as make knows it (space, tab, newline, VT, FF,
         CR) and at nothing else: a no-break space is part of a

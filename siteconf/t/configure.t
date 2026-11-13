@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use TestPaths qw( script_path perl5lib );
+use TestPaths qw( script_path perl5lib fs_surprise );
 use File::Temp qw( tempdir );
 use Cwd ();
 
@@ -24,35 +24,6 @@ sub run {
 	my $out = do { local $/; <$fh> };
 	close $fh;
 	($? >> 8, $out);
-}
-
-# Does the file system (of the current directory) take these bytes
-# for a name as they are, as we expect of it?  That is: a directory
-# under a missing one of that name is ENOENT (and not EILSEQ, EINVAL,
-# or whatever else it has to say about the name); one of that name
-# can be made, is listed under those very bytes (not normalized, nor
-# folded), and can be removed again.  Returns what was surprising, or
-# undef if nothing was; leaves nothing behind.
-sub fs_surprise {
-	my ($name) = @_;
-	return 'the name is already taken' if -e $name || -l $name;
-	if (mkdir "$name/x") {
-		rmdir "$name/x"; rmdir $name;
-		return 'mkdir under a missing directory worked';
-	}
-	return "mkdir under a missing directory: $! (expected ENOENT)"
-		unless $!{ENOENT};
-	return 'a failed mkdir made something' if -e $name || -l $name;
-	mkdir $name or return "mkdir: $!";
-	my @found;
-	if (opendir my $dh, '.') {
-		@found = grep { $_ eq $name } readdir $dh;
-		closedir $dh;
-	}
-	rmdir $name or return "rmdir: $!";
-	return 'the name is not listed as it was given' unless @found == 1;
-	return 'rmdir left something' if -e $name || -l $name;
-	undef;
 }
 
 my ($status, $out) = run($script, 'init');

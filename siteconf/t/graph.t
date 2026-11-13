@@ -8,6 +8,7 @@ use Test::More tests => 214;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
+use TestPaths qw( fs_surprise );
 use Cwd ();
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -429,24 +430,28 @@ SKIP:	{
 
 	# ... as CodeSets says names: "quoted" if not ASCII, and with
 	# \x{...} under diag ascii (the files are UTF-8, as are the names)
-	$dir = project({
-		MANIFEST => Encode::encode('UTF-8', "MAKE all\n\tNEED r\x{e9}sum\x{e9}.css\n"),
-		'Makefile.in' => Encode::encode('UTF-8',
-			"r\x{e9}sum\x{e9}.css: \${a}/r\x{e9}sum\x{e9}.scss\n\ttrue\n"),
-	});
-	my $cs = RdKw::I18N::CodeSets->locale->new(filesys => 'UTF-8', stderr => 'UTF-8');
-	{
-		local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'unicode');
-		eval { plan_of($dir) };
-		like($@, qr/source "html\/r\x{e9}sum\x{e9}\.scss" is missing/,
-			'a name that is not ASCII is "quoted"');
-	}
-	{
-		local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'ascii');
-		eval { plan_of($dir) };
-		like($@, qr/source "html\/r\\x\{e9\}sum\\x\{e9\}\.scss" is missing/,
-			'... and said in ASCII under diag ascii');
-		like($@, qr/\A[\x00-\x7f]*\z/, '... as is everything else');
+SKIP:	{
+		my $why = fs_surprise("r\xc3\xa9sum\xc3\xa9.scss", tempdir(CLEANUP => 1));
+		skip "file system: $why", 3 if defined $why;
+		$dir = project({
+			MANIFEST => Encode::encode('UTF-8', "MAKE all\n\tNEED r\x{e9}sum\x{e9}.css\n"),
+			'Makefile.in' => Encode::encode('UTF-8',
+				"r\x{e9}sum\x{e9}.css: \${a}/r\x{e9}sum\x{e9}.scss\n\ttrue\n"),
+		});
+		my $cs = RdKw::I18N::CodeSets->locale->new(filesys => 'UTF-8', stderr => 'UTF-8');
+		{
+			local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'unicode');
+			eval { plan_of($dir) };
+			like($@, qr/source "html\/r\x{e9}sum\x{e9}\.scss" is missing/,
+				'a name that is not ASCII is "quoted"');
+		}
+		{
+			local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'ascii');
+			eval { plan_of($dir) };
+			like($@, qr/source "html\/r\\x\{e9\}sum\\x\{e9\}\.scss" is missing/,
+				'... and said in ASCII under diag ascii');
+			like($@, qr/\A[\x00-\x7f]*\z/, '... as is everything else');
+		}
 	}
 	# (a quote in it would confuse `the quotes')
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED it's.css\n" });
@@ -754,7 +759,9 @@ MSG
 }
 
 # --- ${U+hex}: a character, by its code point, in headers too
-{
+SKIP: {
+	my $why = fs_surprise("d\xf0\x9f\x98\x80", tempdir(CLEANUP => 1));
+	skip "file system: $why", 9 if defined $why;
 	# The fixture below uses UTF-8 bytes for the file name, whatever
 	# encoding the host locale uses for its own file names.
 	local $RdKw::I18N::CodeSets::LOCALE =

@@ -176,7 +176,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		# no html/c.css
 	});
 	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
-	like($@, qr/goal `all' NEEDs `a\.html', but cannot be made:\nE: {3}NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE: {5}source `html\/c\.css' is missing \(rule at \S*Makefile\.in' line 1\)/,
+	like($@, qr/goal `all' NEEDs `a\.html', but cannot be made:\nE: {3}NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE: {5}source `html\/c\.css' is missing \(rule at \S*Makefile\.in'? line 1\)/,
 		'... and why, a cause per line, deeper as it goes');
 
 	$dir = project({
@@ -291,7 +291,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 
 	$dir = project({ %f, 'gen/tool' => lines( HAVE => [qw[ gen/other ]] ) });
 	eval { plan_of($dir) };
-	like($@, qr/gen\/tool': You HAVE `gen\/other'.*\nE: but I need `gen\/tool' for the rule for `a\.html' \(\S*Makefile\.in' line 1\)\?/, 'tools: HAVE must agree');
+	like($@, qr/gen\/tool': You HAVE `gen\/other'.*\nE: but I need `gen\/tool' for the rule for `a\.html' \(\S*Makefile\.in'? line 1\)\?/, 'tools: HAVE must agree');
 
 	$dir = project({ %f, 'gen/tool' => "\x00\x01\x02# NEED: nowhere\n" x 4 });
 	$plan = eval { plan_of($dir) };
@@ -700,7 +700,7 @@ MSG
 	is_deeply($p && $p->{node}{'a.html'}{kids}, ['b.css'], '... is an edge when it can be made');
 
 	($p, $err) = $rule->('NEED:${A}/gone');
-	like($err, qr/NEEDs `gone' \(prerequisite in \S*Makefile\.in' line 1\), which we don't seem to have/,
+	like($err, qr/NEEDs `gone' \(prerequisite in \S*Makefile\.in'? line 1\), which we don't seem to have/,
 		'NEED: is as firm as no prefix at all');
 
 	($p, $err) = $rule->('NEED:NEED:', 'NEED:' => '');

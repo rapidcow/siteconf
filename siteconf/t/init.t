@@ -118,7 +118,7 @@ is($out, '', 'quiet says nothing');
 ($status, $out) = invoke('init', '-P', 'web', '-SA=project', '-o', 'render:bin/new-render');
 is($status, 1, 'skipped configure does not stop renderer creation');
 ok(-x 'project/bin/new-render', 'renderer created after skipping configure');
-like($out, qr/^Wrote `project\/bin\/new-render'$/m, 'new renderer reported');
+like($out, qr/^Wrote project\/bin\/new-render$/m, 'new renderer reported');
 
 ($status, $out) = invoke('init', '-P', 'web', '-SA=project', '-o', 'configure:new-configure',
 	'-o', 'render:bin/render-page');
@@ -132,7 +132,7 @@ is($status, 0, 'force overwrites existing outputs');
 isnt(slurp('configure'), $configure, 'configure replaced');
 is(slurp('project/bin/render-page'), $renderer, 'renderer replaced');
 like($out, qr/^Overwrote configure$/m, 'configure overwrite reported');
-like($out, qr/^Overwrote `project\/bin\/render-page'$/m, 'renderer overwrite reported');
+like($out, qr/^Overwrote project\/bin\/render-page$/m, 'renderer overwrite reported');
 ($status, $out) = invoke('init', '-f', '-o', 'brand-new');
 is($status, 0, 'force can create a new output');
 is($out, "Wrote brand-new\n", 'force does not imply an overwrite');

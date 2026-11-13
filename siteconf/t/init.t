@@ -11,7 +11,7 @@ use RdKw::WwW::GenGenLib qw( read_make );
 
 my $root = getcwd();
 my $script = script_path();
-plan tests => 99;
+plan tests => 119;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -182,7 +182,8 @@ for my $case (
 	isnt($status, 0, "reject @{$case->[0]}");
 	like($out, $case->[1], 'useful diagnostic');
 }
-subtest 'definition and option defaults use configure syntax' => sub {
+{
+	# subtest: definition and option defaults use configure syntax
 	my @args = ('-Dtailwind', '-Dexplicit=', '-Dchain=a=b', '-D', 'separate',
 		'-Otheme', '-Oempty=', '-Omessage=hello world', '-Ochain=a=b', '-O', 'separate');
 	my ($status, $out) = invoke('init', '-o', 'defaults', @args);
@@ -212,7 +213,6 @@ subtest 'definition and option defaults use configure syntax' => sub {
 			ok(!-e 'bad-default', 'writes nothing');
 		}
 	}
-	done_testing;
-};
+}
 chdir $root or die $!;
 done_testing;

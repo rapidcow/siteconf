@@ -124,6 +124,11 @@ Revision history of WwW-SiteConf
       English is as it was.
     * configure and render say things in the locale's language
       too.
+    + Targets, sources and prerequisites may contain spaces with
+      -G gmake or -G ninja: spell them ${U+20} or ${U+0020}, and
+      use :Q in recipes.  Resolved manifests preserve the escapes;
+      generated directory and cleanup commands quote the names.
+      POSIX make still rejects them.  Word modifiers are unchanged.
 
 
 0.02_03  2026-11-09  RC

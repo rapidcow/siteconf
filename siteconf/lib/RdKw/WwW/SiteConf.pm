@@ -1256,6 +1256,9 @@ sub plan
 	}
 	if (@err) {
 		my $count = @err;
+		# Weirdly enough, the same message is used even
+		# if the user selected the ninja generator....
+		# but eh, I guess we will roll with it. :v
 		die @err, _say(E => diag(__n(
 			# HEY!  "no soup for you!" (Seinfeld) but with Makefile
 			# (not my bit, Claude came up with this... but cool
@@ -1445,8 +1448,16 @@ sub _report
 	my ($self, $name, $what) = @_;
 	return unless $what;
 	$name = "MY/$name" if $name =~ /^MANIFEST\./;
-	# HEY!  Writing is what was not there, and Updating what was
-	$self->_warn(diag($what > 1 ? __("Writing %q") : __("Updating %q"), $name) . "\n");
+	# HEY!  ``Writing'' creates the file, and
+	# ``Updating'' overwrites it.   (The phrasing
+	# is different from what we call it over at
+	# `siteconf -i', primarily because MY/MANIFEST
+	# is considered to be our files, so it is
+	# assumed that the state prior to updating is
+	# consistent with the state now.)
+	$self->_warn(diag($what > 1
+		? __("Writing %#q")
+		: __("Updating %#q"), $name) . "\n");
 }
 
 =back

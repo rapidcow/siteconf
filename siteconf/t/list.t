@@ -101,7 +101,7 @@ bad(qr/-0 is not permitted in mode -g \(make\)/, '-0 elsewhere', '-g', '-0');
 bad(qr/-t is not permitted in mode -g \(make\)/, '-t elsewhere', '-g', '-t', 'all');
 bad(qr/-B is not permitted in mode -l \(list\)/, '-B', '-l', '-B', '.');
 bad(qr/\Asiteconf: cannot open file `nope': /, 'no manifest', '-l', '-F', 'nope');
-bad_late(qr/x:y' conflicts with line terminator -072/, 'a name with the separator',
+bad_late(qr/x:y' conflicts with record separator -072/, 'a name with the separator',
 	'index.html:', '-l', '-072', '-t', 'small');
 put('BAD', "MAKE all\n\tNEED a\n\tNEED x\${U+D800}y\n");
 bad_late(qr/\Asiteconf: BAD: cannot encode "x\\x\{d800\}y"/,

@@ -86,15 +86,24 @@ sub bad
 	ok(!$ok && $out eq '', "$what: fails, and lists nothing");
 	like($err, $re, "$what: says why");
 }
+# (names are written as they come: those before the bad one are out already)
+sub bad_late
+{
+	my ($re, $what, $sofar, @arg) = @_;
+	my ($out, $err, $ok) = list(@arg);
+	ok(!$ok && $out eq $sofar, "$what: fails, and lists no more");
+	like($err, $re, "$what: says why");
+}
 bad(qr/\Asiteconf: `MANIFEST': no goal `nope'$/, 'no such goal', '-l', '-t', 'nope');
 bad(qr/-t all:need: NEED or WANT, not `need'/, 'no such type', '-l', '-t', 'all:need');
 bad(qr/-0400: an octal number up to 377/, 'too big a separator', '-l', '-0400');
-bad(qr/-0 is only for list/, '-0 elsewhere', '-g', '-0');
-bad(qr/-t is only for list/, '-t elsewhere', '-g', '-t', 'all');
-bad(qr/-B is not for list/, '-B', '-l', '-B', '.');
+bad(qr/-0 is not permitted in mode -g \(make\)/, '-0 elsewhere', '-g', '-0');
+bad(qr/-t is not permitted in mode -g \(make\)/, '-t elsewhere', '-g', '-t', 'all');
+bad(qr/-B is not permitted in mode -l \(list\)/, '-B', '-l', '-B', '.');
 bad(qr/\Asiteconf: cannot open file `nope': /, 'no manifest', '-l', '-F', 'nope');
-bad(qr/x:y' has the separator in it \(-072\)/, 'a name with the separator',
-	'-l', '-072', '-t', 'small');
+bad_late(qr/x:y' has the separator in it \(-072\)/, 'a name with the separator',
+	'index.html:', '-l', '-072', '-t', 'small');
 put('BAD', "MAKE all\n\tNEED a\n\tNEED x\${U+D800}y\n");
-bad(qr/\Asiteconf: BAD: cannot encode "x\\x\{d800\}y"/,
-	'a name the file system cannot spell (not even with \x{...})', '-l', '-F', 'BAD');
+bad_late(qr/\Asiteconf: BAD: cannot encode "x\\x\{d800\}y"/,
+	'a name the file system cannot spell (not even with \x{...})',
+	"a\n", '-l', '-F', 'BAD');

@@ -123,7 +123,7 @@ like($out, qr/^Wrote `project\/bin\/new-render'$/m, 'new renderer reported');
 ($status, $out) = invoke('init', '-P', 'web', '-SA=project', '-o', 'configure:new-configure',
 	'-o', 'render:bin/render-page');
 is($status, 0, 'skipped renderer does not affect success');
-like($out, qr/^Wrote `new-configure'$/m, 'written configure reported');
+like($out, qr/^Wrote new-configure$/m, 'written configure reported');
 unlike($out, qr/You already have/, 'no error for a skipped renderer');
 
 ($status, $out) = invoke('init', '-f', '-P', 'web', '-Otitle=changed', '-SA=project',
@@ -131,11 +131,11 @@ unlike($out, qr/You already have/, 'no error for a skipped renderer');
 is($status, 0, 'force overwrites existing outputs');
 isnt(slurp('configure'), $configure, 'configure replaced');
 is(slurp('project/bin/render-page'), $renderer, 'renderer replaced');
-like($out, qr/^Overwrote `configure'$/m, 'configure overwrite reported');
+like($out, qr/^Overwrote configure$/m, 'configure overwrite reported');
 like($out, qr/^Overwrote `project\/bin\/render-page'$/m, 'renderer overwrite reported');
 ($status, $out) = invoke('init', '-f', '-o', 'brand-new');
 is($status, 0, 'force can create a new output');
-is($out, "Wrote `brand-new'\n", 'force does not imply an overwrite');
+is($out, "Wrote brand-new\n", 'force does not imply an overwrite');
 ($status, $out) = invoke('init', '-f', '-q');
 is($status, 0, 'quiet force succeeds');
 is($out, '', 'quiet suppresses overwrite messages');
@@ -175,7 +175,7 @@ for my $case (
 	[ ['init', '-o', 'render:'], qr/empty output path/ ],
 	[ ['init', '-o', 'render:foo'], qr/preset does not supply/ ],
 	[ ['make', '-o', 'render:foo'], qr/only for init/ ],
-	[ ['make', '-f'], qr/-f is not for make/ ],
+	[ ['make', '-f'], qr/-f is not permitted in mode -g \(make\)/ ],
 ) {
 	($status, $out) = invoke(@{ $case->[0] });
 	isnt($status, 0, "reject @{$case->[0]}");

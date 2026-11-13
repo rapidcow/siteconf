@@ -456,7 +456,7 @@ SKIP:	{
 	# ${<} cannot be in a prerequisite
 	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${<}\n\ttrue\n" });
 	eval { plan_of($dir) };
-	like($@, qr/line 1: \$\{<\} is not known here/, '${<} in prerequisites');
+	like($@, qr/line 1: misplaced \$\{<\} \(not in a recipe\)/, '${<} in prerequisites');
 }
 
 # --- ${a} alone as the first prerequisite: no source, nothing implied
@@ -498,7 +498,7 @@ SKIP:	{
 		'Makefile.in' => "stamp: \${a}/\n\ttouch \${<}\n",
 	});
 	eval { plan_of($dir) };
-	like($@, qr/line 2: \$\{<\}: this rule has no source/, '${<} without a source');
+	like($@, qr/line 2: undefined \$\{<\} \(explicitly suppressed by \$\{a\}\)/, '${<} without a source');
 
 	# what follows ${a}/ is read as it was written, any slashes between
 	$dir = project({
@@ -525,7 +525,7 @@ SKIP:	{
 		'html/x.html' => '',
 	});
 	eval { plan_of($dir) };
-	like($@, qr/a target is a name/, 'a target in ${A} is still not a target');
+	like($@, qr/target is not preceded by a legal prefix/, 'a target in ${A} is still not a target');
 }
 
 # --- the cache: ${c}
@@ -569,7 +569,7 @@ SKIP:	{
 	for my $bad ('${B}/other/a.html', 'other/${@}', '${a}/a.html') {
 		$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "$bad: \${A}/x\n\ttrue\n" });
 		eval { plan_of($dir) };
-		like($@, qr/nowhere else|bad file name/, "target $bad is refused");
+		like($@, qr/target is not preceded by a legal prefix/, "target $bad is refused");
 	}
 
 	# the manifest cannot name what is in the cache alone
@@ -717,12 +717,12 @@ MSG
 
 	for my $bad ('need:x', 'Want:x', 'USE:x', 'x:y', ':x', 'NEED-ONLY:x') {
 		($p, $err) = $rule->($bad);
-		like($err, qr/a prerequisite must either NEED: or WANT: before a colon/, "rejected: $bad");
+		like($err, qr/a prerequisite must start with either `NEED:' or `WANT:'/, "rejected: $bad");
 	}
 	($p, $err) = $rule->('NEED:');
-	like($err, qr/`NEED:' of nothing/, 'NEED: of nothing');
+	like($err, qr/`NEED:' something\?/, 'NEED: of nothing');
 	($p, $err) = $rule->('NEED: ${A}/x');
-	like($err, qr/`NEED:' of nothing/, '... no space after it');
+	like($err, qr/`NEED:' something\?/, '... no space after it');
 	($p, $err) = $rule->('${A}/${a:S/h/h/}/a.html NEED:${A}/${a:Q}/b.css');
 	ok($p, 'a colon in ${...} is no prefix') or diag $err;
 }
@@ -794,7 +794,7 @@ MSG
 		'${U+...} in a prerequisite') or diag $@;
 	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${U+D800000}\n\ttrue\n",
 		'html/a.html' => '' });
-	ok(!eval { plan_of($dir) } && $@ =~ /\$\{U\+D800000\} is no code point/,
+	ok(!eval { plan_of($dir) } && $@ =~ /\$\{U\+D800000\} is not a valid Unicode code point/,
 		'... that is no code point') or diag $@;
 }
 

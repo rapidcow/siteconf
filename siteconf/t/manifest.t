@@ -41,11 +41,11 @@ bad("NEED x\n", qr/NEED before any MAKE/, 'orphan');
 bad("MAKE a\nNEED x y\n", qr/exactly one file/, 'two files (old format?)');
 bad("MAKE a\nNEED x\tdescription\n", qr/exactly one file/, 'description');
 bad("MAKE a\nNEED /etc/passwd\n", qr/must be relative/, 'absolute');
-bad("MAKE a\nNEED ../x\n", qr/climbs out/, 'dotdot');
+bad("MAKE a\nNEED ../x\n", qr/out of tree/, 'dotdot');
 bad("MAKE a\nNEED a\$b\n", qr/\AE: `MANIFEST' line 2: bad substitution: \$\{b\}$/, 'a variable');
 bad("MAKE a\nNEED a\${\$}b\n", qr/line 2: bad file name `a\$b'/, 'an escaped $, unescaped');
 bad("MAKE a\nNEED a\${U+0020}b\n", qr/bad file name `a b'/, 'an escaped blank');
-bad("MAKE a\nNEED \${U+002E}\${U+002E}/x\n", qr/climbs out/, 'an escaped ..');
+bad("MAKE a\nNEED \${U+002E}\${U+002E}/x\n", qr/out of tree/, 'an escaped ..');
 bad("MAKE a\nWANT ok\nNEED x\nWANT /y\nNEED ../z\n", qr/line 4: .*must be relative/,
 	'in the order it is said');
 bad("MAKE a\nNEED ok\nMAKE Makefile\n", qr/line 3: `Makefile' is a reserved/,

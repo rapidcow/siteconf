@@ -755,6 +755,10 @@ MSG
 
 # --- ${U+hex}: a character, by its code point, in headers too
 {
+	# The fixture below uses UTF-8 bytes for the file name, whatever
+	# encoding the host locale uses for its own file names.
+	local $RdKw::I18N::CodeSets::LOCALE =
+		RdKw::I18N::CodeSets->locale->new(filesys => 'UTF-8');
 	my $dir = project({
 		MANIFEST => $manifest,
 		'html/a.html' => lines( NEED => [ 'd${U+0020}x', 'd${u+23}h', '${A}/d${U+1F600}', 'd${U+002F}y' ] ),

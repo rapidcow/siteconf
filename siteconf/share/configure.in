@@ -34,7 +34,7 @@ BEGIN {
 }
 
 # Module requirements: [ module, minimum version ]
-my @NEED;
+our @NEED;
 BEGIN {
 	@NEED = (
 @MODULES@

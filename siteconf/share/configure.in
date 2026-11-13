@@ -316,7 +316,7 @@ foreach my $f ([ config => \%D ], [ option => \%O ]) {
 	my ($name, $H) = @$f;
 	my $what = write_make("MY/$name.mk", $H, $prog);
 	$what and print STDERR $cs->diag(
-		$what > 1 ? __("Writing %q") : __("Updating %q"),
+		$what > 1 ? __("Writing %#q") : __("Updating %#q"),
 		"MY/$name.mk"), "\n" unless $shutup;
 }
 

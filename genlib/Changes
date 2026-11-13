@@ -1,9 +1,10 @@
 Revision history of WwW-GenLib
 
 
-0.03_00  2026-11-12  UNTAGGED
-    *** Perl 5.8 is required, and so are RdKw::I18N::CodeSets
-        and RdKw::L10N::TextDomain.
+0.03_00  2026-11-12  RC
+    *** Perl 5.8 is required, and so are
+        RdKw::I18N::CodeSets, RdKw::L10N::TextDomain,
+        and the version pragmatic module.
 
 
 0.02_03  2026-11-09  RC

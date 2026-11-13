@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf
 
 
-0.03_00  2026-11-12  PULLED
+0.03_00  2026-11-13  RC
     BIG Unicode (I18N) update!  Due to the sheer size of
     this patch, many items aren't written by me.
 

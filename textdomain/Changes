@@ -1,7 +1,7 @@
 Revision history of L10N-TextDomain
 
 
-0.00_00  2026-11-12  UNTAGGED
+0.00_00  2026-11-13  RC
     [ This version is entirely generated. ]
 
     + RdKw::L10N::TextDomain: __, __n and N__ of a text domain,

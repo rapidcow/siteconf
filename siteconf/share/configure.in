@@ -126,8 +126,8 @@ sub isnull
 	!(defined $_[0]) || !(length $_[0]);
 }
 
-# *** help: [ flag, description, default ]
-# The default is deferred for some reason.
+# Help text: [ flag, description, default ]
+# The default is deferred in a lambda for some reason.
 our @VARHELP = (
 	[ '-DA', N__('Project root, seen from current directory'), sub { $Dd{A} } ],
 	[ '-DB', N__('Build directory, seen from the source tree'), sub { $Dd{B} } ],

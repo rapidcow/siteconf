@@ -476,7 +476,7 @@ msgid ""
 msgstr ""
 "目标 %q WANT %q\n"
 "  （%s）\n"
-"……但它不存在；只好不要它继续了 :("
+"但它不存在，只好没有它继续下去... ( ˶•ᴖ•)"
 
 #. HEY!  As above, for a tool of the rule; the last %s
 #. is where the rule is (`file' line 3)
@@ -619,7 +619,7 @@ msgstr "%s：需要版本 %s（现有的是 %s）"
 #, perl-format
 msgid "%d module missing.  Looks like you got some work to do..."
 msgid_plural "%d modules missing.  Looks like you got some work to do..."
-msgstr[0] "缺少 %d 个模块。看来你有活要干了……"
+msgstr[0] "缺少 %d 个模块。看来你有活要干了..."
 
 #. HEY!  %s is the option, -D or -O
 #: ../siteconf/share/configure.in:87

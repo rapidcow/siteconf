@@ -849,7 +849,9 @@ my \$provider = $PROVIDER->new({
 	INCLUDE_PATH => [ '.', \$D->{a} ],
 })
 	or die "[TT] ", $PROVIDER->error(), "\\n";
-my \$tt = Template->new({ LOAD_TEMPLATES => [ \$provider ] })
+my \$tt = Template->new({
+	LOAD_TEMPLATES => [ \$provider ],
+})
 	or die "[TT] ", \$Template::ERROR, "\\n";
 NEW
 			: <<\OLD,

@@ -154,6 +154,16 @@ leaves I<cs> as it was; a I<prog> is who says so, before the error
 (C<prog: unknown category ...>), as it is for every method here that
 takes one.  There is no parse of a I<CLASS>: that is a L</new> one.
 
+A I<spec> may also be another I<cs>, or the hash that L</all> returns,
+which sets every category and B<diag> to what it says, so that one
+I<cs> can be updated from another:
+
+    $cs->parse($other);
+    $cs->parse($other->all);    # the same
+
+The hash is given by reference.  As a list (C<%{ $other-E<gt>all }>)
+its keys and values would each be read as a I<spec> of their own.
+
     my $cs = $CS->new->parse('filesys:UTF-8,console:ascii');
 
     # SITECONF_CODESETS=0, =UTF-8, =filesys:UTF-8,console:ascii, ...
@@ -168,10 +178,27 @@ sub parse
 {
 	my ($self, @spec) = @_;
 	Carp::croak('parse: not of an object') unless ref $self;
+	# Another of us is what its all() returns.
+	@spec = map { ref $_ && eval { $_->isa(__PACKAGE__) } ? $_->all : $_ } @spec;
+	# A trailing hash is the options, unless it is what all() returns.
+	my @last = @spec && _is_all($spec[-1]) ? pop @spec : ();
 	my $prog = _who(_opt(parse => \@spec, 'prog'));
+	push @spec, @last;
 	my @pairs;
-	for my $spec (map { defined $_ ? split(/,/, $_) : $_ } @spec) {
+	for my $spec (map { defined $_ && !ref $_ ? split(/,/, $_) : $_ } @spec) {
 		defined $spec or die "${prog}undefined codeset\n";
+		if (ref $spec) {
+			ref $spec eq 'HASH' or die "${prog}not a codeset: $spec\n";
+			my %all = %$spec;
+			# (diag last: setting stderr to ASCII would reset it)
+			for my $name (@CATEGORIES, 'diag') {
+				push @pairs, $name, delete $all{$name} if exists $all{$name};
+			}
+			for (sort keys %all) {
+				die "${prog}unknown category @{[ _qq_ascii($_) ]}\n";
+			}
+			next;
+		}
 		my ($name, $enc) = $spec =~ /\A([^:]*)(?::(.*))?\z/s;
 		length $name or die "${prog}no category in codeset @{[ _qq_ascii($spec) ]}\n";
 		if (!defined $enc && !_is_category($name)) {
@@ -269,6 +296,13 @@ sub _is_category
 {
 	my ($name) = @_;
 	$name eq 'diag' || $name eq 'all' || $PSEUDO{$name} || $LOCALE{$name};
+}
+
+# Whether it is a hash as all() returns one (and not parse's options)
+sub _is_all
+{
+	my ($spec) = @_;
+	ref $spec eq 'HASH' && grep { $LOCALE{$_} || $_ eq 'diag' } keys %$spec;
 }
 
 sub _is_encoding
@@ -402,6 +436,35 @@ for my $name (keys %PSEUDO) {
 		}
 		$enc;
 	};
+}
+
+=item I<cs>->B<all>([ I<encoding> ])
+
+Given an I<encoding>, sets every category to it and makes B<diag>
+follow B<stderr> again, as the pseudo-category B<all> does; I<cs> is
+left as it was if the I<encoding> is unknown.  Returns a new hash
+(by reference) of every category and B<diag>, with undef for what is
+not set.  B<diag> is undef there unless a mode was set explicitly.
+
+The hash is a copy, and can be given to L</parse> to make another
+I<cs> the same.  (Not to L</new> as a list: a hash has no order, and
+B<stderr> set after B<diag> may reset it.)
+
+    $other->parse($cs->all);
+    my $same = $CS->new->parse($cs->all);
+
+=cut
+
+sub all
+{
+	my $self = shift;
+	if (@_) {
+		my ($enc) = @_;
+		# (to a copy first, so that we are as we were if it is bad)
+		my $new = $self->new(all => $enc);
+		%$self = %$new;
+	}
+	+{ map { $_ => $self->{$_} } @CATEGORIES, 'diag' };
 }
 
 # What a category is spelled in, set or not

@@ -25,6 +25,9 @@ Revision history of I18N-CodeSets
     + The encoding locale unsets a category, so that parse('locale')
       resets everything to what new gives; the locale is looked up
       when a category is used, not when it is set.
+    + all: sets every category at once, and returns a hash of them
+      (and diag) that parse takes, as it does another object, to
+      update one from another.
     + stderr set to ASCII (by any of its names) makes diag follow it,
       and so ascii.
     + diag escapes what stderr cannot spell (\x{...}), and diag_name

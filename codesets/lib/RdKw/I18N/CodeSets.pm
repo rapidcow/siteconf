@@ -712,7 +712,7 @@ sub _code
 	(undef, $@ ne '' ? _encode_error($@) : 'undefined');
 }
 
-=item I<cs>->B<diag_name>( I<name> )
+=item I<cs>->B<diag_name>( I<name>, inner => 0 )
 
 I<name>, for people: C<`name'> if it is all printable ASCII but for
 C<`> and C<'> (which would confuse the quotes), and
@@ -722,12 +722,23 @@ printable ASCII; under C<unicode>, it is only controls, separators
 and the like (C<\p{C}> and C<\p{Z}>, but for the ASCII space), and
 what B<stderr> cannot spell.
 
+If C<inner> is true, whole words are interpolated verbatim without
+quoting..
+
 =cut
 
 sub diag_name
 {
-	my ($self, $name) = @_;
+	my ($self, $name, %opt) = @_;
 	return 'undef' unless defined $name;
+	if ($opt{inner}) {
+		if ($self->diag_mode eq 'ascii'
+			? $name =~ /\A[A-Za-z0-9_\.\-]+\z/
+			: $name =~ /\A[\w\.\-]+\z/)
+		{
+			return $name;
+		}
+	}
 	return "`$name'" if $name =~ /\A(?:(?![`'])[\x20-\x7e])*\z/;
 	$self->diag_mode eq 'ascii' ? _qq_ascii($name)
 		: _qq_unicode($name, $self->_encoding('stderr'));
@@ -783,7 +794,8 @@ sub diag
 			$i < @args or Carp::croak("diag: missing argument for $spec");
 			my $arg = $args[$i];
 			if ($conv eq 'q') {
-				($arg, $conv) = ($self->diag_name($arg), 's');
+				my $name = $self->diag_name($arg, inner => 0 + ($flags =~ /#/));
+				($arg, $conv) = ($name, 's');
 			}
 			elsif ($conv eq 's') {
 				$arg = defined $arg ? _perlqq($enc, $arg) : '';

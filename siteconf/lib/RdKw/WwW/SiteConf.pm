@@ -278,10 +278,13 @@ sub _say
 }
 
 # Where in a file: `file' line 3
+# (Since our standard names (MANIFEST and Makefile.in)
+# are usually well-behaved, the quotes are only used
+# when the user overrides them with exotic file names.)
 sub _line
 {
 	my ($file, $line) = @_;
-	_diag(__("%q line %s"), $file, $line);
+	_diag(__("%#q line %d"), $file, $line);
 }
 
 # Goals of the manifest cannot take these names; `Makefile' because

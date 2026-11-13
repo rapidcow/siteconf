@@ -751,10 +751,10 @@ MSG
 	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
 	like(eval { RdKw::WwW::SiteConf::GMake->_emit(\%emit) },
 		qr/^site\/a\.html: html\/a\.html t\$\$ool d\$\$\/x d\$\$\/y site\/\.ok$/m,
-		'... and $$ to GNU make') or diag $@;
+		'... and $$ to GNU Make') or diag $@;
 	ok(!eval { RdKw::WwW::SiteConf::Make->_emit(\%emit) },
-		'... but no $ to make (bmake reads $$ twice)');
-	like($@, qr/^E: make cannot name `t\$ool' \(with `\$' in it\); GNU make can \(-G gmake\)$/,
+		'... but no $ to Make (bmake reads $$ twice)');
+	like($@, qr/^E: make cannot name `t\$ool' \(with inescapable `\$'\).*GNU Make can/s,
 		'... and says so, and who can');
 }
 
@@ -783,9 +783,9 @@ SKIP: {
 	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
 	like(eval { RdKw::WwW::SiteConf::GMake->_emit(\%emit) },
 		qr/^site\/a\.html: html\/a\.html x d\\ x d\\#h d\x{1F600} d\/y site\/\.ok$/m,
-		'GNU make: escaped') or diag $@;
+		'GNU Make: escaped') or diag $@;
 	ok(!eval { RdKw::WwW::SiteConf::Make->_emit(\%emit) }
-		&& $@ =~ /make cannot name `d x' \(with U\+0020 in it\); GNU make can/,
+		&& $@ =~ /make cannot name `d x' \(with inescapable U\+0020\).*GNU Make can/s,
 		'make: a space cannot be') or diag $@;
 	require RdKw::WwW::SiteConf::Ninja;
 	like(eval { RdKw::WwW::SiteConf::Ninja->_emit(\%emit) },
@@ -853,17 +853,17 @@ SKIP: {
 		'a\\*b' => 'a\\\\[*]b', 'a%b' => 'a%b', 'a(b' => 'a(b', 'a~' => 'a~',
 	);
 	for my $name (sort keys %gmake) {
-		is(eval { RdKw::WwW::SiteConf::GMake->_name($name) }, $gmake{$name}, "GNU make: `" . escape_dep($name) . "'")
+		is(eval { RdKw::WwW::SiteConf::GMake->_name($name) }, $gmake{$name}, "GNU Make: `" . escape_dep($name) . "'")
 			or diag $@;
 	}
 	for my $name ("a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a;b', 'a=b', 'a\\', 'a(b)') {
 		ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name($name) }
-			&& $@ =~ /\AE: GNU make cannot name/, "GNU make cannot: `" . escape_dep($name) . "'");
+			&& $@ =~ /\AE: GNU Make cannot name/, "GNU Make cannot: `" . escape_dep($name) . "'");
 	}
 	is(RdKw::WwW::SiteConf::Make->_name("a+b,c\x{e9}\x{a0}%\\d"), "a+b,c\x{e9}\x{a0}%\\d",
 		'make: what needs no escape is as it is');
 	ok(!defined eval { RdKw::WwW::SiteConf::Make->_name('a;b') }
-		&& $@ =~ /make cannot name `a;b' \(with `;' in it\)$/, '... and there is no -G gmake for some');
+		&& $@ =~ /make cannot name `a;b' \(with inescapable `;'\)$/, '... and there is no -G gmake for some');
 	for my $name ("a\nb", "a\rb", "a\x{2028}b", 'a|b') {
 		ok(!defined eval { RdKw::WwW::SiteConf::Ninja::_path($name) }
 			&& $@ =~ /\AE: ninja cannot name/, "ninja cannot: `" . escape_dep($name) . "'");

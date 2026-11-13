@@ -107,7 +107,7 @@ sub _path
 	my ($s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}|])/
 		# HEY!  the %s is a character, as `|' or U+000A
-		and die "E: " . diag(__("ninja cannot name %q (with %s in it)"),
+		and die "E: " . diag(__("ninja cannot name %q (with inescapable %s)"),
 			$s, $1 eq '|' ? "`|'" : sprintf('U+%04X', ord $1)) . "\n";
 	$s =~ s/([ :\$])/\$$1/g;
 	$s;

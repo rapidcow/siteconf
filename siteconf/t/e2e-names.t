@@ -125,8 +125,8 @@ SKIP: {
 {
 	my $dir = spaced_project();
 	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'make');
-	isnt($status, 0, 'POSIX make rejects spaced targets');
-	like($out, qr/make cannot name .*U\+0020.*GNU make can/, 'rejected by the backend');
+	isnt($status, 0, 'POSIX Make rejects spaced targets');
+	like($out, qr/make cannot name .*U\+0020.*GNU Make can/s, 'rejected by the backend');
 	ok(!-e "$dir/Makefile", 'no invalid POSIX Makefile written');
 }
 
@@ -169,7 +169,7 @@ sub builds
 }
 
 SKIP: {
-	skip 'no GNU make newer than 3.81', 5 unless $gmake;
+	skip 'no GNU Make newer than 3.81', 5 unless $gmake;
 	builds($gmake, sub { !(run($_[0], $gmake, '-q'))[0] }, @name);
 }
 
@@ -182,14 +182,14 @@ SKIP: {
 {
 	my $dir = project('sp ace');
 	my ($status, $out) = run($dir, $^X, $script, '-g', '-q');
-	isnt($status, 0, 'make cannot name a space');
-	like($out, qr/make cannot name `sp ace' \(with U\+0020 in it\); GNU make can \(-G gmake\)/,
-		'... and says that GNU make can');
+	isnt($status, 0, 'Make cannot name a space');
+	like($out, qr/make cannot name `sp ace' \(with inescapable U\+0020\).*GNU Make can/s,
+		'... and says that GNU Make can');
 	$dir = project('pi|pe');
 	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'ninja');
-	like($out, qr/ninja cannot name `pi\|pe' \(with `\|' in it\)/, 'ninja cannot name a |');
+	like($out, qr/ninja cannot name `pi\|pe' \(with inescapable `\|'\)/, 'ninja cannot name a |');
 	$dir = project('se;mi');
 	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'gmake');
-	like($out, qr/GNU make cannot name `se;mi' \(with `;' in it\)/, 'GNU make cannot name a ;');
+	like($out, qr/GNU Make cannot name `se;mi' \(with inescapable `;'\)/, 'GNU Make cannot name a ;');
 	ok(!-e "$dir/Makefile", '... and writes nothing');
 }

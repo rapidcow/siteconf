@@ -87,7 +87,7 @@ our @EXPORT_OK = qw(
 	to_fs un_fs
 	to_argv un_argv encode_argv decode_argv
 	getenv setenv unsetenv
-	initstd
+	initstd reinitstd
 );
 our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
 
@@ -109,6 +109,7 @@ sub getenv      { RdKw::I18N::CodeSets->locale->getenv(@_) }
 sub setenv      { RdKw::I18N::CodeSets->locale->setenv(@_) }
 sub unsetenv    { RdKw::I18N::CodeSets->locale->unsetenv(@_) }
 sub initstd     { RdKw::I18N::CodeSets->locale->initstd(@_) }
+sub reinitstd   { RdKw::I18N::CodeSets->locale->reinitstd(@_) }
 
 =head1 SEE ALSO
 

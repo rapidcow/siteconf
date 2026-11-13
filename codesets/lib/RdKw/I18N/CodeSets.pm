@@ -139,30 +139,33 @@ sub new
 	$self;
 }
 
-=item I<CLASS>->B<parse>( I<spec>, ... )
-
 =item I<cs>->B<parse>( I<spec>, ... )
 
-As L</new>, from what C<-C> was told: each I<spec> is a
-I<category>B<:>I<encoding>; a I<category> alone, which means
+Sets I<cs> itself from what C<-C> was told, and returns it: each
+I<spec> is a I<category>B<:>I<encoding>; a I<category> alone, which means
 C<UTF-8> (and, for B<diag>, C<unicode>); or an I<encoding> alone,
 which means B<all:>I<encoding>.  A I<spec> may also be several, split
 by commas.  They are applied in order, so that a later one overrides
 what came before: C<-C console:locale -C stderr:ascii>, or the same as
 C<console:locale,stderr:ascii>.  Dies (with a newline, so that the
-message can be said again as it is) if a I<spec> makes no sense.
+message can be said again as it is) if a I<spec> makes no sense, and
+leaves I<cs> as it was.  There is no parse of a I<CLASS>: that is a
+L</new> one.
+
+    my $cs = $CS->new->parse('filesys:UTF-8,console:ascii');
 
     # SITECONF_CODESETS=0, =UTF-8, =filesys:UTF-8,console:ascii, ...
-    $cs = $cs->parse($ENV{SITECONF_CODESETS})
+    $cs->parse($ENV{SITECONF_CODESETS})
         if exists $ENV{SITECONF_CODESETS};
 
-(Which is L</parse_from_env>, but for the copy.)
+(Which is L</parse_from_env>, but for saying who and what first.)
 
 =cut
 
 sub parse
 {
-	my ($proto, @spec) = @_;
+	my ($self, @spec) = @_;
+	Carp::croak('parse: not of an object') unless ref $self;
 	my @pairs;
 	for my $spec (map { defined $_ ? split(/,/, $_) : $_ } @spec) {
 		defined $spec or die "undefined codeset\n";
@@ -176,15 +179,16 @@ sub parse
 		$enc = $name eq 'diag' ? 'unicode' : 'UTF-8' unless defined $enc;
 		push @pairs, $name, $enc;
 	}
-	$proto->new(@pairs);
+	# (to a copy first, so that we are as we were if one is bad)
+	%$self = %{ $self->new(@pairs) };
+	$self;
 }
 
 =item I<cs>->B<parse_from_env>( I<name>[, prog => I<prog> ] )
 
 As L</parse>, from what the environment variable I<name> says, if it
-is set; but applied to I<cs> itself, which is returned.  Dies (and
-leaves I<cs> as it was) if it makes no sense, saying I<prog> and
-I<name> first:
+is set; I<cs> is returned.  Dies (and leaves I<cs> as it was) if it
+makes no sense, saying I<prog> and I<name> first:
 
     $cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
     # E: SITECONF_CODESETS: unknown category or encoding "nope"
@@ -192,7 +196,7 @@ I<name> first:
 =item I<cs>->B<parse_from_argv>( I<array>[, prog => I<prog> ] )
 
 As L</parse>, from the C<-C> I<spec>s (or C<-C>I<spec>, glued) that
-I<array> (C<\@ARGV>) starts with; but applied to I<cs> itself.  They
+I<array> (C<\@ARGV>) starts with.  They
 are taken off I<array>; the rest is left as it was, from the first
 argument that is not one on (C<--> too, and C<-iC0>: a C<-C> after
 anything else is no longer ours).  Returns how many arguments were
@@ -219,8 +223,7 @@ sub parse_from_env
 	my $prog = _prog_opt(parse_from_env => $self, \@opt);
 	Carp::croak('parse_from_env: undefined environment variable name') unless defined $name;
 	return $self unless exists $ENV{$name};
-	my $new = eval { $self->parse($ENV{$name}) } or die "$prog$name: $@";
-	%$self = %$new;
+	eval { $self->parse($ENV{$name}); 1 } or die "$prog$name: $@";
 	$self;
 }
 
@@ -229,14 +232,15 @@ sub parse_from_argv
 	my ($self, $argv, @opt) = @_;
 	my $prog = _prog_opt(parse_from_argv => $self, \@opt);
 	Carp::croak('parse_from_argv: not an array reference') unless ref $argv eq 'ARRAY';
-	my ($new, $n) = ($self, 0);
+	# (a copy, so that we are as we were if a later one is bad)
+	my ($new, $n) = ($self->new, 0);
 	while ($n < @$argv && defined $argv->[$n] && $argv->[$n] =~ /\A-C(.*)\z/s) {
 		my $spec = $1;
 		unless (length $spec) {
 			++$n < @$argv or die "$prog-C (argv $n): no codeset after it\n";
 			$spec = $argv->[$n];
 		}
-		$new = eval { $new->parse($spec) } or die "$prog-C (argv @{[ $n + 1 ]}): $@";
+		eval { $new->parse($spec); 1 } or die "$prog-C (argv @{[ $n + 1 ]}): $@";
 		$n++;
 	}
 	splice @$argv, 0, $n;

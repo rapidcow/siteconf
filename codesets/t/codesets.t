@@ -5,7 +5,7 @@
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 103;
+use Test::More tests => 105;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -69,61 +69,63 @@ sub canon { Encode::find_encoding($_[0])->name }
 
 # --- parse: in order, UTF-8 if omitted
 {
-	my $cs = $CS->parse(qw( console:latin1 stderr:ascii argv filesys:locale diag:ascii ));
+	my $cs = $CS->new->parse(qw( console:latin1 stderr:ascii argv filesys:locale diag:ascii ));
 	is($cs->stdout, 'iso-8859-1', 'parse: console');
 	is($cs->stderr, 'ascii', '... overridden later');
 	is($cs->argv, 'utf-8-strict', '... omitted is UTF-8');
 	is($cs->filesys, canon('locale_fs'), '... locale');
 	is($cs->diag_mode, 'ascii', '... diag');
-	$cs = $CS->parse(qw( stderr:ascii console:latin1 ));
+	$cs = $CS->new->parse(qw( stderr:ascii console:latin1 ));
 	is($cs->stderr, 'iso-8859-1', 'parse: console overrides what came before');
-	is($CS->parse('diag')->diag_mode, 'unicode', 'parse: diag alone is unicode');
-	ok(!eval { $CS->parse(':UTF-8'); 1 }, 'parse: no category');
+	is($CS->new->parse('diag')->diag_mode, 'unicode', 'parse: diag alone is unicode');
+	ok(!eval { $CS->new->parse(':UTF-8'); 1 }, 'parse: no category');
 	like($@, qr/\Ano category in codeset ":UTF-8"\n\z/, '... says so');
 }
 
 # --- parse: commas, and an encoding alone
 {
-	my $cs = $CS->parse('filesys:UTF-8,console:ascii');
+	my $cs = $CS->new->parse('filesys:UTF-8,console:ascii');
 	is($cs->filesys, 'utf-8-strict', 'parse: commas');
 	is($cs->console, 'ascii', '... all of them');
 	is($cs->argv, undef, '... and nothing else');
-	$cs = $CS->parse('latin1');
+	$cs = $CS->new->parse('latin1');
 	is($cs->$_, 'iso-8859-1', "parse: an encoding alone sets $_") for qw( stdin stdout stderr argv env filesys );
-	is($CS->parse('0')->filesys, 'ascii', 'parse: 0 is ascii');
-	is($CS->parse('1')->filesys, 'utf-8-strict', 'parse: 1 is UTF-8');
-	is($CS->parse('ANSI_X3.4-1968')->stderr, 'ascii', 'parse: ASCII by another name');
-	is($CS->parse('locale')->filesys, canon('locale_fs'), 'parse: locale alone');
-	is($CS->parse('console:0')->stdout, 'ascii', 'parse: 0 for a category');
-	is($CS->parse('diag:0')->diag_mode, 'ascii', 'parse: diag:0');
+	is($CS->new->parse('0')->filesys, 'ascii', 'parse: 0 is ascii');
+	is($CS->new->parse('1')->filesys, 'utf-8-strict', 'parse: 1 is UTF-8');
+	is($CS->new->parse('ANSI_X3.4-1968')->stderr, 'ascii', 'parse: ASCII by another name');
+	is($CS->new->parse('locale')->filesys, canon('locale_fs'), 'parse: locale alone');
+	is($CS->new->parse('console:0')->stdout, 'ascii', 'parse: 0 for a category');
+	is($CS->new->parse('diag:0')->diag_mode, 'ascii', 'parse: diag:0');
 	is($CS->new(diag => 1, stderr => 'ascii', diag => 1)->diag_mode, 'unicode', 'new: diag 1');
-	is_deeply({ %{ $CS->parse('') } }, {}, 'parse: nothing');
-	is_deeply({ %{ $CS->parse('argv,') } }, { argv => 'utf-8-strict' }, 'parse: a comma at the end');
-	ok(!eval { $CS->parse('nope'); 1 }, 'parse: neither');
+	is_deeply({ %{ $CS->new->parse('') } }, {}, 'parse: nothing');
+	is_deeply({ %{ $CS->new->parse('argv,') } }, { argv => 'utf-8-strict' }, 'parse: a comma at the end');
+	ok(!eval { $CS->new->parse('nope'); 1 }, 'parse: neither');
 	like($@, qr/\Aunknown category or encoding "nope"\n\z/, '... says so');
-	ok(!eval { $CS->parse('argv,,env'); 1 }, 'parse: nothing between commas');
+	ok(!eval { $CS->new->parse('argv,,env'); 1 }, 'parse: nothing between commas');
 }
 
 # --- stderr in ASCII: diag too
 {
-	is($CS->parse('diag:unicode,stderr:ascii')->diag_mode, 'ascii', 'stderr:ascii sets diag');
-	is($CS->parse('diag:unicode,console:ascii')->diag_mode, 'ascii', '... console:ascii');
-	is($CS->parse('diag:unicode,console_out:US-ASCII')->diag_mode, 'ascii', '... console_out:US-ASCII');
-	is($CS->parse('stderr:ascii,diag:unicode')->diag_mode, 'unicode', '... until told otherwise');
-	is($CS->parse('stderr:UTF-8,diag:unicode,stdout:ascii')->diag_mode, 'unicode', '... stdout is not stderr');
-	is($CS->parse('0')->diag_mode, 'ascii', '... 0');
-	is($CS->parse('0,1')->diag_mode, 'unicode', '... all: diag follows stderr again');
-	is($CS->parse('diag:ascii,all:UTF-8')->diag_mode, 'unicode', '... all:UTF-8');
+	is($CS->new->parse('diag:unicode,stderr:ascii')->diag_mode, 'ascii', 'stderr:ascii sets diag');
+	is($CS->new->parse('diag:unicode,console:ascii')->diag_mode, 'ascii', '... console:ascii');
+	is($CS->new->parse('diag:unicode,console_out:US-ASCII')->diag_mode, 'ascii', '... console_out:US-ASCII');
+	is($CS->new->parse('stderr:ascii,diag:unicode')->diag_mode, 'unicode', '... until told otherwise');
+	is($CS->new->parse('stderr:UTF-8,diag:unicode,stdout:ascii')->diag_mode, 'unicode', '... stdout is not stderr');
+	is($CS->new->parse('0')->diag_mode, 'ascii', '... 0');
+	is($CS->new->parse('0,1')->diag_mode, 'unicode', '... all: diag follows stderr again');
+	is($CS->new->parse('diag:ascii,all:UTF-8')->diag_mode, 'unicode', '... all:UTF-8');
 }
 
-# --- of an object: a copy
+# --- of an object: parse is the object itself, new is a copy
 {
 	my $base = $CS->new(argv => 'ascii');
 	my $cs = $base->parse('filesys:latin1');
-	isnt($cs, $base, 'parse of an object: another object');
+	is($cs, $base, 'parse: the object itself');
 	is($cs->argv, 'ascii', '... with what it had');
 	is($cs->filesys, 'iso-8859-1', '... and what it was told');
-	is($base->filesys, undef, '... the object left alone');
+	ok(!eval { $base->parse('env:UTF-8,nope'); 1 }, 'parse: one bad spec');
+	is($base->env, undef, '... the object left as it was');
+	ok(!eval { $CS->parse('argv'); 1 }, 'parse: not of a class');
 	$cs = $base->new(argv => 'UTF-8');
 	is($cs->argv, 'utf-8-strict', 'new of an object: overrides');
 	is($base->argv, 'ascii', '... the object left alone');

@@ -506,7 +506,7 @@ sub do_list
 			index($fs, $sep) < 0 or die $cs->diag(__(
 				# HEY!  the %s is the separator, as the option that
 				# says it: -0 for a NUL, -012 for a newline
-				"%q: %q conflicts with line terminator %s"),
+				"%q: %q conflicts with record separator %s"),
 				$file, $name, sprintf('-0%o', ord $sep)) . "\n";
 			print STDOUT $fs, $sep or die "$prog: " . $cs->diag(__(
 				"cannot write to stdout: %m")) . "\n";

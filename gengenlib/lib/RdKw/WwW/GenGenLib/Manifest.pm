@@ -78,14 +78,15 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 use Encode ();
 use RdKw::WwW::GenGenLib qw( subs_dep );
 
-# (what is said is said, and names spelled, as RdKw::WwW::GenGenLib does)
+# Encode as RdKw::WwW::GenGenLib does.
 BEGIN {
 	*__ = \&RdKw::WwW::GenGenLib::__;
 	*_diag = \&RdKw::WwW::GenGenLib::_diag;
 	*_to_fs = \&RdKw::WwW::GenGenLib::_to_fs;
 }
 
-# White space, as make and the shell know it: these six, and nothing else
+# POSIX white space since [[:space:]] is too broad.
+# (This is the same character set used in SiteConf.pm)
 my $SP = '\t\n\cK\f\r ';
 
 =item B<read> I<file>

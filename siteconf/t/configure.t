@@ -44,9 +44,12 @@ ok(!-e 'a', 'and made nothing');
 
 # What configure says of a name, it says as CodeSets says it: under
 # diag ascii, what is not ASCII is \x{...} (the name is UTF-8 bytes)
-($status, $out) = run('configure', '-Cargv:UTF-8,stderr:UTF-8,diag:ascii', '-q', "-DB=r\xc3\xa9/x");
-isnt($status, 0, 'no intermediates, by any name');
-like($out, qr/^E: cannot mkdir "r\\x\{e9\}\/x": .*non-leaf/, '... said in ASCII under diag ascii');
+SKIP: {
+	eval { to_fs("r\x{e9}/x") } or skip "locale fs cannot encode \\x{e9}", 2;
+	($status, $out) = run('configure', '-Cargv:UTF-8,stderr:UTF-8,diag:ascii', '-q', "-DB=r\xc3\xa9/x");
+	isnt($status, 0, 'no intermediates, by any name');
+	like($out, qr/^E: cannot mkdir "r\\x\{e9\}\/x": .*non-leaf/, '... said in ASCII under diag ascii');
+}
 
 ($status, $out) = run('configure', '-q', '--mkpath', '-DB=a/b/c');
 is($status, 0, '--mkpath') or diag $out;

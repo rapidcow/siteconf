@@ -732,12 +732,6 @@ OLD
 		PROG => $prog,
 		VERSION => $RdKw::WwW::SiteConf::VERSION,
 		ARGS => args_comment($opt->{written}),
-		# prior to siteconf 0.01 everything had been pass-through
-		# unicode bytes (with the exception of file names read from
-		# Manifests, which perl implicitly coerces as utf8 bytes).
-		# This may be breaking if folks have been using non-ASCII
-		# characters in their patches.
-		UTF8 => $can_locale ? "use utf8;\n" : '',
 		DDEF => hash_lines(\%Dx),
 		ODEF => hash_lines(\%Ox),
 		MODULES => join("\n", @mod),
@@ -835,11 +829,11 @@ sub render_text
 		PATH => escape_dep($path, unicode => 1),
 		PATH_Q => $path_q,
 		NAME => $name,
-		# See the comment above for configure template's
-		# UTF8 substitution variable for why this is
-		# conditionally added.  (Basically we don't want
-		# to "upgrade" byte strings to Unicode strings
-		# and introduce ugly wide character warnings.)
+		# prior to siteconf 0.01 everything had been pass-through
+		# unicode bytes (with the exception of file names read from
+		# Manifests, which perl implicitly coerces as utf8 bytes).
+		# This may be breaking if folks have been using non-ASCII
+		# characters in their patches.
 		UTF8 => $can_locale ? "use utf8;\n" : '',
 		PERL_MIN => $can_locale ? '5.008' : '5.006',
 		USE_LOCALE => $can_locale ? <<\NEW : '',

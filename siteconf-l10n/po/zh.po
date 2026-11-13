@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 01:13-0600\n"
+"POT-Creation-Date: 2026-11-13 02:21-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -239,6 +239,8 @@ msgstr "%q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
 msgid "%#q line %d"
 msgstr "%#q 行 %d"
 
+#. HEY!  Keep a winky face in the translation ;)
+#. (as GenGenLib's load_state does: newbies see it)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:348
 msgid ""
 "You have not configured!  (no %q)\n"
@@ -251,6 +253,8 @@ msgstr ""
 msgid "%q: %q is missing.  Try reconfiguring."
 msgstr "%q：缺少 %q。请尝试重新配置。"
 
+#. HEY!  %q is a variable of config.mk: `b' or `c', which are where
+#. what we make goes (the target tree, and the cache)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:371
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:376 ../siteconf/share/configure.in:310
 #: ../siteconf/share/configure.in:319
@@ -277,11 +281,15 @@ msgstr "找不到构建目录 %q：%m"
 msgid "cannot find the source tree %q: %m"
 msgstr "找不到源代码树 %q：%m"
 
+#. HEY!  The first %s is where (a file, or `file' line 3), and
+#. the second is b or c (a variable of config.mk, as in ${b}).
+#. Leave the ${...}s alone: they are what is written in a header.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:462
 #, perl-brace-format
 msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
 msgstr "%1$s：%2$q：${%3$s} 是相对于 ${B} 的；请写 ${B}/${%3$s}。"
 
+#. HEY!  the last %s is what is in a header, as ${U+...}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:481
 msgid "%s: %q: %s is no code point"
 msgstr "%s：%q：%s 不是码位"
@@ -301,6 +309,8 @@ msgstr "%s：%q 中有多余的 $"
 msgid "%s: empty path"
 msgstr "%s：路径为空"
 
+#. HEY!  The first %s is always where (a file, or `file' line 3),
+#. in this message and in those that follow it
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:588
 msgid "%s: bad file name %q"
 msgstr "%s：文件名有误：%q"
@@ -317,11 +327,14 @@ msgstr "%s：文件名 %q 在树外"
 msgid "%s: %q is a reserved goal name"
 msgstr "%s：%q 是保留的目标名"
 
+#. HEY!  the second %s is what is in Makefile.in, as ${U+...}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:700
 #, perl-format
 msgid "%s: %s is not a valid Unicode code point"
 msgstr "%s：%s 不是有效的 Unicode 码位"
 
+#. HEY!  the second %s is a variable, as ${@} (or ${.TARGET}),
+#. in this message and in those that follow it
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:707
 #, perl-format
 msgid "%s: %s outside of a recipe"
@@ -356,6 +369,8 @@ msgstr "%s：续行没有结束"
 msgid "%s: more than one recipe for %q"
 msgstr "%s：%q 有不止一个配方"
 
+#. HEY!  a recipe line (one that begins with a tab)
+#. with no rule above it to be the recipe of
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:840
 #, perl-format
 msgid "%s: unexpected tabulation"
@@ -506,6 +521,9 @@ msgstr "%s：目标 %q NEED %q，但它无法生成："
 msgid "goal %q WANTs %q, but cannot be made:"
 msgstr "目标 %q WANT %q，但它无法生成："
 
+#. HEY!  "no soup for you!" (Seinfeld) but with Makefile
+#. (not my bit, Claude came up with this... but cool
+#. nonetheless o_o)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1263
 #, perl-format
 msgid "%d problem; no Makefile for you."
@@ -517,6 +535,7 @@ msgstr[0] "%d 个问题；不给你 Makefile。"
 msgid "%s: %q is also the name of a goal or another rule"
 msgstr "%s：%q 也是某个目标或另一条规则的名字"
 
+#. HEY!  %s is the generators (make, gmake, ninja)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1391
 msgid "unknown generator %q.  Choose one of: %s"
 msgstr "未知的生成器 %q。请从这些中选一个：%s"
@@ -837,6 +856,9 @@ msgstr "update_file: 无法写入文件 %q：%m"
 msgid "update_file: cannot rename %q to %q: %m"
 msgstr "update_file: 无法将 %q 重命名为 %q：%m"
 
+#. HEY!  Keep a winky face in the translation ;)
+#. This message is likely to get seen by newbies,
+#. so we want to keep it fun.
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:205
 msgid ""
 "error: You have not configured! (no %q)\n"

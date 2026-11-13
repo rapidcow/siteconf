@@ -342,9 +342,9 @@ sub new
 	}, $class;
 
 	my $conf = "$self->{B}/MY/config.mk";
-	# HEY!  Keep a winky face in the translation ;)
-	# (as GenGenLib's load_state does: newbies see it)
 	-f _to_fs($conf) or die _say(E => diag(__(
+		# HEY!  Keep a winky face in the translation ;)
+		# (as GenGenLib's load_state does: newbies see it)
 		"You have not configured!  (no %q)\n"
 		. "You should ./configure first. ;)"), $conf));
 	my %D = read_make($conf);
@@ -365,9 +365,9 @@ sub new
 				"%q: %q is missing.  Try reconfiguring."), $conf, $k));
 	}
 	File::Spec->file_name_is_absolute($D{b})
-		# HEY!  %q is a variable of config.mk: `b' or `c', which are where
-		# what we make goes (the target tree, and the cache)
 		and die _say(E => diag(__(
+			# HEY!  %q is a variable of config.mk: `b' or `c', which are where
+			# what we make goes (the target tree, and the cache)
 			"%q prefix must be a relative path."), 'b'));
 	# c, the cache (what we make but do not ship), is written by
 	# configure even when it is b; we do not guess it.
@@ -455,10 +455,10 @@ sub _expand
 	# anything configured (-Dinc=include, say), but A is not config.mk's
 	my %var = ( %$D, A => '.' );
 	$spec =~ /(?<!\$\{B\}\/)(?<!\$B\/)\$(?:\{([bc])\}|([bc]))/
-		# HEY!  The first %s is where (a file, or `file' line 3), and
-		# the second is b or c (a variable of config.mk, as in ${b}).
-		# Leave the ${...}s alone: they are what is written in a header.
 		and die _say(E => diag(__(
+			# HEY!  The first %s is where (a file, or `file' line 3), and
+			# the second is b or c (a variable of config.mk, as in ${b}).
+			# Leave the ${...}s alone: they are what is written in a header.
 			'%1$s: %2$q: ${%3$s} is relative to ${B}; '
 			. 'use ${B}/${%3$s}.'),
 			$where, $spec, defined $1 ? $1 : $2));
@@ -476,8 +476,8 @@ sub _expand
 		} elsif ($spec =~ /\G\$\{([Uu]\+[^}]*)\}/gc) {
 			my $u = $1;
 			$u =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ and hex($1) <= 0x10FFFF
-				# HEY!  the last %s is what is in a header, as ${U+...}
 				or die _say(E => diag(__(
+					# HEY!  the last %s is what is in a header, as ${U+...}
 					"%s: %q: %s is no code point"),
 					$where, $spec, "\${$u}"));
 			$out .= chr hex $1;
@@ -582,9 +582,9 @@ sub _check_file
 {
 	my ($file, $where) = @_;
 	$file =~ m!\A[^$SP:\$#%\\|;<>"'`*?\[\](){}&]+\z!o
-		# HEY!  The first %s is always where (a file, or `file' line 3),
-		# in this message and in those that follow it
 		or die _say(E => diag(__(
+			# HEY!  The first %s is always where (a file, or `file' line 3),
+			# in this message and in those that follow it
 			"%s: bad file name %q"), $where, $file));
 	$file =~ m!\A/!
 		and die _say(E => diag(__(
@@ -695,15 +695,15 @@ sub _subst
 			# a character, as in a header (see _expand)
 			$x =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/
 				and hex($1) <= 0x10FFFF
-				# HEY!  the second %s is what is in Makefile.in, as ${U+...}
 				or die _say(E => diag(__(
+					# HEY!  the second %s is what is in Makefile.in, as ${U+...}
 					"%s: %s is not a valid Unicode code point"),
 					$where, "\${$x}"));
 			$val = chr hex $1;
 		} elsif ($x eq '@' or $x eq '.TARGET') {
-			# HEY!  the second %s is a variable, as ${@} (or ${.TARGET}),
-			# in this message and in those that follow it
 			defined $node or die _say(E => diag(__(
+				# HEY!  the second %s is a variable, as ${@} (or ${.TARGET}),
+				# in this message and in those that follow it
 				"%s: %s outside of a recipe"),
 				$where, "\${$x}"));
 			$val = $node;
@@ -834,9 +834,9 @@ sub _read_rules
 			}
 		};
 		if (/^\t/) {
-			# HEY!  a recipe line (one that begins with a tab)
-			# with no rule above it to be the recipe of
 			@node or die _say(E => diag(__(
+				# HEY!  a recipe line (one that begins with a tab)
+				# with no rule above it to be the recipe of
 				"%s: unexpected tabulation"), $where));
 			$recipe->($_);
 			next;
@@ -1256,10 +1256,10 @@ sub plan
 	}
 	if (@err) {
 		my $count = @err;
-		# HEY!  "no soup for you!" (Seinfeld) but with Makefile
-		# (not my bit, Claude came up with this... but cool
-		# nonetheless o_o)
 		die @err, _say(E => diag(__n(
+			# HEY!  "no soup for you!" (Seinfeld) but with Makefile
+			# (not my bit, Claude came up with this... but cool
+			# nonetheless o_o)
 			"%d problem; no Makefile for you.",
 			"%d problems; no Makefile for you.",
 			$count), $count)
@@ -1386,8 +1386,8 @@ sub generate
 {
 	my ($self, $G, $out) = @_;
 	$G = 'make' unless defined $G and length $G;
-	# HEY!  %s is the generators (make, gmake, ninja)
 	my $gen = $generator{$G} or die _say(E => diag(__(
+		# HEY!  %s is the generators (make, gmake, ninja)
 		"unknown generator %q.  Choose one of: %s"),
 		$G, join(', ', sort keys %generator)));
 	my ($module, $outfile) = @$gen;

@@ -198,10 +198,10 @@ sub load_state
 	for my $f (qw( config option )) {
 		my $file = "$Bdir/MY/$f.mk";
 		-f to_fs($file, { prog => 'load_state' })
+			or die diag(__(
 			# HEY!  Keep a winky face in the translation ;)
 			# This message is likely to get seen by newbies,
 			# so we want to keep it fun.
-			or die diag(__(
 			"error: You have not configured! (no %q)\n"
 			. "error: You should ./configure first. ;)"), $file) . "\n";
 		$S{$f} = { read_make($file) };

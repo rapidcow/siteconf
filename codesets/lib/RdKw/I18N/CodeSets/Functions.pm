@@ -12,7 +12,7 @@ our @ISA = qw( Exporter );
 
 =head1 NAME
 
-RdKw::I18N::CodeSets::Functions - functions for the code sets of the process
+RdKw::I18N::CodeSets::Functions - functional interface for CodeSets.pm
 
 =head1 SYNOPSIS
 

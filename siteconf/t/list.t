@@ -2,9 +2,9 @@
 #
 # t/list.t - siteconf -l: the names of a manifest, for other programs
 
+use utf8;
 use strict;
 use warnings;
-use utf8;
 use Test::More;
 use Encode ();
 use Encode::Locale ();
@@ -95,13 +95,13 @@ sub bad_late
 	like($err, $re, "$what: says why");
 }
 bad(qr/\Asiteconf: `MANIFEST': no goal `nope'$/, 'no such goal', '-l', '-t', 'nope');
-bad(qr/-t all:need: NEED or WANT, not `need'/, 'no such type', '-l', '-t', 'all:need');
-bad(qr/-0400: an octal number up to 377/, 'too big a separator', '-l', '-0400');
+bad(qr/`-t all:need': expected NEED or WANT, not `need'/, 'no such type', '-l', '-t', 'all:need');
+bad(qr/-0400: not a valid ASCII octal code point/, 'too big a separator', '-l', '-0400');
 bad(qr/-0 is not permitted in mode -g \(make\)/, '-0 elsewhere', '-g', '-0');
 bad(qr/-t is not permitted in mode -g \(make\)/, '-t elsewhere', '-g', '-t', 'all');
 bad(qr/-B is not permitted in mode -l \(list\)/, '-B', '-l', '-B', '.');
 bad(qr/\Asiteconf: cannot open file `nope': /, 'no manifest', '-l', '-F', 'nope');
-bad_late(qr/x:y' has the separator in it \(-072\)/, 'a name with the separator',
+bad_late(qr/x:y' conflicts with line terminator -072/, 'a name with the separator',
 	'index.html:', '-l', '-072', '-t', 'small');
 put('BAD', "MAKE all\n\tNEED a\n\tNEED x\${U+D800}y\n");
 bad_late(qr/\Asiteconf: BAD: cannot encode "x\\x\{d800\}y"/,

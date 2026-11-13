@@ -457,11 +457,16 @@ sub diag_mode
 
 =item I<cs>->B<initstd>([ I<file> => I<fallback>, ... ][, { prog => I<prog> }])
 
-Spells the standard files (B<stdin>, B<stdout> and B<stderr>) in
-their code sets, in place of whatever layers they had.  A I<fallback>
-is what L<PerlIO::encoding> does with what cannot be spelled
+Configures the standard files (B<stdin>, B<stdout> and B<stderr>) to
+use the current code sets, in place of whatever layers they had.  A
+I<fallback> is what L<PerlIO::encoding> does with what cannot be spelled
 (C<$PerlIO::encoding::fallback>, which is left as it is for the rest).
 Dies if one cannot be.
+
+=item I<cs>->B<reinitstd>([ I<file> => I<fallback>, ... ][, { prog => I<prog> }])
+
+The same as B<initstd> except that streams that are not explicitly
+spelled are left alone.
 
 =cut
 
@@ -470,16 +475,31 @@ sub initstd
 	my ($self, @pairs) = @_;
 	my $prog = _who(_opt(initstd => \@pairs, 'prog'));
 	Carp::croak('initstd: odd number of arguments') if @pairs % 2;
-	my %fallback = @pairs;
+	my %dfl = map { $_ => undef } qw( stdin stdout stderr );
+	$self->_initstd($prog, %dfl, @pairs);
+}
+
+sub reinitstd
+{
+	my ($self, @pairs) = @_;
+	my $prog = _who(_opt(reinitstd => \@pairs, 'prog'));
+	Carp::croak('reinitstd: odd number of arguments') if @pairs % 2;
+	$self->_initstd($prog, @pairs);
+}
+
+sub _initstd
+{
+	my ($self, $prog, %fallback) = @_;
 	for (sort keys %fallback) {
-		Carp::croak("initstd: not a standard file: $_") unless $STD{$_};
+		Carp::croak("${prog}not a standard file: $_") unless $STD{$_};
 	}
 	for my $name (qw( stdin stdout stderr )) {
+		next unless exists $fallback{$name};
 		my $enc = $self->_encoding($name);
 		local $PerlIO::encoding::fallback = $fallback{$name}
-			if exists $fallback{$name};
+			if defined $fallback{$name};
 		binmode $STD{$name}, ":raw:encoding($enc)"
-			or die "${prog}cannot spell $name in $enc: $!\n";
+			or die "${prog}cannot configure $name to use the $enc encoding: $!\n";
 	}
 	return;
 }

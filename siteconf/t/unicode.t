@@ -183,7 +183,7 @@ like($out, qr/: cannot decode argv 4: /, 'SITECONF_CODESETS=argv:ascii: cannot r
 ($status, $out) = run($C, { SITECONF_CODESETS => 'argv:ascii' }, $script, '-C1', 'init', '-o', '/dev/null', '-Sa=é');
 is($status, 0, '... but -C1 overrides it') or diag $out;
 ($status, $out) = run($C, {}, $script, '-C0', '-C', 'nope', '-V');
-like($out, qr/\Asiteconf: -C \(argv 3\): unknown category or encoding "nope"/, '-C is checked too');
+like($out, qr/\AE: -C \(argv 3\): unknown category or encoding "nope"/, '-C is checked too');
 ($status, $out) = run($C, {}, $script, '-V', '-C1');
 like($out, qr/\Asiteconf: too late to -C now\./, '-C after anything else: too late');
 ($status, $out) = run($C, {}, $script, '-VC1');

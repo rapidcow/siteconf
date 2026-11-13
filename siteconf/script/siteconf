@@ -279,9 +279,8 @@ use IO::Handle ();  # for $fh->flush() prior to 5.014
 
 use Encode ();
 use RdKw::I18N::CodeSets ();
-use RdKw::I18N::CodeSets::Functions qw( diag );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-use RdKw::WwW::GenGenLib qw( escape_dep read_manifest );
+use RdKw::WwW::GenGenLib 0.01 qw( escape_dep read_manifest );
 use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
@@ -292,18 +291,15 @@ our $GENGENLIB_MIN = '0.0100';
 # Our preferred provider, if (and only if) the user requests it via -M
 our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
 
-# The code sets: as the locale says, but for what SITECONF_CODESETS
-# and then -C (which must come first) say (see RdKw::I18N::CodeSets).
-# -C is read as bytes, before anything else is, since it says how to
-# read the rest.  Console output/error is meant for humans, so what it
-# cannot spell is written as ASCII \x{...}.
+# Early init (this is apparently the only time
+# we use the "E:" prefix, other than user errors)
 my $cs = RdKw::I18N::CodeSets->new;
-$cs->parse_from_env('SITECONF_CODESETS', prog => basename($0));
-my $offset = $cs->parse_from_argv(\@ARGV, prog => basename($0));
+$cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
+my $offset = $cs->parse_from_argv(\@ARGV, prog => 'E');
 RdKw::I18N::CodeSets->locale($cs);
-$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
+$cs->initstd( stderr => Encode::FB_PERLQQ() );
 
-# Our name came as an argument; it is only said, so it need not decode
+# Now we can has real prog :]
 my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 
 # How to call us: `usage: ' (as the locale says it), and under it, as
@@ -359,7 +355,7 @@ GetOptions(
 	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
 	'f'        => \$opt{f},
-	# (-C comes first, or not at all: the rest was read without it)
+	# Reject late -C arguments $cs->parse_from_argv could not read
 	'C:s'      => sub { die "$prog: " . __("too late to -C now.") . "\n" },
 ) or die $usage;
 
@@ -371,8 +367,9 @@ VAR
 	exit unless $vee > 1;
 	print <<LVER;
 perl version $], @{[ $cs->un_fs($^X) ]}
-WwW::GenGenLib version $RdKw::WwW::GenGenLib::VERSION
 I18N::CodeSets version $RdKw::I18N::CodeSets::VERSION
+L10N::TextDomain version $L10N::TextDomain::VERSION
+WwW::GenGenLib version $RdKw::WwW::GenGenLib::VERSION
 LVER
 
 	foreach my $fren (qw(
@@ -476,17 +473,20 @@ exit;
 # with \x{...} for what cannot be: a name we cannot spell is an error.
 sub do_list
 {
+	# aw, Why not leave it to PerlIO? :(
+	binmode STDOUT, ':raw';
+
 	my ($opt) = @_;
 	my $sep = "\n";
 	if (defined $opt->{0}) {
-		$opt->{0} =~ /\A[0-7]{0,3}\z/ && oct($opt->{0} || 0) <= 0377
-			or die "$prog: " . $cs->diag(__("%s: an octal number up to 377, please"),
+		$opt->{0} =~ /\A[0-7]{0,3}\z/
+			&& (my $ord = oct($opt->{0} || 0)) <= 0377
+			or die "$prog: " . $cs->diag(__(
+				"%#q: not a valid ASCII octal code point"),
 				"-0$opt->{0}") . "\n";
-		# (a byte, as it is to perl)
-		$sep = chr oct($opt->{0} || 0);
+		$sep = chr $ord;
 	}
 	my $file = defined $opt->{F} ? $opt->{F} : 'MANIFEST';
-	binmode STDOUT, ':raw';
 	eval {
 		my $mf = read_manifest($file);
 		my (%seen, @name);
@@ -496,16 +496,19 @@ sub do_list
 			my @kind = !defined $type || $type eq '' ? qw( needed wanted )
 				: $type eq 'NEED' ? 'needed'
 				: $type eq 'WANT' ? 'wanted'
-				: die $cs->diag(__("%s: NEED or WANT, not %q"), "-t $t", $type) . "\n";
+				: die $cs->diag(__("%q: expected NEED or WANT, not %q"),
+					"-t $t", $type) . "\n";
 			push @name, grep { !$seen{$_}++ } map { $mf->$_($goal) } @kind;
 		}
 		for my $name (@name) {
 			my $fs = $cs->to_fs($name, { prog => $mf->file });
-			# HEY!  the %s is the separator, as the option that
-			# says it: -0 for a NUL, -012 for a newline
-			index($fs, $sep) < 0 or die $cs->diag(__("%q: %q has the separator in it (%s)"),
+			index($fs, $sep) < 0 or die $cs->diag(__(
+				# HEY!  the %s is the separator, as the option that
+				# says it: -0 for a NUL, -012 for a newline
+				"%q: %q conflicts with line terminator %s"),
 				$file, $name, sprintf('-0%o', ord $sep)) . "\n";
-			print STDOUT $fs, $sep or die "$prog: " . $cs->diag(__("cannot write to stdout: %m")) . "\n";
+			print STDOUT $fs, $sep or die "$prog: " . $cs->diag(__(
+				"cannot write to stdout: %m")) . "\n";
 		}
 		1;
 	} or do {

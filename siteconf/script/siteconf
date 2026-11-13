@@ -280,14 +280,9 @@ use Getopt::Long qw( GetOptionsFromArray );
 use Encode ();
 use RdKw::I18N::CodeSets ();
 use RdKw::I18N::CodeSets::Functions qw( diag );
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 use RdKw::WwW::GenGenLib qw( escape_dep read_manifest );
 use RdKw::WwW::SiteConf;
-
-# What we say is said in the language of the locale, if
-# RdKw::WwW::SiteConf::L10N says where the catalogs are (and
-# Locale::Messages is there to read them); else, and for what no
-# catalog has, as it is written (see RdKw::L10N::TextDomain).
-use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 # GenLib with non-broken varargs locate
 our $GENLIB_NEW = '0.0203';
@@ -705,7 +700,7 @@ sub do_init
 	# comes with GenGenLib 0.0100 (which it may still find missing, and
 	# say so); before that, as it is written.
 	my $l10n = version_ge($mods{'RdKw::WwW::GenGenLib'}, $GENGENLIB_LOCALE)
-		? <<\NEW : <<\OLD;
+		? <<\NEW
 
 # What we say is said in the language of the locale, if
 # RdKw::WwW::SiteConf::L10N says where the catalogs are (and
@@ -723,6 +718,7 @@ BEGIN {
 	}
 }
 NEW
+		: <<\OLD;
 
 # What we say is said as it is written (RdKw::L10N::TextDomain, to
 # say it otherwise, comes with GenGenLib 0.0100).
@@ -736,6 +732,12 @@ OLD
 		PROG => $prog,
 		VERSION => $RdKw::WwW::SiteConf::VERSION,
 		ARGS => args_comment($opt->{written}),
+		# prior to siteconf 0.01 everything had been pass-through
+		# unicode bytes (with the exception of file names read from
+		# Manifests, which perl implicitly coerces as utf8 bytes).
+		# This may be breaking if folks have been using non-ASCII
+		# characters in their patches.
+		UTF8 => $can_locale ? "use utf8;\n" : '',
 		DDEF => hash_lines(\%Dx),
 		ODEF => hash_lines(\%Ox),
 		MODULES => join("\n", @mod),
@@ -744,7 +746,7 @@ OLD
 		OPTHELP => $help,
 		L10N => $l10n,
 	);
-	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: config template: \@$1\@?\n"/ge;
+	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: configure template: \@$1\@?\n"/ge;
 
 	my $out = exists $opt->{output}{configure} ? $opt->{output}{configure} : 'configure';
 	my %out = ( configure => $out );
@@ -833,6 +835,12 @@ sub render_text
 		PATH => escape_dep($path, unicode => 1),
 		PATH_Q => $path_q,
 		NAME => $name,
+		# See the comment above for configure template's
+		# UTF8 substitution variable for why this is
+		# conditionally added.  (Basically we don't want
+		# to "upgrade" byte strings to Unicode strings
+		# and introduce ugly wide character warnings.)
+		UTF8 => $can_locale ? "use utf8;\n" : '',
 		PERL_MIN => $can_locale ? '5.008' : '5.006',
 		USE_LOCALE => $can_locale ? <<\NEW : '',
 
@@ -843,37 +851,37 @@ NEW
 		# comes with GenGenLib 0.0100, and RdKw::WwW::SiteConf::L10N may
 		# or may not be there; before that, as it was always written)
 		USE_L10N => $can_locale ? <<\NEW : '',
-
-# What we say is said in the language of the locale, if
-# RdKw::WwW::SiteConf::L10N says where the catalogs are (and
-# Locale::Messages is there to read them); else, and for what no
-# catalog has, as it is written (see RdKw::L10N::TextDomain).
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-
-use RdKw::I18N::CodeSets::Functions qw( diag );
 NEW
 		GETOPT => $can_locale
 			? <<\NEW
-# The arguments are read as the code sets say: as the locale says,
-# but for what SITECONF_CODESETS and then -C (which must come first)
-# say (see RdKw::I18N::CodeSets).  -C is read first, as bytes, since it
-# says how to read the rest.  What the console cannot spell is written
-# as \x{...}.
-my $cs = RdKw::I18N::CodeSets->new;
+my $cs = RdKw::I18N::CodeSets->new();
+# Command-line arguments are decoded via the
+# argv codeset, though this may be altered by
+# the SITECONF_CODESETS and -C flags, so we
+# must parse them.
 $cs->parse_from_env('SITECONF_CODESETS', prog => $0);
 my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
+
+# Parsing is complete; we can publish them for
+# everyone else.
 RdKw::I18N::CodeSets->locale($cs);
-$cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
+$cs->initstd(stderr => Encode::FB_PERLQQ());
 my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ() });
-eval { @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset }); 1 } or die "$prog: $@";
+eval { @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset }); 1 }
+	or die "$prog: $@";
+
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 my $B = '.';
 GetOptions(
 	'B=s' => \$B,
-	# (-C comes first, or not at all: the rest was read without it)
+	# Explicitly reject stray -C options.
 	'C:s' => sub { die "$prog: " . __("too late to -C now.") . "\n" },
-) or die diag(__("usage: %s"), "$prog [-C CODESET ...] [-B BUILDDIR] apath bpath") . "\n";
-# HEY!  the two are what to render (apath), and what to render it to (bpath)
+)
+# The usage may be altered, so we only translate the "usage:" part.
+	or die $cs->diag(__("usage: %s"),
+	"$prog [-B dir] apath bpath") . "\n";
+# HEY!  The usage is `./render apath bpath', which is two arguments.
 @ARGV == 2 or die "$prog: " . __("need exactly two args") . "\n";
 my ($apath, $bpath) = @ARGV;
 NEW

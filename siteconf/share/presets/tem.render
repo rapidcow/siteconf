@@ -23,7 +23,7 @@
 # More information about Template Toolkit here:
 # https://template-toolkit.org/
 #
-use 5.008;
+@UTF8@use 5.008;
 use strict;
 use warnings;
 

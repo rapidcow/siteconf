@@ -7,7 +7,7 @@
 # patch keeps applying), rather than editing it in place and losing
 # them the next time `@PROG@ -i' is run.
 #
-@ARGS@use utf8;
+@ARGS@@UTF8@
 use 5.008;
 use strict;
 use warnings;
@@ -193,10 +193,9 @@ sub _section
 }
 
 $usage = do {
-	# (as wide as the widest syntax, and never less than 11, which
-	# is where the column always was)
+	# Don't make it wider than 12 columns (including space).
+	# My screen isn't that wide; make it wider if yours is...
 	my $w = 11;
-	length $_->[0] > $w and $w = length $_->[0] for @VARHELP, @OPTHELP, @FLAGHELP;
 	diag(__("usage: %s"),
 		"$prog [-C codeset ...] [-Dvar=val ...] [-Ovar=val ...] [--reset] [--mkpath] [-hq]")
 	. "\n\n" . __("The following variables may be defined:") . "\n\n"

@@ -3,10 +3,9 @@ package RdKw::WwW::GenGenLib::Manifest;
 use 5.008;
 use strict;
 use warnings;
-use utf8;
 
-our $VERSION = '0.01_00';
-$VERSION = eval $VERSION;
+use RdKw::WwW::GenGenLib ();
+our $VERSION = $RdKw::WwW::GenGenLib::VERSION;
 
 =head1 NAME
 

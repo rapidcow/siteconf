@@ -20,6 +20,7 @@ my %WriteMakefileArgs = (
 		'Test::More' => '0',
 	},
 	PREREQ_PM => {
+		'version' => '0',
 		'Cwd' => '0',
 		'File::Spec' => '0',
 		'RdKw::I18N::CodeSets' => '0',

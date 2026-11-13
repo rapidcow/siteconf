@@ -4,8 +4,9 @@ use 5.008;
 use strict;
 use warnings;
 
+use version;
 our $VERSION = '0.03_00';
-$VERSION = eval $VERSION;
+$VERSION = version->parse( $VERSION );
 
 =head1 NAME
 

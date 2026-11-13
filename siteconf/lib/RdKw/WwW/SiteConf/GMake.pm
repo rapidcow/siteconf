@@ -3,8 +3,9 @@ package RdKw::WwW::SiteConf::GMake;
 use 5.008;
 use strict;
 use warnings;
-use RdKw::WwW::SiteConf::Make ();
 
+use RdKw::WwW::SiteConf::Make ();
+our $VERSION = $RdKw::WwW::SiteConf::Make::VERSION;
 our @ISA = qw( RdKw::WwW::SiteConf::Make );
 
 =head1 NAME

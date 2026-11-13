@@ -17,6 +17,7 @@ my %WriteMakefileArgs = (
 		'Test::More' => '0',
 	},
 	PREREQ_PM => {
+		'version' => '0',
 		'Carp' => '0',
 		'Encode' => '0',
 		'Encode::Locale' => '0',

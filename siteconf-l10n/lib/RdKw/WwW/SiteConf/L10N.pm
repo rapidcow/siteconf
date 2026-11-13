@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 our $VERSION = '0.00_00';
-$VERSION = eval $VERSION;
+$VERSION = version->parse( $VERSION );
 
 =head1 NAME
 

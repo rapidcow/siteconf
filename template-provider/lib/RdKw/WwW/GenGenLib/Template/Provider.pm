@@ -4,8 +4,9 @@ use 5.008;
 use strict;
 use warnings;
 
+use version;
 our $VERSION = '0.00_00';
-$VERSION = eval $VERSION;
+$VERSION = version->parse( $VERSION );
 
 use Template::Provider ();
 our @ISA = qw( Template::Provider );
@@ -141,8 +142,9 @@ those write files by names this provider does not spell.
 
 use Cwd ();
 use File::Spec ();
-use Template::Constants qw( STATUS_ERROR STATUS_DECLINED );
 use RdKw::I18N::CodeSets ();
+use Template::Constants qw(
+	STATUS_ERROR STATUS_DECLINED );
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_deps walk_deps follow_ok
 	norm_dep subs_dep split_dep

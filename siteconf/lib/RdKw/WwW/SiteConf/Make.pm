@@ -4,6 +4,9 @@ use 5.008;
 use strict;
 use warnings;
 
+use RdKw::WwW::SiteConf ();
+our $VERSION = $RdKw::WwW::SiteConf::VERSION;
+
 =head1 NAME
 
 RdKw::WwW::SiteConf::Make - Makefile backend for siteconf

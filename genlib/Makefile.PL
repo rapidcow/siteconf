@@ -17,11 +17,12 @@ my %WriteMakefileArgs = (
 		'Test::More' => '0',
 	},
 	PREREQ_PM => {
+		'version' => '0',
 		'Exporter' => '0',
-		'URI' => '0',
-		'URI::Escape' => '0',
 		'RdKw::I18N::CodeSets' => '0',
 		'RdKw::L10N::TextDomain' => '0',
+		'URI' => '0',
+		'URI::Escape' => '0',
 	},
 	# What we say is said in the language of the locale, with these
 	# (and as it is written, without them)

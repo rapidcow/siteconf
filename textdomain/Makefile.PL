@@ -18,8 +18,9 @@ my %WriteMakefileArgs = (
 		'File::Temp' => '0',
 		'Test::More' => '0',
 	},
-	# (nothing but what comes with Perl)
+	# Core (version.pm since 5.010)
 	PREREQ_PM => {
+		'version' => '0',
 		'Carp' => '0',
 		'Encode' => '0',
 	},

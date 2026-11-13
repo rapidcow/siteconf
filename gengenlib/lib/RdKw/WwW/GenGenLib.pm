@@ -4,8 +4,9 @@ use 5.008;
 use strict;
 use warnings;
 
+use version;
 our $VERSION = '0.01_00';
-$VERSION = eval $VERSION;
+$VERSION = version->parse( $VERSION );
 
 use Exporter ();
 our @ISA = qw( Exporter );
@@ -46,18 +47,17 @@ L<RdKw::I18N::CodeSets> says: C<< RdKw::I18N::CodeSets->locale >>, or
 
 =cut
 
-use utf8;
 use Encode ();
 use IO::Handle ();
 use File::Basename qw( basename dirname );
 use File::Compare ();
 use File::Spec;
-use RdKw::I18N::CodeSets ();
 
 # What we say is said in the language of the locale, if
 # RdKw::WwW::SiteConf::L10N says where the catalogs are (and
 # Locale::Messages is there to read them); else, and for what no
 # catalog has, as it is written (see RdKw::L10N::TextDomain).
+use RdKw::I18N::CodeSets ();
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 # A message: %q is a name, %s as it is (see RdKw::I18N::CodeSets)

@@ -40,6 +40,7 @@ my %WriteMakefileArgs = (
 		'Test::More' => '0',
 	},
 	PREREQ_PM => {
+		'version' => '0',
 	},
 	# (not mkintl.pl or pm_filter.pl, which are no modules)
 	PM => {

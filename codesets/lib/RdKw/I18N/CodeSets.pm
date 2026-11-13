@@ -60,8 +60,9 @@ by the system.
 A category that is not set is spelled as L<Encode::Locale> says:
 C<console_in> for B<stdin>, C<console_out> for B<stdout> and
 B<stderr>, C<locale_fs> for B<filesys>, and C<locale> for the rest.
-The pseudo-encoding C<locale> means exactly that, for whichever
-category it is given to.
+Setting a category to the pseudo-encoding C<locale> unsets it, so
+C<locale> alone (B<all:locale>) resets everything to a plain L</new>.
+The locale is looked up when the category is used, not when it is set.
 
 When setting, there are also the pseudo-categories B<console> (all of
 the standard files), B<console_in> (B<stdin>), B<console_out>
@@ -69,8 +70,8 @@ the standard files), B<console_in> (B<stdin>), B<console_out>
 follows B<stderr> again); and B<diag>, which is not a code set but a
 mode, C<unicode> or C<ascii>, for what we say (L</diag_mode>).  An
 B<stderr> set to ASCII (by any of its names) makes B<diag> follow it
-again, and so C<ascii>, until it is told otherwise.  C<0> is short for C<ascii>, and
-C<1> for C<UTF-8> (or, for B<diag>, C<unicode>).
+again, and so C<ascii>, until it is told otherwise.  C<0> is short
+for C<ascii>, and C<1> for C<UTF-8> (or, for B<diag>, C<unicode>).
 
 What cannot be spelled is an error, not mangled; but what we say is
 said so that it can be (L</diag>).
@@ -153,6 +154,16 @@ leaves I<cs> as it was; a I<prog> is who says so, before the error
 (C<prog: unknown category ...>), as it is for every method here that
 takes one.  There is no parse of a I<CLASS>: that is a L</new> one.
 
+A I<spec> may also be another I<cs>, or the hash that L</all> returns,
+which sets every category and B<diag> to what it says, so that one
+I<cs> can be updated from another:
+
+    $cs->parse($other);
+    $cs->parse($other->all);    # the same
+
+The hash is given by reference.  As a list (C<%{ $other-E<gt>all }>)
+its keys and values would each be read as a I<spec> of their own.
+
     my $cs = $CS->new->parse('filesys:UTF-8,console:ascii');
 
     # SITECONF_CODESETS=0, =UTF-8, =filesys:UTF-8,console:ascii, ...
@@ -167,10 +178,27 @@ sub parse
 {
 	my ($self, @spec) = @_;
 	Carp::croak('parse: not of an object') unless ref $self;
+	# Another of us is what its all() returns.
+	@spec = map { ref $_ && eval { $_->isa(__PACKAGE__) } ? $_->all : $_ } @spec;
+	# A trailing hash is the options, unless it is what all() returns.
+	my @last = @spec && _is_all($spec[-1]) ? pop @spec : ();
 	my $prog = _who(_opt(parse => \@spec, 'prog'));
+	push @spec, @last;
 	my @pairs;
-	for my $spec (map { defined $_ ? split(/,/, $_) : $_ } @spec) {
+	for my $spec (map { defined $_ && !ref $_ ? split(/,/, $_) : $_ } @spec) {
 		defined $spec or die "${prog}undefined codeset\n";
+		if (ref $spec) {
+			ref $spec eq 'HASH' or die "${prog}not a codeset: $spec\n";
+			my %all = %$spec;
+			# (diag last: setting stderr to ASCII would reset it)
+			for my $name (@CATEGORIES, 'diag') {
+				push @pairs, $name, delete $all{$name} if exists $all{$name};
+			}
+			for (sort keys %all) {
+				die "${prog}unknown category @{[ _qq_ascii($_) ]}\n";
+			}
+			next;
+		}
 		my ($name, $enc) = $spec =~ /\A([^:]*)(?::(.*))?\z/s;
 		length $name or die "${prog}no category in codeset @{[ _qq_ascii($spec) ]}\n";
 		if (!defined $enc && !_is_category($name)) {
@@ -270,6 +298,13 @@ sub _is_category
 	$name eq 'diag' || $name eq 'all' || $PSEUDO{$name} || $LOCALE{$name};
 }
 
+# Whether it is a hash as all() returns one (and not parse's options)
+sub _is_all
+{
+	my ($spec) = @_;
+	ref $spec eq 'HASH' && grep { $LOCALE{$_} || $_ eq 'diag' } keys %$spec;
+}
+
 sub _is_encoding
 {
 	my ($enc) = @_;
@@ -348,13 +383,15 @@ sub locale
 
 =item I<cs>->B<filesys>([ I<encoding> ])
 
-The code set of a category, by its canonical name in L<Encode>
-(C<UTF-8> is C<utf-8-strict>), or undef if it is not set; or, given
-an I<encoding>, set it (undef unsets it).  What is got means the same
-to every category, C<locale> having been resolved already, so that
-one may be set from another:
+Returns the code set of a category, by its canonical name in
+L<Encode> (C<UTF-8> is C<utf-8-strict>), or undef if it is not set.
+Given an I<encoding>, sets it first; undef or C<locale> unsets it.
 
-    $cs->stdout( $cs->argv ) if !defined $cs->stdout;
+A category that is not set follows the locale I<of that category>,
+so copying an unset one does not copy its encoding:
+
+    $cs->stdout( $cs->argv );   # argv not set: stdout is unset too,
+                                # and follows console_out, not locale
 
 =item I<cs>->B<console>([ I<encoding> ])
 
@@ -373,8 +410,7 @@ for my $name (@CATEGORIES) {
 		my $self = shift;
 		if (@_) {
 			my ($enc) = @_;
-			if (defined $enc) {
-				$enc = $LOCALE{$name} if $enc eq 'locale';
+			if (defined $enc && $enc ne 'locale') {
 				my $obj = Encode::find_encoding($enc)
 					or die "unknown encoding @{[ _qq_ascii($enc) ]}"
 						. " for $name\n";
@@ -400,6 +436,35 @@ for my $name (keys %PSEUDO) {
 		}
 		$enc;
 	};
+}
+
+=item I<cs>->B<all>([ I<encoding> ])
+
+Given an I<encoding>, sets every category to it and makes B<diag>
+follow B<stderr> again, as the pseudo-category B<all> does; I<cs> is
+left as it was if the I<encoding> is unknown.  Returns a new hash
+(by reference) of every category and B<diag>, with undef for what is
+not set.  B<diag> is undef there unless a mode was set explicitly.
+
+The hash is a copy, and can be given to L</parse> to make another
+I<cs> the same.  (Not to L</new> as a list: a hash has no order, and
+B<stderr> set after B<diag> may reset it.)
+
+    $other->parse($cs->all);
+    my $same = $CS->new->parse($cs->all);
+
+=cut
+
+sub all
+{
+	my $self = shift;
+	if (@_) {
+		my ($enc) = @_;
+		# (to a copy first, so that we are as we were if it is bad)
+		my $new = $self->new(all => $enc);
+		%$self = %$new;
+	}
+	+{ map { $_ => $self->{$_} } @CATEGORIES, 'diag' };
 }
 
 # What a category is spelled in, set or not

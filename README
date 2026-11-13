@@ -3,4 +3,9 @@ script generator.  with the web preset (-P),
 it is a very minimal static site generator
 (if it even deserves to be called one.)
 
+Since siteconf 0.03 (gengenlib 0.01 genlib 0.03),
+perl 5.008 is required for Unicode support.
+it is recommended to use at least perl 5.010
+(since version.pm would be core by then).
+
 WWW: https://foss.rapidcow.org/project/siteconf/

@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf-L10N
 
 
-0.00_00  2026-11-12  AI
+0.00_00  2026-11-13  RC
     + RdKw::WwW::SiteConf::L10N: $LOCALEDIR, where the catalogs of
       the siteconf text domain are (bytes, as the system spells
       it): by default, share/locale under INSTALL_BASE or PREFIX;

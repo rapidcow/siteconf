@@ -1,7 +1,7 @@
 Revision history of WwW-GenGenLib
 
 
-0.01_00  2026-11-12  PULLED
+0.01_00  2026-11-13  RC
     *** Perl 5.8 is required.
     *** RdKw::I18N::CodeSets is required: what we say says names
         as it does (%q of diag: `name' if it is printable ASCII,
@@ -9,6 +9,7 @@ Revision history of WwW-GenGenLib
         locale has it, which may be local()ized.
     *** RdKw::L10N::TextDomain is required (which needs nothing
         but what comes with Perl): __ and __n are its.
+    *** The version pragmatic module is required.
     + What we say is said in the language of the locale, from the
       catalogs of the siteconf text domain (which has what
       GenGenLib says, with what siteconf says), if

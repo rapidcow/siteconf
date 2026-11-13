@@ -22,6 +22,9 @@ Revision history of I18N-CodeSets
       specs by commas, and takes an encoding alone for all of the
       categories (the pseudo-category all); 0 is short for ascii,
       and 1 for UTF-8 (or unicode), as for SITECONF_CODESETS.
+    + The encoding locale unsets a category, so that parse('locale')
+      resets everything to what new gives; the locale is looked up
+      when a category is used, not when it is set.
     + stderr set to ASCII (by any of its names) makes diag follow it,
       and so ascii.
     + diag escapes what stderr cannot spell (\x{...}), and diag_name

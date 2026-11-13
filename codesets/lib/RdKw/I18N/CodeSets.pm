@@ -60,8 +60,9 @@ by the system.
 A category that is not set is spelled as L<Encode::Locale> says:
 C<console_in> for B<stdin>, C<console_out> for B<stdout> and
 B<stderr>, C<locale_fs> for B<filesys>, and C<locale> for the rest.
-The pseudo-encoding C<locale> means exactly that, for whichever
-category it is given to.
+Setting a category to the pseudo-encoding C<locale> unsets it, so
+C<locale> alone (B<all:locale>) resets everything to a plain L</new>.
+The locale is looked up when the category is used, not when it is set.
 
 When setting, there are also the pseudo-categories B<console> (all of
 the standard files), B<console_in> (B<stdin>), B<console_out>
@@ -69,8 +70,8 @@ the standard files), B<console_in> (B<stdin>), B<console_out>
 follows B<stderr> again); and B<diag>, which is not a code set but a
 mode, C<unicode> or C<ascii>, for what we say (L</diag_mode>).  An
 B<stderr> set to ASCII (by any of its names) makes B<diag> follow it
-again, and so C<ascii>, until it is told otherwise.  C<0> is short for C<ascii>, and
-C<1> for C<UTF-8> (or, for B<diag>, C<unicode>).
+again, and so C<ascii>, until it is told otherwise.  C<0> is short
+for C<ascii>, and C<1> for C<UTF-8> (or, for B<diag>, C<unicode>).
 
 What cannot be spelled is an error, not mangled; but what we say is
 said so that it can be (L</diag>).
@@ -348,13 +349,15 @@ sub locale
 
 =item I<cs>->B<filesys>([ I<encoding> ])
 
-The code set of a category, by its canonical name in L<Encode>
-(C<UTF-8> is C<utf-8-strict>), or undef if it is not set; or, given
-an I<encoding>, set it (undef unsets it).  What is got means the same
-to every category, C<locale> having been resolved already, so that
-one may be set from another:
+Returns the code set of a category, by its canonical name in
+L<Encode> (C<UTF-8> is C<utf-8-strict>), or undef if it is not set.
+Given an I<encoding>, sets it first; undef or C<locale> unsets it.
 
-    $cs->stdout( $cs->argv ) if !defined $cs->stdout;
+A category that is not set follows the locale I<of that category>,
+so copying an unset one does not copy its encoding:
+
+    $cs->stdout( $cs->argv );   # argv not set: stdout is unset too,
+                                # and follows console_out, not locale
 
 =item I<cs>->B<console>([ I<encoding> ])
 
@@ -373,8 +376,7 @@ for my $name (@CATEGORIES) {
 		my $self = shift;
 		if (@_) {
 			my ($enc) = @_;
-			if (defined $enc) {
-				$enc = $LOCALE{$name} if $enc eq 'locale';
+			if (defined $enc && $enc ne 'locale') {
 				my $obj = Encode::find_encoding($enc)
 					or die "unknown encoding @{[ _qq_ascii($enc) ]}"
 						. " for $name\n";

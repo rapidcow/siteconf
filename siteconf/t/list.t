@@ -7,7 +7,6 @@ use strict;
 use warnings;
 use Test::More;
 use Encode ();
-use Encode::Locale ();
 use File::Temp qw( tempdir );
 use FindBin;
 use lib "$FindBin::Bin/lib";
@@ -15,7 +14,7 @@ use TestPaths qw( script_path perl5lib );
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
-plan tests => 34;
+plan tests => 38;
 
 my $dir = tempdir(CLEANUP => 1);
 sub put
@@ -29,7 +28,9 @@ sub put
 # (stdout, as bytes; stderr; whether it went well)
 sub list
 {
-	my @arg = map { "'$_'" } @_;
+	# Exercise list syntax with a known encoding, even in a C locale.
+	# A later -C can override this for the encoding checks below.
+	my @arg = map { "'$_'" } '-C', 'filesys:UTF-8', @_;
 	my $out = `cd '$dir' && '$^X' '$script' @arg 2>err`;
 	my $ok = $? == 0;
 	open my $fh, '<', "$dir/err" or die;
@@ -48,16 +49,12 @@ MAKE small
 	WANT x${U+003A}y
 M
 
-my $resume = eval { Encode::encode(locale_fs => 'résumé.html', Encode::FB_CROAK()) };
+my $resume = Encode::encode('UTF-8' => 'résumé.html');
 my ($out, $err, $ok) = list('-l');
 ok($ok, '-l') or diag $err;
-SKIP: {
-	skip "locale_fs ($Encode::Locale::ENCODING_LOCALE_FS) cannot spell résumé", 1
-		unless defined $resume;
-	is($out, "index.html\n${resume}\nextra/a b.html\n",
-		'... NEEDs, then WANTs, of the default goal; unescaped, once each,'
-		. ' and spelled as the file system does');
-}
+is($out, "index.html\n${resume}\nextra/a b.html\n",
+	'... NEEDs, then WANTs, of the default goal; unescaped, once each,'
+	. ' and spelled as the file system does');
 is($err, '', '... and nothing else is said');
 is((list('list'))[0], $out, 'list: the same');
 is((list('-l', '-012'))[0], $out, '-012: the default');
@@ -103,6 +100,12 @@ bad(qr/-B is not permitted in mode -l \(list\)/, '-B', '-l', '-B', '.');
 bad(qr/\Asiteconf: cannot open file `nope': /, 'no manifest', '-l', '-F', 'nope');
 bad_late(qr/x:y' conflicts with record separator -072/, 'a name with the separator',
 	'index.html:', '-l', '-072', '-t', 'small');
+bad_late(qr/\Asiteconf: MANIFEST: cannot encode "r\\x\{e9\}sum\\x\{e9\}\.html" in US-ASCII$/,
+	'ASCII cannot spell résumé', "index.html\n", '-C', 'filesys:ascii', '-l');
+($out, $err, $ok) = list('-C', 'filesys:ISO-8859-1', '-l');
+ok($ok && $err eq '', 'Latin-1 can spell résumé') or diag $err;
+is($out, Encode::encode('ISO-8859-1', "index.html\nrésumé.html\nextra/a b.html\n"),
+	'... in the requested filesystem encoding');
 put('BAD', "MAKE all\n\tNEED a\n\tNEED x\${U+D800}y\n");
 bad_late(qr/\Asiteconf: BAD: cannot encode "x\\x\{d800\}y"/,
 	'a name the file system cannot spell (not even with \x{...})',

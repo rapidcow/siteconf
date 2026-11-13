@@ -95,7 +95,7 @@ bad(qr/\Asiteconf: `MANIFEST': no goal `nope'$/, 'no such goal', '-l', '-t', 'no
 bad(qr/`-t all:need': expected NEED or WANT, not `need'/, 'no such type', '-l', '-t', 'all:need');
 bad(qr/-0400: not a valid ASCII octal code point/, 'too big a separator', '-l', '-0400');
 bad(qr/-0 is not permitted in mode -g \(make\)/, '-0 elsewhere', '-g', '-0');
-bad(qr/-t is not permitted in mode -g \(make\)/, '-t elsewhere', '-g', '-t', 'all');
+bad(qr/-t is not permitted in mode -i \(init\)/, '-t elsewhere', '-i', '-t', 'all');
 bad(qr/-B is not permitted in mode -l \(list\)/, '-B', '-l', '-B', '.');
 bad(qr/\Asiteconf: cannot open file `nope': /, 'no manifest', '-l', '-F', 'nope');
 bad_late(qr/x:y' conflicts with record separator -072/, 'a name with the separator',

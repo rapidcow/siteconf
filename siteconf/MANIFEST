@@ -22,6 +22,7 @@ t/e2e-make.t
 t/e2e-names.t
 t/e2e-ninja.t
 t/general.t
+t/goals.t
 t/graph.t
 t/init.t
 t/list.t

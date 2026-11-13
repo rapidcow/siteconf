@@ -348,6 +348,11 @@ I<quiet> is true.  I<D> overrides C<MY/config.mk> parameters.
 (C<F> and C<R>, whether from here or from there, are paths from the
 current directory, not from the project root.)
 
+C<goals =E<gt> [ ... ]> selects manifest goals, in the order given,
+as C<goal>, C<NEED:goal> (both keep NEED and WANT as declared), or
+C<WANT:goal> (all files are wanted).  A repeated goal keeps its first
+position and its last mode.  An empty list, or none, selects all goals.
+
 =cut
 
 sub new
@@ -356,6 +361,7 @@ sub new
 	my $self = bless {
 		B => defined $arg{B} && length $arg{B} ? $arg{B} : '.',
 		quiet => $arg{quiet},
+		goals => [ @{ $arg{goals} || [] } ],
 		prog => defined $arg{prog} ? $arg{prog} : 'siteconf',
 	}, $class;
 
@@ -1263,6 +1269,7 @@ sub plan
 	$self->{rules} = $self->_read_rules;
 
 	my @spec = $self->read_manifest(File::Spec->canonpath($D->{F}));
+	@spec = $self->_select_goals(@spec);
 
 	my (@goal, @err, @order, %known);
 	# A file comes after what it takes to make it
@@ -1347,6 +1354,35 @@ sub plan
 		clean => \@clean,
 		D => $D,
 	};
+}
+
+# Select goals before resolving any files.  WANT changes only the roots:
+# a file still needs all of its prerequisites, or is dropped as a whole.
+sub _select_goals
+{
+	my ($self, @spec) = @_;
+	my @select = @{ $self->{goals} || [] };
+	return @spec unless @select;
+	my %goal = map { $_->{name} => $_ } @spec;
+	my (%mode, @order);
+	for my $select (@select) {
+		my ($mode, $name) = index($select, ':') < 0
+			? ('NEED', $select) : split(/:/, $select, 2);
+		$mode eq 'NEED' || $mode eq 'WANT'
+			or die _say(E => diag(__("%q: expected NEED or WANT, not %q"),
+				"-t $select", $mode));
+		length $name or die _say(E => diag(__("%q: expected a goal name"), "-t $select"));
+		exists $goal{$name} or die _say(E => diag(__("%q: no goal %q"), $self->{D}{F}, $name));
+		push @order, $name unless exists $mode{$name};
+		$mode{$name} = $mode;
+	}
+	map {
+		my $goal = $goal{$_};
+		$mode{$_} eq 'WANT'
+			? { %$goal, need => [], want => [ sort { $a->{line} <=> $b->{line} }
+				@{ $goal->{need} }, @{ $goal->{want} } ] }
+			: $goal;
+	} @order;
 }
 
 # The cleaning rules, as { name, files => [ BPATH ] } (see
@@ -1475,6 +1511,7 @@ sub generate
 		" -$_ " . shell_quote($self->{fromhere}{$_})
 	} sort keys %{ $self->{fromhere} };
 	$plan->{prog} .= " -o " . shell_quote($out) if $named;
+	$plan->{prog} .= " -t " . shell_quote($_) for @{ $self->{goals} || [] };
 	my $text = $module->_emit($plan);
 	$self->_report($outfile, update_file("$self->{B}/$outfile", $text));
 

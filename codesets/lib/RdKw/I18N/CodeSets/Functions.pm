@@ -53,22 +53,26 @@ L<RdKw::I18N::CodeSets/to_fs> and L<RdKw::I18N::CodeSets/un_fs>.
 
 =item B<encode_argv>([ I<check> ])
 
+=item B<encode_argv>({ I<option> => I<value>, ... })
+
 =item B<decode_argv>([ I<check> ])
+
+=item B<decode_argv>({ I<option> => I<value>, ... })
 
 L<RdKw::I18N::CodeSets/to_argv>, L<RdKw::I18N::CodeSets/un_argv>,
 L<RdKw::I18N::CodeSets/encode_argv> and
 L<RdKw::I18N::CodeSets/decode_argv>.
 
-=item B<getenv>( I<name>, ...[, { check => I<check> }] )
+=item B<getenv>( I<name>, ...[, { I<option> => I<value>, ... }] )
 
-=item B<setenv>( I<name> => I<value>, ...[, { check => I<check> }] )
+=item B<setenv>( I<name> => I<value>, ...[, { I<option> => I<value>, ... }] )
 
-=item B<unsetenv>( I<name>, ... )
+=item B<unsetenv>( I<name>, ...[, { prog => I<prog> }] )
 
 L<RdKw::I18N::CodeSets/getenv>, L<RdKw::I18N::CodeSets/setenv> and
 L<RdKw::I18N::CodeSets/unsetenv>.
 
-=item B<initstd>([ I<file> => I<fallback>, ... ])
+=item B<initstd>([ I<file> => I<fallback>, ... ][, { prog => I<prog> }])
 
 L<RdKw::I18N::CodeSets/initstd>.
 

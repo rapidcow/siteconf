@@ -338,7 +338,7 @@ sub _width
 	length($s) + $wide;
 }
 
-eval { @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset }); 1 } or die "$prog: $@";
+@ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 my %opt = (S => {}, D => {}, O => {}, M => [], outputs => [], t => []);
@@ -871,8 +871,7 @@ my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
 RdKw::I18N::CodeSets->locale($cs);
 $cs->initstd(stderr => Encode::FB_PERLQQ());
 my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ() });
-eval { @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset }); 1 }
-	or die "$prog: $@";
+@ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 my $B = '.';

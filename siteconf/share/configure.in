@@ -208,7 +208,7 @@ $usage = do {
 	. "\n" . __("See also `perldoc RdKw::WwW::SiteConf::Configure'.") . "\n";
 };
 
-eval { @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset }); 1 } or die "$prog: $@";
+@ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 # (-C comes first, or not at all: the rest was read without it)
 GetOptions(%getopt, 'C:s' => sub { die "E: " . __("too late to -C now.") . "\n" })

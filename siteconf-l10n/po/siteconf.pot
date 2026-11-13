@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 02:21-0600\n"
+"POT-Creation-Date: 2026-11-13 02:34-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,13 +18,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../siteconf/script/siteconf:319 ../siteconf/script/siteconf:885
+#: ../siteconf/script/siteconf:319 ../siteconf/script/siteconf:884
 #: ../siteconf/share/configure.in:200
 #, perl-format
 msgid "usage: %s"
 msgstr ""
 
-#: ../siteconf/script/siteconf:370 ../siteconf/script/siteconf:882
+#: ../siteconf/script/siteconf:370 ../siteconf/script/siteconf:881
 #: ../siteconf/share/configure.in:214
 msgid "too late to -C now."
 msgstr ""
@@ -212,22 +212,22 @@ msgid "%s requires RdKw::WwW::GenGenLib %s"
 msgstr ""
 
 #. HEY!  The usage is `./render apath bpath', which is two arguments.
-#: ../siteconf/script/siteconf:888
+#: ../siteconf/script/siteconf:887
 msgid "need exactly two args"
 msgstr ""
 
-#: ../siteconf/script/siteconf:963
+#: ../siteconf/script/siteconf:962
 msgid "%q: HAVE declaration not found"
 msgstr ""
 
 #. HEY!  The first %q is the symbolic form, and
 #. (aka %q) is expanded form.
-#: ../siteconf/script/siteconf:990
+#: ../siteconf/script/siteconf:989
 #, perl-brace-format
 msgid "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
 msgstr ""
 
-#: ../siteconf/script/siteconf:992
+#: ../siteconf/script/siteconf:991
 #, perl-brace-format
 msgid "%q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr ""

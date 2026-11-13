@@ -139,7 +139,7 @@ sub new
 	$self;
 }
 
-=item I<cs>->B<parse>( I<spec>, ... )
+=item I<cs>->B<parse>( I<spec>, ...[, { prog => I<prog> }] )
 
 Sets I<cs> itself from what C<-C> was told, and returns it: each
 I<spec> is a I<category>B<:>I<encoding>; a I<category> alone, which means
@@ -149,8 +149,9 @@ by commas.  They are applied in order, so that a later one overrides
 what came before: C<-C console:locale -C stderr:ascii>, or the same as
 C<console:locale,stderr:ascii>.  Dies (with a newline, so that the
 message can be said again as it is) if a I<spec> makes no sense, and
-leaves I<cs> as it was.  There is no parse of a I<CLASS>: that is a
-L</new> one.
+leaves I<cs> as it was; a I<prog> is who says so, before the error
+(C<prog: unknown category ...>), as it is for every method here that
+takes one.  There is no parse of a I<CLASS>: that is a L</new> one.
 
     my $cs = $CS->new->parse('filesys:UTF-8,console:ascii');
 
@@ -158,7 +159,7 @@ L</new> one.
     $cs->parse($ENV{SITECONF_CODESETS})
         if exists $ENV{SITECONF_CODESETS};
 
-(Which is L</parse_from_env>, but for saying who and what first.)
+(Which is L</parse_from_env>, but for saying what first.)
 
 =cut
 
@@ -166,21 +167,23 @@ sub parse
 {
 	my ($self, @spec) = @_;
 	Carp::croak('parse: not of an object') unless ref $self;
+	my $prog = _who(_opt(parse => \@spec, 'prog'));
 	my @pairs;
 	for my $spec (map { defined $_ ? split(/,/, $_) : $_ } @spec) {
-		defined $spec or die "undefined codeset\n";
+		defined $spec or die "${prog}undefined codeset\n";
 		my ($name, $enc) = $spec =~ /\A([^:]*)(?::(.*))?\z/s;
-		length $name or die "no category in codeset @{[ _qq_ascii($spec) ]}\n";
+		length $name or die "${prog}no category in codeset @{[ _qq_ascii($spec) ]}\n";
 		if (!defined $enc && !_is_category($name)) {
 			_is_encoding($name)
-				or die "unknown category or encoding @{[ _qq_ascii($name) ]}\n";
+				or die "${prog}unknown category or encoding @{[ _qq_ascii($name) ]}\n";
 			($name, $enc) = (all => $name);
 		}
 		$enc = $name eq 'diag' ? 'unicode' : 'UTF-8' unless defined $enc;
 		push @pairs, $name, $enc;
 	}
 	# (to a copy first, so that we are as we were if one is bad)
-	%$self = %{ $self->new(@pairs) };
+	my $new = eval { $self->new(@pairs) } or die "$prog$@";
+	%$self = %$new;
 	$self;
 }
 
@@ -452,18 +455,22 @@ sub diag_mode
 	_is_ascii($self->_encoding('stderr')) ? 'ascii' : 'unicode';
 }
 
-=item I<cs>->B<initstd>([ I<file> => I<fallback>, ... ])
+=item I<cs>->B<initstd>([ I<file> => I<fallback>, ... ][, { prog => I<prog> }])
 
 Spells the standard files (B<stdin>, B<stdout> and B<stderr>) in
 their code sets, in place of whatever layers they had.  A I<fallback>
 is what L<PerlIO::encoding> does with what cannot be spelled
 (C<$PerlIO::encoding::fallback>, which is left as it is for the rest).
+Dies if one cannot be.
 
 =cut
 
 sub initstd
 {
-	my ($self, %fallback) = @_;
+	my ($self, @pairs) = @_;
+	my $prog = _who(_opt(initstd => \@pairs, 'prog'));
+	Carp::croak('initstd: odd number of arguments') if @pairs % 2;
+	my %fallback = @pairs;
 	for (sort keys %fallback) {
 		Carp::croak("initstd: not a standard file: $_") unless $STD{$_};
 	}
@@ -472,7 +479,7 @@ sub initstd
 		local $PerlIO::encoding::fallback = $fallback{$name}
 			if exists $fallback{$name};
 		binmode $STD{$name}, ":raw:encoding($enc)"
-			or die "cannot spell $name in $enc: $!\n";
+			or die "${prog}cannot spell $name in $enc: $!\n";
 	}
 	return;
 }
@@ -524,7 +531,7 @@ sub _fs
 	my @new;
 	for my $name (@names) {
 		my ($new) = _code($code, $enc, $name, $opt->{check});
-		defined $new or die +(defined $opt->{prog} ? "$opt->{prog}: " : '')
+		defined $new or die _who($opt)
 			. "cannot $what @{[ _qq_ascii($name) ]}"
 			. " in @{[ $self->_say_encoding('filesys') ]}\n";
 		push @new, $new;
@@ -547,6 +554,11 @@ and so on.  The options are:
 
 What the first argument is called (C<0>).
 
+=item B<prog> => I<prog>
+
+Who could not, said before the error (C<prog: cannot decode argv 1:
+...>).
+
 =item B<check> => I<check>
 
 What to do with what cannot be spelled, as L<Encode> takes it
@@ -555,34 +567,35 @@ What to do with what cannot be spelled, as L<Encode> takes it
 =back
 
     my $prog = $cs->un_argv($0);
-    my @args = $cs->un_argv(@ARGV, { start => 1 });
+    my @args = $cs->un_argv(@ARGV, { start => 1, prog => $prog });
 
 =cut
 
 sub un_argv
 {
 	my $self = shift;
-	$self->_argv(\&Encode::decode, decode => @_);
+	$self->_argv(\&Encode::decode, decode => un_argv => @_);
 }
 
 sub to_argv
 {
 	my $self = shift;
-	$self->_argv(\&Encode::encode, encode => @_);
+	$self->_argv(\&Encode::encode, encode => to_argv => @_);
 }
 
 sub _argv
 {
-	my ($self, $code, $what, @args) = @_;
-	my $opt = _opt("${what}_argv" => \@args, qw( start check ));
+	my ($self, $code, $what, $sub, @args) = @_;
+	my $opt = _opt($sub => \@args, qw( start prog check ));
 	my $start = exists $opt->{start} ? $opt->{start} : 0;
-	Carp::croak("${what}_argv: start is not a number")
+	Carp::croak("$sub: start is not a number")
 		unless defined $start && $start =~ /\A[0-9]+\z/;
 	my $enc = $self->_encoding('argv');
 	my @new;
 	for my $i (0 .. $#args) {
 		my ($new, $err) = _code($code, $enc, $args[$i], $opt->{check});
-		defined $new or die "cannot $what argv @{[ $start + $i ]}: $err\n";
+		defined $new or die _who($opt)
+			. "cannot $what argv @{[ $start + $i ]}: $err\n";
 		push @new, $new;
 	}
 	wantarray ? @new : $new[0];
@@ -590,41 +603,56 @@ sub _argv
 
 =item I<cs>->B<decode_argv>([ I<check> ])
 
+=item I<cs>->B<decode_argv>({ I<option> => I<value>, ... })
+
 =item I<cs>->B<encode_argv>([ I<check> ])
+
+=item I<cs>->B<encode_argv>({ I<option> => I<value>, ... })
 
 Decodes C<@ARGV> (as B<argv>), or encodes it, as B<un_argv> and
 B<to_argv> would from B<argv> C<1>; or dies, leaving it as it was, if
-one argument cannot be.  (As L<Encode::Locale/decode_argv>.)
+one argument cannot be.  (As L<Encode::Locale/decode_argv>.)  The
+options are theirs, but for B<start>: B<prog> and B<check>.
 
 =cut
 
 sub decode_argv
 {
-	my ($self, $check) = @_;
-	@ARGV = $self->un_argv(@ARGV, { start => 1, check => $check });
+	my ($self, @arg) = @_;
+	@ARGV = $self->un_argv(@ARGV, { _argv_opt(decode_argv => @arg), start => 1 });
 	return;
 }
 
 sub encode_argv
 {
-	my ($self, $check) = @_;
-	@ARGV = $self->to_argv(@ARGV, { start => 1, check => $check });
+	my ($self, @arg) = @_;
+	@ARGV = $self->to_argv(@ARGV, { _argv_opt(encode_argv => @arg), start => 1 });
 	return;
 }
 
-=item I<cs>->B<getenv>( I<name>, ...[, { check => I<check> }] )
+# A check alone, or the options, of decode_argv and encode_argv
+sub _argv_opt
+{
+	my ($who, @arg) = @_;
+	return (check => $arg[0]) unless ref $arg[0] eq 'HASH';
+	%{ _opt($who => \@arg, qw( prog check )) };
+}
+
+=item I<cs>->B<getenv>( I<name>, ...[, { I<option> => I<value>, ... }] )
 
 The values of the environment variables (B<env>) by those names,
 undef for each that is not set; the first one, in scalar context.
-Dies if a name or a value cannot be spelled.  A I<check> is for the
-values; a name is always spelled as it is, or not at all.
+Dies if a name or a value cannot be spelled.  The options are
+B<prog>, who could not (said before the error), and B<check>, which
+is for the values; a name is always spelled as it is, or not at all.
 
-=item I<cs>->B<setenv>( I<name> => I<value>, ...[, { check => I<check> }] )
+=item I<cs>->B<setenv>( I<name> => I<value>, ...[, { I<option> => I<value>, ... }] )
 
 Sets the environment variables; a I<value> of undef unsets it.  Sets
-none of them if one cannot be spelled.
+none of them if one cannot be spelled.  The options are those of
+B<getenv>.
 
-=item I<cs>->B<unsetenv>( I<name>, ... )
+=item I<cs>->B<unsetenv>( I<name>, ...[, { prog => I<prog> }] )
 
 Unsets them.
 
@@ -633,14 +661,14 @@ Unsets them.
 sub getenv
 {
 	my ($self, @names) = @_;
-	my $opt = _opt(getenv => \@names, 'check');
+	my $opt = _opt(getenv => \@names, qw( prog check ));
 	my $enc = $self->_encoding('env');
 	my @values;
 	for my $name (@names) {
-		my $value = $ENV{ $self->_env_key($enc, $name) };
+		my $value = $ENV{ $self->_env_key($enc, $name, $opt) };
 		if (defined $value) {
 			($value) = _code(\&Encode::decode, $enc, $value, $opt->{check});
-			defined $value or die "cannot decode environment variable"
+			defined $value or die _who($opt) . "cannot decode environment variable"
 				. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}\n";
 		}
 		push @values, $value;
@@ -651,15 +679,15 @@ sub getenv
 sub setenv
 {
 	my ($self, @pairs) = @_;
-	my $opt = _opt(setenv => \@pairs, 'check');
+	my $opt = _opt(setenv => \@pairs, qw( prog check ));
 	Carp::croak('setenv: odd number of arguments') if @pairs % 2;
 	my $enc = $self->_encoding('env');
 	my %set;
 	while (my ($name, $value) = splice @pairs, 0, 2) {
-		my $key = $self->_env_key($enc, $name);
+		my $key = $self->_env_key($enc, $name, $opt);
 		if (defined $value) {
 			my ($bytes) = _code(\&Encode::encode, $enc, $value, $opt->{check});
-			defined $bytes or die "cannot encode the value of"
+			defined $bytes or die _who($opt) . "cannot encode the value of"
 				. " environment variable @{[ _qq_ascii($name) ]}"
 				. " in @{[ $self->_say_encoding('env') ]}\n";
 			$value = $bytes;
@@ -677,16 +705,17 @@ sub setenv
 sub unsetenv
 {
 	my ($self, @names) = @_;
-	$self->setenv(map { $_ => undef } @names);
+	my $opt = _opt(unsetenv => \@names, 'prog');
+	$self->setenv((map { $_ => undef } @names), $opt);
 	return;
 }
 
 sub _env_key
 {
-	my ($self, $enc, $name) = @_;
+	my ($self, $enc, $name, $opt) = @_;
 	Carp::croak('undefined environment variable name') unless defined $name;
 	my ($key) = _code(\&Encode::encode, $enc, $name);
-	defined $key or die "cannot encode environment variable name"
+	defined $key or die _who($opt) . "cannot encode environment variable name"
 		. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}\n";
 	$key;
 }
@@ -702,6 +731,13 @@ sub _opt
 		Carp::croak("$who: unknown option $_") unless $ok{$_};
 	}
 	$opt;
+}
+
+# prog => ..., of those options: "prog: ", or ''
+sub _who
+{
+	my ($opt) = @_;
+	defined $opt->{prog} ? "$opt->{prog}: " : '';
 }
 
 # What Encode makes of the source (which it is not given to modify),

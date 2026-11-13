@@ -5,7 +5,7 @@
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 105;
+use Test::More tests => 109;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -125,6 +125,10 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs->filesys, 'iso-8859-1', '... and what it was told');
 	ok(!eval { $base->parse('env:UTF-8,nope'); 1 }, 'parse: one bad spec');
 	is($base->env, undef, '... the object left as it was');
+	ok(!eval { $base->parse('nope', { prog => 'me' }); 1 }, 'parse: prog');
+	is($@, qq{me: unknown category or encoding "nope"\n}, '... says who first');
+	ok(!eval { $base->parse('argv:nope', { prog => 'me' }); 1 }, '... an unknown encoding');
+	like($@, qr/\Ame: /, '... too');
 	ok(!eval { $CS->parse('argv'); 1 }, 'parse: not of a class');
 	$cs = $base->new(argv => 'UTF-8');
 	is($cs->argv, 'utf-8-strict', 'new of an object: overrides');

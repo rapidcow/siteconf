@@ -6,7 +6,7 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 61;
+use Test::More tests => 79;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -47,6 +47,10 @@ like($@, qr/\Acannot encode "\\x\{e9\}"/, '... says which');
 	like($@, qr/\Acannot decode argv 1: .+\n\z/, '... says which, from 0');
 	ok(!eval { $asc->un_argv(@args, { start => 1 }); 1 }, 'un_argv: start');
 	like($@, qr/\Acannot decode argv 1: .+\n\z/, '... from there');
+	ok(!eval { $asc->un_argv(@args, { start => 1, prog => 'me' }); 1 }, 'un_argv: prog');
+	like($@, qr/\Ame: cannot decode argv 1: .+\n\z/, '... says who first');
+	ok(!eval { $asc->to_argv('é', { prog => 'me' }); 1 }, 'to_argv: prog');
+	like($@, qr/\Ame: cannot encode argv 0: .+\n\z/, '... likewise');
 	ok(!eval { $asc->to_argv('é'); 1 }, 'to_argv: cannot spell one');
 	like($@, qr/\Acannot encode argv 0: .+\n\z/, '... says which');
 	ok(!eval { $lat->un_argv('x', { begin => 1 }); 1 }, 'un_argv: unknown option');
@@ -62,6 +66,13 @@ like($@, qr/\Acannot encode "\\x\{e9\}"/, '... says which');
 	ok(!eval { $asc->decode_argv; 1 }, 'decode_argv: cannot read one');
 	like($@, qr/\Acannot decode argv 1: .+\n\z/, '... says which, from 1');
 	is_deeply(\@ARGV, ["r\xe9sum\xe9", 'x'], '... leaving @ARGV be');
+	ok(!eval { $asc->decode_argv({ prog => 'me' }); 1 }, 'decode_argv: prog');
+	like($@, qr/\Ame: cannot decode argv 1: .+\n\z/, '... says who first');
+	$asc->decode_argv({ check => Encode::FB_DEFAULT() });
+	is_deeply(\@ARGV, ["r\x{fffd}sum\x{fffd}", 'x'], 'decode_argv: check, as an option');
+	ok(!eval { $asc->encode_argv({ prog => 'me' }); 1 }, 'encode_argv: prog');
+	like($@, qr/\Ame: cannot encode argv 1: .+\n\z/, '... says who first');
+	ok(!eval { $lat->decode_argv({ start => 2 }); 1 }, 'decode_argv: start is not ours to say');
 }
 
 # --- check: FB_CROAK, unless told otherwise
@@ -97,6 +108,15 @@ like($@, qr/\Acannot encode "\\x\{e9\}"/, '... says which');
 	is($ENV{CS_ONE}, '\x{00e9}', 'setenv: check');
 	ok(!eval { $asc->getenv('CS_é', { check => Encode::FB_DEFAULT() }); 1 },
 		'getenv: names, never checked otherwise');
+	ok(!eval { $asc->getenv('CS_é', { prog => 'me' }); 1 }, 'getenv: prog');
+	like($@, qr/\Ame: cannot encode environment variable name /, '... says who first');
+	$ENV{CS_TWO} = "\xe9";
+	ok(!eval { $asc->getenv('CS_TWO', { prog => 'me' }); 1 }, '... for a value');
+	like($@, qr/\Ame: cannot decode environment variable /, '... too');
+	ok(!eval { $asc->setenv(CS_TWO => 'é', { prog => 'me' }); 1 }, 'setenv: prog');
+	like($@, qr/\Ame: cannot encode the value of /, '... says who first');
+	ok(!eval { $asc->unsetenv('CS_é', { prog => 'me' }); 1 }, 'unsetenv: prog');
+	like($@, qr/\Ame: cannot encode environment variable name /, '... says who first');
 }
 
 # --- getenv, setenv, unsetenv

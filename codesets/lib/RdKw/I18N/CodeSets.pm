@@ -798,6 +798,8 @@ sub diag_name
 		#
 		# Backslashes are alright though... (also
 		# because DOS uses them for file sep, so)
+		# A more practical reason though: PERLQQ-
+		# fallback ASCII strings are preserved.
 		if ($self->diag_mode eq 'ascii'
 			? $name =~ /\A[A-Za-z0-9_\.\-\\\/]+\z/
 			: $name =~ /\A[\w\.\-\\\/]+\z/)

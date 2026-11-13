@@ -24,13 +24,13 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs->console, undef, '... nor console');
 }
 
-# --- set: by canonical name, and locale per category
+# --- set: by canonical name; locale unsets
 {
 	my $cs = $CS->new(argv => 'UTF-8', env => 'latin1', filesys => 'locale', stdout => 'locale');
 	is($cs->argv, 'utf-8-strict', 'argv: canonical name');
 	is($cs->env, 'iso-8859-1', 'env: canonical name');
-	is($cs->filesys, canon('locale_fs'), 'filesys: locale is locale_fs');
-	is($cs->stdout, canon('console_out'), 'stdout: locale is console_out');
+	is($cs->filesys, undef, 'filesys: locale is not set');
+	is($cs->_encoding('filesys'), canon('locale_fs'), '... and is spelled as locale_fs');
 	$cs->argv(undef);
 	is($cs->argv, undef, 'undef unsets');
 	ok(!eval { $CS->new(argv => 'no-such-thing'); 1 }, 'unknown encoding');
@@ -41,9 +41,9 @@ sub canon { Encode::find_encoding($_[0])->name }
 
 # --- what is got can be given to another category
 {
-	my $cs = $CS->new(argv => 'locale');
-	$cs->stdout($cs->argv) if !defined $cs->stdout;
-	is($cs->stdout, canon('locale'), 'stdout from argv: locale of argv');
+	my $cs = $CS->new(argv => 'locale', stdout => 'latin1');
+	$cs->stdout($cs->argv);
+	is($cs->stdout, undef, 'stdout from argv: unset, as argv is');
 	$cs = $CS->new(argv => 'ascii');
 	$cs->stdout($cs->argv);
 	is($cs->stdout, 'ascii', 'stdout from argv: as it is');
@@ -73,7 +73,7 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs->stdout, 'iso-8859-1', 'parse: console');
 	is($cs->stderr, 'ascii', '... overridden later');
 	is($cs->argv, 'utf-8-strict', '... omitted is UTF-8');
-	is($cs->filesys, canon('locale_fs'), '... locale');
+	is($cs->filesys, undef, '... locale is not set');
 	is($cs->diag_mode, 'ascii', '... diag');
 	$cs = $CS->new->parse(qw( stderr:ascii console:latin1 ));
 	is($cs->stderr, 'iso-8859-1', 'parse: console overrides what came before');
@@ -93,7 +93,7 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($CS->new->parse('0')->filesys, 'ascii', 'parse: 0 is ascii');
 	is($CS->new->parse('1')->filesys, 'utf-8-strict', 'parse: 1 is UTF-8');
 	is($CS->new->parse('ANSI_X3.4-1968')->stderr, 'ascii', 'parse: ASCII by another name');
-	is($CS->new->parse('locale')->filesys, canon('locale_fs'), 'parse: locale alone');
+	is_deeply({ %{ $CS->new->parse('0')->parse('locale') } }, {}, 'parse: locale alone resets to new');
 	is($CS->new->parse('console:0')->stdout, 'ascii', 'parse: 0 for a category');
 	is($CS->new->parse('diag:0')->diag_mode, 'ascii', 'parse: diag:0');
 	is($CS->new(diag => 1, stderr => 'ascii', diag => 1)->diag_mode, 'unicode', 'new: diag 1');

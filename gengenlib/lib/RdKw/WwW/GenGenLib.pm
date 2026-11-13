@@ -53,10 +53,7 @@ use File::Basename qw( basename dirname );
 use File::Compare ();
 use File::Spec;
 
-# What we say is said in the language of the locale, if
-# RdKw::WwW::SiteConf::L10N says where the catalogs are (and
-# Locale::Messages is there to read them); else, and for what no
-# catalog has, as it is written (see RdKw::L10N::TextDomain).
+# Set up locale and gettext.
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 

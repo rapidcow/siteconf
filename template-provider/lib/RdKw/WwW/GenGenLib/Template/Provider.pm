@@ -142,7 +142,6 @@ those write files by names this provider does not spell.
 
 use Cwd ();
 use File::Spec ();
-use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
 use Template::Constants qw(
 	STATUS_ERROR STATUS_DECLINED );
 use RdKw::WwW::GenGenLib 0.0100 qw(
@@ -150,10 +149,10 @@ use RdKw::WwW::GenGenLib 0.0100 qw(
 	norm_dep subs_dep split_dep
 	escape_dep uproot );
 
-# (what is said is said, and names spelled, as RdKw::WwW::GenGenLib does)
-BEGIN {
-	*__ = \&RdKw::WwW::GenGenLib::__;
-}
+
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
+# Use the same gettext domain as our (distant) parent GenGenLib.pm.
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 # A name as the file system spells it, and back; or an error from us
 sub _to_fs { to_fs($_[0], { prog => __PACKAGE__ }) }

@@ -246,25 +246,23 @@ use File::Basename qw( dirname basename );
 use Cwd qw( abs_path );
 use File::Spec ();
 
+# Set up locale and gettext.
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
+
+use RdKw::WwW::SiteConf::Modifiers;
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_make read_deps update_file
 	norm_dep uproot );
 
-# What we say is said in the language of the locale, if
-# RdKw::WwW::SiteConf::L10N says where the catalogs are (and
-# Locale::Messages is there to read them); else, and for what no
-# catalog has, as it is written (see RdKw::L10N::TextDomain).
-use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-
-use RdKw::WwW::SiteConf::Modifiers;
-
-# A name as the file system spells it, and back; or an error from E
+# A name as the file system spells it, and back;
+# or an error prefixed `E:'.
 sub _to_fs { to_fs($_[0], { prog => 'E' }) }
 sub _un_fs { un_fs($_[0], { prog => 'E' }) }
 
-# An error or a warning: each line of the message after `prefix'
-# (E: or W:), and a newline at the end
+# An error or a warning: each line of the message
+# after `prefix' (`E:' or `W:').  Terminated with
+# newline.
 sub _say
 {
 	my ($prefix, $msg) = @_;

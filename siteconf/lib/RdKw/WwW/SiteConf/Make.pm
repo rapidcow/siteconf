@@ -36,7 +36,7 @@ only say how else to spell them.
 =cut
 
 use RdKw::I18N::CodeSets::Functions qw( diag );
-# (said as RdKw::WwW::SiteConf says it: see there)
+# (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _emit

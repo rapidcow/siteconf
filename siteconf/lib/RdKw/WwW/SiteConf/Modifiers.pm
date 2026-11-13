@@ -73,7 +73,7 @@ written C<$$> (as by bmake's C<:q>), so that make passes it on.
 =cut
 
 use RdKw::I18N::CodeSets::Functions qw( diag );
-# (said as RdKw::WwW::SiteConf says it: see there)
+# (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 # Word at a time.  Each takes and returns a word.

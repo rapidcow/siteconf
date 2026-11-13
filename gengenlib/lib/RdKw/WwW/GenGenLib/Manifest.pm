@@ -76,13 +76,11 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 =cut
 
 use Encode ();
-use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
 use RdKw::WwW::GenGenLib qw( subs_dep );
 
-# Say what we say as RdKw::WwW::GenGenLib does.
-BEGIN {
-	*__ = \&RdKw::WwW::GenGenLib::__;
-}
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
+# Use the same gettext domain as our parent GenGenLib.pm.
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 # POSIX white space since [[:space:]] is too broad.
 # (This is the same character set used in SiteConf.pm)

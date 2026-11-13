@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-13 01:13-0600\n"
-"PO-Revision-Date: 2026-11-12 00:00-0600\n"
-"Last-Translator: rapidcow\n"
+"PO-Revision-Date: 2026-11-13 12:00-0600\n"
+"Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -49,9 +49,9 @@ msgid "empty output path"
 msgstr "empty output path"
 
 #: ../siteconf/script/siteconf:427
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s is not permitted in mode %s"
-msgstr "%s is not for %s"
+msgstr "%s is not permitted in mode %s"
 
 #: ../siteconf/script/siteconf:490
 #, perl-format
@@ -69,9 +69,8 @@ msgid "%q: %q has the separator in it (%s)"
 msgstr "%q: %q has the separator in it (%s)"
 
 #: ../siteconf/script/siteconf:515 ../siteconf/script/siteconf:522
-#, fuzzy
 msgid "cannot write to stdout: %m"
-msgstr "cannot write to standard output: %m"
+msgstr "cannot write to stdout: %m"
 
 #: ../siteconf/script/siteconf:533
 msgid "cannot find %q (is WwW-SiteConf installed?)"
@@ -184,14 +183,12 @@ msgstr "cannot chmod %q: %m"
 #. Claude felt the need to clarify this; this
 #. seems pretty clear to me. :/
 #: ../siteconf/script/siteconf:793
-#, fuzzy
 msgid "Overwrote %#q"
-msgstr "Overwrote %q"
+msgstr "Overwrote %#q"
 
 #: ../siteconf/script/siteconf:793
-#, fuzzy
 msgid "Wrote %#q"
-msgstr "Wrote %q"
+msgstr "Wrote %#q"
 
 #: ../siteconf/script/siteconf:797
 msgid "You already have configure."
@@ -210,9 +207,9 @@ msgstr ""
 "or -f to overwrite the existing one."
 
 #: ../siteconf/script/siteconf:835
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s requires RdKw::WwW::GenGenLib %s"
-msgstr "%s needs RdKw::WwW::GenGenLib %s"
+msgstr "%s requires RdKw::WwW::GenGenLib %s"
 
 #. HEY!  The usage is `./render apath bpath', which is two arguments.
 #: ../siteconf/script/siteconf:888
@@ -239,9 +236,8 @@ msgstr "%q: Your HAVE %q is not under ${a} (aka %q)"
 #. file and %d is its lineno.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:282
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:102
-#, fuzzy
 msgid "%#q line %d"
-msgstr "%q line %s"
+msgstr "%#q line %d"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:348
 msgid ""
@@ -284,7 +280,7 @@ msgstr "cannot find the source tree %q: %m"
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:462
 #, perl-brace-format
 msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
-msgstr "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}"
+msgstr "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:481
 msgid "%s: %q: %s is no code point"
@@ -339,7 +335,7 @@ msgstr "%s: misplaced %s (not in a recipe)"
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:715
 #, perl-format, perl-brace-format
 msgid "%s: undefined %s (explicitly suppressed by ${a})"
-msgstr ""
+msgstr "%s: undefined %s (explicitly suppressed by ${a})"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:722
 #, perl-format

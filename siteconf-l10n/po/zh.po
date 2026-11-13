@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-13 01:13-0600\n"
-"PO-Revision-Date: 2026-11-12 00:00-0600\n"
+"PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
 "Language: zh\n"
@@ -49,9 +49,9 @@ msgid "empty output path"
 msgstr "输出路径为空"
 
 #: ../siteconf/script/siteconf:427
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s is not permitted in mode %s"
-msgstr "%s 不适用于 %s"
+msgstr "%s 不能用于模式 %s"
 
 #: ../siteconf/script/siteconf:490
 #, perl-format
@@ -69,7 +69,6 @@ msgid "%q: %q has the separator in it (%s)"
 msgstr "%q：%q 中有分隔符（%s）"
 
 #: ../siteconf/script/siteconf:515 ../siteconf/script/siteconf:522
-#, fuzzy
 msgid "cannot write to stdout: %m"
 msgstr "无法写入标准输出：%m"
 
@@ -184,14 +183,12 @@ msgstr "无法修改 %q 的权限：%m"
 #. Claude felt the need to clarify this; this
 #. seems pretty clear to me. :/
 #: ../siteconf/script/siteconf:793
-#, fuzzy
 msgid "Overwrote %#q"
-msgstr "已覆盖 %q"
+msgstr "已覆盖 %#q"
 
 #: ../siteconf/script/siteconf:793
-#, fuzzy
 msgid "Wrote %#q"
-msgstr "已写入 %q"
+msgstr "已写入 %#q"
 
 #: ../siteconf/script/siteconf:797
 msgid "You already have configure."
@@ -210,7 +207,7 @@ msgstr ""
 "要覆盖现有的，请传 -f。"
 
 #: ../siteconf/script/siteconf:835
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s requires RdKw::WwW::GenGenLib %s"
 msgstr "%s 需要 RdKw::WwW::GenGenLib %s"
 
@@ -281,9 +278,9 @@ msgid "cannot find the source tree %q: %m"
 msgstr "找不到源代码树 %q：%m"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:462
-#, fuzzy, perl-brace-format
+#, perl-brace-format
 msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
-msgstr "%1$s：%2$q：${%3$s} 是相对于 ${B} 的；请写 ${B}/${%3$s}"
+msgstr "%1$s：%2$q：${%3$s} 是相对于 ${B} 的；请写 ${B}/${%3$s}。"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:481
 msgid "%s: %q: %s is no code point"
@@ -313,18 +310,17 @@ msgid "%s: file name %q must be relative"
 msgstr "%s：文件名 %q 必须是相对的"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:594
-#, fuzzy
 msgid "%s: file name %q is out of tree"
-msgstr "%s：文件名 %q 跑出了树"
+msgstr "%s：文件名 %q 在树外"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:645
 msgid "%s: %q is a reserved goal name"
 msgstr "%s：%q 是保留的目标名"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:700
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: %s is not a valid Unicode code point"
-msgstr "%s：%s 不是码位"
+msgstr "%s：%s 不是有效的 Unicode 码位"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:707
 #, perl-format
@@ -332,14 +328,14 @@ msgid "%s: %s outside of a recipe"
 msgstr "%s：%s 出现在配方之外"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:712
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: misplaced %s (not in a recipe)"
-msgstr "%s：%s 出现在配方之外"
+msgstr "%s：%s 放错了地方（不在配方中）"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:715
 #, perl-format, perl-brace-format
 msgid "%s: undefined %s (explicitly suppressed by ${a})"
-msgstr ""
+msgstr "%s：%s 未定义（被 ${a} 显式取消了）"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:722
 #, perl-format
@@ -349,7 +345,7 @@ msgstr "%s：未定义的变量：%s"
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:766
 #, perl-brace-format
 msgid "%s: %q: target is not preceded by a legal prefix (${b} or ${c})"
-msgstr ""
+msgstr "%s：%q：目标前面没有合法的前缀（${b} 或 ${c}）"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:816
 #, perl-format
@@ -376,16 +372,14 @@ msgid "%s: %q must be one name in ${a}"
 msgstr "%s：%q 必须是 ${a} 中的一个名字"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:886
-#, fuzzy
 msgid ""
 "%s: %q: a prerequisite must start with either `NEED:' or `WANT:', not %q"
-msgstr "%s：%q：先决条件在冒号前只能是 NEED: 或 WANT:"
+msgstr "%s：%q：先决条件必须以 `NEED:' 或 `WANT:' 开头，而不是 %q"
 
 #. HEY!  %q is `NEED:' or `WANT:', literally.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:891
-#, fuzzy
 msgid "%s: %q something?"
-msgstr "%s：%q 后面什么都没有"
+msgstr "%s：%q 什么呢？"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:902
 msgid "%s: invalid line: %q"
@@ -398,9 +392,8 @@ msgid "dependency cycle: %s"
 msgstr "依赖循环：%s"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:950
-#, fuzzy
 msgid "%q: %q is reserved for directory markers. (Set -De to change it.)"
-msgstr "%q：%q 是保留给目录标记的。"
+msgstr "%q：%q 是保留给目录标记的。（要改的话请设置 -De。）"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:971
 msgid "no rule to make it (%q)"
@@ -529,9 +522,8 @@ msgid "unknown generator %q.  Choose one of: %s"
 msgstr "未知的生成器 %q。请从这些中选一个：%s"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1397
-#, fuzzy
 msgid "bad output name %q: stay in the build directory please"
-msgstr "输出名 %q 有误：请给出构建目录中的一个文件"
+msgstr "输出名 %q 有误：请留在构建目录里"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1419
 msgid "Removing %q"

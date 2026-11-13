@@ -26,6 +26,35 @@ sub run {
 	($? >> 8, $out);
 }
 
+# Does the file system (of the current directory) take these bytes
+# for a name as they are, as we expect of it?  That is: a directory
+# under a missing one of that name is ENOENT (and not EILSEQ, EINVAL,
+# or whatever else it has to say about the name); one of that name
+# can be made, is listed under those very bytes (not normalized, nor
+# folded), and can be removed again.  Returns what was surprising, or
+# undef if nothing was; leaves nothing behind.
+sub fs_surprise {
+	my ($name) = @_;
+	return 'the name is already taken' if -e $name || -l $name;
+	if (mkdir "$name/x") {
+		rmdir "$name/x"; rmdir $name;
+		return 'mkdir under a missing directory worked';
+	}
+	return "mkdir under a missing directory: $! (expected ENOENT)"
+		unless $!{ENOENT};
+	return 'a failed mkdir made something' if -e $name || -l $name;
+	mkdir $name or return "mkdir: $!";
+	my @found;
+	if (opendir my $dh, '.') {
+		@found = grep { $_ eq $name } readdir $dh;
+		closedir $dh;
+	}
+	rmdir $name or return "rmdir: $!";
+	return 'the name is not listed as it was given' unless @found == 1;
+	return 'rmdir left something' if -e $name || -l $name;
+	undef;
+}
+
 my ($status, $out) = run($script, 'init');
 is($status, 0, 'init') or diag $out;
 
@@ -43,10 +72,13 @@ like($out, qr/^E: cannot mkdir `a\/b\/c': .*non-leaf/, 'says why');
 ok(!-e 'a', 'and made nothing');
 
 # What configure says of a name, it says as CodeSets says it: under
-# diag ascii, what is not ASCII is \x{...} (the name is UTF-8 bytes)
+# diag ascii, what is not ASCII is \x{...} (the name is UTF-8 bytes).
+# The file system code set is pinned, so that the locale has no say;
+# the file system itself still does, so ask it first.
 SKIP: {
-	eval { to_fs("r\x{e9}/x") } or skip "locale fs cannot encode \\x{e9}", 2;
-	($status, $out) = run('configure', '-Cargv:UTF-8,stderr:UTF-8,diag:ascii', '-q', "-DB=r\xc3\xa9/x");
+	my $why = fs_surprise("r\xc3\xa9");
+	skip "file system: $why", 2 if defined $why;
+	($status, $out) = run('configure', '-Cargv:UTF-8,stderr:UTF-8,diag:ascii,filesys:UTF-8', '-q', "-DB=r\xc3\xa9/x");
 	isnt($status, 0, 'no intermediates, by any name');
 	like($out, qr/^E: cannot mkdir "r\\x\{e9\}\/x": .*non-leaf/, '... said in ASCII under diag ascii');
 }

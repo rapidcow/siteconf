@@ -242,9 +242,8 @@ msgstr "%q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
 #. file and %d is its lineno.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:289
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:105
-#, fuzzy
 msgid "%#q line %d"
-msgstr "%q 第 %s 行"
+msgstr "%#q 行 %d"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:355
 msgid ""
@@ -1035,9 +1034,6 @@ msgstr "不允许相对路径（没有设置 RELATIVE）"
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:473
 msgid "%q: not a file"
 msgstr "%q：不是文件"
-
-#~ msgid "%q line %s"
-#~ msgstr "%q 第 %s 行"
 
 #, perl-format
 #~ msgid "%s: %s is not known here (the source is what the prerequisites say)"

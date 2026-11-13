@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 02:48-0600\n"
+"POT-Creation-Date: 2026-11-13 08:03-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,166 +18,165 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../siteconf/script/siteconf:312 ../siteconf/share/configure.in:216
+#: ../siteconf/script/siteconf:309 ../siteconf/share/configure.in:182
 #: ../siteconf/share/presets/tem.render:61
 #: ../siteconf/share/presets/web.render:70
 #, perl-format
 msgid "usage: %s"
 msgstr ""
 
-#: ../siteconf/script/siteconf:363 ../siteconf/share/configure.in:230
+#: ../siteconf/script/siteconf:360 ../siteconf/share/configure.in:197
 #: ../siteconf/share/presets/tem.render:58
 #: ../siteconf/share/presets/web.render:67
 msgid "too late to -C now."
 msgstr ""
 
-#: ../siteconf/script/siteconf:395
+#: ../siteconf/script/siteconf:393
 #, perl-format
 msgid "conflicting modes: %s and %s"
 msgstr ""
 
-#: ../siteconf/script/siteconf:399 ../siteconf/share/configure.in:232
+#: ../siteconf/script/siteconf:397 ../siteconf/share/configure.in:199
 msgid "too many arguments"
 msgstr ""
 
-#: ../siteconf/script/siteconf:407
+#: ../siteconf/script/siteconf:405
 msgid "named outputs are only for init"
 msgstr ""
 
-#: ../siteconf/script/siteconf:409
+#: ../siteconf/script/siteconf:407
 msgid "unknown output name: %q"
 msgstr ""
 
-#: ../siteconf/script/siteconf:411
+#: ../siteconf/script/siteconf:409
 msgid "empty output path"
 msgstr ""
 
-#: ../siteconf/script/siteconf:420
+#: ../siteconf/script/siteconf:418
 #, perl-format
 msgid "%s is not permitted in mode %s"
 msgstr ""
 
-#: ../siteconf/script/siteconf:483
-#, perl-format
-msgid "%s: an octal number up to 377, please"
+#: ../siteconf/script/siteconf:486
+msgid "%#q: not a valid ASCII octal code point"
 msgstr ""
 
-#: ../siteconf/script/siteconf:499
-msgid "%s: NEED or WANT, not %q"
+#: ../siteconf/script/siteconf:500
+msgid "%q: expected NEED or WANT, not %q"
 msgstr ""
 
 #. HEY!  the %s is the separator, as the option that
 #. says it: -0 for a NUL, -012 for a newline
-#: ../siteconf/script/siteconf:506
-msgid "%q: %q has the separator in it (%s)"
+#: ../siteconf/script/siteconf:509
+msgid "%q: %q conflicts with record separator %s"
 msgstr ""
 
-#: ../siteconf/script/siteconf:508 ../siteconf/script/siteconf:515
+#: ../siteconf/script/siteconf:512 ../siteconf/script/siteconf:519
 msgid "cannot write to stdout: %m"
 msgstr ""
 
-#: ../siteconf/script/siteconf:526
+#: ../siteconf/script/siteconf:530
 msgid "cannot find %q (is WwW-SiteConf installed?)"
 msgstr ""
 
-#: ../siteconf/script/siteconf:535 ../siteconf/lib/RdKw/WwW/SiteConf.pm:799
+#: ../siteconf/script/siteconf:539 ../siteconf/lib/RdKw/WwW/SiteConf.pm:799
 msgid "cannot open file %q: %m"
 msgstr ""
 
-#: ../siteconf/script/siteconf:537
+#: ../siteconf/script/siteconf:541
 msgid "cannot read file %q: %m"
 msgstr ""
 
-#: ../siteconf/script/siteconf:591
+#: ../siteconf/script/siteconf:595
 msgid "Host-relative base URL"
 msgstr ""
 
-#: ../siteconf/script/siteconf:592
+#: ../siteconf/script/siteconf:596
 msgid "Absolute base URL"
 msgstr ""
 
 #. HEY!  %s is the option (-Sx), and then what it may be
-#: ../siteconf/script/siteconf:596
+#: ../siteconf/script/siteconf:600
 #, perl-format
 msgid "%s: no such thing (valid: %s)"
 msgstr ""
 
 #. HEY!  %s is an option, as -Sa (and likewise in the next few)
-#: ../siteconf/script/siteconf:600 ../siteconf/script/siteconf:620
+#: ../siteconf/script/siteconf:604 ../siteconf/script/siteconf:624
 #, perl-format
 msgid "%s may not be empty."
 msgstr ""
 
-#: ../siteconf/script/siteconf:603 ../siteconf/script/siteconf:607
+#: ../siteconf/script/siteconf:607 ../siteconf/script/siteconf:611
 #, perl-format
 msgid "%s must be a relative path."
 msgstr ""
 
-#: ../siteconf/script/siteconf:612
+#: ../siteconf/script/siteconf:616
 #, perl-format
 msgid "%s and %s are the same thing; pick one."
 msgstr ""
 
-#: ../siteconf/script/siteconf:626
+#: ../siteconf/script/siteconf:630
 msgid "bad preset name: %q"
 msgstr ""
 
-#: ../siteconf/script/siteconf:628
+#: ../siteconf/script/siteconf:632
 msgid "no such preset: %q"
 msgstr ""
 
 #. HEY!  %s is the option, as -MModule=version (here and
 #. in the next four)
-#: ../siteconf/script/siteconf:647
+#: ../siteconf/script/siteconf:651
 #, perl-format
 msgid "%s: bad module name"
 msgstr ""
 
-#: ../siteconf/script/siteconf:649
+#: ../siteconf/script/siteconf:653
 #, perl-format
 msgid "%s: no version for what is dropped"
 msgstr ""
 
-#: ../siteconf/script/siteconf:652
+#: ../siteconf/script/siteconf:656
 #, perl-format
 msgid "%s: bad version"
 msgstr ""
 
-#: ../siteconf/script/siteconf:655
+#: ../siteconf/script/siteconf:659
 #, perl-format
 msgid "%s: configure always needs it"
 msgstr ""
 
-#: ../siteconf/script/siteconf:659
+#: ../siteconf/script/siteconf:663
 #, perl-format
 msgid "%s: version %s or later is required"
 msgstr ""
 
-#: ../siteconf/script/siteconf:676
+#: ../siteconf/script/siteconf:680
 msgid "preset does not supply a render output"
 msgstr ""
 
-#: ../siteconf/script/siteconf:682
+#: ../siteconf/script/siteconf:686
 msgid "dangerous name for render: %q is not supported (yet)"
 msgstr ""
 
-#: ../siteconf/script/siteconf:724
+#: ../siteconf/script/siteconf:728
 msgid "Not changing %q"
 msgstr ""
 
-#: ../siteconf/script/siteconf:728
+#: ../siteconf/script/siteconf:732
 msgid "cannot remove %q: %m"
 msgstr ""
 
-#: ../siteconf/script/siteconf:739
+#: ../siteconf/script/siteconf:743
 msgid "cannot create file %q: %m"
 msgstr ""
 
-#: ../siteconf/script/siteconf:740 ../siteconf/script/siteconf:741
+#: ../siteconf/script/siteconf:744 ../siteconf/script/siteconf:745
 msgid "cannot write file %q: %m"
 msgstr ""
 
-#: ../siteconf/script/siteconf:743
+#: ../siteconf/script/siteconf:747
 msgid "cannot chmod %q: %m"
 msgstr ""
 
@@ -186,23 +185,23 @@ msgstr ""
 #. the file is simply created.  I don't know why
 #. Claude felt the need to clarify this; this
 #. seems pretty clear to me. :/
-#: ../siteconf/script/siteconf:751
+#: ../siteconf/script/siteconf:755
 msgid "Overwrote %#q"
 msgstr ""
 
-#: ../siteconf/script/siteconf:751
+#: ../siteconf/script/siteconf:755
 msgid "Wrote %#q"
 msgstr ""
 
-#: ../siteconf/script/siteconf:755
+#: ../siteconf/script/siteconf:759
 msgid "You already have configure."
 msgstr ""
 
-#: ../siteconf/script/siteconf:756
+#: ../siteconf/script/siteconf:760
 msgid "You already have configure at %q."
 msgstr ""
 
-#: ../siteconf/script/siteconf:757
+#: ../siteconf/script/siteconf:761
 msgid ""
 "Pass -o /dev/null if you did mean to not generate configure,\n"
 "or -f to overwrite the existing one."
@@ -230,8 +229,8 @@ msgstr ""
 #. HEY!  %q is a variable of config.mk: `b' or `c', which are where
 #. what we make goes (the target tree, and the cache)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:371
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:376 ../siteconf/share/configure.in:326
-#: ../siteconf/share/configure.in:335
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:376 ../siteconf/share/configure.in:297
+#: ../siteconf/share/configure.in:309
 msgid "%q prefix must be a relative path."
 msgstr ""
 
@@ -512,7 +511,7 @@ msgstr ""
 msgid "Removing %q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1437 ../siteconf/share/configure.in:353
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1437 ../siteconf/share/configure.in:330
 msgid "Done!"
 msgstr ""
 
@@ -523,11 +522,11 @@ msgid "To build, run: %s"
 msgstr ""
 
 #. HEY!  Writing is what was not there, and Updating what was
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1449 ../siteconf/share/configure.in:342
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1449 ../siteconf/share/configure.in:319
 msgid "Writing %q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1449 ../siteconf/share/configure.in:342
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1449 ../siteconf/share/configure.in:319
 msgid "Updating %q"
 msgstr ""
 
@@ -586,164 +585,150 @@ msgstr ""
 msgid "ninja cannot name %q (with %s in it)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:58
+#: ../siteconf/share/configure.in:51
 #, perl-format
 msgid "missing %s"
 msgstr ""
 
-#. HEY!  the first %s is a module, then the version we need,
-#. and the version there is
-#: ../siteconf/share/configure.in:62
+#: ../siteconf/share/configure.in:55
 #, perl-format
 msgid "%s: version %s required (this is %s)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:67
+#: ../siteconf/share/configure.in:64
 #, perl-format
 msgid "%d module missing.  Looks like you got some work to do..."
 msgid_plural "%d modules missing.  Looks like you got some work to do..."
 msgstr[0] ""
 msgstr[1] ""
 
-#. HEY!  %s is the option, -D or -O
-#: ../siteconf/share/configure.in:103
+#: ../siteconf/share/configure.in:96
 #, perl-format
 msgid "%s: empty name."
 msgstr ""
 
-#: ../siteconf/share/configure.in:157
+#: ../siteconf/share/configure.in:132
 msgid "Project root, seen from current directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:158
+#: ../siteconf/share/configure.in:133
 msgid "Build directory, seen from the source tree"
 msgstr ""
 
-#: ../siteconf/share/configure.in:159
+#: ../siteconf/share/configure.in:134
 msgid "Source directory, seen from the source tree"
 msgstr ""
 
-#: ../siteconf/share/configure.in:160
+#: ../siteconf/share/configure.in:135
 msgid "Target directory, seen from the build directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:161
+#: ../siteconf/share/configure.in:136
 msgid "Cache directory, seen from the build directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:163
+#: ../siteconf/share/configure.in:138
 msgid "Transformation rules, from current directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:164
+#: ../siteconf/share/configure.in:139
 msgid "Manifest, from current directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:165
+#: ../siteconf/share/configure.in:140
 msgid "Directory marker"
 msgstr ""
 
-#: ../siteconf/share/configure.in:166
+#: ../siteconf/share/configure.in:141
 msgid "Clean rule template"
 msgstr ""
 
-#: ../siteconf/share/configure.in:171
-msgid ""
-"Code sets, after SITECONF_CODESETS; first, or not at all\n"
-"(see RdKw::I18N::CodeSets)"
+#: ../siteconf/share/configure.in:146
+msgid "Code sets overrides (see I18N::CodeSets)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:173
+#: ../siteconf/share/configure.in:147
 msgid "This help message"
 msgstr ""
 
-#: ../siteconf/share/configure.in:174
+#: ../siteconf/share/configure.in:148
 msgid "Clear all configuration at this point"
 msgstr ""
 
-#: ../siteconf/share/configure.in:175
+#: ../siteconf/share/configure.in:149
 msgid "Disable tips"
 msgstr ""
 
-#: ../siteconf/share/configure.in:176
+#: ../siteconf/share/configure.in:150
 msgid "Create non-leaf build directory components"
 msgstr ""
 
-#. HEY!  what an option is, if it is not said: the first %s
-#. is what the option is for (the last line of it, if it is
-#. more), and the second the default (as -Db, say)
-#: ../siteconf/share/configure.in:195
+#: ../siteconf/share/configure.in:164
 #, perl-format
 msgid "%s (default: %s)"
 msgstr ""
 
-#. HEY!  the same, for an option with nothing said of it
-#: ../siteconf/share/configure.in:197
+#: ../siteconf/share/configure.in:165
 #, perl-format
 msgid "(default: %s)"
 msgstr ""
 
-#. HEY!  the other ways to say an option (--help, -?), after
-#. what it is for
-#: ../siteconf/share/configure.in:203
+#: ../siteconf/share/configure.in:169
 #, perl-format
 msgid "%s (alias: %s)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:218
+#: ../siteconf/share/configure.in:184
 msgid "The following variables may be defined:"
 msgstr ""
 
-#: ../siteconf/share/configure.in:220
+#: ../siteconf/share/configure.in:186
 msgid "Options with defaults:"
 msgstr ""
 
-#: ../siteconf/share/configure.in:221
+#: ../siteconf/share/configure.in:187
 msgid ""
 "Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
 "respectively, for the rulebook or for the files being transformed."
 msgstr ""
 
-#: ../siteconf/share/configure.in:224
-msgid "See also `perldoc RdKw::WwW::SiteConf::Configure'."
+#: ../siteconf/share/configure.in:190
+msgid "See also WwW::SiteConf::Configure."
 msgstr ""
 
-#: ../siteconf/share/configure.in:243
+#: ../siteconf/share/configure.in:211
 msgid "cannot find $A (aka %q): %m"
 msgstr ""
 
-#: ../siteconf/share/configure.in:245
+#: ../siteconf/share/configure.in:214
 msgid "cannot chdir to $A (aka %q): %m"
 msgstr ""
 
-#. HEY!  %s is why, as File::Path says it
-#: ../siteconf/share/configure.in:266
+#: ../siteconf/share/configure.in:234
 msgid "cannot create %q: %s"
 msgstr ""
 
-#. HEY!  non-leaf: a directory above it (as in mkdir -p)
-#: ../siteconf/share/configure.in:276
+#: ../siteconf/share/configure.in:244
 msgid "cannot mkdir %q: %m (missing non-leaf components?)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:277 ../siteconf/share/configure.in:338
+#: ../siteconf/share/configure.in:245 ../siteconf/share/configure.in:314
 msgid "cannot mkdir %q: %m"
 msgstr ""
 
-#: ../siteconf/share/configure.in:280
+#: ../siteconf/share/configure.in:249
 msgid "cannot chdir to $B (aka %q): %m"
 msgstr ""
 
-#: ../siteconf/share/configure.in:320 ../siteconf/share/configure.in:332
+#: ../siteconf/share/configure.in:290 ../siteconf/share/configure.in:305
 msgid "%q may not be empty."
 msgstr ""
 
-#: ../siteconf/share/configure.in:336
+#: ../siteconf/share/configure.in:311
 msgid "%q may not contain a slash."
 msgstr ""
 
-#. HEY!  %s is a command line, as the shell would read it
-#: ../siteconf/share/configure.in:355
+#: ../siteconf/share/configure.in:333
 #, perl-format
 msgid "To generate build script, run: %s"
 msgstr ""

@@ -1264,7 +1264,9 @@ sub plan
 		die @err, _say(E => _diag(__n(
 			"%d problem; no Makefile for you.",
 			"%d problems; no Makefile for you.",
-			$count), $count));
+			$count), $count)
+		);
+	}
 
 	# Every file hangs off the marker of its parent directory (and
 	# every marker off its own parent's), so that a parallel build

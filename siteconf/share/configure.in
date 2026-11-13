@@ -179,7 +179,7 @@ $usage = do {
 	# Don't make it wider than 12 columns (including space).
 	# My screen isn't that wide; make it wider if yours is...
 	my $w = 11;
-	$cs->diag(__("usage: %s"), $cs->diag("%#q %s", $prog,
+	$cs->diag(__("usage: %s"), $cs->diag("%#q %s", $prog =>
 		  '[-C codeset ...] [-Dvar=val ...] [-Ovar=val ...] [--reset] [--mkpath] [-hq]'))
 	. "\n\n" . __("The following variables may be defined:") . "\n\n"
 	. _section($w, @VARHELP)
@@ -193,9 +193,9 @@ $usage = do {
 @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 GetOptions(%getopt,
-	# Reject misplaced -C arguments loudly
+	# Reject misplaced -C arguments
 	'C:s' => sub { die $cs->diag("%#q: %s\n", $prog, __("too late to -C now.")); })
-	or die +( split(/\n\n/m, $usage) )[0];
+	or die +( split(/\n(?=\n)/m, $usage) )[0];
 @ARGV and die $cs->diag("%#q: %s\n", $prog, __("too many arguments"));
 
 # Store the starting directory: for the

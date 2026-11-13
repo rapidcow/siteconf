@@ -30,16 +30,18 @@ use warnings;
 
 use Encode ();
 use RdKw::I18N::CodeSets ();
+use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
+
 use Getopt::Long qw( GetOptions );
 use RdKw::WwW::GenGenLib 0.0100 qw( load_state );
 use Template;
-@USE_PROVIDER@use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
+@USE_PROVIDER@
 
 my $cs = RdKw::I18N::CodeSets->new();
 # Command-line arguments are decoded via the
 # argv codeset, though this may be altered by
 # the SITECONF_CODESETS and -C flags, so we
-# must parse them.
+# must parse them now.
 $cs->parse_from_env('SITECONF_CODESETS', prog => $0);
 my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
 
@@ -47,7 +49,7 @@ my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
 # everyone else.
 RdKw::I18N::CodeSets->locale($cs);
 $cs->initstd(stderr => Encode::FB_PERLQQ());
-my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ() });
+my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ(), prog => $0 });
 @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
@@ -55,15 +57,17 @@ my $B = '.';
 GetOptions(
 	'B=s' => \$B,
 	# Explicitly reject stray -C options.
-	'C:s' => sub { die "$prog: " . __("too late to -C now.") . "\n" },
+	'C:s' => sub { die $cs->diag("%#q: %s\n", $prog, __("too late to -C now.")); },
 )
 # The usage may be altered, so we only translate the "usage:" part.
-	or die $cs->diag(__("usage: %s"),
-	"$prog [-B dir] apath bpath") . "\n";
+	or die $cs->diag(__("usage: %s"), $cs->diag("%#q: %s\n",
+		$prog => '[-B dir] apath bpath'));
 # HEY!  The usage is `./render apath bpath', which is two arguments.
-@ARGV == 2 or die "$prog: " . __("need exactly two args") . "\n";
+@ARGV == 2 or die "$prog: " . __("need exactly two arguments") . "\n";
 my ($apath, $bpath) = @ARGV;
 
+# Load configuration parameters and build options,
+# so we can expose them to the template.
 my %S = load_state($B);
 my %v = (
 	D => $S{config},
@@ -72,8 +76,15 @@ my %v = (
 my $D = $S{config};
 
 #
-# UTF-8 on both ends: ENCODING for what is read (the source,
-# and what it INCLUDEs), binmode for what is written.
+# Specify UTF-8 on both ends of Template Toolkit's I/O:
+#
+#   * ENCODING for $apath (input), as well as any fetched
+#     files via INCLUDE / INSERT / PROCESS / WRAPPER.
+#   * binmode for $bpath (output).
+#
+# By nature of UTF-8, files should be able to round-trip
+# as opaque octets... but it's nice to have text decoded
+# when you need to do cool stuff with it. ;D
 #
 @TT_NEW@
 $tt->process(@APATH_FS@, \%v, $cs->to_fs($bpath, { prog => 'E' }),

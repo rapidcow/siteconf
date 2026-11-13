@@ -303,8 +303,9 @@ $cs->initstd( stderr => Encode::FB_PERLQQ() );
 # Now we can has real prog :]
 my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 
-# How to call us: `usage: ' (as the locale says it), and under it, as
-# far in as that is wide, the other ways
+# How to invoke us: `usage: ' (or a translated
+# string under the current locale).  Each sub-
+# sequent line is indented to match its width.
 my $usage = do {
 	my ($before, $after) = split /\0/, $cs->diag(__("usage: %s"), "\0"), 2;
 	defined $after or $after = '';
@@ -356,7 +357,7 @@ GetOptions(
 	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
 	'f'        => \$opt{f},
-	# Reject misplaced -C arguments loudly
+	# Reject misplaced -C arguments
 	'C:s'      => sub { die "$prog: " . __("too late to -C now.") . "\n" },
 ) or die $usage;
 

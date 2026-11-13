@@ -3,10 +3,12 @@ package RdKw::WwW::GenLib;
 use 5.008;
 use strict;
 use warnings;
-use Exporter ();
 
 our $VERSION = '0.03_00';
 $VERSION = eval $VERSION;
+
+use Exporter ();
+our @ISA = qw( Exporter );
 
 =head1 NAME
 
@@ -98,7 +100,6 @@ sub _diag
 	RdKw::I18N::CodeSets->locale->diag(@_);
 }
 
-our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
 	locate
 	relapath joinpath

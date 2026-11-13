@@ -5,6 +5,10 @@ use strict;
 use warnings;
 
 our $VERSION = '0.00_00';
+$VERSION = eval $VERSION;
+
+use Exporter ();
+our @ISA = qw( Exporter );
 
 =head1 NAME
 
@@ -72,10 +76,8 @@ L<RdKw::I18N::CodeSets/initstd>.
 
 =cut
 
-use Exporter ();
 use RdKw::I18N::CodeSets;
 
-our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
 	diag diag_name
 	to_fs un_fs

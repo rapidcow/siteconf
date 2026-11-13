@@ -3,10 +3,12 @@ package RdKw::WwW::GenGenLib;
 use 5.008;
 use strict;
 use warnings;
-use Exporter ();
 
 our $VERSION = '0.01_00';
 $VERSION = eval $VERSION;
+
+use Exporter ();
+our @ISA = qw( Exporter );
 
 =head1 NAME
 
@@ -71,7 +73,6 @@ sub _to_fs
 	RdKw::I18N::CodeSets->locale->to_fs($name, { prog => $prog });
 }
 
-our @ISA = qw( Exporter );
 our @EXPORT_OK = qw(
 	read_make write_make
 	update_file load_state

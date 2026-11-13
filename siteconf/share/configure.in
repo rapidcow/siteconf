@@ -10,7 +10,7 @@ use warnings;
 
 use Cwd qw( getcwd abs_path );
 use Encode ();
-use File::Basename;
+use File::Basename qw( basename );
 use File::Spec;
 use FindBin;
 use Getopt::Long qw( GetOptions );
@@ -23,11 +23,12 @@ use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make );
 use RdKw::I18N::CodeSets ();
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
-my ($cs, $offset);
+my ($cs, $me, $offset);
 BEGIN {
 	$cs = RdKw::I18N::CodeSets->new;
-	$cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
-	$offset = $cs->parse_from_argv(\@ARGV, prog => 'E');
+	$me = basename($0);
+	$cs->parse_from_env('SITECONF_CODESETS', prog => $me);
+	$offset = $cs->parse_from_argv(\@ARGV, prog => $me);
 	RdKw::I18N::CodeSets->locale($cs);
 	$cs->initstd( stderr => Encode::FB_PERLQQ() );
 }

@@ -294,8 +294,9 @@ our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
 # Early init (this is apparently the only time
 # we use the "E:" prefix, other than user errors)
 my $cs = RdKw::I18N::CodeSets->new;
-$cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
-my $offset = $cs->parse_from_argv(\@ARGV, prog => 'E');
+my $me = basename($0);
+$cs->parse_from_env('SITECONF_CODESETS', prog => $me);
+my $offset = $cs->parse_from_argv(\@ARGV, prog => $me);
 RdKw::I18N::CodeSets->locale($cs);
 $cs->initstd( stderr => Encode::FB_PERLQQ() );
 

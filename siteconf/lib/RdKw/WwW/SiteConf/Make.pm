@@ -91,7 +91,9 @@ sub _name
 	require RdKw::WwW::SiteConf::GMake;
 	my $gnu_can = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
 	die RdKw::WwW::SiteConf::_say(E => diag($gnu_can
-		# HEY!  the %s is a character, as `$' or U+0020
+		# HEY!  the %s is a character, as `$' or U+0020.
+		# You don't need to keep the ";)"; it's just
+		# reflexive for me as a tone indicator... :x
 		? __("make cannot name %q (with inescapable %s),\n"
 		. "... but GNU Make can!  (Pass -G gmake if you want that. ;)")
 		: __("make cannot name %q (with inescapable %s)"), $s, $class->_char($c)));

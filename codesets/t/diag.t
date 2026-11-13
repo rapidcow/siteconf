@@ -50,7 +50,7 @@ is($u->diag_name("炒饭\x{a0}pic.png\r\n"), '"炒饭\x{a0}pic.png\r\n"',
 is($u->diag_name("\x{2028}\x{200b}\x{d800}\x{3000}"), '"\x{2028}\x{200b}\x{d800}\x{3000}"',
 	'... separators, formats, surrogates');
 is($u->diag_name("é \$x \@y \"\\"), '"é \$x \@y \"\\\\"', '... a Perl string all the same');
-is($u->diag_name(undef), 'undef', 'diag_name: undef');
+is($u->diag_name(undef), undef, 'diag_name: undef');
 
 # --- diag
 is($a->diag("cannot open file %q: %s\n", "炒饭", "No such file"),

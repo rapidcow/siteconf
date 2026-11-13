@@ -7,7 +7,7 @@ use warnings;
 our $VERSION = '0.00_00';
 $VERSION = eval $VERSION;
 
-use Template::Provider;
+use Template::Provider ();
 our @ISA = qw( Template::Provider );
 
 =head1 NAME

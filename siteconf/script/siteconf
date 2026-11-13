@@ -419,32 +419,46 @@ for my $output (@{ $opt{outputs} }) {
 	$opt{mode} eq 'init' ? ($opt{output}{$name} = $path) : ($opt{o} = $path);
 }
 
-if ($opt{mode} ne 'list') {
-	@{ $opt{t} } and die "$prog: " . $cs->diag(__("%s is only for %s"), '-t', 'list') . "\n";
-	defined $opt{0} and die "$prog: " . $cs->diag(__("%s is only for %s"), '-0', 'list') . "\n";
+# This is the same string bsdtar uses (modulo casing)
+# $ tar -taf /dev/null
+# tar: Option -a is not permitted in mode -t
+sub _not_for_us {
+	die "$prog: " . $cs->diag(
+		__("%s is not permitted in mode %s"), @_) . "\n";
 }
+
 if ($opt{mode} eq 'init') {
-	for my $k (qw( B F G R )) {
-		defined $opt{$k} and die "$prog: " . $cs->diag(__("%s is not for %s"), "-$k", 'init') . "\n";
+	foreach (qw( 0 B F G R )) {
+		defined $opt{$_} and _not_for_us("-$_", '-i (init)');
+	}
+	foreach (qw( t )) {
+		@{ $opt{$_} } and _not_for_us("-$_", '-i (init)');
 	}
 	$opt{written} = \@written;
 	exit do_init(\%opt);
 } elsif ($opt{mode} eq 'list') {
-	for my $k (qw( P f B G R o )) {
-		defined $opt{$k} and die "$prog: " . $cs->diag(__("%s is not for %s"), "-$k", 'list') . "\n";
+	foreach (qw( P f B G R o )) {
+		defined $opt{$_} and _not_for_us("-$_", '-l (list)');
 	}
-	@{ $opt{M} } and die "$prog: " . $cs->diag(__("%s is not for %s"), '-M', 'list') . "\n";
-	for my $S (qw( S D O )) {
-		%{ $opt{$S} } and die "$prog: " . $cs->diag(__("%s is not for %s"), "-$S", 'list') . "\n";
+	foreach (qw( M )) {
+		@{ $opt{$_} } and _not_for_us("-$_", '-l (list)');
+	}
+	foreach (qw( S D O )) {
+		%{ $opt{$_} } and _not_for_us("-$_", '-l (list)');
 	}
 	exit do_list(\%opt);
 } else {
-	for my $k (qw( P f )) {
-		defined $opt{$k} and die "$prog: " . $cs->diag(__("%s is not for %s"), "-$k", 'make') . "\n";
+	# Just as a side remark, I don't think `siteconf make'
+	# makes a lot of sense sense.  it stands for generate, but
+	# i wrote make so that it'd be four letters like init.
+	foreach (qw( 0 P f )) {
+		defined $opt{$_} and _not_for_us("-$_", '-g (make)');
 	}
-	@{ $opt{M} } and die "$prog: " . $cs->diag(__("%s is not for %s"), '-M', 'make') . "\n";
-	for my $S (qw( S D O )) {
-		%{ $opt{$S} } and die "$prog: " . $cs->diag(__("%s is not for %s"), "-$S", 'make') . "\n";
+	foreach (qw( M t )) {
+		@{ $opt{$_} } and _not_for_us("-$_", '-g (make)');
+	}
+	foreach (qw( S D O )) {
+		%{ $opt{$_} } and _not_for_us("-$_", '-g (make)');
 	}
 	my %Doverrides;
 	foreach my $Dk (qw( F R )) {

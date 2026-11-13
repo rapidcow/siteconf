@@ -195,7 +195,7 @@ Getopt::Long::Configure(qw( bundling no_ignore_case ));
 GetOptions(%getopt,
 	# Reject misplaced -C arguments
 	'C:s' => sub { die $cs->diag("%#q: %s\n", $prog, __("too late to -C now.")); })
-	or die +( split(/\n(?=\n)/m, $usage) )[0];
+	or die +( split(/(?<=\n)\n/m, $usage) )[0];
 @ARGV and die $cs->diag("%#q: %s\n", $prog, __("too many arguments"));
 
 # Store the starting directory: for the

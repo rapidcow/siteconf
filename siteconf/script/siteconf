@@ -14,7 +14,7 @@ siteconf - configurable incremental build script generator
 
     siteconf -i [-P preset] [-o [name:]path ...] [-f]
              [-M[-]module[=version] ...] [-Sopt=val ...]
-             [-Dvar=val ...] [-Ovar=val ...]
+             [-Dvar[=val] ...] [-Ovar[=val] ...]
     siteconf init ...                         # same
 
     #
@@ -134,6 +134,15 @@ the names are spelled as CodeSets says.
 
 Write the build file, reading the configuration from C<-B>
 (the current directory by default).
+
+=item B<-D>I<name>[B<=>I<value>], B<-O>I<name>[B<=>I<value>]
+
+With C<-i>, set a default definition or option in F<configure>.
+As in F<configure>, a name without C<=> has an empty value:
+C<-Dtailwind> is equivalent to C<-Dtailwind=>.  The original spelling
+is kept in the generated options comment.  Split at the first C<=>;
+the rest belongs to the value.  An empty name is an error, and the
+last value for a repeated name wins.
 
 =item B<-B> I<dir>
 
@@ -326,7 +335,7 @@ my $usage = do {
 	"$before$prog [-C codeset ...] [-q] [-i|-g|-l|-V] [<args>]$after\n"
 	. join '', map { "$pad$prog $_\n" }
 		"-i [-P preset] [-o [name:]path ...] [-f] [-M[-]module[=version] ...]\n"
-		. "$pad         [-Sopt=val ...] [-Dvar=val ...] [-Ovar=val ...]",
+		. "$pad         [-Sopt=val ...] [-Dvar[=val] ...] [-Ovar[=val] ...]",
 		"-g [-B builddir] [-G generator] [-F manifest] [-R rulebook]\n"
 		. "$pad         [-o file] [-t [NEED:|WANT:]goal ...]",
 		"-l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]",
@@ -349,6 +358,19 @@ my %opt = (S => {}, D => {}, O => {}, M => [], outputs => [], t => []);
 # What `-i' was told, in the order it was told, for the header of
 # configure.  (Leaving out what does not alter its text: -i, -o, -f, -q.)
 my @written;
+# Like configure: a bare name declares an empty default.  Keep the
+# argument before splitting so the options comment does not invent `='.
+sub default_setter
+{
+	my ($kind, $values) = @_;
+	sub {
+		my ($name, $value) = split(/=/, $_[1], 2);
+		defined $name && length $name
+			or die "$prog: " . $cs->diag(__("%s: empty name."), "-$kind") . "\n";
+		$values->{$name} = defined $value ? $value : '';
+		push @written, "-$kind$_[1]";
+	};
+}
 GetOptions(
 	'i|init'   => sub { $opt{mode} = 'init' },
 	'g|make'   => sub { $opt{mode} = 'make' },
@@ -359,8 +381,8 @@ GetOptions(
 	'B=s'      => \$opt{B},
 	'G=s'      => \$opt{G},
 	'S=s%'     => sub { $opt{S}{$_[1]} = $_[2]; push @written, "-S$_[1]=$_[2]" },
-	'D=s%'     => sub { $opt{D}{$_[1]} = $_[2]; push @written, "-D$_[1]=$_[2]" },
-	'O=s%'     => sub { $opt{O}{$_[1]} = $_[2]; push @written, "-O$_[1]=$_[2]" },
+	'D=s'      => default_setter(D => $opt{D}),
+	'O=s'      => default_setter(O => $opt{O}),
 	'F=s'      => \$opt{F},
 	'R=s'      => \$opt{R},
 	't=s'      => $opt{t},

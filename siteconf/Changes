@@ -132,6 +132,9 @@ Revision history of WwW-SiteConf
     + siteconf -g -t [NEED:|WANT:]goal selects goals in command-line
       order.  WANT makes all files in that goal optional; NEED (the
       default) keeps the manifest's NEED/WANT declarations.
+    + siteconf -i accepts -Dname and -Oname as empty defaults, as
+      configure does.  The options comment keeps whether `=' was
+      written; values may contain further equals signs.
 
 
 0.02_03  2026-11-09  RC

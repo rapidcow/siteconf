@@ -35,5 +35,5 @@ Revision history of I18N-CodeSets
       off, saying how many; applied to the object itself.
     + RdKw::I18N::CodeSets::Functions: diag, diag_name, to_fs, un_fs,
       to_argv, un_argv, encode_argv, decode_argv, getenv, setenv,
-      unsetenv and initstd, as functions (of locale), for export on
-      request (:all for all of them).
+      unsetenv, initstd, and reinitstd, as functions (of locale),
+      for export on request (:all for all of them).

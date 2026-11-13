@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 09:33-0600\n"
+"POT-Creation-Date: 2026-11-13 15:00-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -528,11 +528,11 @@ msgstr "完成！"
 msgid "To build, run: %s"
 msgstr "要构建，请运行：%s"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1459
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1459 ../siteconf/share/configure.in:319
 msgid "Writing %#q"
 msgstr "正在写入 %#q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1460
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1460 ../siteconf/share/configure.in:319
 msgid "Updating %#q"
 msgstr "正在更新 %#q"
 
@@ -734,14 +734,6 @@ msgstr "%q 不能为空。"
 #: ../siteconf/share/configure.in:311
 msgid "%q may not contain a slash."
 msgstr "%q 不能含有斜杠。"
-
-#: ../siteconf/share/configure.in:319
-msgid "Writing %q"
-msgstr "正在写入 %q"
-
-#: ../siteconf/share/configure.in:319
-msgid "Updating %q"
-msgstr "正在更新 %q"
 
 #: ../siteconf/share/configure.in:333
 #, perl-format
@@ -1028,6 +1020,12 @@ msgstr "不允许相对路径（没有设置 RELATIVE）"
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:473
 msgid "%q: not a file"
 msgstr "%q：不是文件"
+
+#~ msgid "Writing %q"
+#~ msgstr "正在写入 %q"
+
+#~ msgid "Updating %q"
+#~ msgstr "正在更新 %q"
 
 #, perl-format
 #~ msgid "%s: an octal number up to 377, please"

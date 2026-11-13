@@ -20,6 +20,7 @@ my %WriteMakefileArgs = (
 		'Carp' => '0',
 		'Encode' => '0',
 		'Encode::Locale' => '0',
+		'Exporter' => '0',
 		'PerlIO::encoding' => '0',
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },

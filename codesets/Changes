@@ -31,3 +31,7 @@ Revision history of I18N-CodeSets
       prog => ...): parse of what an environment variable says, and
       of the -C (or -Cglued) that @ARGV starts with, which it takes
       off, saying how many; applied to the object itself.
+    + RdKw::I18N::CodeSets::Functions: diag, diag_name, to_fs, un_fs,
+      to_argv, un_argv, encode_argv, decode_argv, getenv, setenv,
+      unsetenv and initstd, as functions (of locale), for export on
+      request (:all for all of them).

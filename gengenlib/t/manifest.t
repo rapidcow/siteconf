@@ -77,7 +77,7 @@ sub bad {
 	ok(!eval { parse($text); 1 }, "$what: dies");
 	like($@, $re, "$what: says why");
 }
-bad("NEED x\n", qr/\Aread_manifest: `MANIFEST' line 1: NEED before any MAKE$/, 'orphan');
+bad("NEED x\n", qr/\Aread_manifest: MANIFEST line 1: NEED before any MAKE$/, 'orphan');
 bad("MAKE a\nNEED x y\n", qr/line 2: NEED takes exactly one file/, 'two files');
 bad("MAKE a\nNEED x\cKy\n", qr/exactly one file/, 'vertical tab is a blank');
 bad("MAKE a\nMAKE a\n", qr/line 2: goal `a' is already made/, 'duplicate goal');

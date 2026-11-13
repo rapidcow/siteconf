@@ -32,36 +32,37 @@ BEGIN {
 	$cs->initstd( stderr => Encode::FB_PERLQQ() );
 }
 
-# --- requirements: [ module, minimum version ], from `@PROG@ -i -M'.
-# The requirements of the preset, if any, is appended here too.
-our @NEED;
+# Module requirements: [ module, minimum version ]
+my @NEED;
 BEGIN {
 	@NEED = (
 @MODULES@
 	);
 }
 @PRESET@
-# ---
 
-# Look before we load: a missing module is reported by us, all
-# of them at once, and not by the first `use' to trip over it.
 BEGIN {
 	my @bad;
 	foreach my $need (@NEED) {
 		my ($module, $min) = @$need;
 		(my $file = "$module.pm") =~ s!::!/!g;
-		# (sprintf: CodeSets, and its diag, may be what is missing)
-		eval { require $file; 1 }
-			or do { push @bad, sprintf(__("missing %s"), $module); next };
-		$min and !eval { $module->VERSION($min); 1 }
-			and push @bad, sprintf(__("%s: version %s required (this is %s)"), $module, $min,
+		unless (eval { require $file; 1 }) {
+			push @bad, $cs->diag(__("missing %s"), $module);
+			next;
+		}
+		unless (!$min || eval { $module->VERSION($min); 1 }) {
+			push @bad, $cs->diag(__("%s: version %s required (this is %s)"),
+				$module, $min,
 				defined $module->VERSION ? $module->VERSION : '?');
+		}
 	}
 	if (@bad) {
 		print STDERR "E: $_\n" for @bad;
-		die "E: " . sprintf(__n("%d module missing.  Looks like you got some work to do...",
-			"%d modules missing.  Looks like you got some work to do...", scalar @bad),
-			scalar @bad) . "\n";
+		my $count = @bad;
+		die "E: " . $cs->diag(__n(
+			"%d module missing.  Looks like you got some work to do...",
+			"%d modules missing.  Looks like you got some work to do...",
+			$count), $count) . "\n";
 	}
 }
 
@@ -90,7 +91,8 @@ sub setter
 	sub {
 		my ($k, $v) = split(/=/, $_[1], 2);
 		# HEY!  %s is the option, -D or -O.
-		length $k or die "$prog: " . $cs->diag(__("%s: empty name."), "-$S") . "\n";
+		length $k or die $cs->diag("%#q: %s\n", "$prog: ",
+			$cs->diag(__("%s: empty name."), "-$S"));
 		$H->{$k} = defined $v ? $v : "";
 	};
 }
@@ -123,9 +125,8 @@ sub isnull
 	!(defined $_[0]) || !(length $_[0]);
 }
 
-# The help: [ syntax, msgid, default (a sub that says it), aliases ],
-# a row each, laid out by _section.  Every msgid is a line, but for
-# those of more, whose others go under the first.
+# *** help: [ flag, description, default ]
+# The default is deferred for some reason.
 our @VARHELP = (
 	[ '-DA', N__('Project root, seen from current directory'), sub { $Dd{A} } ],
 	[ '-DB', N__('Build directory, seen from the source tree'), sub { $Dd{B} } ],
@@ -141,15 +142,13 @@ our @VARHELP = (
 our @OPTHELP = (
 @OPTHELP@);
 our @FLAGHELP = (
-	[ '-C', N__("Code sets, after SITECONF_CODESETS; first, or not at all\n"
-		. "(see RdKw::I18N::CodeSets)") ],
+	[ '-C', N__("Code sets overrides (see I18N::CodeSets)") ],
 	[ '-h', N__('This help message'), undef, '--help, -?' ],
 	[ '--reset', N__('Clear all configuration at this point') ],
 	[ '-q', N__('Disable tips'), undef, '--quiet' ],
 	[ '--mkpath', N__('Create non-leaf build directory components') ],
 );
 
-# Help message tabulation.
 sub _section
 {
 	my ($w, @row) = @_;
@@ -179,23 +178,24 @@ $usage = do {
 	# Don't make it wider than 12 columns (including space).
 	# My screen isn't that wide; make it wider if yours is...
 	my $w = 11;
-	$cs->diag(__("usage: %s"),
-		"$prog [-C codeset ...] [-Dvar=val ...] [-Ovar=val ...] [--reset] [--mkpath] [-hq]")
+	$cs->diag(__("usage: %s"), $cs->diag("%#q %s", $prog,
+		  '[-C codeset ...] [-Dvar=val ...] [-Ovar=val ...] [--reset] [--mkpath] [-hq]'))
 	. "\n\n" . __("The following variables may be defined:") . "\n\n"
 	. _section($w, @VARHELP)
 	. (@OPTHELP ? "\n" . __("Options with defaults:") . "\n\n" . _section($w, @OPTHELP) : '')
 	. "\n" . __("Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
 		. "respectively, for the rulebook or for the files being transformed.") . "\n"
 	. "\n" . _section($w, @FLAGHELP)
-	. "\n" . __("See also `perldoc RdKw::WwW::SiteConf::Configure'.") . "\n";
+	. "\n" . __("See also WwW::SiteConf::Configure.") . "\n";
 };
 
 @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
-# (-C comes first, or not at all: the rest was read without it)
-GetOptions(%getopt, 'C:s' => sub { die "E: " . __("too late to -C now.") . "\n" })
-	or die +( split(/^/, $usage, 2) )[0];
-@ARGV and die "$prog: " . __("too many arguments") . "\n";
+GetOptions(%getopt,
+	# Reject misplaced -C arguments loudly
+	'C:s' => sub { die $cs->diag("%#q: %s\n", $prog, __("too late to -C now.")); })
+	or die +( split(/\n\n/m, $usage) )[0];
+@ARGV and die $cs->diag("%#q: %s\n", $prog, __("too many arguments"));
 
 # Store the starting directory: for the
 # `siteconf -g' hint after configuring.
@@ -288,21 +288,21 @@ foreach my $k (qw( a b R F )) {
 	length $D{$k} or die "E: " . $cs->diag(__(
 		"%q may not be empty."), $k) . "\n";
 }
-# b is a directory we create rules under, one parent at a time;
-# that walk ends at `.', so it must be relative.  (a, on the
+# `b' is a directory we create rules under, one parent at a time;
+# that walk ends at `.', so it must be relative.  (`a', on the
 # other hand, is free to be absolute for foreign source files.)
 File::Spec->file_name_is_absolute($D{b})
 	and die "E: " . $cs->diag(__(
 	"%q prefix must be a relative path."), 'b') . "\n";
-# c, the cache: defaults to -Dc from the command-line, or
-# else -Sc (but *only* if it differs from -Sc), or else b.
+# `c', the cache: defaults to -Dc from the command-line, or
+# else -Sc (but *only* if it differs from -Sc), or else `b'.
 # It is always defined since 0.02_01, though it is opt-in.
 isnull($D{c}) and $D{c} = !isnull($Dd{c}) && $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
 length $D{c}
 	or die "E: " . $cs->diag(__(
 	"%q may not be empty."), 'c') . "\n";
-# We also create rules under c, so it must be relative too.
+# We also create rules under `c', so it must be relative too.
 File::Spec->file_name_is_absolute($D{c})
 	and die "E: " . $cs->diag(__(
 	"%q prefix must be a relative path."), 'c') . "\n";

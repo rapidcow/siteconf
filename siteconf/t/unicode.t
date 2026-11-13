@@ -189,7 +189,7 @@ like($out, qr/\Asiteconf: too late to -C now\./, '-C after anything else: too la
 ($status, $out) = run($C, {}, $script, '-VC1');
 like($out, qr/\Asiteconf: too late to -C now\./, '... even glued to it');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-C', 'argv:UTF-8');
-like($out, qr/\AE: too late to -C now\./, 'configure: too late, too');
+like($out, qr/\Asiteconf: too late to -C now\./, 'configure: too late, too');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-DB=build', '-Dx=é');
 like($out, qr/: cannot decode argv 3: /, 'configure: unreadable arguments are an error');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-C', 'argv:UTF-8', '-q', '-DB=build', '-Dx=é');

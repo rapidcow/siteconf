@@ -355,7 +355,7 @@ GetOptions(
 	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
 	'f'        => \$opt{f},
-	# Reject late -C arguments $cs->parse_from_argv could not read
+	# Reject misplaced -C arguments loudly
 	'C:s'      => sub { die "$prog: " . __("too late to -C now.") . "\n" },
 ) or die $usage;
 

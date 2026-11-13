@@ -792,9 +792,15 @@ sub diag_name
 	my ($self, $name, %opt) = @_;
 	return 'undef' unless defined $name;
 	if ($opt{inner}) {
+		# colons are usually separators and are
+		# therefore "too dangerous" to be included
+		# here :c
+		#
+		# Backslashes are alright though... (also
+		# because DOS uses them for file sep, so)
 		if ($self->diag_mode eq 'ascii'
-			? $name =~ /\A[A-Za-z0-9_\.\-]+\z/
-			: $name =~ /\A[\w\.\-]+\z/)
+			? $name =~ /\A[A-Za-z0-9_\.\-\\\/]+\z/
+			: $name =~ /\A[\w\.\-\\\/]+\z/)
 		{
 			return $name;
 		}

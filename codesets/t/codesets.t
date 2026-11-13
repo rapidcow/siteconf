@@ -5,7 +5,7 @@
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 109;
+use Test::More tests => 129;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -47,6 +47,38 @@ sub canon { Encode::find_encoding($_[0])->name }
 	$cs = $CS->new(argv => 'ascii');
 	$cs->stdout($cs->argv);
 	is($cs->stdout, 'ascii', 'stdout from argv: as it is');
+}
+
+# --- all: sets everything, and returns a copy that parse takes
+{
+	my $cs = $CS->new(argv => 'UTF-8', stderr => 'ascii', diag => 'unicode');
+	is_deeply($cs->all, { stdin => undef, stdout => undef, stderr => 'ascii',
+		argv => 'utf-8-strict', env => undef, filesys => undef, diag => 'unicode' },
+		'all: every category and diag, undef if not set');
+	$cs->all->{argv} = 'ascii';
+	is($cs->argv, 'utf-8-strict', '... a copy');
+	my $other = $CS->new(env => 'latin1', filesys => 'latin1');
+	is($other->parse($cs->all), $other, 'parse: of what all returns');
+	is_deeply($other->all, $cs->all, '... makes it the same');
+	is($other->diag_mode, 'unicode', '... diag set after stderr');
+	is_deeply($CS->new->parse($cs->all)->all, $cs->all, '... of a new one too');
+	$other = $CS->new(env => 'latin1', filesys => 'latin1');
+	is_deeply($other->parse($cs)->all, $cs->all, 'parse: of another, the same');
+	is_deeply($CS->new(env => 'latin1')->parse($cs, { prog => 'me' })->all, $cs->all, '... with options');
+	ok(!eval { $other->parse([]); 1 } && $@ =~ /\Anot a codeset: ARRAY/, 'parse: not of any other reference');
+	$other->parse('env:latin1', $cs->all, 'argv:ascii', { prog => 'me' });
+	is_deeply([ $other->env, $other->argv ], [ undef, 'ascii' ], 'parse: all among specs, in order, with options');
+	ok(!eval { $other->parse({ argv => 'UTF-8', argh => 'UTF-8' }, { prog => 'me' }); 1 }, 'parse: a hash with an unknown category');
+	is($@, qq{me: unknown category "argh"\n}, '... says so');
+	ok(!eval { $other->parse({ console => 'UTF-8' }); 1 }, 'parse: a hash that is not options, nor from all');
+	like($@, qr/\Aparse: unknown option console at /, '... is options still');
+	is_deeply($cs->all('latin1'), { (map { $_ => 'iso-8859-1' } qw( stdin stdout stderr argv env filesys )), diag => undef },
+		'all: sets every category, and diag follows stderr again');
+	ok(!eval { $cs->all('no-such-thing'); 1 }, 'all: unknown encoding');
+	like($@, qr/\Aunknown encoding "no-such-thing" for stdin\n\z/, '... says so');
+	is($cs->argv, 'iso-8859-1', '... leaving it as it was');
+	is_deeply({ %{ $cs->all('locale') && $cs } }, {}, 'all: locale resets to new');
+	is($cs->all(0)->{filesys}, 'ascii', 'all: 0 is ascii');
 }
 
 # --- new: in order, as parse

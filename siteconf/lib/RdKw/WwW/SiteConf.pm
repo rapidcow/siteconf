@@ -281,9 +281,11 @@ sub _say
 # (Since our standard names (MANIFEST and Makefile.in)
 # are usually well-behaved, the quotes are only used
 # when the user overrides them with exotic file names.)
-sub _line
+sub _blame
 {
 	my ($file, $line) = @_;
+	# HEY!  %#q is the file name of the faulty
+	# file and %d is its lineno.
 	_diag(__("%#q line %d"), $file, $line);
 }
 
@@ -648,8 +650,8 @@ sub read_manifest
 		$reserved_goal{$name} || $self->_is_clean($name)
 			and die _say(E => _diag(__(
 				"%s: %q is a reserved goal name"),
-				_line($file, $goal->{line}), $name));
-		_check_file($_->{file}, _line($file, $_->{line}))
+				_blame($file, $goal->{line}), $name));
+		_check_file($_->{file}, _blame($file, $_->{line}))
 			for sort { $a->{line} <=> $b->{line} }
 				@{ $goal->{need} }, @{ $goal->{want} };
 	}
@@ -807,7 +809,7 @@ sub _read_rules
 	while (<$fh>) {
 		next if /\A[$SP]*#(?:[$SP]|\z)/o or /\A[$SP]*\z/o;
 		my $line = $.;
-		my $where = _line($D->{R}, $line);
+		my $where = _blame($D->{R}, $line);
 		# Fold rule headers before deciding whether an indented line
 		# is a recipe.  Recipe backslashes belong to make/the shell.
 		unless (/^\t/) {
@@ -979,7 +981,7 @@ sub _node
 	unless ($nosrc or -f _to_fs($self->_fs($apath))) {
 		$fail->($rule->{line}
 			# HEY!  the %s is where the rule is (e.g. `file' line 3)
-			? _diag(__("source %q is missing (rule at %s)"), $apath, _line($D->{R}, $rule->{line}))
+			? _diag(__("source %q is missing (rule at %s)"), $apath, _blame($D->{R}, $rule->{line}))
 			: _diag(__("source %q is missing"), $apath));
 		return $done->();
 	}
@@ -1007,7 +1009,7 @@ sub _node
 	my $from = $nosrc ? __("in header") : _diag(__("in header of %q"), $apath);
 	my @hneed = map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] };
 	my @hwant = map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{WANT} || [] };
-	my $rule_at = _line($D->{R}, $rule->{line});
+	my $rule_at = _blame($D->{R}, $rule->{line});
 	my @rdep = map { [ $_, $_, _diag(__("prerequisite in %s"), $rule_at) ] } @{ $rule->{deps} };
 	my @rwant = map { [ $_, $_, _diag(__("WANT: in %s"), $rule_at) ] } @{ $rule->{want} || [] };
 	# What the source files we NEED (or WANT) say they need, and so on:
@@ -1173,7 +1175,7 @@ sub _tool
 			? read_deps($fs) : ();
 		if (defined $I{HAVE}) {
 			my $have = $self->_dep($I{HAVE}, _diag('%q: HAVE', $dep));
-			my $at = _line($self->{D}{R}, $rule->{line});
+			my $at = _blame($self->{D}{R}, $rule->{line});
 			$self->_same($have, $dep)
 				or die _say(E => $have ne $I{HAVE}
 					# HEY!  As above, for a tool of the rule; the last %s
@@ -1248,7 +1250,7 @@ sub plan
 					# HEY!  the %s is where (`file' line 3); what
 					# follows the colon is why, a line each
 					push @err, _say(E => _diag(__("%s: goal %q NEEDs %q, but cannot be made:"),
-						_line($D->{F}, $ent->{line}), $spec->{name}, $file))
+						_blame($D->{F}, $ent->{line}), $spec->{name}, $file))
 						. $causes->('E:');
 				} else {
 					push @dropped, [ $file, $why ];

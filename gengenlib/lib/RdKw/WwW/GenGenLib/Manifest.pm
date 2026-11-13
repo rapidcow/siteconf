@@ -97,6 +97,14 @@ F<MANIFEST>).  B<RdKw::WwW::GenGenLib::read_manifest> is the same.
 
 =cut
 
+sub _blame
+{
+	my ($file, $line) = @_;
+	# HEY!  %#q is the file name of the faulty
+	# file and %d is its lineno.
+	_diag(__("%#q line %d"), $file, $line);
+}
+
 sub read
 {
 	local ($_, $.);
@@ -113,47 +121,51 @@ sub read
 
 	my (@goal, %goal, $goal);
 	while (<$fh>) {
-		# HEY!  %q is the file name of the faulty
-		# MANIFEST and %s is its lineno.
-		my $where = _diag(__("%q line %s"), $file, $.);
+		# HEY!  %#q is the file name of the faulty
+		# MANIFEST and %d is its lineno.
 		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
-			or die _diag(__("read_manifest: %s: not UTF-8"), $where) . "\n";
+			or die _diag(__("read_manifest: %s: not UTF-8"),
+				_blame($file, $.)) . "\n";
 		s/(?:^|[$SP])#.*//so;
 		my ($kw, @arg) = /([^$SP]+)/go;
 		defined $kw or next;
 		if ($kw eq 'MAKE') {
-			@arg == 1 or die _diag(__("read_manifest: %s: MAKE takes exactly one goal name"),
-				$where) . "\n";
+			@arg == 1 or die _diag(__("read_manifest: %s: "
+				. "MAKE takes exactly one goal name"),
+				_blame($file, $.)) . "\n";
 			my $name = $arg[0];
 			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
-				or die _diag(__("read_manifest: %s: bad goal name %q"), $where, $name) . "\n";
-			$goal{$name} and die _diag(__("read_manifest: %s: goal %q is already made"),
-				$where, $name) . "\n";
+				or die _diag(__("read_manifest: %s: bad goal name %q"),
+				_blame($file, $.), $name) . "\n";
+			$goal{$name} and die _diag(__("read_manifest: %s: "
+				. "goal %q is already made"),
+				_blame($file, $.), $name) . "\n";
 			push @goal, $goal = $goal{$name}
 				= { name => $name, need => [], want => [], line => $. };
 			next;
 		}
 		if ($kw eq 'NEED' or $kw eq 'WANT') {
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			$goal or die _diag(__("read_manifest: %s: %s before any MAKE"), $where, $kw) . "\n";
+			$goal or die _diag(__("read_manifest: %s: %s before any MAKE"),
+				_blame($file, $.), $kw) . "\n";
 			# HEY!  the second %s is the string "NEED" or "WANT"
 			@arg == 1 or die _diag(__("read_manifest: %s: %s takes exactly one file"
-				. " (use # for comments)"), $where, $kw) . "\n";
+				. " (use # for comments)"), _blame($file, $.), $kw) . "\n";
 			my $name = eval { subs_dep(undef, $arg[0],
 				strict => 1, on_missing => 'croak') };
 			defined $name or do {
 				(my $why = $@) =~ s/\A\w+: //;
-				die _diag(__("read_manifest: %s: %s"), $where, $why);
+				die _diag(__("read_manifest: %s: %s"), _blame($file, $.), $why);
 			};
 			length $name or die _diag(__("read_manifest: %s: %q is no name"),
-				$where, $arg[0]) . "\n";
+				_blame($file, $.), $arg[0]) . "\n";
 			$name =~ /\0/ and die _diag(__("read_manifest: %s: %q has a NUL in it"),
-				$where, $arg[0]) . "\n";
+				_blame($file, $.), $arg[0]) . "\n";
 			push @{ $goal->{lc $kw} }, { file => $name, line => $. };
 			next;
 		}
 		die _diag(__("read_manifest: %s: expected MAKE, NEED or WANT, not %q"),
-			$where, $kw) . "\n";
+			_blame($file, $.), $kw) . "\n";
 	}
 	close $fh or die _diag(__("read_manifest: cannot read file %q: %m"), $file) . "\n";
 	# HEY!  I (ethan/rc) didn't write this message.

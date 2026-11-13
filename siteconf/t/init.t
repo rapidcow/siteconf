@@ -54,7 +54,7 @@ close $rh;
 ($status, $out) = invoke('init', '-P', 'web', '-SA=project',
 	'-o', 'configure:/dev/null', '-o', 'render:bin/render-page');
 is($status, 0, 'suppressed configure is not a failure');
-like($out, qr/Not changing `project\/bin\/render-page'/, 'existing renderer reported');
+like($out, qr/Not changing project\/bin\/render-page/, 'existing renderer reported');
 is(slurp('project/bin/render-page'), "custom renderer\n", 'existing renderer preserved');
 ok(!-e 'configure', 'configure suppressed');
 
@@ -107,8 +107,8 @@ my $configure = slurp('configure');
 is($status, 1, 'existing configure gives status 1');
 is(slurp('configure'), $configure, 'configure is not overwritten by default');
 is(slurp('project/bin/render-page'), "custom renderer\n", 'renderer is not overwritten by default');
-like($out, qr/^Not changing `configure'$/m, 'skipped configure reported');
-like($out, qr/^Not changing `project\/bin\/render-page'$/m, 'skipped renderer reported');
+like($out, qr/^Not changing configure$/m, 'skipped configure reported');
+like($out, qr/^Not changing project\/bin\/render-page$/m, 'skipped renderer reported');
 like($out, qr/You already have configure/, 'missing configure is an error');
 like($out, qr/-f to overwrite/, '... that suggests -f');
 ($status, $out) = invoke('init', '-q', '-P', 'web', '-SA=project', '-o', 'render:bin/render-page');

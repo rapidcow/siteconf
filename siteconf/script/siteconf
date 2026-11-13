@@ -726,11 +726,15 @@ out:	while (my ($name, $dest) = each %out) {
 		my $dest_fs = $cs->to_fs($dest, { prog => $prog });
 		my $exists = (-e $dest_fs || -l $dest_fs);
 		if (!$opt->{f} && $exists) {
-			print STDERR $cs->diag(__("Not changing %q"), $dest), "\n" unless $opt->{q};
+			print STDERR
+				$cs->diag(__("Not changing %#q"), $dest),
+				"\n" unless $opt->{q};
 			next out;
 		}
 		if ($exists && !(-l $dest_fs || unlink $dest_fs)) {
-			print STDERR "$prog: ", $cs->diag(__("cannot remove %q: %m"), $dest), "\n" unless $opt->{q};
+			print STDERR "$prog: ",
+				$cs->diag(__("cannot remove %q: %m"), $dest),
+				"\n" unless $opt->{q};
 		}
 		my $contents;
 		if ($name eq 'configure') {
@@ -741,11 +745,17 @@ out:	while (my ($name, $dest) = each %out) {
 			die "Unreachable\n";
 		}
 		open my $fh, '>:encoding(UTF-8)', $dest_fs
-			or die "$prog: " . $cs->diag(__("cannot create file %q: %m"), $dest) . "\n";
-		print $fh $contents or die "$prog: " . $cs->diag(__("cannot write file %q: %m"), $dest) . "\n";
-		close $fh or die "$prog: " . $cs->diag(__("cannot write file %q: %m"), $dest) . "\n";
+			or die "$prog: "
+				. $cs->diag(__("cannot create file %q: %m"), $dest)
+				. "\n";
+		print $fh $contents or die "$prog: "
+			. $cs->diag(__("cannot write file %q: %m"), $dest) . "\n";
+		close $fh or die "$prog: "
+			. $cs->diag(__("cannot write file %q: %m"), $dest) . "\n";
 		unless (chmod 0777 & ~umask, $dest_fs) {
-			print STDERR "$prog: ", $cs->diag(__("cannot chmod %q: %m"), $dest), "\n" unless $opt->{q};
+			print STDERR "$prog: ",
+				$cs->diag(__("cannot chmod %q: %m"), $dest),
+				"\n" unless $opt->{q};
 		}
 		$written{$name} = 1;
 		# HEY!  "Overwrote" clobbers a file the user
@@ -753,16 +763,21 @@ out:	while (my ($name, $dest) = each %out) {
 		# the file is simply created.  I don't know why
 		# Claude felt the need to clarify this; this
 		# seems pretty clear to me. :/
-		print STDERR $cs->diag($exists ? __("Overwrote %#q") : __("Wrote %#q"), $dest), "\n"
-			unless $opt->{q};
+		print STDERR $cs->diag(
+			$exists ? __("Overwrote %#q") : __("Wrote %#q"), $dest),
+			"\n" unless $opt->{q};
 	}
 	unless ($written{configure} || $out{configure} eq '/dev/null') {
-		my $msg = ($out{configure} eq 'configure' ? __("You already have configure.")
-				: $cs->diag(__("You already have configure at %q."), $out{configure}))
-			. "\n" . __("Pass -o /dev/null if you did mean to not generate configure,\n"
-				. "or -f to overwrite the existing one.");
-		$msg =~ s/^/E: /mg;
-		print STDERR "$msg\n" unless $opt->{q};
+		my $msg = ($out{configure} eq 'configure'
+			? __("You already have configure.")
+			: $cs->diag(__("You already have configure at %q."), $out{configure}))
+			. "\n" . __(
+			"Pass -o /dev/null if you did mean to not generate configure,\n"
+			. "or -f to overwrite the existing one.");
+		# I really don't like the name Claude
+		# gave this function but in the mean-
+		# time I don't have a better one either.
+		print STDERR RdKw::WwW::SiteConf::_say(E => $msg) unless $opt->{q};
 		return 1;
 	}
 	return 0;

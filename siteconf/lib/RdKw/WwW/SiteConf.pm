@@ -711,7 +711,7 @@ sub _subst
 			$val = $node;
 		} elsif ($x eq '<' or $x eq '.IMPSRC') {
 			defined $src or die _say(E => _diag(__(
-				"%s: misplaced %s"),
+				"%s: misplaced %s (not in a recipe)"),
 				$where, "\${$x}"));
 			length $src or die _say(E => _diag(__(
 				"%s: undefined %s"

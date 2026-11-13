@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 21:38-0600\n"
+"POT-Creation-Date: 2026-11-12 21:47-0600\n"
 "PO-Revision-Date: 2026-11-12 00:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -335,9 +335,9 @@ msgid "%s: %s outside of a recipe"
 msgstr "%s：%s 出现在配方之外"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:714
-#, perl-format
-msgid "%s: misplaced %s"
-msgstr ""
+#, fuzzy, perl-format
+msgid "%s: misplaced %s (not in a recipe)"
+msgstr "%s：%s 出现在配方之外"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:717
 #, perl-format, perl-brace-format

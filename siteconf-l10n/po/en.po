@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 21:38-0600\n"
+"POT-Creation-Date: 2026-11-12 21:47-0600\n"
 "PO-Revision-Date: 2026-11-12 00:00-0600\n"
 "Last-Translator: rapidcow\n"
 "Language-Team: none\n"
@@ -284,8 +284,9 @@ msgid "cannot find the source tree %q: %m"
 msgstr "cannot find the source tree %q: %m"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:464
-msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; write ${B}/${%3$s}."
-msgstr "%1$s: %2$q: ${%3$s} is relative to ${B}; write ${B}/${%3$s}"
+#, perl-brace-format
+msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
+msgstr "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:483
 msgid "%s: %q: %s is no code point"
@@ -323,6 +324,7 @@ msgid "%s: %q is a reserved goal name"
 msgstr "%s: %q is a reserved goal name"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:702
+#, perl-format
 msgid "%s: %s is not a valid Unicode code point"
 msgstr "%s: %s is not a valid Unicode code point"
 
@@ -333,8 +335,8 @@ msgstr "%s: %s outside of a recipe"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:714
 #, perl-format
-msgid "%s: misplaced %s"
-msgstr "%s: misplaced %s"
+msgid "%s: misplaced %s (not in a recipe)"
+msgstr "%s: misplaced %s (not in a recipe)"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:717
 #, perl-format, perl-brace-format
@@ -1031,18 +1033,18 @@ msgstr "relative paths are not allowed (RELATIVE is unset)"
 msgid "%q: not a file"
 msgstr "%q: not a file"
 
-#, perl-format
 # Superceded by: "%s: misplaced %s"
+#, perl-format
 #~ msgid "%s: %s is not known here (the source is what the prerequisites say)"
 #~ msgstr "%s: %s is not known here (the source is what the prerequisites say)"
 
-#, perl-format, perl-brace-format
 # Superceded by: "%s: undefined %s (explicitly suppressed by ${a})"
+#, perl-format, perl-brace-format
 #~ msgid "%s: %s: this rule has no source (its first prerequisite is ${a})"
 #~ msgstr "%s: %s: this rule has no source (its first prerequisite is ${a})"
 
-#, perl-brace-format
 # Superceded by: "%s: %q: target is not preceded by a legal prefix (${b} or ${c})"
+#, perl-brace-format
 #~ msgid ""
 #~ "%s: %q: a target is a name, optionally after ${b}/ or ${c}/; nowhere else "
 #~ "under ${B}"

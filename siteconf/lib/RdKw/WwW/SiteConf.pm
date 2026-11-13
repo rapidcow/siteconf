@@ -128,6 +128,25 @@ by white space as L<make(1)> knows it -- space, tab, newline, vertical
 tab, form feed and carriage return -- and by nothing else: a no-break
 space is part of a name.
 
+A space within a file name is written C<${U+20}> or C<${U+0020}>,
+in targets, prerequisites, F<MANIFEST>, and source headers alike.
+Choose C<-G gmake> or C<-G ninja>; the POSIX make backend rejects
+such names.  Quote the names in recipes with C<:Q>:
+
+    my${U+20}page.html: ${a}/my${U+0020}source.txt ${A}/some${U+20}dependency
+            cp ${A:Q}/${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}
+
+    # MANIFEST
+    MAKE all
+        NEED my${U+0020}page.html
+
+In prerequisites, escaped characters and the known path variables
+C<${A}>, C<${B}>, C<${a}>, C<${b}>, C<${c}> and C<${@}>
+stay within one name.  Other variables still expand to lists of words.
+This does not change the word modifiers: C<:E>, C<:H>, C<:R>,
+C<:T> and ordinary C<:S> still operate on whitespace-separated
+words, including in C<${@}> and C<${<}>.  C<:Q> quotes the whole value.
+
 Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along
 with indentation on the next line, are replaced by a space.  Lines
@@ -160,10 +179,9 @@ A file name is unescaped as a header's is (see
 L<RdKw::WwW::GenGenLib::Manifest>): C<${$}> is a C<$> and
 C<${U+>I<hex>C<}> a character, as in C<r${U+00E9}sum${U+00E9}.html>; and
 there are no variables.  A goal name is not.  What it comes to must
-still be a name that we would put into a Makefile, as it must in a
-target: no blanks, C<$>, C<#>, C<:> and the like, nothing absolute,
-and no C<..> (so far, the escape is good for C<siteconf -l>, and what
-is not ASCII).
+still be a permitted target name: spaces are allowed with GNU make
+or Ninja, but C<$>, C<#>, C<:> and the like are not; nothing absolute,
+and no C<..>.
 
 =item the files themselves
 
@@ -252,7 +270,7 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use RdKw::WwW::SiteConf::Modifiers;
 use RdKw::WwW::GenGenLib 0.0100 qw(
-	read_make read_deps update_file
+	read_make read_deps update_file escape_dep
 	norm_dep uproot );
 
 # A name as the file system spells it, and back;
@@ -576,12 +594,12 @@ sub shell_quote
 	"'$s'";
 }
 
-# Names that we dare to put into a Makefile, and cannot escape from
-# the source or the output tree.
+# Names that cannot escape from the source or the output tree.
+# A space is allowed here; the selected backend must escape or reject it.
 sub _check_file
 {
 	my ($file, $where) = @_;
-	$file =~ m!\A[^$SP:\$#%\\|;<>"'`*?\[\](){}&]+\z!o
+	$file =~ m!\A[^\t\n\cK\f\r\0:\$#%\\|;<>"'`*?\[\](){}&]+\z!
 		or die _say(E => diag(__(
 			# HEY!  The first %s is always where (a file, or `file' line 3),
 			# in this message and in those that follow it
@@ -602,8 +620,9 @@ hash references, where the latter two are lists of C<{ file, line }>.
 You can also give a scalar reference instead of a file name.  It is
 read by L<RdKw::WwW::GenGenLib/read_manifest> (so names are unescaped),
 and then what we cannot have is an error: a reserved goal name, and a
-file name we would not put into a Makefile (one with blanks or what
-make would make something of, an absolute one, one with C<..>).
+file name we do not permit as a target (an absolute one, one with
+C<..>, or special characters other than spaces).  The backend
+escapes spaces, or rejects them in the case of POSIX make.
 
 =cut
 
@@ -660,7 +679,7 @@ sub read_manifest
 # where each one is in what we return, as [ offset, length ].
 sub _subst
 {
-	my ($self, $line, $node, $where, $src, $quoted) = @_;
+	my ($self, $line, $node, $where, $src, $quoted, $literal) = @_;
 	my $D = $self->{D};
 	my $out = '';
 	my $pos = 0;
@@ -738,9 +757,36 @@ sub _subst
 			($val, $slash) = ('', '');
 		}
 		push @$quoted, [ length $out, length $val ] if $q && $quoted;
+		# Code points and known paths are parts of one name, even when
+		# they contain blanks.  Ordinary variables can still be lists.
+		push @$literal, [ length $out, length($out) + length($val) ]
+			if $literal && $x =~ /\A(?:[Uu]\+.*|[ABabc@<]|\.TARGET|\.IMPSRC|\^X)\z/;
 		$out .= $val . $slash;
 	}
 	$out . substr($line, $pos);
+}
+
+# Split an expanded prerequisite without splitting literal characters or
+# known paths.  Keep offsets, rather than reserving a sentinel character.
+sub _subst_words
+{
+	my ($self, $line, $node, $where) = @_;
+	my @literal;
+	my $text = $self->_subst($line, $node, $where, undef, undef, \@literal);
+	my (@words, $word);
+	$word = '';
+	while ($text =~ /([^$SP]+|[$SP])/go) {
+		my ($part, $at) = ($1, $-[0]);
+		shift @literal while @literal && $literal[0][1] <= $at;
+		if ($part =~ /\A[$SP]\z/o && !(@literal && $literal[0][0] <= $at)) {
+			push @words, $word if length $word;
+			$word = '';
+		} else {
+			$word .= $part;
+		}
+	}
+	push @words, $word if length $word;
+	@words;
 }
 
 # A target as Makefile.in spells it: `name' (in b), `${b}/name' or
@@ -762,6 +808,7 @@ sub _read_target
 	}
 	# (as it was written, unless it said a tree)
 	defined $rest or $rest = $spec;
+	$rest =~ s/(\$\{[Uu]\+[^}]*\})/$self->_subst($1, undef, $where)/ge;
 	$rest =~ /\$/ and die _say(E => diag(__(
 		'%s: %q: target is not preceded by'
 		. ' a legal prefix (${b} or ${c})'),
@@ -862,9 +909,10 @@ sub _read_rules
 					my ($first) = $dep =~ /\A[$SP]*($WORD)/o;
 					if (defined $first and defined(my $from = _source_of($first))) {
 						# ${a} alone says there is none (and ${<} is not known)
-						my $name_of = length $from ? $self->_subst($from, $name, $where) : '';
+						my @name_of = $self->_subst_words($from, $name, $where);
+						my $name_of = @name_of ? $name_of[0] : '';
 						length $from and do {
-							$name_of =~ /[^$SP]/o and $name_of !~ /[$SP]/o
+							@name_of == 1
 								or die _say(E => diag(__(
 									'%s: %q must be one name in ${a}'),
 									$where, $first));
@@ -892,7 +940,7 @@ sub _read_rules
 							$where, "$1:"));
 					}
 					push @{ $rule->{$kind} },
-						_words($self->_subst($word, $name, $where));
+						$self->_subst_words($word, $name, $where);
 				}
 			}
 			$recipe->($cmd) if defined $cmd;
@@ -1362,7 +1410,7 @@ sub manifest_text
 	my ($self, $goal) = @_;
 	my $text = "#\n# resolved by `$self->{prog} -g'\n#\n";
 	$text .= "MAKE $goal->{name}\n";
-	$text .= "\tNEED $_\n" for @{ $goal->{files} };
+	$text .= "\tNEED " . escape_dep($_, unicode => 1) . "\n" for @{ $goal->{files} };
 	for my $drop (@{ $goal->{dropped} }) {
 		$text .= "#\tWANT $drop->[0]\t# $drop->[1]\n";
 	}

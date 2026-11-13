@@ -60,7 +60,8 @@ MAKE
 	}
 	for my $rule (@{ $plan->{clean} }) {
 		$out .= "$rule->{name}:\n";
-		$out .= "\trm -f @{ $rule->{files} }\n" if @{ $rule->{files} };
+		$out .= "\trm -f " . join(' ', map { _quote($_) } @{ $rule->{files} }) . "\n"
+			if @{ $rule->{files} };
 	}
 
 	for my $dir (@{ $plan->{dirs} }) {
@@ -68,7 +69,7 @@ MAKE
 		$out .= $name->($dir->{marker}) . ": "
 			. join(' ', map { $name->($_) } @{ $dir->{deps} }) . "\n";
 		$out .= "\t[ -d $d ] || mkdir -- $d\n";
-		$out .= "\t\@> $dir->{marker}\n";
+		$out .= "\t\@> " . _quote($dir->{marker}) . "\n";
 	}
 
 	for my $file (@{ $plan->{order} }) {
@@ -105,6 +106,7 @@ sub _char
 sub _quote
 {
 	my ($s) = @_;
+	$s =~ s/\$/\$\$/g;
 	return $s if $s !~ m![^A-Za-z0-9_./:@%+=,-]!;
 	$s =~ s!'!'\\''!g;
 	"'$s'";

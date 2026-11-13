@@ -63,7 +63,7 @@ NINJA
 		my $line = "build " . _path($dir->{marker}) . ": mkdir_marker";
 		$line .= " || " . join ' ', map { _path($_) } @{ $dir->{deps} }
 			if @{ $dir->{deps} };
-		$out .= "$line\n  dir = " . _path($dir->{dir}) . "\n";
+		$out .= "$line\n  dir = " . _path(RdKw::WwW::SiteConf::shell_quote($dir->{dir})) . "\n";
 	}
 	$out .= "\n" if @{ $plan->{dirs} };
 

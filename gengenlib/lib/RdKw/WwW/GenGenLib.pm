@@ -57,21 +57,8 @@ use File::Spec;
 # RdKw::WwW::SiteConf::L10N says where the catalogs are (and
 # Locale::Messages is there to read them); else, and for what no
 # catalog has, as it is written (see RdKw::L10N::TextDomain).
-use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-
-# A message: %q is a name, %s as it is (see RdKw::I18N::CodeSets)
-sub _diag
-{
-	RdKw::I18N::CodeSets->locale->diag(@_);
-}
-
-# A name, as the file system spells it, or an error prefixed with $prog.
-sub _to_fs
-{
-	my ($name, $prog) = @_;
-	RdKw::I18N::CodeSets->locale->to_fs($name, { prog => $prog });
-}
 
 our @EXPORT_OK = qw(
 	read_make write_make
@@ -107,15 +94,15 @@ sub read_make
 	local ($_, $.);
 	my ($file) = @_;
 
-	open my $fh, '<', _to_fs($file, 'read_make')
-		or die _diag(__("read_make: cannot open file %q: %m"), $file) . "\n";
+	open my $fh, '<', to_fs($file, { prog => 'read_make' })
+		or die diag(__("read_make: cannot open file %q: %m"), $file) . "\n";
 	binmode $fh, ':encoding(UTF-8)';
 
 	my %O;
 	while (<$fh>) {
 		next if /^\s*#/ or /^\s*$/;
 		my ($k, $v) = split /=/, $_, 2;
-		defined $v or die _diag(__("read_make: %q line %s: no `='"), $file, $.) . "\n";
+		defined $v or die diag(__("read_make: %q line %s: no `='"), $file, $.) . "\n";
 		$k =~ s/^\s+|\s+$//g;
 		$v =~ s/^\s+|\s+$//g;
 		$O{$k} = $v;
@@ -145,8 +132,8 @@ sub write_make
 		# is allowed... like IL-legal in the sense of invalid.
 		# (but let's not get into the topic of identity crisis...
 		# we're talking about SYNTACTICALLY invalid names here.))
-		$k =~ /\A[^\s=#]+\z/ or die _diag(__("write_make: bad name: %q"), $k) . "\n";
-		$v =~ /[\r\n]/ and die _diag(__("write_make: %q: value has a newline"), $k) . "\n";
+		$k =~ /\A[^\s=#]+\z/ or die diag(__("write_make: bad name: %q"), $k) . "\n";
+		$v =~ /[\r\n]/ and die diag(__("write_make: %q: value has a newline"), $k) . "\n";
 		$text .= "$k=\t$v\n";
 	}
 	update_file($file, $text);
@@ -175,21 +162,21 @@ sub update_file
 	#
 	my $tmp = File::Spec->catfile(dirname($file), 'tmp-' . basename($file));
 
-	my ($tmp_fs, $file_fs) = map { _to_fs($_, 'update_file') } $tmp, $file;
+	my ($tmp_fs, $file_fs) = map { to_fs($_, { prog => 'update_file' }) } $tmp, $file;
 
 	open my $fh, '>:encoding(UTF-8)', $tmp_fs
-		or die _diag(__("update_file: cannot create file %q: %m"), $tmp) . "\n";
+		or die diag(__("update_file: cannot create file %q: %m"), $tmp) . "\n";
 	print $fh $text
-		or die _diag(__("update_file: cannot write file %q: %m"), $tmp) . "\n";
+		or die diag(__("update_file: cannot write file %q: %m"), $tmp) . "\n";
 	close $fh
-		or die _diag(__("update_file: cannot write file %q: %m"), $tmp) . "\n";
+		or die diag(__("update_file: cannot write file %q: %m"), $tmp) . "\n";
 
 	my $exists = -e $file_fs;
 	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0) {
 		unlink $tmp_fs;
 		return 0;  # make it numeric so `>' isn't upset
 	}
-	rename $tmp_fs, $file_fs or die _diag(__("update_file: cannot rename %q to %q: %m"),
+	rename $tmp_fs, $file_fs or die diag(__("update_file: cannot rename %q to %q: %m"),
 		$tmp, $file) . "\n";
 	$exists ? 1 : 2;
 }
@@ -213,11 +200,11 @@ sub load_state
 	my %S;
 	for my $f (qw( config option )) {
 		my $file = "$Bdir/MY/$f.mk";
-		-f _to_fs($file, 'load_state')
+		-f to_fs($file, { prog => 'load_state' })
 			# HEY!  Keep a winky face in the translation ;)
 			# This message is likely to get seen by newbies,
 			# so we want to keep it fun.
-			or die _diag(__(
+			or die diag(__(
 			"error: You have not configured! (no %q)\n"
 			. "error: You should ./configure first. ;)"), $file) . "\n";
 		$S{$f} = { read_make($file) };
@@ -382,9 +369,9 @@ sub read_deps
 	my %I = ();
 
 	# (A name we cannot even spell is not missing: it is an error.)
-	open (my $fh, '<', _to_fs($file, 'read_deps')) or ($missing_ok
+	open (my $fh, '<', to_fs($file, { prog => 'read_deps' })) or ($missing_ok
 		? return ()
-		: die _diag(__("read_deps: cannot open file %q: %m"), $file) . "\n");
+		: die diag(__("read_deps: cannot open file %q: %m"), $file) . "\n");
 
 	while (<$fh>) {
 		# Not UTF-8 is not text, and so has no header: give up on the
@@ -418,7 +405,7 @@ sub read_deps
 				# in... "you HAVE too many.  The hell are
 				# you tryin' to be, the whole universe?"
 				# Like that.
-				die _diag(__("read_deps: %q line %s: You HAVE too many."), $file, $.) . "\n"
+				die diag(__("read_deps: %q line %s: You HAVE too many."), $file, $.) . "\n"
 					if @list > 1 or exists $I{$type};
 				$I{HAVE} = $list[0];
 			} else {
@@ -433,7 +420,7 @@ sub read_deps
 	}
 
 	if ($fh->error()) {
-		die _diag(__("read_deps: cannot read file %q: %m"), $file) . "\n";
+		die diag(__("read_deps: cannot read file %q: %m"), $file) . "\n";
 	}
 
 	close $fh;
@@ -579,7 +566,7 @@ sub norm_deps
 					$out .= sprintf '${U+%04X}', $n;
 				} else {
 					$opt->{strict}
-						and die _diag(__("norm_deps: %s is no code point in %q"),
+						and die diag(__("norm_deps: %s is no code point in %q"),
 							"\${$name}", $_) . "\n";
 					$out .= ($opt->{pass_thru} ? '$' : '${$}') . "{$name}";
 				}
@@ -591,11 +578,11 @@ sub norm_deps
 			} elsif ($spec =~ /\G\$/gc) {
 				# Anything else is not a variable we recognize
 				if ($opt->{strict}) {
-					die _diag(__("norm_deps: trailing \$ in %q"), $_) . "\n"
+					die diag(__("norm_deps: trailing \$ in %q"), $_) . "\n"
 						if $spec =~ /\G\z/gc;
-					die _diag(__("norm_deps: unterminated or empty \${ in %q"), $_) . "\n"
+					die diag(__("norm_deps: unterminated or empty \${ in %q"), $_) . "\n"
 						if $spec =~ /\G\{/gc;
-					die _diag(__("norm_deps: stray \$ in %q"), $_) . "\n";
+					die diag(__("norm_deps: stray \$ in %q"), $_) . "\n";
 				}
 				$out .= $opt->{pass_thru} ? '$' : '${$}';
 			} else {
@@ -674,7 +661,7 @@ sub _bad_subs
 	# pure decode operation... in which case a named
 	# substitution that is not an escape at all as "bad"
 	# as in, "wait.... that's illegal."
-	die _diag(__("subs_deps: bad substitution: %s"), "\${$_[0]}") . "\n";
+	die diag(__("subs_deps: bad substitution: %s"), "\${$_[0]}") . "\n";
 }
 
 sub subs_deps
@@ -941,7 +928,7 @@ sub walk_deps
 				# Only a regular file has a header to read: a directory
 				# opens fine but cannot be read, and a FIFO would hang
 				my $file = subs_deps($D, $spec);
-				$G->{$spec} = -f _to_fs($file, 'walk_deps')
+				$G->{$spec} = -f to_fs($file, { prog => 'walk_deps' })
 					? { read_deps($file, { forgive_missing => 1 }) }
 					: {};
 			} else {

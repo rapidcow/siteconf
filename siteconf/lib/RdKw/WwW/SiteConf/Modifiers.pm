@@ -72,14 +72,9 @@ written C<$$> (as by bmake's C<:q>), so that make passes it on.
 
 =cut
 
-use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( diag );
 # (said as RdKw::WwW::SiteConf says it: see there)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-
-sub _diag
-{
-	RdKw::I18N::CodeSets->locale->diag(@_);
-}
 
 # Word at a time.  Each takes and returns a word.
 my %WORD = (
@@ -112,7 +107,7 @@ sub _expr_end
 			return $i + 1 unless --$depth;
 		}
 	}
-	die _diag(__("unterminated %q"), substr($str, $pos)) . "\n";
+	die diag(__("unterminated %q"), substr($str, $pos)) . "\n";
 }
 
 # One part of :S/old/new/, from `pos' of `str' up to its delimiter.
@@ -231,14 +226,14 @@ sub _apply
 		} elsif ($c eq 'S') {
 			$pos < $len or die __("unterminated :S modifier") . "\n";
 			my $delim = substr($mods, $pos++, 1);
-			$delim =~ /\A[\\\$:]\z/ and die _diag(__("bad delimiter %q for :S"), $delim) . "\n";
+			$delim =~ /\A[\\\$:]\z/ and die diag(__("bad delimiter %q for :S"), $delim) . "\n";
 			my ($old, $bol, $eol, @new);
 			($pos, $old, $bol, $eol) = _part($mods, $pos, $delim, 0, $o{expand});
 			($pos, @new) = _part($mods, $pos, $delim, 1, $o{expand});
 			my %flag;
 			while ($pos < $len && substr($mods, $pos, 1) ne ':') {
 				my $f = substr($mods, $pos++, 1);
-				$f =~ /\A[1gW]\z/ or die _diag(__("unknown flag %q for :S"), $f) . "\n";
+				$f =~ /\A[1gW]\z/ or die diag(__("unknown flag %q for :S"), $f) . "\n";
 				$flag{$f} = 1;
 			}
 			my $done;
@@ -253,12 +248,12 @@ sub _apply
 			$val = join ' ', @word;
 		} else {
 			(my $name = substr($mods, $start)) =~ s/:.*//s;
-			die _diag(__("unknown modifier %q"), ":$name") . "\n";
+			die diag(__("unknown modifier %q"), ":$name") . "\n";
 		}
 		if ($pos < $len) {
 			if (substr($mods, $pos, 1) ne ':') {
 				(my $name = substr($mods, $start)) =~ s/:.*//s;
-				die _diag(__("unknown modifier %q"), ":$name") . "\n";
+				die diag(__("unknown modifier %q"), ":$name") . "\n";
 			}
 			$pos++;
 			$pos < $len or die __("empty modifier") . "\n";

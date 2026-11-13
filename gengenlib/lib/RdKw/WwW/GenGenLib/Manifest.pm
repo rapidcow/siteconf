@@ -76,13 +76,12 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 =cut
 
 use Encode ();
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
 use RdKw::WwW::GenGenLib qw( subs_dep );
 
-# Encode as RdKw::WwW::GenGenLib does.
+# Say what we say as RdKw::WwW::GenGenLib does.
 BEGIN {
 	*__ = \&RdKw::WwW::GenGenLib::__;
-	*_diag = \&RdKw::WwW::GenGenLib::_diag;
-	*_to_fs = \&RdKw::WwW::GenGenLib::_to_fs;
 }
 
 # POSIX white space since [[:space:]] is too broad.
@@ -102,7 +101,7 @@ sub _blame
 	my ($file, $line) = @_;
 	# HEY!  %#q is the file name of the faulty
 	# file and %d is its lineno.
-	_diag(__("%#q line %d"), $file, $line);
+	diag(__("%#q line %d"), $file, $line);
 }
 
 sub read
@@ -112,11 +111,11 @@ sub read
 	my $fh;
 	if (ref $file) {
 		open $fh, '<', $file
-			or die _diag(__("read_manifest: cannot open string: %m")) . "\n";
+			or die diag(__("read_manifest: cannot open string: %m")) . "\n";
 		$file = 'MANIFEST';
 	} else {
-		open $fh, '<', _to_fs($file, 'read_manifest')
-			or die _diag(__("read_manifest: cannot open file %q: %m"), $file) . "\n";
+		open $fh, '<', to_fs($file, { prog => 'read_manifest' })
+			or die diag(__("read_manifest: cannot open file %q: %m"), $file) . "\n";
 	}
 
 	my (@goal, %goal, $goal);
@@ -124,20 +123,20 @@ sub read
 		# HEY!  %#q is the file name of the faulty
 		# MANIFEST and %d is its lineno.
 		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
-			or die _diag(__("read_manifest: %s: not UTF-8"),
+			or die diag(__("read_manifest: %s: not UTF-8"),
 				_blame($file, $.)) . "\n";
 		s/(?:^|[$SP])#.*//so;
 		my ($kw, @arg) = /([^$SP]+)/go;
 		defined $kw or next;
 		if ($kw eq 'MAKE') {
-			@arg == 1 or die _diag(__("read_manifest: %s: "
+			@arg == 1 or die diag(__("read_manifest: %s: "
 				. "MAKE takes exactly one goal name"),
 				_blame($file, $.)) . "\n";
 			my $name = $arg[0];
 			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
-				or die _diag(__("read_manifest: %s: bad goal name %q"),
+				or die diag(__("read_manifest: %s: bad goal name %q"),
 				_blame($file, $.), $name) . "\n";
-			$goal{$name} and die _diag(__("read_manifest: %s: "
+			$goal{$name} and die diag(__("read_manifest: %s: "
 				. "goal %q is already made"),
 				_blame($file, $.), $name) . "\n";
 			push @goal, $goal = $goal{$name}
@@ -146,33 +145,33 @@ sub read
 		}
 		if ($kw eq 'NEED' or $kw eq 'WANT') {
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			$goal or die _diag(__("read_manifest: %s: %s before any MAKE"),
+			$goal or die diag(__("read_manifest: %s: %s before any MAKE"),
 				_blame($file, $.), $kw) . "\n";
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			@arg == 1 or die _diag(__("read_manifest: %s: %s takes exactly one file"
+			@arg == 1 or die diag(__("read_manifest: %s: %s takes exactly one file"
 				. " (use # for comments)"), _blame($file, $.), $kw) . "\n";
 			my $name = eval { subs_dep(undef, $arg[0],
 				strict => 1, on_missing => 'croak') };
 			defined $name or do {
 				(my $why = $@) =~ s/\A\w+: //;
-				die _diag(__("read_manifest: %s: %s"), _blame($file, $.), $why);
+				die diag(__("read_manifest: %s: %s"), _blame($file, $.), $why);
 			};
-			length $name or die _diag(__("read_manifest: %s: %q is no name"),
+			length $name or die diag(__("read_manifest: %s: %q is no name"),
 				_blame($file, $.), $arg[0]) . "\n";
-			$name =~ /\0/ and die _diag(__("read_manifest: %s: %q has a NUL in it"),
+			$name =~ /\0/ and die diag(__("read_manifest: %s: %q has a NUL in it"),
 				_blame($file, $.), $arg[0]) . "\n";
 			push @{ $goal->{lc $kw} }, { file => $name, line => $. };
 			next;
 		}
-		die _diag(__("read_manifest: %s: expected MAKE, NEED or WANT, not %q"),
+		die diag(__("read_manifest: %s: expected MAKE, NEED or WANT, not %q"),
 			_blame($file, $.), $kw) . "\n";
 	}
-	close $fh or die _diag(__("read_manifest: cannot read file %q: %m"), $file) . "\n";
+	close $fh or die diag(__("read_manifest: cannot read file %q: %m"), $file) . "\n";
 	# HEY!  I (ethan/rc) didn't write this message.
 	# I'm frankly a bit surprised Claude made it
 	# a question... anyways go wild at it i don't
 	# really have any idea lol :v
-	@goal or die _diag(__("read_manifest: %q: no goals; what should I make?"), $file) . "\n";
+	@goal or die diag(__("read_manifest: %q: no goals; what should I make?"), $file) . "\n";
 	bless { file => $file, goals => \@goal, goal => \%goal }, $class;
 }
 
@@ -217,7 +216,7 @@ sub _goal
 {
 	my ($self, $name) = @_;
 	defined $name or return $self->{goals}[0];
-	$self->{goal}{$name} or die _diag(__("read_manifest: %q: no goal %q"),
+	$self->{goal}{$name} or die diag(__("read_manifest: %q: no goal %q"),
 		$self->{file}, $name) . "\n";
 }
 

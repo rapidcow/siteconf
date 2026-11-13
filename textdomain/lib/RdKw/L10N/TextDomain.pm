@@ -21,7 +21,7 @@ L10N::TextDomain - UTF-8 gettext text domain
     # or as they are given:
     use RdKw::L10N::TextDomain 'siteconf', '/usr/local/share/locale';
 
-    die _diag(__("cannot open file %q: %m"), $file) . "\n";
+    die diag(__("cannot open file %q: %m"), $file) . "\n";
     print __n("one file", "%d files", $n);
     our @HELP = ( N__("This help message"), ... );   # __ them later
 

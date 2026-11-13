@@ -35,14 +35,9 @@ only say how else to spell them.
 
 =cut
 
-use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( diag );
 # (said as RdKw::WwW::SiteConf says it: see there)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-
-sub _diag
-{
-	RdKw::I18N::CodeSets->locale->diag(@_);
-}
 
 sub _emit
 {
@@ -94,7 +89,7 @@ sub _name
 	my $c = $1;
 	require RdKw::WwW::SiteConf::GMake;
 	my $gnu = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
-	die "E: " . _diag($gnu
+	die "E: " . diag($gnu
 		# HEY!  the %s is a character, as `$' or U+0020
 		? __("make cannot name %q (with %s in it); GNU make can (-G gmake)")
 		: __("make cannot name %q (with %s in it)"), $s, $class->_char($c)) . "\n";

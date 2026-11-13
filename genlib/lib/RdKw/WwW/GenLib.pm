@@ -92,14 +92,8 @@ use URI::Escape qw( uri_unescape );
 # locale, if RdKw::WwW::SiteConf::L10N says where the catalogs are
 # (and Locale::Messages is there to read them); else, and for what no
 # catalog has, as it is written (see RdKw::L10N::TextDomain).
-use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( diag );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-
-# A message: %q is a name, %s as it is (see RdKw::I18N::CodeSets)
-sub _diag
-{
-	RdKw::I18N::CodeSets->locale->diag(@_);
-}
 
 our @EXPORT_OK = qw(
 	locate
@@ -294,7 +288,7 @@ sub parse_base
 	{
 		my $proto = $site_url->scheme;
 		unless (defined $proto and grep { lc($proto) eq $_ } qw( file http https )) {
-			die _diag(__("parse_base: site_url has no file or www URI scheme: %q"),
+			die diag(__("parse_base: site_url has no file or www URI scheme: %q"),
 				$D->{site_url}) . "\n";
 		}
 	}
@@ -318,7 +312,7 @@ sub parse_base
 			# so report it thoroughly to the console.
 			# HEY!  the first %q is the path of site_url, and the
 			# second is base_url
-			die _diag(__("parse_base: site_url has a nonempty path (%q), and\n"
+			die diag(__("parse_base: site_url has a nonempty path (%q), and\n"
 				. "parse_base: is inconsistent with base_url (%q)"),
 				$site_url->path, $base_url) . "\n";
 		}

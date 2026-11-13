@@ -246,7 +246,7 @@ use File::Basename qw( dirname basename );
 use Cwd qw( abs_path );
 use File::Spec ();
 
-use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_make read_deps update_file
 	norm_dep uproot );
@@ -259,15 +259,9 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use RdKw::WwW::SiteConf::Modifiers;
 
-# A name as the file system spells it, and back (see RdKw::I18N::CodeSets)
-sub _to_fs { RdKw::I18N::CodeSets->locale->to_fs($_[0], { prog => 'E' }) }
-sub _un_fs { RdKw::I18N::CodeSets->locale->un_fs($_[0], { prog => 'E' }) }
-
-# A message: %q is a name, %s as it is, %m is $! (see RdKw::I18N::CodeSets)
-sub _diag
-{
-	RdKw::I18N::CodeSets->locale->diag(@_);
-}
+# A name as the file system spells it, and back; or an error from E
+sub _to_fs { to_fs($_[0], { prog => 'E' }) }
+sub _un_fs { un_fs($_[0], { prog => 'E' }) }
 
 # An error or a warning: each line of the message after `prefix'
 # (E: or W:), and a newline at the end
@@ -287,7 +281,7 @@ sub _blame
 	my ($file, $line) = @_;
 	# HEY!  %#q is the file name of the faulty
 	# file and %d is its lineno.
-	_diag(__("%#q line %d"), $file, $line);
+	diag(__("%#q line %d"), $file, $line);
 }
 
 # Goals of the manifest cannot take these names; `Makefile' because
@@ -352,7 +346,7 @@ sub new
 	my $conf = "$self->{B}/MY/config.mk";
 	# HEY!  Keep a winky face in the translation ;)
 	# (as GenGenLib's load_state does: newbies see it)
-	-f _to_fs($conf) or die _say(E => _diag(__(
+	-f _to_fs($conf) or die _say(E => diag(__(
 		"You have not configured!  (no %q)\n"
 		. "You should ./configure first. ;)"), $conf));
 	my %D = read_make($conf);
@@ -369,27 +363,27 @@ sub new
 	}
 	for my $k (qw( A B a b c R F e )) {
 		defined $D{$k} && length $D{$k}
-			or die _say(E => _diag(__(
+			or die _say(E => diag(__(
 				"%q: %q is missing.  Try reconfiguring."), $conf, $k));
 	}
 	File::Spec->file_name_is_absolute($D{b})
 		# HEY!  %q is a variable of config.mk: `b' or `c', which are where
 		# what we make goes (the target tree, and the cache)
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			"%q prefix must be a relative path."), 'b'));
 	# c, the cache (what we make but do not ship), is written by
 	# configure even when it is b; we do not guess it.
 	File::Spec->file_name_is_absolute($D{c})
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			"%q prefix must be a relative path."), 'c'));
 	grep { $_ eq '..' } split m!/!, $D{c}
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			"%q prefix may not climb out of the build directory."), 'c'));
 	$D{e} =~ m!/!
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			"%q (directory marker) may not contain a slash."), 'e'));
 	defined $D{clean} && length $D{clean} and $D{clean} !~ /\A[A-Za-z0-9&][-\w.+&]*\z/
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			"%q may be made of letters, digits and -_.+& only: %q"),
 			'clean', $D{clean}));
 	$self->{D} = \%D;
@@ -398,10 +392,10 @@ sub new
 	# soon as it is not found, while $! still says why.
 	$self->{Babs} = abs_path(_to_fs($self->{B}));
 	defined $self->{Babs}
-		or die _say(E => _diag(__("cannot find the build directory %q: %m"), $self->{B}));
+		or die _say(E => diag(__("cannot find the build directory %q: %m"), $self->{B}));
 	$self->{Rabs} = abs_path(_to_fs($self->_fs($D{A})));
 	defined $self->{Rabs}
-		or die _say(E => _diag(__("cannot find the source tree %q: %m"), $D{A}));
+		or die _say(E => diag(__("cannot find the source tree %q: %m"), $D{A}));
 	$_ = _un_fs($_) for @$self{qw( Babs Rabs )};
 	$self->{fromhere} = \%fromhere;
 	$self;
@@ -466,7 +460,7 @@ sub _expand
 		# HEY!  The first %s is where (a file, or `file' line 3), and
 		# the second is b or c (a variable of config.mk, as in ${b}).
 		# Leave the ${...}s alone: they are what is written in a header.
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			'%1$s: %2$q: ${%3$s} is relative to ${B}; '
 			. 'use ${B}/${%3$s}.'),
 			$where, $spec, defined $1 ? $1 : $2));
@@ -485,24 +479,24 @@ sub _expand
 			my $u = $1;
 			$u =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ and hex($1) <= 0x10FFFF
 				# HEY!  the last %s is what is in a header, as ${U+...}
-				or die _say(E => _diag(__(
+				or die _say(E => diag(__(
 					"%s: %q: %s is no code point"),
 					$where, $spec, "\${$u}"));
 			$out .= chr hex $1;
 		} elsif ($spec =~ /\G\$(?:\{(\w+)\}|(\w))/gc) {
 			my $x = defined $1 ? $1 : $2;
 			# HEY!  the last %s is the variable, as ${name}
-			defined $var{$x} or die _say(E => _diag(__(
+			defined $var{$x} or die _say(E => diag(__(
 				"%s: %q: no such variable %s"),
 				$where, $spec, "\${$x}"));
 			$out .= $var{$x};
 		} elsif ($spec =~ /\G\$/gc) {
-			die _say(E => _diag(__('%s: stray $ in %q'), $where, $spec));
+			die _say(E => diag(__('%s: stray $ in %q'), $where, $spec));
 		} else {
 			last;
 		}
 	}
-	length $out or die _say(E => _diag(__("%s: empty path"), $where));
+	length $out or die _say(E => diag(__("%s: empty path"), $where));
 	File::Spec->canonpath($out);
 }
 
@@ -592,13 +586,13 @@ sub _check_file
 	$file =~ m!\A[^$SP:\$#%\\|;<>"'`*?\[\](){}&]+\z!o
 		# HEY!  The first %s is always where (a file, or `file' line 3),
 		# in this message and in those that follow it
-		or die _say(E => _diag(__(
+		or die _say(E => diag(__(
 			"%s: bad file name %q"), $where, $file));
 	$file =~ m!\A/!
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			"%s: file name %q must be relative"), $where, $file));
 	grep { $_ eq '..' } split m!/!, $file
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			"%s: file name %q is out of tree"), $where, $file));
 	1;
 }
@@ -649,7 +643,7 @@ sub read_manifest
 	for my $goal (@goal) {
 		my $name = $goal->{name};
 		$reserved_goal{$name} || $self->_is_clean($name)
-			and die _say(E => _diag(__(
+			and die _say(E => diag(__(
 				"%s: %q is a reserved goal name"),
 				_blame($file, $goal->{line}), $name));
 		_check_file($_->{file}, _blame($file, $_->{line}))
@@ -704,22 +698,22 @@ sub _subst
 			$x =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/
 				and hex($1) <= 0x10FFFF
 				# HEY!  the second %s is what is in Makefile.in, as ${U+...}
-				or die _say(E => _diag(__(
+				or die _say(E => diag(__(
 					"%s: %s is not a valid Unicode code point"),
 					$where, "\${$x}"));
 			$val = chr hex $1;
 		} elsif ($x eq '@' or $x eq '.TARGET') {
 			# HEY!  the second %s is a variable, as ${@} (or ${.TARGET}),
 			# in this message and in those that follow it
-			defined $node or die _say(E => _diag(__(
+			defined $node or die _say(E => diag(__(
 				"%s: %s outside of a recipe"),
 				$where, "\${$x}"));
 			$val = $node;
 		} elsif ($x eq '<' or $x eq '.IMPSRC') {
-			defined $src or die _say(E => _diag(__(
+			defined $src or die _say(E => diag(__(
 				"%s: misplaced %s (not in a recipe)"),
 				$where, "\${$x}"));
-			length $src or die _say(E => _diag(__(
+			length $src or die _say(E => diag(__(
 				"%s: undefined %s"
 				. ' (explicitly suppressed by ${a})'),
 				$where, "\${$x}"));
@@ -727,7 +721,7 @@ sub _subst
 		} elsif ($x eq '^X' or $x eq "\030") {
 			$val = _un_fs($^X);
 		} else {
-			defined $D->{$x} or die _say(E => _diag(__("%s: undefined variable: %s"),
+			defined $D->{$x} or die _say(E => diag(__("%s: undefined variable: %s"),
 				$where, "\${$x}"));
 			$val = $D->{$x};
 		}
@@ -770,7 +764,7 @@ sub _read_target
 	}
 	# (as it was written, unless it said a tree)
 	defined $rest or $rest = $spec;
-	$rest =~ /\$/ and die _say(E => _diag(__(
+	$rest =~ /\$/ and die _say(E => diag(__(
 		'%s: %q: target is not preceded by'
 		. ' a legal prefix (${b} or ${c})'),
 		$where, $rest));
@@ -804,7 +798,7 @@ sub _read_rules
 	my $D = $self->{D};
 	my $file = File::Spec->canonpath($D->{R});
 	open my $fh, '<:encoding(UTF-8)', _to_fs($file)
-		or die _say(E => _diag(__("cannot open file %q: %m"), $file));
+		or die _say(E => diag(__("cannot open file %q: %m"), $file));
 
 	my (%rule, @node, $stanza);
 	while (<$fh>) {
@@ -820,7 +814,7 @@ sub _read_rules
 				# a comment line does not end the header (nor is it in it)
 				$next = <$fh> while defined $next and
 					$next =~ /\A[$SP]*#(?:[$SP]|\z)/o;
-				defined $next or die _say(E => _diag(__(
+				defined $next or die _say(E => diag(__(
 					"%s: unfinished line continuation"), $where));
 				$next =~ s/^[ \t]+//;
 				$_ .= $next;
@@ -832,7 +826,7 @@ sub _read_rules
 			for my $node (@node) {
 				my $rule = $rule{$node->[0]};
 				if (defined $rule->{stanza} && $rule->{stanza} != $stanza) {
-					die _say(E => _diag(__(
+					die _say(E => diag(__(
 						"%s: more than one recipe for %q"),
 						$where, $node->[0]));
 				}
@@ -844,7 +838,7 @@ sub _read_rules
 		if (/^\t/) {
 			# HEY!  a recipe line (one that begins with a tab)
 			# with no rule above it to be the recipe of
-			@node or die _say(E => _diag(__(
+			@node or die _say(E => diag(__(
 				"%s: unexpected tabulation"), $where));
 			$recipe->($_);
 			next;
@@ -857,7 +851,7 @@ sub _read_rules
 			$dep =~ /\A($PREREQ);[ \t]*(.*)\z/so
 				and ($dep, $cmd) = ($1, "\t$2");
 			@node = map { [ $self->_read_target($_, $where) ] } _words($src)
-				or die _say(E => _diag(__("%s: null target list"), $where));
+				or die _say(E => diag(__("%s: null target list"), $where));
 			$stanza = $line;
 			for my $node (@node) {
 				my ($key, $name) = @$node;
@@ -873,7 +867,7 @@ sub _read_rules
 						my $name_of = length $from ? $self->_subst($from, $name, $where) : '';
 						length $from and do {
 							$name_of =~ /[^$SP]/o and $name_of !~ /[$SP]/o
-								or die _say(E => _diag(__(
+								or die _say(E => diag(__(
 									'%s: %q must be one name in ${a}'),
 									$where, $first));
 							_check_file($name_of, $where);
@@ -890,13 +884,13 @@ sub _read_rules
 					my $kind = 'deps';
 					if ($word =~ s/\A([^$SP\$\/:]*)://o) {
 						$1 eq 'NEED' or $1 eq 'WANT'
-							or die _say(E => _diag(__(
+							or die _say(E => diag(__(
 								"%s: %q: a prerequisite must start with "
 								. "either `NEED:' or `WANT:', not %q"),
 								$where, "$1:$word", "$1:"));
 						$kind = $1 eq 'WANT' ? 'want' : 'deps';
 						# HEY!  %q is `NEED:' or `WANT:', literally.
-						length $word or die _say(E => _diag(__("%s: %q something?"),
+						length $word or die _say(E => diag(__("%s: %q something?"),
 							$where, "$1:"));
 					}
 					push @{ $rule->{$kind} },
@@ -907,7 +901,7 @@ sub _read_rules
 			next;
 		}
 		(my $text = $_) =~ s/\r?\n\z//;
-		die _say(E => _diag(__("%s: invalid line: %q"), $where, $text));
+		die _say(E => diag(__("%s: invalid line: %q"), $where, $text));
 	}
 	close $fh;
 	for my $rule (values %rule) {
@@ -939,8 +933,8 @@ sub _node
 			my @stack = @{ $self->{stack} };
 			shift @stack while @stack && $stack[0] ne $file;
 			# HEY!  %s is the files, as `a' -> `b' -> `a'
-			die _say(E => _diag(__("dependency cycle: %s"),
-				join(' -> ', map { _diag('%q', $_) } @stack, $file)));
+			die _say(E => diag(__("dependency cycle: %s"),
+				join(' -> ', map { diag('%q', $_) } @stack, $file)));
 		}
 		return $node;
 	}
@@ -954,7 +948,7 @@ sub _node
 	my $apath = $nosrc ? undef : $self->_apath($src);
 	my $bpath = $self->_bpath($file);
 	basename($bpath) eq $D->{e}
-		and die _say(E => _diag(__(
+		and die _say(E => diag(__(
 			"%q: %q is reserved for directory markers. "
 			. "(Set -De to change it.)"),
 			$file, $D->{e}));
@@ -976,14 +970,14 @@ sub _node
 	my $done = sub { delete $node->{visiting}; pop @{ $self->{stack} }; $node };
 
 	unless ($rule) {
-		$fail->(_diag(__("no rule to make it (%q)"), $D->{R}));
+		$fail->(diag(__("no rule to make it (%q)"), $D->{R}));
 		return $done->();
 	}
 	unless ($nosrc or -f _to_fs($self->_fs($apath))) {
 		$fail->($rule->{line}
 			# HEY!  the %s is where the rule is (e.g. `file' line 3)
-			? _diag(__("source %q is missing (rule at %s)"), $apath, _blame($D->{R}, $rule->{line}))
-			: _diag(__("source %q is missing"), $apath));
+			? diag(__("source %q is missing (rule at %s)"), $apath, _blame($D->{R}, $rule->{line}))
+			: diag(__("source %q is missing"), $apath));
 		return $done->();
 	}
 	$node->{recipe} = $rule->{recipe};
@@ -992,27 +986,27 @@ sub _node
 	if (defined $I{HAVE}) {
 		# The source's own name, as a header spells it, is the one
 		# the rule says it is: ${A}/${a}/FILE.
-		my $where = _diag('%q: HAVE', $apath);
+		my $where = diag('%q: HAVE', $apath);
 		my $have = $self->_expand($I{HAVE}, $where);
 		my $want = File::Spec->canonpath("$D->{a}/$src");
 		$have eq $want or die _say(E => $have ne $I{HAVE}
 			# HEY!  Keep the question mark: we are as puzzled as
 			# anyone.  The (aka %q) is what the HAVE says, expanded
-			? _diag(__("%q: You HAVE %q (aka %q),\nbut I need %q?"),
+			? diag(__("%q: You HAVE %q (aka %q),\nbut I need %q?"),
 				$apath, $I{HAVE}, $have, $want)
-			: _diag(__("%q: You HAVE %q,\nbut I need %q?"), $apath, $I{HAVE}, $want));
+			: diag(__("%q: You HAVE %q,\nbut I need %q?"), $apath, $I{HAVE}, $want));
 	}
 
 	# What the headers say they need, and what the rules do
-	my $where = _diag('%q', $nosrc ? $file : $apath);
+	my $where = diag('%q', $nosrc ? $file : $apath);
 	# HEY!  This and the next three are where a NEED (or a WANT)
 	# was said, and are said in parentheses after what is needed
-	my $from = $nosrc ? __("in header") : _diag(__("in header of %q"), $apath);
+	my $from = $nosrc ? __("in header") : diag(__("in header of %q"), $apath);
 	my @hneed = map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] };
 	my @hwant = map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{WANT} || [] };
 	my $rule_at = _blame($D->{R}, $rule->{line});
-	my @rdep = map { [ $_, $_, _diag(__("prerequisite in %s"), $rule_at) ] } @{ $rule->{deps} };
-	my @rwant = map { [ $_, $_, _diag(__("WANT: in %s"), $rule_at) ] } @{ $rule->{want} || [] };
+	my @rdep = map { [ $_, $_, diag(__("prerequisite in %s"), $rule_at) ] } @{ $rule->{deps} };
+	my @rwant = map { [ $_, $_, diag(__("WANT: in %s"), $rule_at) ] } @{ $rule->{want} || [] };
 	# What the source files we NEED (or WANT) say they need, and so on:
 	# like gcc -MM, which lists the headers of headers.
 	{
@@ -1070,7 +1064,7 @@ sub _node
 				# (a cause per line, each cause deeper than what it breaks)
 				# HEY!  %s is where it was needed (in header of `file').
 				# The same goes for the next two marked strings.
-				$fail->(_diag(__("NEEDs %q (%s), but cannot be made:"), $dep, $from),
+				$fail->(diag(__("NEEDs %q (%s), but cannot be made:"), $dep, $from),
 					map { "  $_" } @{ $kid->{why} });
 				return 0;
 			}
@@ -1082,9 +1076,9 @@ sub _node
 			$fail->($said =~ m!\AMY/(?:config|option)\.mk\z!
 				# HEY!  The last %q is the name it may have meant: a
 				# header says MY/option.mk, when it is ${B}/MY/option.mk
-				? _diag(__("NEEDs %q (%s), which we don't seem to have (is it %q?)"),
+				? diag(__("NEEDs %q (%s), which we don't seem to have (is it %q?)"),
 					$dep, $from, "\${B}/$said")
-				: _diag(__("NEEDs %q (%s), which we don't seem to have"), $dep, $from));
+				: diag(__("NEEDs %q (%s), which we don't seem to have"), $dep, $from));
 		}
 		0;
 	};
@@ -1100,7 +1094,7 @@ sub _node
 			# is yours to keep; i added it because "W"
 			# felt like a weak indication of a soft dep
 			# failing....
-			$self->_warn(_say(W => _diag(__("target %q WANTs %q\n"
+			$self->_warn(_say(W => diag(__("target %q WANTs %q\n"
 				. "  (%s)\n"
 				. "... but it is missing; going on without it :("),
 				$file, $d->[1], $d->[2])));
@@ -1123,8 +1117,8 @@ sub _inherit
 		my $fs = $self->_fs($dep);
 		my %I = !defined $self->_target($dep) && -f _to_fs($fs) && -T _
 			? read_deps($fs) : ();
-		my $where = _diag('%q', $dep);
-		my $from = _diag(__("in header of %q"), $dep);
+		my $where = diag('%q', $dep);
+		my $from = diag(__("in header of %q"), $dep);
 		[
 			[ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] } ],
 			[ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{WANT} || [] } ],
@@ -1175,21 +1169,21 @@ sub _tool
 		my %I = !defined $self->_target($dep) && -f _to_fs($fs) && -T _
 			? read_deps($fs) : ();
 		if (defined $I{HAVE}) {
-			my $have = $self->_dep($I{HAVE}, _diag('%q: HAVE', $dep));
+			my $have = $self->_dep($I{HAVE}, diag('%q: HAVE', $dep));
 			my $at = _blame($self->{D}{R}, $rule->{line});
 			$self->_same($have, $dep)
 				or die _say(E => $have ne $I{HAVE}
 					# HEY!  As above, for a tool of the rule; the last %s
 					# is where the rule is (`file' line 3)
-					? _diag(__("%q: You HAVE %q (aka %q),\n"
+					? diag(__("%q: You HAVE %q (aka %q),\n"
 						. "but I need %q for the rule for %q (%s)?"),
 						$dep, $I{HAVE}, $have, $dep, $file, $at)
-					: _diag(__("%q: You HAVE %q,\n"
+					: diag(__("%q: You HAVE %q,\n"
 						. "but I need %q for the rule for %q (%s)?"),
 						$dep, $I{HAVE}, $dep, $file, $at));
 		}
-		my $where = _diag('%q', $dep);
-		my $from = _diag(__("in header of %q"), $dep);
+		my $where = diag('%q', $dep);
+		my $from = diag(__("in header of %q"), $dep);
 		{
 			need => [ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] } ],
 			want => [ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{WANT} || [] } ],
@@ -1250,12 +1244,12 @@ sub plan
 				if ($kind eq 'need') {
 					# HEY!  the %s is where (`file' line 3); what
 					# follows the colon is why, a line each
-					push @err, _say(E => _diag(__("%s: goal %q NEEDs %q, but cannot be made:"),
+					push @err, _say(E => diag(__("%s: goal %q NEEDs %q, but cannot be made:"),
 						_blame($D->{F}, $ent->{line}), $spec->{name}, $file))
 						. $causes->('E:');
 				} else {
 					push @dropped, [ $file, $why ];
-					$self->_warn(_say(W => _diag(__("goal %q WANTs %q, but cannot be made:"),
+					$self->_warn(_say(W => diag(__("goal %q WANTs %q, but cannot be made:"),
 						$spec->{name}, $file)), $causes->('W:'));
 				}
 			}
@@ -1267,7 +1261,7 @@ sub plan
 		# HEY!  "no soup for you!" (Seinfeld) but with Makefile
 		# (not my bit, Claude came up with this... but cool
 		# nonetheless o_o)
-		die @err, _say(E => _diag(__n(
+		die @err, _say(E => diag(__n(
 			"%d problem; no Makefile for you.",
 			"%d problems; no Makefile for you.",
 			$count), $count)
@@ -1338,7 +1332,7 @@ sub _clean_rules
 	for my $rule (@rule) {
 		my $name = $rule->{name};
 		# HEY!  %s is the option, as in -Dclean=clean-&
-		$taken{$name}++ and die _say(E => _diag(__("%s: %q is"
+		$taken{$name}++ and die _say(E => diag(__("%s: %q is"
 			. " also the name of a goal or another rule"),
 			"-Dclean=$self->{D}{clean}", $name));
 	}
@@ -1395,14 +1389,14 @@ sub generate
 	my ($self, $G, $out) = @_;
 	$G = 'make' unless defined $G and length $G;
 	# HEY!  %s is the generators (make, gmake, ninja)
-	my $gen = $generator{$G} or die _say(E => _diag(__(
+	my $gen = $generator{$G} or die _say(E => diag(__(
 		"unknown generator %q.  Choose one of: %s"),
 		$G, join(', ', sort keys %generator)));
 	my ($module, $outfile) = @$gen;
 	my $named = defined $out && length $out;
 	if ($named) {
 		$out =~ m!\A[^/\0]+\z! and $out !~ /\A\.\.?\z/
-			or die _say(E => _diag(__("bad output name %q: "
+			or die _say(E => diag(__("bad output name %q: "
 				. "stay in the build directory please"),
 				$out));
 		$outfile = $out;
@@ -1424,7 +1418,7 @@ sub generate
 		$name =~ /\AMANIFEST\.[A-Za-z0-9][-\w.+]*\z/ or next;
 		$have{$name} or do {
 			unlink $old;
-			$self->_warn(_diag(__("Removing %q"), "MY/$name") . "\n");
+			$self->_warn(diag(__("Removing %q"), "MY/$name") . "\n");
 		};
 	}
 
@@ -1444,7 +1438,7 @@ sub generate
 	push @cmd, shell_quote($plan->{goals}[0]{name}) if @{ $plan->{goals} };
 	$self->_warn(__("Done!") . "\n");
 	# HEY!  %s is a command line, as the shell would read it
-	$self->_warn(_diag(__("To build, run: %s"), "@cmd") . "\n");
+	$self->_warn(diag(__("To build, run: %s"), "@cmd") . "\n");
 	$plan;
 }
 
@@ -1454,7 +1448,7 @@ sub _report
 	return unless $what;
 	$name = "MY/$name" if $name =~ /^MANIFEST\./;
 	# HEY!  Writing is what was not there, and Updating what was
-	$self->_warn(_diag($what > 1 ? __("Writing %q") : __("Updating %q"), $name) . "\n");
+	$self->_warn(diag($what > 1 ? __("Writing %q") : __("Updating %q"), $name) . "\n");
 }
 
 =back

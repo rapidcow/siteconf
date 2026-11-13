@@ -31,14 +31,9 @@ name that ends in parentheses, which would be an archive member.
 
 =cut
 
-use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( diag );
 # (said as RdKw::WwW::SiteConf says it: see there)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-
-sub _diag
-{
-	RdKw::I18N::CodeSets->locale->diag(@_);
-}
 
 # A name, as GNU make reads it
 sub _name
@@ -46,11 +41,11 @@ sub _name
 	my ($class, $s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029};=]|\\\z)/
 		# HEY!  the %s is a character, as `;' or U+000A
-		and die "E: " . _diag(__("GNU make cannot name %q (with %s in it)"),
+		and die "E: " . diag(__("GNU make cannot name %q (with %s in it)"),
 			$s, $class->_char($1)) . "\n";
 	$s =~ /\(.*\)\z/s
 		# HEY!  lib(member.o) is how make names a member of an archive
-		and die "E: " . _diag(__("GNU make cannot name %q (it would be an archive member)"),
+		and die "E: " . diag(__("GNU make cannot name %q (it would be an archive member)"),
 			$s) . "\n";
 	$s =~ s/\$/\$\$/g;
 	$s =~ s/(\\*)([\t #:|])/$1$1\\$2/g;

@@ -37,14 +37,9 @@ C<|> cannot be, and is an error.
 
 =cut
 
-use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( diag );
 # (said as RdKw::WwW::SiteConf says it: see there)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-
-sub _diag
-{
-	RdKw::I18N::CodeSets->locale->diag(@_);
-}
 
 sub _emit
 {
@@ -77,7 +72,7 @@ NINJA
 		my $node = $plan->{node}{$file};
 		my $command = _command($node->{recipe});
 		defined $command and length $command
-			or die "E: " . _diag(__("%q: no recipe to make it (and ninja has no"
+			or die "E: " . diag(__("%q: no recipe to make it (and ninja has no"
 				. " way to make nothing)"), $file) . "\n";
 		my $rule = 'rule' . ++$n;
 		$out .= "rule $rule\n  command = $command\n";
@@ -112,7 +107,7 @@ sub _path
 	my ($s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}|])/
 		# HEY!  the %s is a character, as `|' or U+000A
-		and die "E: " . _diag(__("ninja cannot name %q (with %s in it)"),
+		and die "E: " . diag(__("ninja cannot name %q (with %s in it)"),
 			$s, $1 eq '|' ? "`|'" : sprintf('U+%04X', ord $1)) . "\n";
 	$s =~ s/([ :\$])/\$$1/g;
 	$s;

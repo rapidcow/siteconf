@@ -55,13 +55,8 @@ BEGIN {
 
 use Encode ();
 use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
 use RdKw::WwW::GenGenLib qw( read_make write_make );
-
-# A message: %q is a name, %s as it is, %m is $! (see RdKw::I18N::CodeSets)
-sub _diag
-{
-	RdKw::I18N::CodeSets->locale->diag(@_);
-}
 
 # How can ./configure work without siteconf -g afterwards?
 # Anyways, let's just port this one function in the (very
@@ -88,7 +83,7 @@ sub setter
 	sub {
 		my ($k, $v) = split(/=/, $_[1], 2);
 		# HEY!  %s is the option, -D or -O
-		length $k or die "$prog: " . _diag(__("%s: empty name."), "-$S") . "\n";
+		length $k or die "$prog: " . diag(__("%s: empty name."), "-$S") . "\n";
 		$H->{$k} = defined $v ? $v : "";
 	};
 }
@@ -116,9 +111,9 @@ my $offset = $cs->parse_from_argv(\@ARGV, prog => 'E');
 RdKw::I18N::CodeSets->locale($cs);
 $cs->initstd(stdout => Encode::FB_PERLQQ(), stderr => Encode::FB_PERLQQ());
 
-# File names, as the file system spells them, and back
-sub to_fs { $cs->to_fs($_[0], { prog => 'E' }) }
-sub un_fs { $cs->un_fs($_[0], { prog => 'E' }) }
+# File names, as the file system spells them, and back; or an error from E
+sub _to_fs { to_fs($_[0], { prog => 'E' }) }
+sub _un_fs { un_fs($_[0], { prog => 'E' }) }
 
 # Our name came as an argument; it is only said, so it need not decode
 $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
@@ -180,15 +175,15 @@ sub _section
 			# HEY!  what an option is, if it is not said: the first %s
 			# is what the option is for (the last line of it, if it is
 			# more), and the second the default (as -Db, say)
-			push @line, length $last ? _diag(__("%s (default: %s)"), $last, $default->())
+			push @line, length $last ? diag(__("%s (default: %s)"), $last, $default->())
 				# HEY!  the same, for an option with nothing said of it
-				: _diag(__("(default: %s)"), $default->());
+				: diag(__("(default: %s)"), $default->());
 		}
 		if (defined $alias) {
 			my $last = pop @line;
 			# HEY!  the other ways to say an option (--help, -?), after
 			# what it is for
-			push @line, _diag(__("%s (alias: %s)"), $last, $alias);
+			push @line, diag(__("%s (alias: %s)"), $last, $alias);
 		}
 		$text .= sprintf("  %-*s %s\n", $w, $syntax, shift @line);
 		$text .= ' ' x ($w + 3) . "$_\n" for @line;
@@ -202,7 +197,7 @@ $usage = do {
 	# is where the column always was)
 	my $w = 11;
 	length $_->[0] > $w and $w = length $_->[0] for @VARHELP, @OPTHELP, @FLAGHELP;
-	_diag(__("usage: %s"),
+	diag(__("usage: %s"),
 		"$prog [-C codeset ...] [-Dvar=val ...] [-Ovar=val ...] [--reset] [--mkpath] [-hq]")
 	. "\n\n" . __("The following variables may be defined:") . "\n\n"
 	. _section($w, @VARHELP)
@@ -222,16 +217,16 @@ GetOptions(%getopt, 'C:s' => sub { die "E: " . __("too late to -C now.") . "\n" 
 
 # Store the starting directory: for the
 # `siteconf -g' hint after configuring.
-my $start = un_fs(getcwd());
+my $start = _un_fs(getcwd());
 
 # Find the source tree, which is where A says it is,
 # observed from the starting directory (not necessarily
 # relative to the base directory of this script).
 my $A = isnull($D{A}) ? $Dd{A} : $D{A};
-my $srcdir = abs_path(to_fs(File::Spec->rel2abs($A, $start)));
-defined $srcdir or die "E: " . _diag(__('cannot find $A (aka %q): %m'), $A) . "\n";
-$srcdir = un_fs($srcdir);
-chdir to_fs($srcdir) or die "E: " . _diag(__('cannot chdir to $A (aka %q): %m'), $srcdir) . "\n";
+my $srcdir = abs_path(_to_fs(File::Spec->rel2abs($A, $start)));
+defined $srcdir or die "E: " . diag(__('cannot find $A (aka %q): %m'), $A) . "\n";
+$srcdir = _un_fs($srcdir);
+chdir _to_fs($srcdir) or die "E: " . diag(__('cannot chdir to $A (aka %q): %m'), $srcdir) . "\n";
 
 # -DB is the build directory, seen from the source tree; like
 # `cmake -B' we go there, and make it if it is not there.  Its
@@ -239,7 +234,7 @@ chdir to_fs($srcdir) or die "E: " . _diag(__('cannot chdir to $A (aka %q): %m'),
 # *this* run: nothing about it is ever read back from MY/config.mk,
 # which is the very file it is about to choose.
 my $B = isnull($D{B}) ? $Dd{B} : $D{B};
-unless (-d to_fs($B)) {
+unless (-d _to_fs($B)) {
 	# Please do not --mkpath unless you absolutely need to.
 	# This is only provided if you ABSOLUTELY depend on the
 	# old behavior.  Consider running the mkdir -p equivalent
@@ -248,16 +243,16 @@ unless (-d to_fs($B)) {
 	# us to create it.
 	if ($mkpath) {
 		require File::Path;
-		File::Path::make_path(to_fs($B), { error => \my $err });
+		File::Path::make_path(_to_fs($B), { error => \my $err });
 		if (@$err) {
 			my ($path, $why) = %{ $err->[0] };
 			# HEY!  %s is why, as File::Path says it
-			die "E: " . _diag(__("cannot create %q: %s"), length $path ? un_fs($path) : $B, $why)
+			die "E: " . diag(__("cannot create %q: %s"), length $path ? _un_fs($path) : $B, $why)
 				. "\n";
 		}
 	} else {
-		mkdir to_fs($B) or $!{EEXIST}   # Forgive race condition...
-			or die "E: " . _diag($!{ENOENT}
+		mkdir _to_fs($B) or $!{EEXIST}   # Forgive race condition...
+			or die "E: " . diag($!{ENOENT}
 			# Provide a plausible explanation for ENOENT.
 			# There might be weirder cases with symlinks,
 			# but I'm not gonna investigate further lol.
@@ -266,8 +261,8 @@ unless (-d to_fs($B)) {
 			: __("cannot mkdir %q: %m"), $B) . "\n";
 	}
 }
-chdir to_fs($B) or die "E: " . _diag(__('cannot chdir to $B (aka %q): %m'), $B) . "\n";
-my $Babs = un_fs(getcwd());
+chdir _to_fs($B) or die "E: " . diag(__('cannot chdir to $B (aka %q): %m'), $B) . "\n";
+my $Babs = _un_fs(getcwd());
 
 # Files first, command line over them -- unless --reset said otherwise.
 unless ($reset) {
@@ -306,29 +301,29 @@ preset_finish(\%D, \%O) if defined &preset_finish;
 
 foreach my $k (qw( a b R F )) {
 	$D{$k} =~ s!/+$!!;
-	length $D{$k} or die "E: " . _diag(__("%q may not be empty."), $k) . "\n";
+	length $D{$k} or die "E: " . diag(__("%q may not be empty."), $k) . "\n";
 }
 # b is a directory we create rules under, one parent at a time;
 # that walk ends at `.', so it must be relative.  (a, on the
 # other hand, is free to be absolute for foreign source files.)
 File::Spec->file_name_is_absolute($D{b})
-	and die "E: " . _diag(__("%q prefix must be a relative path."), 'b') . "\n";
+	and die "E: " . diag(__("%q prefix must be a relative path."), 'b') . "\n";
 # c, the cache: defaults to -Dc from the command-line, or
 # else -Sc (but *only* if it differs from -Sc), or else b.
 # It is always defined since 0.02_01, though it is opt-in.
 isnull($D{c}) and $D{c} = !isnull($Dd{c}) && $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
-length $D{c} or die "E: " . _diag(__("%q may not be empty."), 'c') . "\n";
+length $D{c} or die "E: " . diag(__("%q may not be empty."), 'c') . "\n";
 # We also create rules under c, so it must be relative too.
 File::Spec->file_name_is_absolute($D{c})
-	and die "E: " . _diag(__("%q prefix must be a relative path."), 'c') . "\n";
-$D{e} =~ m!/! and die "E: " . _diag(__("%q may not contain a slash."), 'e') . "\n";
+	and die "E: " . diag(__("%q prefix must be a relative path."), 'c') . "\n";
+$D{e} =~ m!/! and die "E: " . diag(__("%q may not contain a slash."), 'e') . "\n";
 
--d 'MY' or mkdir 'MY' or die "E: " . _diag(__("cannot mkdir %q: %m"), 'MY') . "\n";
+-d 'MY' or mkdir 'MY' or die "E: " . diag(__("cannot mkdir %q: %m"), 'MY') . "\n";
 foreach my $f ([ config => \%D ], [ option => \%O ]) {
 	my ($name, $H) = @$f;
 	my $what = write_make("MY/$name.mk", $H, $prog);
-	$what and print STDERR _diag($what > 1 ? __("Writing %q") : __("Updating %q"),
+	$what and print STDERR diag($what > 1 ? __("Writing %q") : __("Updating %q"),
 		"MY/$name.mk"), "\n" unless $shutup;
 }
 
@@ -341,7 +336,7 @@ my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);
 unless ($shutup) {
 	print STDERR __("Done!"), "\n";
 	# HEY!  %s is a command line, as the shell would read it
-	print STDERR _diag(__("To generate build script, run: %s"), "@PROG@ -g$where"), "\n";
+	print STDERR diag(__("To generate build script, run: %s"), "@PROG@ -g$where"), "\n";
 }
 
 exit 0;

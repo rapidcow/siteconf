@@ -19,8 +19,8 @@ I18N::CodeSets - character encoding context and parser
     # SITECONF_CODESETS=filesys:UTF-8,console:ascii, and then
     # -C diag:ascii -C console:locale -C argv:UTF-8 -C filesys ...
     my $cs = $CS->new;
-    $cs->parse_from_env('SITECONF_CODESETS', prog => 'E');
-    my $offset = $cs->parse_from_argv(\@ARGV, prog => 'E');
+    $cs->parse_from_env('SITECONF_CODESETS', prog => $0);
+    my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
     $CS->locale($cs);
 
     # elsewhere

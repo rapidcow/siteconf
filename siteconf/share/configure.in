@@ -18,7 +18,23 @@ use File::Basename;
 use File::Spec;
 use FindBin;
 use Getopt::Long qw( GetOptions );
-@L10N@
+
+# What we say is said in the language of the locale, if
+# RdKw::WwW::SiteConf::L10N says where the catalogs are (and
+# Locale::Messages is there to read them); else, and for what no
+# catalog has, as it is written (see RdKw::L10N::TextDomain, which
+# comes with GenGenLib).  If that is not there either, the check below
+# says so, as it is written.
+BEGIN {
+	if (eval { require RdKw::L10N::TextDomain; 1 }) {
+		RdKw::L10N::TextDomain->import(':module' => 'RdKw::WwW::SiteConf::L10N');
+	} else {
+		*__ = sub { $_[0] };
+		*__n = sub { $_[2] == 1 ? $_[0] : $_[1] };
+		*N__ = sub { $_[0] };
+	}
+}
+
 # --- requirements: [ module, minimum version ], from `@PROG@ -i -M'.
 # The requirements of the preset, if any, is appended here too.
 our @NEED;

@@ -23,7 +23,8 @@
 # More information about Template Toolkit here:
 # https://template-toolkit.org/
 #
-@UTF8@use 5.008;
+use utf8;
+use 5.008;
 use strict;
 use warnings;
 
@@ -32,8 +33,37 @@ use RdKw::I18N::CodeSets ();
 use Getopt::Long qw( GetOptions );
 use RdKw::WwW::GenGenLib 0.0100 qw( load_state );
 use Template;
-@USE_PROVIDER@@USE_L10N@
-@GETOPT@
+@USE_PROVIDER@use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
+
+my $cs = RdKw::I18N::CodeSets->new();
+# Command-line arguments are decoded via the
+# argv codeset, though this may be altered by
+# the SITECONF_CODESETS and -C flags, so we
+# must parse them.
+$cs->parse_from_env('SITECONF_CODESETS', prog => $0);
+my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
+
+# Parsing is complete; we can publish them for
+# everyone else.
+RdKw::I18N::CodeSets->locale($cs);
+$cs->initstd(stderr => Encode::FB_PERLQQ());
+my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ() });
+@ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
+
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+my $B = '.';
+GetOptions(
+	'B=s' => \$B,
+	# Explicitly reject stray -C options.
+	'C:s' => sub { die "$prog: " . __("too late to -C now.") . "\n" },
+)
+# The usage may be altered, so we only translate the "usage:" part.
+	or die $cs->diag(__("usage: %s"),
+	"$prog [-B dir] apath bpath") . "\n";
+# HEY!  The usage is `./render apath bpath', which is two arguments.
+@ARGV == 2 or die "$prog: " . __("need exactly two args") . "\n";
+my ($apath, $bpath) = @ARGV;
+
 my %S = load_state($B);
 my %v = (
 	D => $S{config},

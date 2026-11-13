@@ -34,8 +34,7 @@ Revision history of WwW-SiteConf
       is to make; a tab line after it is the next.  It used
       to be read as more prerequisites.
     + -P tem: a Template Toolkit render with D and O, and no
-      web (no GenLib, no site_url, no location).  It needs
-      GenGenLib 0.0100 (and so may not be pinned below it).
+      web (no GenLib, no site_url, no location).
     + $$ or ${$} in a header is a $, and ${U+hex} the character
       of that code point (${U+0020}, a space), as they are to
       GenGenLib.  So a header can name any file, and so may
@@ -78,10 +77,16 @@ Revision history of WwW-SiteConf
       what it cannot say, by siteconf, configure and render
       (configure wrote UTF-8, and siteconf whatever perl had).
     * configure always checks for Encode::Locale, and for
-      GenGenLib 0.0100 unless told otherwise (-M).  render
+      GenGenLib 0.0100 (or a later one, if -M says so).  render
       decodes its arguments and names its files for Template
-      as the locale does; pin -MRdKw::WwW::GenGenLib=0.0002 if
-      you do not want this.
+      as the locale does.
+    *** configure and render are written for GenGenLib 0.0100
+        or later, and for nothing older:
+        -MRdKw::WwW::GenGenLib=VERSION is an error for a VERSION
+        below it.  (It used to get a render for that version: one
+        for any GenGenLib at all, or one that left names and
+        arguments as they were.)  Pinning GenLib below 0.0203
+        still gets the render for it.
     *** Makefile.in and MANIFEST are split into words at white
         space as make knows it (space, tab, newline, VT, FF,
         CR) and at nothing else: a no-break space is part of a
@@ -116,9 +121,8 @@ Revision history of WwW-SiteConf
     * configure -h: its tables (and what -D, -O say of
       themselves) are translated as well, aligned in columns.
       English is as it was.
-    * configure and render written for GenGenLib 0.0100 or later
-      say things in the locale's language; those for older ones,
-      as before.
+    * configure and render say things in the locale's language
+      too.
 
 
 0.02_03  2026-11-09  RC

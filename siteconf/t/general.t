@@ -13,7 +13,7 @@ use File::Temp qw( tempdir );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 my $script = script_path();
-plan tests => 21;
+plan tests => 30;
 # The preset comes from the built share
 local $ENV{PERL5LIB} = join ':', project_root() . '/blib/lib', perl5lib();
 
@@ -50,11 +50,23 @@ my $render = slurp('render');
 unlike($render, qr/\$target|locate|location/, 'render has no location to speak of');
 like($render, qr/^use RdKw::WwW::GenGenLib 0\.0100 /m, '... and uses the GenGenLib it needs');
 
-for my $pin ('0', '0.0003') {
-	my ($st, $o) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null',
-		"-MRdKw::WwW::GenGenLib=$pin");
-	like($o, qr/-P tem needs RdKw::WwW::GenGenLib 0\.0100/, "no tem for GenGenLib $pin");
+# GenGenLib before 0.0100 is not written for: by any preset, or none
+for my $pin ('0', '0.0003', '0.0099') {
+	for my $preset (qw( tem web none )) {
+		my ($st, $o) = run($script, 'init', '-q', '-f', '-P', $preset, '-o', '/dev/null',
+			"-MRdKw::WwW::GenGenLib=$pin");
+		like($o, qr/-MRdKw::WwW::GenGenLib=\Q$pin\E: version 0\.0100 or later is required/,
+			"no -P $preset for GenGenLib $pin");
+	}
 }
+($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', 'configure:configure.m',
+	'-o', 'render:/dev/null', '-MRdKw::WwW::GenGenLib');
+like($status ? $out : slurp('configure.m'), qr/\[ "RdKw::WwW::GenGenLib", "0\.0100" \]/,
+	'-MRdKw::WwW::GenGenLib, with no version: the one it needs anyway');
+($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', 'configure:configure.m',
+	'-o', 'render:/dev/null', '-MRdKw::WwW::GenGenLib=0.02');
+like($status ? $out : slurp('configure.m'), qr/\[ "RdKw::WwW::GenGenLib", "0\.02" \]/,
+	'... a later one: as told');
 
 # -M-module drops what the preset asked for; a later -Mmodule is back
 ($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', 'configure:configure.m',

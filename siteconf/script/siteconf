@@ -80,7 +80,7 @@ see L<RdKw::WwW::GenLib/SYNOPSIS>.
 
 The C<tem> preset (C<-P tem>) is the same without the web: F<render>
 gives a template C<D> and C<O>, and nothing else, and F<configure>
-asks for no options (nor GenLib).  It needs GenGenLib 0.0100.
+asks for no options (nor GenLib).
 
 For the generated script, see L<RdKw::WwW::SiteConf::Configure>.
 
@@ -116,10 +116,9 @@ least I<version>, if given) before doing anything else.  May be
 given more than once; a later one for the same module replaces
 the earlier.  F<configure> always checks for L<RdKw::I18N::CodeSets>
 and L<RdKw::WwW::GenGenLib> (version 0.0100, which spells file names
-as CodeSets says, and which F<render> needs; give
-C<-MRdKw::WwW::GenGenLib=0> to get an older F<render> that works with
-any version, and C<=0.0002> for one that leaves names and arguments
-as they are),
+as CodeSets says, and which F<render> needs; a later I<version> may
+be asked for, but not an earlier one: neither F<configure> nor
+F<render> is written for those),
 and so does the preset for what it needs (C<# USE:>
 lines in its config).  C<-M->I<module> drops I<module> from the list,
 even one the preset asked for (as C<-M>I<module>C<=> does, with
@@ -129,7 +128,7 @@ C<-MRdKw::WwW::GenGenLib::Template::Provider> (which nothing asks for,
 and nothing needs) has F<render> load templates through it: what a page
 C<INCLUDE>s (or C<PROCESS>es, C<WRAPPER>s, C<INSERT>s) must be declared
 in its header, or in the header of what that declares, and so on; and
-the names are spelled as CodeSets says.  It needs GenGenLib 0.0100.
+the names are spelled as CodeSets says.
 
 =item B<-g>, B<make>
 
@@ -287,17 +286,11 @@ use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
 our $GENLIB_NEW = '0.0203';
-# GenGenLib with norm_dep, subs_dep and uproot.
-our $GENGENLIB_NEW = '0.0002';
-# GenGenLib that is locale-aware
-our $GENGENLIB_LOCALE = '0.0100';
+# GenGenLib that is locale-aware (and has norm_dep, subs_dep and
+# uproot): what configure and render are written for, and no older
+our $GENGENLIB_MIN = '0.0100';
 # Our preferred provider, if (and only if) the user requests it via -M
 our $PROVIDER = 'RdKw::WwW::GenGenLib::Template::Provider';
-
-# The minimum version a preset's render supports: -P tem is here
-# due to its belated inclusion, while -P web isn't because it has
-# been around for much longer.
-my %PRESET_GENGENLIB = ( tem => $GENGENLIB_LOCALE );
 
 # The code sets: as the locale says, but for what SITECONF_CODESETS
 # and then -C (which must come first) say (see RdKw::I18N::CodeSets).
@@ -643,23 +636,29 @@ sub do_init
 	# (or -Mmodule=, with nothing after the =) drops it.
 	my %mods = (
 		'RdKw::I18N::CodeSets' => 0,
-		'RdKw::WwW::GenGenLib' => $GENGENLIB_LOCALE,
+		'RdKw::WwW::GenGenLib' => $GENGENLIB_MIN,
 	);
 	my @spec = ($preset =~ /^# USE: (\S+)$/mg, @{ $opt->{M} });
 	my %user;
 	for my $m (@spec) {
 		my ($drop, $module, $min) = $m =~ /\A(-?)([^=]*)(?:=(.*))?\z/s;
 		# HEY!  %s is the option, as -MModule=version (here and
-		# in the next three)
+		# in the next four)
 		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: " . $cs->diag(__("%s: bad module name"), "-M$m") . "\n";
 		$drop && defined $min
 			and die "$prog: " . $cs->diag(__("%s: no version for what is dropped"), "-M$m") . "\n";
-		$min = $drop ? '' : 0 unless defined $min;
+		my $said = defined $min;
+		$min = $drop ? '' : 0 unless $said;
 		$min =~ /\A(?:v?[0-9][0-9._]*|0|)\z/ or die "$prog: " . $cs->diag(__("%s: bad version"), "-M$m") . "\n";
 		if ($min eq '') {
 			$module eq 'RdKw::WwW::GenGenLib' || $module eq 'RdKw::I18N::CodeSets'
 				and die "$prog: " . $cs->diag(__("%s: configure always needs it"), "-M$m") . "\n";
 			delete $mods{$module};
+		} elsif ($module eq 'RdKw::WwW::GenGenLib' && !version_ge($min, $GENGENLIB_MIN)) {
+			# (with no version, it is the one we ask for anyway)
+			$said and die "$prog: " . $cs->diag(__("%s: version %s or later is required"),
+				"-M$m", $GENGENLIB_MIN) . "\n";
+			$mods{$module} = $GENGENLIB_MIN;
 		} else {
 			$mods{$module} = $min;
 		}
@@ -667,15 +666,6 @@ sub do_init
 	}
 	# Test how far we could go, with user overrides taken into account.
 	if (defined $render) {
-		$user{'RdKw::WwW::GenGenLib'}
-			or version_ge($mods{'RdKw::WwW::GenGenLib'}, $GENGENLIB_NEW)
-			or $mods{'RdKw::WwW::GenGenLib'} = $GENGENLIB_NEW;
-		$opt->{gengenlib_min} = $mods{'RdKw::WwW::GenGenLib'};
-		if (defined(my $least = $PRESET_GENGENLIB{$opt->{P}})) {
-			version_ge($opt->{gengenlib_min}, $least)
-				or die "$prog: " . $cs->diag(__("%s needs RdKw::WwW::GenGenLib %s"),
-					"-P $opt->{P}", $least) . "\n";
-		}
 		# (what the preset said, if it says anything: -P tem does not)
 		$opt->{genlib_min} = $mods{'RdKw::WwW::GenLib'};
 		# (only ever because -M said so: no preset asks for it)
@@ -703,37 +693,6 @@ sub do_init
 		"\t[ " . pq("-O$_") . ', ' . (exists $OD{$_} ? 'N__(' . pq($OD{$_}) . ')' : '""')
 			. ', sub { $Od{' . pK($_) . "} } ],\n"
 	} sort keys %Ox;
-	# What configure says, it says as we do: RdKw::L10N::TextDomain
-	# comes with GenGenLib 0.0100 (which it may still find missing, and
-	# say so); before that, as it is written.
-	my $l10n = version_ge($mods{'RdKw::WwW::GenGenLib'}, $GENGENLIB_LOCALE)
-		? <<\NEW
-
-# What we say is said in the language of the locale, if
-# RdKw::WwW::SiteConf::L10N says where the catalogs are (and
-# Locale::Messages is there to read them); else, and for what no
-# catalog has, as it is written (see RdKw::L10N::TextDomain, which
-# comes with GenGenLib).  If that is not there either, the check below
-# says so, as it is written.
-BEGIN {
-	if (eval { require RdKw::L10N::TextDomain; 1 }) {
-		RdKw::L10N::TextDomain->import(':module' => 'RdKw::WwW::SiteConf::L10N');
-	} else {
-		*__ = sub { $_[0] };
-		*__n = sub { $_[2] == 1 ? $_[0] : $_[1] };
-		*N__ = sub { $_[0] };
-	}
-}
-NEW
-		: <<\OLD;
-
-# What we say is said as it is written (RdKw::L10N::TextDomain, to
-# say it otherwise, comes with GenGenLib 0.0100).
-sub __ { $_[0] }
-sub __n { $_[2] == 1 ? $_[0] : $_[1] }
-sub N__ { $_[0] }
-OLD
-
 	my $text = slurp(share_file('configure.in'));
 	my %sub = (
 		PROG => $prog,
@@ -745,7 +704,6 @@ OLD
 		PRESET => $preset,
 		DEFHELP => $dhelp,
 		OPTHELP => $help,
-		L10N => $l10n,
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: configure template: \@$1\@?\n"/ge;
 
@@ -827,86 +785,17 @@ sub render_text
 	}
 	$path_q = RdKw::WwW::SiteConf::shell_quote($path);
 	my $text = slurp($render);
-	my $can_subst = version_ge($opt->{gengenlib_min}, $GENGENLIB_NEW);
 	my $can_valoc = version_ge($opt->{genlib_min}, $GENLIB_NEW);
-	my $can_locale = version_ge($opt->{gengenlib_min}, $GENGENLIB_LOCALE);
 	my $provider = $opt->{provider};
-	$provider && !$can_locale
-		and die "$prog: " . $cs->diag(__("%s requires RdKw::WwW::GenGenLib %s"),
-			"-M$PROVIDER", $GENGENLIB_LOCALE) . "\n";
 	my %sub = (
 		# (a spec, in its HAVE and in Makefile.in: a $ is a $)
 		PATH => escape_dep($path, unicode => 1),
 		PATH_Q => $path_q,
 		NAME => $name,
-		# prior to siteconf 0.01 everything had been pass-through
-		# unicode bytes (with the exception of file names read from
-		# Manifests, which perl implicitly coerces as utf8 bytes).
-		# This may be breaking if folks have been using non-ASCII
-		# characters in their patches.
-		UTF8 => $can_locale ? "use utf8;\n" : '',
-		USE_LOCALE => $can_locale ? <<\NEW : '',
-
-use Encode ();
-use RdKw::I18N::CodeSets ();
-NEW
-		# (what render says, it says as siteconf does: RdKw::L10N::TextDomain
-		# comes with GenGenLib 0.0100, and RdKw::WwW::SiteConf::L10N may
-		# or may not be there; before that, as it was always written)
-		USE_L10N => $can_locale ? <<\NEW : '',
-use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-NEW
-		GETOPT => $can_locale
-			? <<\NEW
-my $cs = RdKw::I18N::CodeSets->new();
-# Command-line arguments are decoded via the
-# argv codeset, though this may be altered by
-# the SITECONF_CODESETS and -C flags, so we
-# must parse them.
-$cs->parse_from_env('SITECONF_CODESETS', prog => $0);
-my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
-
-# Parsing is complete; we can publish them for
-# everyone else.
-RdKw::I18N::CodeSets->locale($cs);
-$cs->initstd(stderr => Encode::FB_PERLQQ());
-my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ() });
-@ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
-
-Getopt::Long::Configure(qw( bundling no_ignore_case ));
-my $B = '.';
-GetOptions(
-	'B=s' => \$B,
-	# Explicitly reject stray -C options.
-	'C:s' => sub { die "$prog: " . __("too late to -C now.") . "\n" },
-)
-# The usage may be altered, so we only translate the "usage:" part.
-	or die $cs->diag(__("usage: %s"),
-	"$prog [-B dir] apath bpath") . "\n";
-# HEY!  The usage is `./render apath bpath', which is two arguments.
-@ARGV == 2 or die "$prog: " . __("need exactly two args") . "\n";
-my ($apath, $bpath) = @ARGV;
-NEW
-			: <<\OLD,
-Getopt::Long::Configure(qw( bundling no_ignore_case ));
-my $B = '.';
-GetOptions('B=s' => \$B) or die "usage: $0 [-B BUILDDIR] apath bpath\n";
-@ARGV == 2 or die "$0: need exactly two args\n";
-my ($apath, $bpath) = @ARGV;
-OLD
-		USE_GENGENLIB => $can_locale
-			? "use RdKw::WwW::GenGenLib $GENGENLIB_LOCALE qw(
-	read_deps load_state
-	norm_dep subs_dep uproot );"
-			: $can_subst
-			? "use RdKw::WwW::GenGenLib $GENGENLIB_NEW qw(
-	read_deps load_state
-	norm_dep subs_dep uproot );"
-			: 'use RdKw::WwW::GenGenLib qw( read_deps load_state );',
 		# Template opens the files itself: by the names
 		# the file system knows them by.
 		# (the provider names files itself)
-		APATH_FS => $can_locale && !$provider ? "\$cs->to_fs(\$apath, { prog => 'E' })" : '$apath',
+		APATH_FS => $provider ? '$apath' : "\$cs->to_fs(\$apath, { prog => 'E' })",
 		USE_PROVIDER => $provider ? "use $PROVIDER;\n" : '',
 		TT_NEW => $provider
 			? <<"NEW"
@@ -943,84 +832,18 @@ my \$provider = $PROVIDER->new({
 my \$tt = Template->new({ LOAD_TEMPLATES => [ \$provider ] })
 	or die "[TT] ", \$Template::ERROR, "\\n";
 NEW
-			: <<"OLD",
-my \$tt = Template->new({
+			: <<\OLD,
+my $tt = Template->new({
 	ENCODING => 'UTF-8',
-	INCLUDE_PATH => [ '.', @{[ $can_locale ? "\$cs->to_fs(\$D->{a}, { prog => 'E' })" : '$D->{a}' ]} ],
+	INCLUDE_PATH => [ '.', $cs->to_fs($D->{a}, { prog => 'E' }) ],
 })
-	or die "[TT] ", \$Template::ERROR, "\\n";
+	or die "[TT] ", $Template::ERROR, "\n";
 OLD
-		BPATH_FS => $can_locale ? "\$cs->to_fs(\$bpath, { prog => 'E' })" : '$bpath',
 		USE_GENLIB => $can_valoc
 			? "use RdKw::WwW::GenLib $GENLIB_NEW qw( locate );"
 			: 'use RdKw::WwW::GenLib qw( locate );',
 		USE_TT_EXC => $can_valoc ? '' : <<\OLD,
 use Template::Exception;
-OLD
-		HAVE_NOT_FOUND => $can_locale
-			? <<\NEW
-defined $I{HAVE} or die "E: " . $cs->diag(__("%q: HAVE declaration not found"), $apath) . "\n";
-NEW
-			: <<\OLD,
-defined $I{HAVE} or die "E: $apath: HAVE declaration not found\n";
-OLD
-		LOCATE => $can_locale
-			? <<\NEW
-# relapath doesn't do well with the leading slash,
-# though people may have a habit of including it...
-(my $target = do {
-	my ($name, $norm, $real);
-	# Try symbolic prefix
-	if (defined ($name = uproot('${a}',
-		$norm = norm_dep($I{HAVE}))))
-	{
-		subs_dep($D, $name);
-	}
-	# Try literal prefix
-	elsif (defined ($name = uproot($D->{a},
-		$real = subs_dep($D, $norm))))
-	{
-		$name;
-	}
-	else {
-		die "E: " . ($real ne $I{HAVE}
-			# HEY!  The first %q is the symbolic form, and
-			# (aka %q) is expanded form.
-			? $cs->diag(__('%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)'),
-				$apath, $I{HAVE}, $real, $D->{a})
-			: $cs->diag(__('%q: Your HAVE %q is not under ${a} (aka %q)'),
-				$apath, $I{HAVE}, $D->{a})) . "\n";
-	}
-}) =~ s/\A\/+//;
-NEW
-			: $can_subst
-			? <<\NEW
-# relapath doesn't do well with the leading slash,
-# though people may have a habit of including it...
-(my $target = do {
-	my ($name, $norm, $real);
-	# Try symbolic prefix
-	if (defined ($name = uproot('${a}',
-		$norm = norm_dep($I{HAVE}))))
-	{
-		subs_dep($D, $name);
-	}
-	# Try literal prefix
-	elsif (defined ($name = uproot($D->{a},
-		$real = subs_dep($D, $norm))))
-	{
-		$name;
-	}
-	else {
-		die "E: $apath: Your HAVE `$I{HAVE}'"
-			. ($real eq $I{HAVE} ? "" : " (aka `$real')")
-			. " is not under \${a} (aka `$D->{a}')\n";
-	}
-}) =~ s/\A\/+//;
-NEW
-			: <<\OLD,
-(my $target = $I{HAVE}) =~ s{\A(?:\$(?:\{A\}|A)/)?(?:\$(?:\{a\}|a)|\Q$D->{a}\E)/}{}
-	or $D->{a} eq '.' or die "E: $apath: HAVE `$I{HAVE}' not under \${a} ($D->{a})\n";
 OLD
 		V_LOCATE => $can_valoc
 			? <<\NEW

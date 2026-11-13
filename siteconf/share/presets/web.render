@@ -28,16 +28,51 @@
 # More information about Template Toolkit here:
 # https://template-toolkit.org/
 #
-@UTF8@use 5.008;
+use utf8;
+use 5.008;
 use strict;
 use warnings;
-@USE_LOCALE@
+
+use Encode ();
+use RdKw::I18N::CodeSets ();
+
 use Getopt::Long qw( GetOptions );
-@USE_GENGENLIB@
+use RdKw::WwW::GenGenLib 0.0100 qw(
+	read_deps load_state
+	norm_dep subs_dep uproot );
 @USE_GENLIB@
 use Template;
-@USE_TT_EXC@@USE_PROVIDER@@USE_L10N@
-@GETOPT@
+@USE_TT_EXC@@USE_PROVIDER@use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
+
+my $cs = RdKw::I18N::CodeSets->new();
+# Command-line arguments are decoded via the
+# argv codeset, though this may be altered by
+# the SITECONF_CODESETS and -C flags, so we
+# must parse them.
+$cs->parse_from_env('SITECONF_CODESETS', prog => $0);
+my $offset = $cs->parse_from_argv(\@ARGV, prog => $0);
+
+# Parsing is complete; we can publish them for
+# everyone else.
+RdKw::I18N::CodeSets->locale($cs);
+$cs->initstd(stderr => Encode::FB_PERLQQ());
+my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ() });
+@ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
+
+Getopt::Long::Configure(qw( bundling no_ignore_case ));
+my $B = '.';
+GetOptions(
+	'B=s' => \$B,
+	# Explicitly reject stray -C options.
+	'C:s' => sub { die "$prog: " . __("too late to -C now.") . "\n" },
+)
+# The usage may be altered, so we only translate the "usage:" part.
+	or die $cs->diag(__("usage: %s"),
+	"$prog [-B dir] apath bpath") . "\n";
+# HEY!  The usage is `./render apath bpath', which is two arguments.
+@ARGV == 2 or die "$prog: " . __("need exactly two args") . "\n";
+my ($apath, $bpath) = @ARGV;
+
 #
 # Load configuration parameters and build options, so
 # we can expose them to the template.
@@ -52,7 +87,34 @@ my ($D, $O) = @S{qw( config option )};
 # as a predefined constant (like how ${A} is).
 #
 my %I = read_deps($apath);
-@HAVE_NOT_FOUND@@LOCATE@
+defined $I{HAVE} or die "E: " . $cs->diag(__("%q: HAVE declaration not found"), $apath) . "\n";
+# relapath doesn't do well with the leading slash,
+# though people may have a habit of including it...
+(my $target = do {
+	my ($name, $norm, $real);
+	# Try symbolic prefix
+	if (defined ($name = uproot('${a}',
+		$norm = norm_dep($I{HAVE}))))
+	{
+		subs_dep($D, $name);
+	}
+	# Try literal prefix
+	elsif (defined ($name = uproot($D->{a},
+		$real = subs_dep($D, $norm))))
+	{
+		$name;
+	}
+	else {
+		die "E: " . ($real ne $I{HAVE}
+			# HEY!  The first %q is the symbolic form, and
+			# (aka %q) is expanded form.
+			? $cs->diag(__('%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)'),
+				$apath, $I{HAVE}, $real, $D->{a})
+			: $cs->diag(__('%q: Your HAVE %q is not under ${a} (aka %q)'),
+				$apath, $I{HAVE}, $D->{a})) . "\n";
+	}
+}) =~ s/\A\/+//;
+
 #
 # Define Template variables (see also Template::Stash
 # if you want access to these from a plugin/filter).
@@ -75,7 +137,7 @@ my %v = (
 # when you need to do cool stuff with it. ;D
 #
 @TT_NEW@
-$tt->process(@APATH_FS@, \%v, @BPATH_FS@,
+$tt->process(@APATH_FS@, \%v, $cs->to_fs($bpath, { prog => 'E' }),
 	{ binmode => ':encoding(UTF-8)' })
 	or die "[TT] ", $tt->error(), "\n";
 

@@ -220,7 +220,7 @@ the C<locate> function.
 C<siteconf -i -P tem> writes a Template Toolkit renderer like the web
 preset's, but with nothing of the web: no options are required, and
 the renderer exposes definitions as C<D> and options as C<O>, and
-nothing else.  It requires Template and RdKw::WwW::GenGenLib 0.0100.
+nothing else.  It requires Template.
 
 =head1 OUTPUT LOCATIONS
 

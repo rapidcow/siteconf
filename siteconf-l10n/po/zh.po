@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 02:34-0600\n"
+"POT-Creation-Date: 2026-11-13 02:48-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -16,164 +16,166 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: ../siteconf/script/siteconf:319 ../siteconf/script/siteconf:884
-#: ../siteconf/share/configure.in:200
+#: ../siteconf/script/siteconf:312 ../siteconf/share/configure.in:216
+#: ../siteconf/share/presets/tem.render:61
+#: ../siteconf/share/presets/web.render:70
 #, perl-format
 msgid "usage: %s"
 msgstr "用法：%s"
 
-#: ../siteconf/script/siteconf:370 ../siteconf/script/siteconf:881
-#: ../siteconf/share/configure.in:214
+#: ../siteconf/script/siteconf:363 ../siteconf/share/configure.in:230
+#: ../siteconf/share/presets/tem.render:58
+#: ../siteconf/share/presets/web.render:67
 msgid "too late to -C now."
 msgstr "现在给 -C 已经太晚了。"
 
-#: ../siteconf/script/siteconf:402
+#: ../siteconf/script/siteconf:395
 #, perl-format
 msgid "conflicting modes: %s and %s"
 msgstr "模式冲突：%s 和 %s"
 
-#: ../siteconf/script/siteconf:406 ../siteconf/share/configure.in:216
+#: ../siteconf/script/siteconf:399 ../siteconf/share/configure.in:232
 msgid "too many arguments"
 msgstr "参数太多"
 
-#: ../siteconf/script/siteconf:414
+#: ../siteconf/script/siteconf:407
 msgid "named outputs are only for init"
 msgstr "命名的输出只适用于 init"
 
-#: ../siteconf/script/siteconf:416
+#: ../siteconf/script/siteconf:409
 msgid "unknown output name: %q"
 msgstr "未知的输出名：%q"
 
-#: ../siteconf/script/siteconf:418
+#: ../siteconf/script/siteconf:411
 msgid "empty output path"
 msgstr "输出路径为空"
 
-#: ../siteconf/script/siteconf:427
+#: ../siteconf/script/siteconf:420
 #, perl-format
 msgid "%s is not permitted in mode %s"
 msgstr "%s 不能用于模式 %s"
 
-#: ../siteconf/script/siteconf:490
+#: ../siteconf/script/siteconf:483
 #, perl-format
 msgid "%s: an octal number up to 377, please"
 msgstr "%s：请给出不超过 377 的八进制数"
 
-#: ../siteconf/script/siteconf:506
+#: ../siteconf/script/siteconf:499
 msgid "%s: NEED or WANT, not %q"
 msgstr "%s：应为 NEED 或 WANT，而不是 %q"
 
 #. HEY!  the %s is the separator, as the option that
 #. says it: -0 for a NUL, -012 for a newline
-#: ../siteconf/script/siteconf:513
+#: ../siteconf/script/siteconf:506
 msgid "%q: %q has the separator in it (%s)"
 msgstr "%q：%q 中有分隔符（%s）"
 
-#: ../siteconf/script/siteconf:515 ../siteconf/script/siteconf:522
+#: ../siteconf/script/siteconf:508 ../siteconf/script/siteconf:515
 msgid "cannot write to stdout: %m"
 msgstr "无法写入标准输出：%m"
 
-#: ../siteconf/script/siteconf:533
+#: ../siteconf/script/siteconf:526
 msgid "cannot find %q (is WwW-SiteConf installed?)"
 msgstr "找不到 %q（WwW-SiteConf 安装了吗？）"
 
-#: ../siteconf/script/siteconf:542 ../siteconf/lib/RdKw/WwW/SiteConf.pm:799
+#: ../siteconf/script/siteconf:535 ../siteconf/lib/RdKw/WwW/SiteConf.pm:799
 msgid "cannot open file %q: %m"
 msgstr "无法打开文件 %q：%m"
 
-#: ../siteconf/script/siteconf:544
+#: ../siteconf/script/siteconf:537
 msgid "cannot read file %q: %m"
 msgstr "无法读取文件 %q：%m"
 
-#: ../siteconf/script/siteconf:598
+#: ../siteconf/script/siteconf:591
 msgid "Host-relative base URL"
 msgstr "相对于主机的基础 URL"
 
-#: ../siteconf/script/siteconf:599
+#: ../siteconf/script/siteconf:592
 msgid "Absolute base URL"
 msgstr "绝对基础 URL"
 
 #. HEY!  %s is the option (-Sx), and then what it may be
-#: ../siteconf/script/siteconf:603
+#: ../siteconf/script/siteconf:596
 #, perl-format
 msgid "%s: no such thing (valid: %s)"
 msgstr "%s：没有这一项（有效的有：%s）"
 
 #. HEY!  %s is an option, as -Sa (and likewise in the next few)
-#: ../siteconf/script/siteconf:607 ../siteconf/script/siteconf:627
+#: ../siteconf/script/siteconf:600 ../siteconf/script/siteconf:620
 #, perl-format
 msgid "%s may not be empty."
 msgstr "%s 不能为空。"
 
-#: ../siteconf/script/siteconf:610 ../siteconf/script/siteconf:614
+#: ../siteconf/script/siteconf:603 ../siteconf/script/siteconf:607
 #, perl-format
 msgid "%s must be a relative path."
 msgstr "%s 必须是相对路径。"
 
-#: ../siteconf/script/siteconf:619
+#: ../siteconf/script/siteconf:612
 #, perl-format
 msgid "%s and %s are the same thing; pick one."
 msgstr "%s 和 %s 是同一回事；请选一个。"
 
-#: ../siteconf/script/siteconf:633
+#: ../siteconf/script/siteconf:626
 msgid "bad preset name: %q"
 msgstr "预设名有误：%q"
 
-#: ../siteconf/script/siteconf:635
+#: ../siteconf/script/siteconf:628
 msgid "no such preset: %q"
 msgstr "没有这个预设：%q"
 
 #. HEY!  %s is the option, as -MModule=version (here and
-#. in the next three)
-#: ../siteconf/script/siteconf:654
+#. in the next four)
+#: ../siteconf/script/siteconf:647
 #, perl-format
 msgid "%s: bad module name"
 msgstr "%s：模块名有误"
 
-#: ../siteconf/script/siteconf:656
+#: ../siteconf/script/siteconf:649
 #, perl-format
 msgid "%s: no version for what is dropped"
 msgstr "%s：去掉的模块不能带版本"
 
-#: ../siteconf/script/siteconf:658
+#: ../siteconf/script/siteconf:652
 #, perl-format
 msgid "%s: bad version"
 msgstr "%s：版本有误"
 
-#: ../siteconf/script/siteconf:661
+#: ../siteconf/script/siteconf:655
 #, perl-format
 msgid "%s: configure always needs it"
 msgstr "%s：configure 总是需要它"
 
-#: ../siteconf/script/siteconf:676
+#: ../siteconf/script/siteconf:659
 #, perl-format
-msgid "%s needs RdKw::WwW::GenGenLib %s"
-msgstr "%s 需要 RdKw::WwW::GenGenLib %s"
+msgid "%s: version %s or later is required"
+msgstr "%s：需要版本 %s 或更高版本"
 
-#: ../siteconf/script/siteconf:686
+#: ../siteconf/script/siteconf:676
 msgid "preset does not supply a render output"
 msgstr "该预设不提供 render 输出"
 
-#: ../siteconf/script/siteconf:692
+#: ../siteconf/script/siteconf:682
 msgid "dangerous name for render: %q is not supported (yet)"
 msgstr "render 的名字很危险：（暂时）不支持 %q"
 
-#: ../siteconf/script/siteconf:766
+#: ../siteconf/script/siteconf:724
 msgid "Not changing %q"
 msgstr "不更改 %q"
 
-#: ../siteconf/script/siteconf:770
+#: ../siteconf/script/siteconf:728
 msgid "cannot remove %q: %m"
 msgstr "无法删除 %q：%m"
 
-#: ../siteconf/script/siteconf:781
+#: ../siteconf/script/siteconf:739
 msgid "cannot create file %q: %m"
 msgstr "无法创建文件 %q：%m"
 
-#: ../siteconf/script/siteconf:782 ../siteconf/script/siteconf:783
+#: ../siteconf/script/siteconf:740 ../siteconf/script/siteconf:741
 msgid "cannot write file %q: %m"
 msgstr "无法写入文件 %q：%m"
 
-#: ../siteconf/script/siteconf:785
+#: ../siteconf/script/siteconf:743
 msgid "cannot chmod %q: %m"
 msgstr "无法修改 %q 的权限：%m"
 
@@ -182,55 +184,29 @@ msgstr "无法修改 %q 的权限：%m"
 #. the file is simply created.  I don't know why
 #. Claude felt the need to clarify this; this
 #. seems pretty clear to me. :/
-#: ../siteconf/script/siteconf:793
+#: ../siteconf/script/siteconf:751
 msgid "Overwrote %#q"
 msgstr "已覆盖 %#q"
 
-#: ../siteconf/script/siteconf:793
+#: ../siteconf/script/siteconf:751
 msgid "Wrote %#q"
 msgstr "已写入 %#q"
 
-#: ../siteconf/script/siteconf:797
+#: ../siteconf/script/siteconf:755
 msgid "You already have configure."
 msgstr "你已经有 configure 了。"
 
-#: ../siteconf/script/siteconf:798
+#: ../siteconf/script/siteconf:756
 msgid "You already have configure at %q."
 msgstr "你已经在 %q 有 configure 了。"
 
-#: ../siteconf/script/siteconf:799
+#: ../siteconf/script/siteconf:757
 msgid ""
 "Pass -o /dev/null if you did mean to not generate configure,\n"
 "or -f to overwrite the existing one."
 msgstr ""
 "如果你确实不想生成 configure，请传 -o /dev/null；\n"
 "要覆盖现有的，请传 -f。"
-
-#: ../siteconf/script/siteconf:835
-#, perl-format
-msgid "%s requires RdKw::WwW::GenGenLib %s"
-msgstr "%s 需要 RdKw::WwW::GenGenLib %s"
-
-#. HEY!  The usage is `./render apath bpath', which is two arguments.
-#: ../siteconf/script/siteconf:887
-msgid "need exactly two args"
-msgstr "需要恰好两个参数"
-
-#: ../siteconf/script/siteconf:962
-msgid "%q: HAVE declaration not found"
-msgstr "%q：找不到 HAVE 声明"
-
-#. HEY!  The first %q is the symbolic form, and
-#. (aka %q) is expanded form.
-#: ../siteconf/script/siteconf:989
-#, perl-brace-format
-msgid "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
-msgstr "%q：你的 HAVE %q（又名 %q）不在 ${a}（又名 %q）之下"
-
-#: ../siteconf/script/siteconf:991
-#, perl-brace-format
-msgid "%q: Your HAVE %q is not under ${a} (aka %q)"
-msgstr "%q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
 
 #. HEY!  %#q is the file name of the faulty
 #. file and %d is its lineno.
@@ -256,8 +232,8 @@ msgstr "%q：缺少 %q。请尝试重新配置。"
 #. HEY!  %q is a variable of config.mk: `b' or `c', which are where
 #. what we make goes (the target tree, and the cache)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:371
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:376 ../siteconf/share/configure.in:310
-#: ../siteconf/share/configure.in:319
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:376 ../siteconf/share/configure.in:326
+#: ../siteconf/share/configure.in:335
 msgid "%q prefix must be a relative path."
 msgstr "%q 前缀必须是相对路径。"
 
@@ -548,7 +524,7 @@ msgstr "输出名 %q 有误：请留在构建目录里"
 msgid "Removing %q"
 msgstr "正在删除 %q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1437 ../siteconf/share/configure.in:337
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1437 ../siteconf/share/configure.in:353
 msgid "Done!"
 msgstr "完成！"
 
@@ -559,11 +535,11 @@ msgid "To build, run: %s"
 msgstr "要构建，请运行：%s"
 
 #. HEY!  Writing is what was not there, and Updating what was
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1449 ../siteconf/share/configure.in:326
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1449 ../siteconf/share/configure.in:342
 msgid "Writing %q"
 msgstr "正在写入 %q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1449 ../siteconf/share/configure.in:326
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1449 ../siteconf/share/configure.in:342
 msgid "Updating %q"
 msgstr "正在更新 %q"
 
@@ -622,67 +598,67 @@ msgstr "%q：没有生成它的配方（而 ninja 没法从无到有地生成）
 msgid "ninja cannot name %q (with %s in it)"
 msgstr "ninja 无法表示 %q（其中有 %s）"
 
-#: ../siteconf/share/configure.in:42
+#: ../siteconf/share/configure.in:58
 #, perl-format
 msgid "missing %s"
 msgstr "缺少 %s"
 
 #. HEY!  the first %s is a module, then the version we need,
 #. and the version there is
-#: ../siteconf/share/configure.in:46
+#: ../siteconf/share/configure.in:62
 #, perl-format
 msgid "%s: version %s required (this is %s)"
 msgstr "%s：需要版本 %s（现有的是 %s）"
 
-#: ../siteconf/share/configure.in:51
+#: ../siteconf/share/configure.in:67
 #, perl-format
 msgid "%d module missing.  Looks like you got some work to do..."
 msgid_plural "%d modules missing.  Looks like you got some work to do..."
 msgstr[0] "缺少 %d 个模块。看来你有活要干了..."
 
 #. HEY!  %s is the option, -D or -O
-#: ../siteconf/share/configure.in:87
+#: ../siteconf/share/configure.in:103
 #, perl-format
 msgid "%s: empty name."
 msgstr "%s：名字为空。"
 
-#: ../siteconf/share/configure.in:141
+#: ../siteconf/share/configure.in:157
 msgid "Project root, seen from current directory"
 msgstr "项目根目录，相对于当前目录"
 
-#: ../siteconf/share/configure.in:142
+#: ../siteconf/share/configure.in:158
 msgid "Build directory, seen from the source tree"
 msgstr "构建目录，相对于源代码树"
 
-#: ../siteconf/share/configure.in:143
+#: ../siteconf/share/configure.in:159
 msgid "Source directory, seen from the source tree"
 msgstr "源目录，相对于源代码树"
 
-#: ../siteconf/share/configure.in:144
+#: ../siteconf/share/configure.in:160
 msgid "Target directory, seen from the build directory"
 msgstr "目标目录，相对于构建目录"
 
-#: ../siteconf/share/configure.in:145
+#: ../siteconf/share/configure.in:161
 msgid "Cache directory, seen from the build directory"
 msgstr "缓存目录，相对于构建目录"
 
-#: ../siteconf/share/configure.in:147
+#: ../siteconf/share/configure.in:163
 msgid "Transformation rules, from current directory"
 msgstr "转换规则，相对于当前目录"
 
-#: ../siteconf/share/configure.in:148
+#: ../siteconf/share/configure.in:164
 msgid "Manifest, from current directory"
 msgstr "清单，相对于当前目录"
 
-#: ../siteconf/share/configure.in:149
+#: ../siteconf/share/configure.in:165
 msgid "Directory marker"
 msgstr "目录标记"
 
-#: ../siteconf/share/configure.in:150
+#: ../siteconf/share/configure.in:166
 msgid "Clean rule template"
 msgstr "清理规则模板"
 
-#: ../siteconf/share/configure.in:155
+#: ../siteconf/share/configure.in:171
 msgid ""
 "Code sets, after SITECONF_CODESETS; first, or not at all\n"
 "(see RdKw::I18N::CodeSets)"
@@ -690,52 +666,52 @@ msgstr ""
 "代码集，在 SITECONF_CODESETS 之后；要么放在最前，要么不给\n"
 "（见 RdKw::I18N::CodeSets）"
 
-#: ../siteconf/share/configure.in:157
+#: ../siteconf/share/configure.in:173
 msgid "This help message"
 msgstr "本帮助信息"
 
-#: ../siteconf/share/configure.in:158
+#: ../siteconf/share/configure.in:174
 msgid "Clear all configuration at this point"
 msgstr "在此处清除所有配置"
 
-#: ../siteconf/share/configure.in:159
+#: ../siteconf/share/configure.in:175
 msgid "Disable tips"
 msgstr "关闭提示"
 
-#: ../siteconf/share/configure.in:160
+#: ../siteconf/share/configure.in:176
 msgid "Create non-leaf build directory components"
 msgstr "创建构建目录的上层目录"
 
 #. HEY!  what an option is, if it is not said: the first %s
 #. is what the option is for (the last line of it, if it is
 #. more), and the second the default (as -Db, say)
-#: ../siteconf/share/configure.in:179
+#: ../siteconf/share/configure.in:195
 #, perl-format
 msgid "%s (default: %s)"
 msgstr "%s（默认：%s）"
 
 #. HEY!  the same, for an option with nothing said of it
-#: ../siteconf/share/configure.in:181
+#: ../siteconf/share/configure.in:197
 #, perl-format
 msgid "(default: %s)"
 msgstr "（默认：%s）"
 
 #. HEY!  the other ways to say an option (--help, -?), after
 #. what it is for
-#: ../siteconf/share/configure.in:187
+#: ../siteconf/share/configure.in:203
 #, perl-format
 msgid "%s (alias: %s)"
 msgstr "%s（别名：%s）"
 
-#: ../siteconf/share/configure.in:202
+#: ../siteconf/share/configure.in:218
 msgid "The following variables may be defined:"
 msgstr "可以定义以下变量："
 
-#: ../siteconf/share/configure.in:204
+#: ../siteconf/share/configure.in:220
 msgid "Options with defaults:"
 msgstr "有默认值的选项："
 
-#: ../siteconf/share/configure.in:205
+#: ../siteconf/share/configure.in:221
 msgid ""
 "Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
 "respectively, for the rulebook or for the files being transformed."
@@ -743,46 +719,46 @@ msgstr ""
 "其他用 -D 或 -O 给出的内容分别写入 MY/config.mk 或 MY/option.mk，\n"
 "供规则手册或被转换的文件使用。"
 
-#: ../siteconf/share/configure.in:208
+#: ../siteconf/share/configure.in:224
 msgid "See also `perldoc RdKw::WwW::SiteConf::Configure'."
 msgstr "另见 `perldoc RdKw::WwW::SiteConf::Configure'。"
 
-#: ../siteconf/share/configure.in:227
+#: ../siteconf/share/configure.in:243
 msgid "cannot find $A (aka %q): %m"
 msgstr "找不到 $A（又名 %q）：%m"
 
-#: ../siteconf/share/configure.in:229
+#: ../siteconf/share/configure.in:245
 msgid "cannot chdir to $A (aka %q): %m"
 msgstr "无法进入 $A（又名 %q）：%m"
 
 #. HEY!  %s is why, as File::Path says it
-#: ../siteconf/share/configure.in:250
+#: ../siteconf/share/configure.in:266
 msgid "cannot create %q: %s"
 msgstr "无法创建 %q：%s"
 
 #. HEY!  non-leaf: a directory above it (as in mkdir -p)
-#: ../siteconf/share/configure.in:260
+#: ../siteconf/share/configure.in:276
 msgid "cannot mkdir %q: %m (missing non-leaf components?)"
 msgstr "无法创建目录 %q：%m（缺少上层目录？）"
 
-#: ../siteconf/share/configure.in:261 ../siteconf/share/configure.in:322
+#: ../siteconf/share/configure.in:277 ../siteconf/share/configure.in:338
 msgid "cannot mkdir %q: %m"
 msgstr "无法创建目录 %q：%m"
 
-#: ../siteconf/share/configure.in:264
+#: ../siteconf/share/configure.in:280
 msgid "cannot chdir to $B (aka %q): %m"
 msgstr "无法进入 $B（又名 %q）：%m"
 
-#: ../siteconf/share/configure.in:304 ../siteconf/share/configure.in:316
+#: ../siteconf/share/configure.in:320 ../siteconf/share/configure.in:332
 msgid "%q may not be empty."
 msgstr "%q 不能为空。"
 
-#: ../siteconf/share/configure.in:320
+#: ../siteconf/share/configure.in:336
 msgid "%q may not contain a slash."
 msgstr "%q 不能含有斜杠。"
 
 #. HEY!  %s is a command line, as the shell would read it
-#: ../siteconf/share/configure.in:339
+#: ../siteconf/share/configure.in:355
 #, perl-format
 msgid "To generate build script, run: %s"
 msgstr "要生成构建脚本，请运行：%s"
@@ -790,6 +766,28 @@ msgstr "要生成构建脚本，请运行：%s"
 #: ../siteconf/share/presets/web.config:20
 msgid "missing %q option"
 msgstr "缺少 %q 选项"
+
+#. HEY!  The usage is `./render apath bpath', which is two arguments.
+#: ../siteconf/share/presets/tem.render:64
+#: ../siteconf/share/presets/web.render:73
+msgid "need exactly two args"
+msgstr "需要恰好两个参数"
+
+#: ../siteconf/share/presets/web.render:90
+msgid "%q: HAVE declaration not found"
+msgstr "%q：找不到 HAVE 声明"
+
+#. HEY!  The first %q is the symbolic form, and
+#. (aka %q) is expanded form.
+#: ../siteconf/share/presets/web.render:111
+#, perl-brace-format
+msgid "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
+msgstr "%q：你的 HAVE %q（又名 %q）不在 ${a}（又名 %q）之下"
+
+#: ../siteconf/share/presets/web.render:113
+#, perl-brace-format
+msgid "%q: Your HAVE %q is not under ${a} (aka %q)"
+msgstr "%q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:282
 msgid "parse_base: missing site_url"
@@ -1045,6 +1043,14 @@ msgstr "不允许相对路径（没有设置 RELATIVE）"
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:473
 msgid "%q: not a file"
 msgstr "%q：不是文件"
+
+#, perl-format
+#~ msgid "%s needs RdKw::WwW::GenGenLib %s"
+#~ msgstr "%s 需要 RdKw::WwW::GenGenLib %s"
+
+#, perl-format
+#~ msgid "%s requires RdKw::WwW::GenGenLib %s"
+#~ msgstr "%s 需要 RdKw::WwW::GenGenLib %s"
 
 #, perl-format
 #~ msgid "%s is only for %s"

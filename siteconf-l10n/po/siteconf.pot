@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 09:33-0600\n"
+"POT-Creation-Date: 2026-11-13 15:00-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -516,11 +516,11 @@ msgstr ""
 msgid "To build, run: %s"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1459
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1459 ../siteconf/share/configure.in:319
 msgid "Writing %#q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1460
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1460 ../siteconf/share/configure.in:319
 msgid "Updating %#q"
 msgstr ""
 
@@ -720,14 +720,6 @@ msgstr ""
 
 #: ../siteconf/share/configure.in:311
 msgid "%q may not contain a slash."
-msgstr ""
-
-#: ../siteconf/share/configure.in:319
-msgid "Writing %q"
-msgstr ""
-
-#: ../siteconf/share/configure.in:319
-msgid "Updating %q"
 msgstr ""
 
 #: ../siteconf/share/configure.in:333

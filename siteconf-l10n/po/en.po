@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 09:33-0600\n"
+"POT-Creation-Date: 2026-11-13 15:00-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -530,11 +530,11 @@ msgstr "Done!"
 msgid "To build, run: %s"
 msgstr "To build, run: %s"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1459
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1459 ../siteconf/share/configure.in:319
 msgid "Writing %#q"
 msgstr "Writing %#q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1460
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1460 ../siteconf/share/configure.in:319
 msgid "Updating %#q"
 msgstr "Updating %#q"
 
@@ -737,14 +737,6 @@ msgstr "%q may not be empty."
 #: ../siteconf/share/configure.in:311
 msgid "%q may not contain a slash."
 msgstr "%q may not contain a slash."
-
-#: ../siteconf/share/configure.in:319
-msgid "Writing %q"
-msgstr "Writing %q"
-
-#: ../siteconf/share/configure.in:319
-msgid "Updating %q"
-msgstr "Updating %q"
 
 #: ../siteconf/share/configure.in:333
 #, perl-format
@@ -1031,6 +1023,12 @@ msgstr "relative paths are not allowed (RELATIVE is unset)"
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:473
 msgid "%q: not a file"
 msgstr "%q: not a file"
+
+#~ msgid "Writing %q"
+#~ msgstr "Writing %q"
+
+#~ msgid "Updating %q"
+#~ msgstr "Updating %q"
 
 #, perl-format
 #~ msgid "%s: an octal number up to 377, please"

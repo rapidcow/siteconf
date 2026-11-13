@@ -5,6 +5,8 @@
 use strict;
 use warnings;
 use Test::More tests => 14;
+# Pin LANGUAGE to C so gettext does not translate the messages matched below.
+BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf::Ninja;
 
 sub cmd { RdKw::WwW::SiteConf::Ninja::_command($_[0]) }

@@ -7,10 +7,11 @@ use lib "$FindBin::Bin/lib";
 use TestPaths qw( script_path perl5lib );
 use File::Temp qw(tempdir);
 use File::Path qw(make_path);
+use RdKw::WwW::GenGenLib qw( read_make );
 
 my $root = getcwd();
 my $script = script_path();
-plan tests => 98;
+plan tests => 99;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -181,5 +182,37 @@ for my $case (
 	isnt($status, 0, "reject @{$case->[0]}");
 	like($out, $case->[1], 'useful diagnostic');
 }
+subtest 'definition and option defaults use configure syntax' => sub {
+	my @args = ('-Dtailwind', '-Dexplicit=', '-Dchain=a=b', '-D', 'separate',
+		'-Otheme', '-Oempty=', '-Omessage=hello world', '-Ochain=a=b', '-O', 'separate');
+	my ($status, $out) = invoke('init', '-o', 'defaults', @args);
+	is($status, 0, 'bare definitions and options accepted') or diag $out;
+	like(slurp('defaults'),
+		qr/^# options: -Dtailwind -Dexplicit= -Dchain=a=b -Dseparate -Otheme -Oempty= '-Omessage=hello world' -Ochain=a=b -Oseparate$/m,
+		'options comment preserves bare names, explicit empties, and values');
+	is(system($^X, 'defaults', '-q', '-DB=defaults-state'), 0, 'generated configure runs');
+	my %D = read_make('defaults-state/MY/config.mk');
+	my %O = read_make('defaults-state/MY/option.mk');
+	is_deeply([@D{qw(tailwind explicit chain separate)}], ['', '', 'a=b', ''], 'definition defaults');
+	is_deeply([@O{qw(theme empty message chain separate)}], ['', '', 'hello world', 'a=b', ''], 'option defaults');
+	($status, $out) = invoke('init', '-o', 'defaults-repeat',
+		'-Dtailwind=old', '-Dtailwind', '-Otheme=old', '-Otheme', '-Otheme=new');
+	is($status, 0, 'repeated values accepted') or diag $out;
+	like(slurp('defaults-repeat'), qr/^# options: -Dtailwind=old -Dtailwind -Otheme=old -Otheme -Otheme=new$/m,
+		'options comment keeps repeated arguments in order');
+	is(system($^X, 'defaults-repeat', '-q', '-DB=repeat-state'), 0, 'configure with repeated defaults');
+	%D = read_make('repeat-state/MY/config.mk');
+	%O = read_make('repeat-state/MY/option.mk');
+	is_deeply([$D{tailwind}, $O{theme}], ['', 'new'], 'last value wins, including a bare name');
+	for my $kind (qw(D O)) {
+		for my $arg ('', '=value') {
+			($status, $out) = invoke('init', '-o', 'bad-default', "-$kind", $arg);
+			isnt($status, 0, "-$kind rejects an empty name");
+			like($out, qr/\Q-$kind\E: empty name/, 'says why');
+			ok(!-e 'bad-default', 'writes nothing');
+		}
+	}
+	done_testing;
+};
 chdir $root or die $!;
 done_testing;

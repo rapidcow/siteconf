@@ -42,7 +42,7 @@ is($again, $text, 'configure is generated deterministically');
 	like($out, qr/E: missing Template\nE: 1 module missing/, '... and says so');
 }
 
-like(run('./configure', $^X, './configure'), qr/Writing `MY\/config\.mk'/, 'configure');
+like(run('./configure', $^X, './configure'), qr/Writing (?:`MY\/config\.mk'|MY\/config\.mk)/, 'configure');
 my $quiet = run('./configure again', $^X, './configure');
 unlike($quiet, qr/Writing|Updating/, 'reconfiguring changes nothing');
 like(slurp('build/MY/config.mk'), qr/^A=\t\.\.$/m, 'A seen from build');

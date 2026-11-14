@@ -26,23 +26,27 @@ RdKw::WwW::SiteConf::Modifiers - Makefile.in variable modifiers
 =head1 DESCRIPTION
 
 Modifiers are applied from left to right, each to what the one before
-it made.  Except for C<:Q>, they work on a value one word (a run of
-non-whitespace) at a time, and the words are put back together with
-single spaces.
+it made.  A value is one name, whatever blanks it has (see
+L<RdKw::WwW::SiteConf>), so every modifier works on all of it:
+C<${@:T}> of F<blog x/my page.html> is F<my page.html>.
+
+!!! L<bmake(1)> differs here: it takes a value for a list of words, and
+works on each of them.  That is for a make that expands lists; names
+are not lists here.
 
 =over
 
 =item C<:E>, C<:H>, C<:R>, C<:T>
 
-The suffix of each word (without the dot; empty if there is none), its
+The suffix of the value (without the dot; empty if there is none), its
 directory (C<.> if there is none), everything but its suffix, and its
 last component.  Like L<bmake(1)>, except that only the last component
 may have a suffix: C<:R> of F<a.b/c> is F<a.b/c>, not F<a>.
 
 =item C<:S/old/new/[1gW]>
 
-Replaces the first C<old> in each word with C<new>.  C<^old> only
-matches at the start of a word, and C<old$> only at its end.  C<&> in
+Replaces the first C<old> in the value with C<new>.  C<^old> only
+matches at the start of the value, and C<old$> only at its end.  C<&> in
 C<new> is C<old>.  The delimiter may be any character; it, C<^>, C<$>,
 C<&> and C<\> are literal after a backslash.  Both parts may have
 C<${...}> in them.  This is I<not> a regular expression.
@@ -59,8 +63,9 @@ nothing after it is an error.
 only anchors, and a literal C<$> must be C<\$>.  That works here too,
 but C<$$> is a C<$> as well.
 
-The flags are C<1> (stop after the first word that matched), C<g> (every
-occurrence in a word) and C<W> (the value is a single word).
+The flag C<g> replaces every occurrence.  C<1> and C<W>, which are
+bmake's (stop after the first word that matched; the value is a single
+word), are accepted and mean nothing, since a value is always one word.
 
 =item C<:Q>
 
@@ -76,11 +81,11 @@ use RdKw::I18N::CodeSets::Functions qw( diag );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
-# Word at a time.  Each takes and returns a word.
+# Each takes a name and returns a name.
 my %WORD = (
 	E => sub { $_[0] =~ m!\.([^./]*)\z! ? $1 : '' },
 	H => sub {
-		$_[0] =~ m!\A(.*)/! ? (length $1 ? $1 : '/') : '.';
+		$_[0] =~ m!\A(.*)/!s ? (length $1 ? $1 : '/') : '.';
 	},
 	R => sub { $_[0] =~ m!\A(.*?)\.[^./]*\z!s ? $1 : $_[0] },
 	T => sub { $_[0] =~ m!([^/]*)\z! ? $1 : $_[0] },
@@ -200,16 +205,6 @@ Private; for L<RdKw::WwW::SiteConf>.
 # given the text of an expression (`${x}') and returns its value,
 # `quote' a string and returns it quoted.  Dies, without a location,
 # on what it cannot understand.
-# The words of `s', at white space as make knows it (and as
-# RdKw::WwW::SiteConf splits the rules): not a no-break space
-sub _words
-{
-	my ($s) = @_;
-	# (We cannot use split, since it would eat Unicode spaces:
-	# see _words in RdKw::WwW::SiteConf.)
-	$s =~ /([^\t\n\cK\f\r ]+)/g;
-}
-
 sub _apply
 {
 	my ($val, $mods, %o) = @_;
@@ -220,7 +215,7 @@ sub _apply
 		my $start = $pos;
 		my $c = substr($mods, $pos++, 1);
 		if ($WORD{$c}) {
-			$val = join ' ', map { $WORD{$c}->($_) } _words($val);
+			$val = $WORD{$c}->($val) if length $val;
 		} elsif ($c eq 'Q') {
 			$val = $o{quote}->($val);
 		} elsif ($c eq 'S') {
@@ -236,16 +231,8 @@ sub _apply
 				$f =~ /\A[1gW]\z/ or die diag(__("unknown flag %q for :S"), $f) . "\n";
 				$flag{$f} = 1;
 			}
-			my $done;
-			my @word = $flag{W} ? ($val) : _words($val);
-			for my $w (@word) {
-				next if $flag{1} && $done;
-				my $r = _replace($w, $old, \@new, $bol, $eol, $flag{g});
-				defined $r or next;
-				$w = $r;
-				$done = 1;
-			}
-			$val = join ' ', @word;
+			my $r = _replace($val, $old, \@new, $bol, $eol, $flag{g});
+			$val = $r if defined $r;
 		} else {
 			(my $name = substr($mods, $start)) =~ s/:.*//s;
 			die diag(__("unknown modifier %q"), ":$name") . "\n";

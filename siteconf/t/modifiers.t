@@ -14,15 +14,15 @@ BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
 
-my %D = ( A => '.', B => '.', a => 'html', b => 'site', c => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Y => 'xa$ xa$$ xa', md => '.md', html => '.html', F => 'a.md b.md.md c.mdx' );
+my %D = ( A => '.', B => '.', a => 'html', b => 'site', c => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Ya => 'xa$', Yb => 'xa$$', Yc => 'xa', md => '.md', html => '.html', F => 'b.md.md', G => 'c.mdx', Sp => 'my dir/sub dir', Empty => '' );
 my $sc = bless { D => \%D }, 'RdKw::WwW::SiteConf';
 sub s_ { $sc->_subst($_[0], $_[1], 'test', $_[2]) }
 
 my @ok = (
-	# word modifiers
-	['${X:E}',          'gz  '],
-	['${X:H}',          'a.b . .'],
-	['${X:R}',          'a.b/c.tar d e'],
+	# name modifiers: a value is one name, blanks and all
+	['${X:E}',          ''],
+	['${X:H}',          'a.b'],
+	['${X:R}',          'a.b/c.tar.gz d e'],
 	['${X:T}',          'c.tar.gz d e.'],
 	['${@:R}',          'x/y.md', 'x/y.md.html'],
 	['${@:H}/${@:T}',   'x/y.md.html', 'x/y.md.html'],
@@ -34,53 +34,77 @@ my @ok = (
 	['${@:H}',          'a/b', 'a/b/'],
 	['${@:T}',          '', 'a/b/'],
 	['${@:R}',          '', '.bashrc'],
+	# ... also with spaces before and after the slash
+	['${@:T}',          'my page.html', 'blog x/my page.html'],
+	['${@:H}',          'blog x', 'blog x/my page.html'],
+	['${@:R}',          'blog x/my page', 'blog x/my page.html'],
+	['${@:E}',          'html', 'blog x/my page.html'],
+	['${@:H}/${@:T}',   'blog x/my page.html', 'blog x/my page.html'],
+	['${@:T:Q}',        "'my page.html'", 'blog x/my page.html'],
+	['${<:T}',          'my page.txt', 'x', 'blog x/my page.txt'],
+	['${Sp:H}',         'my dir', ],
+	['${Sp:T}',         'sub dir'],
+	['${Empty:T}${Empty:E}${Empty:S/a/b/}', ''],
 	['${A:Q}/${@}',     'x', 'x'],
 	['${Z:Q}',          "'a&b'"],
 	['${X:T:Q}',        "'c.tar.gz d e.'"],
-	# :S
-	['${W:S/a/X/}',     'Xa bX'],
+	# :S, on the value as a whole
+	['${W:S/a/X/}',     'Xa ba'],
 	['${W:S/a/X/g}',    'XX bX'],
 	['${W:S/a/X/1}',    'Xa ba'],
-	['${W:S/a/X/1g}',   'XX ba'],
+	['${W:S/a/X/1g}',   'XX bX'],
 	['${W:S/a/X/W}',    'Xa ba'],
+	['${W:S/a/X/W1g}',  'XX bX'],
 	['${W:S/a b/_/W}',  'a_a'],
+	['${W:S/a b/_/}',   'a_a'],
 	['${W:S/^a/X/}',    'Xa ba'],
-	['${W:S/a$/X/}',    'aX bX'],
-	['${W:S/^aa$/X/}',  'X ba'],
+	['${W:S/a$/X/}',    'aa bX'],
+	['${W:S/^aa$/X/}',  'aa ba'],
+	['${W:S/^aa ba$/X/}', 'X'],
 	['${W:S/^b$/X/}',   'aa ba'],
-	['${W:S/^/pre-/}',  'pre-aa pre-ba'],
-	['${W:S/$/.bak/}',  'aa.bak ba.bak'],
+	['${W:S/^/pre-/}',  'pre-aa ba'],
+	['${W:S/$/.bak/}',  'aa ba.bak'],
 	['${W:S//X/g}',     'aa ba'],
 	['${W:S/a/&&/g}',   'aaaa baa'],
-	['${W:S/a/\&/}',    '&a b&'],
+	['${W:S/a/\&/}',    '&a ba'],
 	['${@:S/.html$//}', 'x/y.md', 'x/y.md.html'],
 	['${@:S/^x\///}',  'y.md.html', 'x/y.md.html'],
-	# dollars: `$$' is a `$', and only a lone one before the delimiter anchors
-	['${Y:S/a$$//}',       'x x$ xa'],
-	['${Y:S/a$$$//}',      'x xa$$ xa'],
-	['${Y:S/a\$$//}',      'x xa$$ xa'],
-	['${Y:S/a$$$$//}',     'xa$ x xa'],
-	['${Y:S/a$$$$$/X/}',   'xa$ xX xa'],
-	['${Y:S/a$//}',        'xa$ xa$$ x'],
-	['${Y:S/a/$$/}',       'x$$ x$$$ x$'],
-	['${Y:S/a/&$/}',       'xa$$ xa$$$ xa$'],
-	['${F:S/${md}$/${html}/}', 'a.html b.md.html c.mdx'],
-	['${F:S/${md}/${html}/}',  'a.html b.html.md c.htmlx'],
-	['${W:S/a/b/:S/b/c/g}', 'ca cc'],
-	['${W:S,a,/,}',     '/a b/'],
-	['${W:S/a/\//}',    '/a b/'],
-	['${W:S|a|\||}',    '|a b|'],
+	['${@:S/ /_/g}',    'blog_x/my_page.html', 'blog x/my page.html'],
+	['${F:S/${md}$/${html}/}', 'b.md.html'],
+	['${F:S/${md}/${html}/}',  'b.html.md'],
+	['${G:S/${md}$/${html}/}', 'c.mdx'],
+	['${G:S/${md}/${html}/}',  'c.htmlx'],
+	['${W:S/a/b/:S/b/c/g}', 'ca ca'],
+	['${W:S,a,/,}',     '/a ba'],
+	['${W:S/a/\//}',    '/a ba'],
+	['${W:S|a|\||}',    '|a ba'],
 	['${W:S/\^a/X/}',   'aa ba'],
 	['${Z:S/\&/+/}',    'a+b'],
 	['${Z:S/b/\$/}',    'a&$'],
-	['${W:S/a/${Z}/}',  'a&ba ba&b'],
-	['${W:S/${Z:S,&b,,}/X/}', 'Xa bX'],
+	['${W:S/a/${Z}/}',  'a&ba ba'],
+	['${W:S/${Z:S,&b,,}/X/}', 'Xa ba'],
 	['${W:S/^a/${A}/}', '.a ba'],
-	['${W:S/a/X/:R}',   'Xa bX'],
-	['${W:S/a/X/:Q}',   "'Xa bX'"],
-	['${W:S/a/X\}/}',   'X}a bX}'],
+	['${W:S/a/X/:R}',   'Xa ba'],
+	['${W:S/a/X/:Q}',   "'Xa ba'"],
+	['${W:S/a/X\}/}',   'X}a ba'],
 	['$$ ${A:Q}/b $',   '$ b $'],
 );
+
+# dollars: `$$' is a `$', and only a lone one before the delimiter anchors
+# (Ya, Yb, Yc are `xa$', `xa$$' and `xa')
+for my $c (
+	['S/a$$//',        qw( x   x$    xa )],
+	['S/a$$$//',       qw( x   xa$$  xa )],
+	['S/a\$$//',       qw( x   xa$$  xa )],
+	['S/a$$$$//',      qw( xa$ x     xa )],
+	['S/a$$$$$/X/',    qw( xa$ xX    xa )],
+	['S/a$//',         qw( xa$ xa$$  x  )],
+	['S/a/$$/',        qw( x$$ x$$$  x$ )],
+	['S/a/&$/',        qw( xa$$ xa$$$ xa$ )],
+) {
+	my ($mod, @want) = @$c;
+	push @ok, map { ['${Y' . (qw( a b c ))[$_] . ":$mod}", $want[$_]] } 0 .. 2;
+}
 
 # :Q alone, of what a shell would make something else of
 my %Q = ( sp => 'sp ace', tab => "ta\tb", pipe => 'a|b', colon => 'c:d', quote => "it's",
@@ -146,7 +170,7 @@ for my $c (
 	['${W:S}',         qr/unterminated :S/],
 	['${W:S:a:b:}',    qr/bad delimiter/],
 	['${W:S/a/b/',     qr/unterminated `\$\{W/],
-	['${Y:S/a/b$}',    qr/unterminated :S/],
+	['${Ya:S/a/b$}',   qr/unterminated :S/],
 ) {
 	my ($in, $re) = @$c;
 	eval { s_($in) };

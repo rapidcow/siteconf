@@ -615,8 +615,8 @@ Recognized variables and the project root are still normalized.
 C<strict> takes precedence: malformed input still dies even
 with C<pass_thru> enabled.  Defaults to C<< pass_thru => 0 >>.
 
-Added in 0.0002.  C<pass_thru> added in 0.0003.  C<${U+...}>
-added in 0.0100 (before, it was a variable of that name).
+Added in 0.0002.  C<pass_thru> added in 0.0003.
+C<${U+...}> escapes added in 0.0100.
 
 =cut
 

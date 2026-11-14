@@ -146,6 +146,17 @@ Revision history of WwW-SiteConf
         takes lists of words); the :S flags W and 1 are
         accepted but mean nothing.  Recipes are unchanged:
         they are text for the shell, and :Q quotes the whole.
+    *** The Makefile that -G make and -G gmake write no longer
+        says `include MY/config.mk': it never used a variable of
+        it (all of them are said where they are used), and what
+        it holds is not for make to read.
+    *** MY/config.mk and MY/option.mk hold any value, as
+        GenGenLib says it: ${U+XXXX} for a character that a line
+        cannot hold (a newline, a no-break space, ...), and
+        ${$} for a $ before a {.  -D and -O say them so too,
+        and ${U+20} is a space: -Devil_path='evil${U+20}path'.
+        (A literal ${U+20} is ${$}{U+20}.)  Requires the
+        GenGenLib of this release.
 
 
 0.02_03  2026-11-09  RC

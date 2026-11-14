@@ -141,7 +141,8 @@ With C<-i>, set a default definition or option in F<configure>.
 As in F<configure>, a name without C<=> has an empty value:
 C<-Dtailwind> is equivalent to C<-Dtailwind=>.  The original spelling
 is kept in the generated options comment.  Split at the first C<=>;
-the rest belongs to the value.  An empty name is an error, and the
+the rest belongs to the value, in which C<${U+20}> is a space and C<${$}> a
+C<$>, as it is for F<configure> (see L<RdKw::WwW::SiteConf::Configure>).  An empty name is an error, and the
 last value for a repeated name wins.
 
 =item B<-B> I<dir>
@@ -302,7 +303,7 @@ use IO::Handle ();  # for $fh->flush() prior to 5.014
 use Encode ();
 use RdKw::I18N::CodeSets ();
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-use RdKw::WwW::GenGenLib 0.01 qw( escape_dep read_manifest );
+use RdKw::WwW::GenGenLib 0.01 qw( escape_dep read_manifest unescape_make );
 use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
@@ -367,7 +368,13 @@ sub default_setter
 		my ($name, $value) = split(/=/, $_[1], 2);
 		defined $name && length $name
 			or die "$prog: " . $cs->diag(__("%s: empty name."), "-$kind") . "\n";
-		$values->{$name} = defined $value ? $value : '';
+		# (a value says what it cannot spell as in configure: ${U+20})
+		my $text = eval { unescape_make(defined $value ? $value : '') };
+		defined $text or do {
+			(my $why = $@) =~ s/\n\z//;
+			die "$prog: " . "-$kind$name: $why\n";
+		};
+		$values->{$name} = $text;
 		push @written, "-$kind$_[1]";
 	};
 }

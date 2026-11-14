@@ -373,7 +373,7 @@ sub new
 		# (as GenGenLib's load_state does: newbies see it)
 		"You have not configured!  (no %q)\n"
 		. "You should ./configure first. ;)"), $conf));
-	my %D = read_make($conf);
+	my %D = read_make($conf, $self->{prog});
 	# F and R (the manifest and the rules) are external to the project:
 	# paths from where we are, not from the project root.  The overrides
 	# are noted so that we can credit them in the header.

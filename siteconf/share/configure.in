@@ -17,7 +17,7 @@ use Getopt::Long qw( GetOptions );
 
 # Pin GenGenLib 0.01 and its Unicode
 # dependency modules transitively.
-use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make );
+use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make unescape_make );
 
 # Initialize locale and gettext.
 use RdKw::I18N::CodeSets ();
@@ -94,7 +94,14 @@ sub setter
 		# HEY!  %s is the option, -D or -O.
 		length $k or die $cs->diag("%#q: %s\n", "$prog: ",
 			$cs->diag(__("%s: empty name."), "-$S"));
-		$H->{$k} = defined $v ? $v : "";
+		# A value says what it cannot spell as a header does: ${U+0020}
+		# is a space, ${$} a $ (as MY/*.mk says them).
+		my $text = eval { unescape_make(defined $v ? $v : "") };
+		defined $text or do {
+			(my $why = $@) =~ s/\n\z//;
+			die $cs->diag("%#q: %s\n", "$prog: ", "-$S$k: $why");
+		};
+		$H->{$k} = $text;
 	};
 }
 
@@ -253,13 +260,13 @@ my $Babs = un_fs(getcwd());
 unless ($reset) {
 	my %Dc = %D;   # cool times
 	my %Oc = %O;   # trade anyone?
-	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk") : ();
+	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk", $prog) : ();
 	# A c that was the same as b (as it was last time: no distinction
 	# between build and cache, however it came to be) follows b, if b
 	# is now set to something else -- unless c is explicitly set.
 	$D{c} = $Dc{b} if !exists $Dc{c} && exists $Dc{b} && !isnull($D{c})
 		&& !isnull($D{b}) && $D{c} eq $D{b};
-	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk") : ();
+	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk", $prog) : ();
 	@D{keys %Dc} = values %Dc;
 	@O{keys %Oc} = values %Oc;
 }

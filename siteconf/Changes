@@ -135,6 +135,17 @@ Revision history of WwW-SiteConf
     + siteconf -i accepts -Dname and -Oname as empty defaults, as
       configure does.  The options comment keeps whether `=' was
       written; values may contain further equals signs.
+    *** A name is one name.  Targets and prerequisites in
+        Makefile.in are told apart where they are written, not
+        by what a variable holds, so -Dx='my dir' makes ${x}/a
+        one file, "my dir/a", for every variable (not only
+        ${A} ${B} ${a} ${b} ${c} ${@}), and a name that
+        expands to nothing is an error.  Modifiers :E :H :R
+        :T and :S take a value as one name as well, so ${@:T}
+        of "blog x/my page.html" is "my page.html" (bmake
+        takes lists of words); the :S flags W and 1 are
+        accepted but mean nothing.  Recipes are unchanged:
+        they are text for the shell, and :Q quotes the whole.
 
 
 0.02_03  2026-11-09  RC

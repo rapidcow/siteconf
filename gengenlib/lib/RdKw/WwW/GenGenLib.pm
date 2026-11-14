@@ -54,10 +54,12 @@ use File::Compare ();
 use File::Spec;
 
 # Set up locale and gettext.
+use RdKw::I18N::CodeSets ();
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 our @EXPORT_OK = qw(
+	tagmsg
 	read_make write_make update_file load_state
 	read_deps norm_deps norm_dep subs_deps subs_dep
 	escape_vars escape_var
@@ -77,7 +79,28 @@ my $SP = '\t\n\cK\f\r ';
 
 =over
 
-=item B<read_make> I<file>[, I<prog>]
+=item B<tagmsg> prog, mesg
+
+Prepend message with a prefix.  This seems
+common enough to warrant a special function.
+
+If the prefix is missing, return the message
+itself.
+
+Added in 0.0100.
+
+=cut
+
+sub tagmsg
+{
+	my ($prog, $diag) = @_;
+	chomp $diag;
+	return "$diag\n" unless defined $prog && length $prog;
+	$diag =~ s/^/diag("%#q: ", $prog)/gem;
+	"$diag\n";
+}
+
+=item B<read_make> I<file>[, { prog => 'read_make' }]
 
 This reads user-configured B<MY/*.mk> files.
 They're kind of like DOS-INI / GNU libconfini, but
@@ -94,17 +117,35 @@ Code points above U+10FFFF are accepted as-is; invalidate them if you care
 about only the valid Unicode code points.
 
 Errors are prefixed with I<prog>, else C<'read_make'>.
+The I<prog> option was added in 0.0100.
 
 =cut
+
+{
+	my $nil = +{};
+
+	sub _getkwds
+	{
+		my ($args) = @_;
+		@$args && ref($args->[-1]) eq 'HASH' ? pop @$args : $nil;
+	}
+
+	sub _getprog
+	{
+		my ($kwds, $default) = @_;
+		exists $kwds->{prog} ? $kwds->{prog} : $default;
+	}
+}
 
 sub read_make
 {
 	local ($_, $.);
-	my ($file, $prog) = @_;
-	defined $prog or $prog = 'read_make';
+	my $prog = _getprog(_getkwds(\@_), 'read_make');
+	my $kwds = { prog => $prog };
+	my ($file) = @_;
 
-	open my $fh, '<', to_fs($file, { prog => $prog })
-		or die diag("%#q: %s\n", diag(__(
+	open my $fh, '<', to_fs($file, $kwds)
+		or die tagmsg($prog => diag(__(
 			"cannot open file %q: %m"), $file));
 	binmode $fh, ':encoding(UTF-8)';
 
@@ -112,11 +153,11 @@ sub read_make
 	while (<$fh>) {
 		next if /^\s*#/ or /^\s*$/;
 		my ($k, $v) = split /=/, $_, 2;
-		defined $v or die diag("%#q: %s\n", diag(__(
-			"%q line %s: missing `='"), $file, $.));
+		defined $v or die tagmsg($prog => diag(__(
+			"%q line %d: missing `='"), $file, $.));
 		$k =~ s/^[$SP]+|[$SP]+$//g;
 		$v =~ s/^[$SP]+|[$SP]+$//g;
-		my $text = unescape_vars($v);
+		my $text = unescape_vars($v);  # no $kwds
 		$O{$k} = $text;
 	}
 
@@ -124,17 +165,22 @@ sub read_make
 	%O;
 }
 
-=item B<write_make> I<file>, \%vars, I<prog>
+=item B<write_make> I<file>, \%vars[, { prog => 'write_make' }]
 
 The reverse of B<read_make>, through B<update_file>.  Keys are
 sorted by length, then alphabetically.  I<prog> is credited in the
 header comment.  Values are escaped by B<escape_var>.
 
+Errors are prefixed with I<prog>, else C<'write_make'>.
+The I<prog> option was added in 0.0100.
+
 =cut
 
 sub write_make
 {
-	my ($file, $H, $prog) = @_;
+	my $prog = _getprog(_getkwds(\@_), 'write_make');
+	my $kwds = { prog => $prog };
+	my ($file, $H) = @_;
 	my $text = RdKw::I18N::CodeSets->new( diag => 'ascii' )
 		->diag("#\n# configured by %q\n#\n", $prog);
 	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
@@ -145,11 +191,11 @@ sub write_make
 		# is allowed... like IL-legal in the sense of invalid.
 		# (but let's not get into the topic of identity crisis...
 		# we're talking about SYNTACTICALLY invalid names here.))
-		$k =~ /\A[^\s=#]+\z/ or die diag("%#q: %s\n",
-			$prog, diag(__("bad name: %q"), $k));
-		$text .= "$k=\t" . escape_vars($v) . "\n";
+		$k =~ /\A[^\s=#]+\z/ or die tagmsg(
+			$prog => diag(__("bad name: %q"), $k));
+		$text .= "$k=\t" . escape_vars($v) . "\n";  # no $opt
 	}
-	update_file($file, $text);
+	update_file($file, $text, $kwds);
 }
 
 =item B<escape_vars> I<value>, ...
@@ -178,7 +224,8 @@ Added in 0.0100.  EXPERIMENTAL.
 
 sub escape_vars
 {
-	wantarray ? map { escape_var($_) } @_ : escape_var($_[0]);
+	my $opt = _getkwds(\@_);
+	wantarray ? map { escape_var($_, %$opt) } @_ : escape_var($_[0], %$opt);
 }
 
 sub escape_var
@@ -221,7 +268,9 @@ would have to be done externally.
 
 sub unescape_vars
 {
-	wantarray ? map { unescape_var($_) } @_ : unescape_var($_[0]);
+	# Ignore up to one trailing HASH.  (See escape_vars)
+	my %opt = @_ && ref($_[-1]) eq 'HASH' ? %{+pop} : ();
+	wantarray ? map { unescape_var($_, %opt) } @_ : unescape_var($_[0], %opt);
 }
 
 sub unescape_var
@@ -248,7 +297,8 @@ C<< $r > 1 ? 'created' : $r ? 'updated' : 'unchanged' >>.
 
 sub update_file
 {
-	my ($file, $text) = @_;
+	my ($file, $text, $opt) = @_;
+	my $prog = $opt && exists $opt->{prog} ? $opt->{prog} : 'update_file';
 	#
 	# Try writing to the same file system to ensure atomicity.
 	# Polluting directory is fine, since we usually own the
@@ -256,26 +306,31 @@ sub update_file
 	#
 	my $tmp = File::Spec->catfile(dirname($file), 'tmp-' . basename($file));
 
-	my ($tmp_fs, $file_fs) = map { to_fs($_, { prog => 'update_file' }) } $tmp, $file;
+	my ($tmp_fs, $file_fs) = map { to_fs($_, { prog => $prog }) } $tmp, $file;
 
 	open my $fh, '>:encoding(UTF-8)', $tmp_fs
-		or die diag(__("update_file: cannot create file %q: %m"), $tmp) . "\n";
+		or die diag("%#q: %s\n", diag($prog, __(
+			"cannot create file %q: %m"), $tmp));
 	print $fh $text
-		or die diag(__("update_file: cannot write file %q: %m"), $tmp) . "\n";
+		or die diag("%#q: %s\n", diag($prog, __(
+			"cannot write file %q: %m"), $tmp));
 	close $fh
-		or die diag(__("update_file: cannot write file %q: %m"), $tmp) . "\n";
+		or die diag("%#q: %s\n", diag($prog, __(
+			"cannot write file %q: %m"), $tmp));
 
 	my $exists = -e $file_fs;
 	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0) {
 		unlink $tmp_fs;
 		return 0;  # make it numeric so `>' isn't upset
 	}
-	rename $tmp_fs, $file_fs or die diag(__("update_file: cannot rename %q to %q: %m"),
-		$tmp, $file) . "\n";
+	rename $tmp_fs, $file_fs
+		or die diag("%#q: %s\n", diag($prog, __(
+			"cannot rename %q to %q: %m"),
+			$tmp, $file));
 	$exists ? 1 : 2;
 }
 
-=item B<load_state> I<B>
+=item B<load_state> I<B>[, { prog => 'load_state' }]
 
 Read C<${B}/MY/config.mk> and C<${B}/MY/option.mk> and return
 an associative map of hashes, keyed by I<config> and I<option>.
@@ -289,24 +344,30 @@ by name.
 
 sub load_state
 {
-	my ($Bdir) = @_;
+	my ($Bdir, $opt) = @_;
+	my $prog = $opt && exists $opt->{prog} ? $opt->{prog} : 'load_state';
 	$Bdir = '.' unless defined $Bdir and length $Bdir;
+
 	my %S;
-	for my $f (qw( config option )) {
-		my $file = "$Bdir/MY/$f.mk";
-		-f to_fs($file, { prog => 'load_state' })
-			or die diag(__(
+	foreach (qw( config option )) {
+		my $file = File::Spec->catfile($Bdir, "MY/$_.mk");
+		$file = File::Spec->canonpath($file);
+		unless (-f to_fs($file, { prog => $prog })) {
+			my $mesg = diag(__(
 			# HEY!  Keep a winky face in the translation ;)
 			# This message is likely to get seen by newbies,
 			# so we want to keep it fun.
-			"error: You have not configured! (no %q)\n"
-			. "error: You should ./configure first. ;)"), $file) . "\n";
-		$S{$f} = { read_make($file) };
+			"You have not configured! (no %q)\n"
+			. "You should ./configure first. ;)"), $file);
+			$mesg =~ s/^/diag("%#q", $prog)/gem;
+			die "$mesg\n";
+		}
+		$S{$_} = { read_make($file, $prog) };
 	}
 	%S;
 }
 
-=item B<read_deps> I<file>, { forgive_missing => 0 }
+=item B<read_deps> I<file>, { forgive_missing => 0, prog => 'read_deps' }
 
 This is an ambitious one.  Essentially, we're trying
 to propose a framework for a lean, but robust build
@@ -459,6 +520,7 @@ sub read_deps
 	local ($_, $.);
 	my ($file, $opt) = @_;
 	my $missing_ok = $opt && $opt->{forgive_missing};
+	my $prog = $opt && exists $opt->{prog} ? $opt->{prog} : 'read_deps';
 	my $onit = 0;
 	my %I = ();
 
@@ -634,51 +696,57 @@ C<${U+...}> escapes added in 0.0100.
 =cut
 
 # The code point that `U+hex' is, if it is one
+#
+# (We can accept leading zeros provided that
+# they don't overflow a 32-bit int.)
 sub _code_point
 {
 	my ($name) = @_;
-	$name =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ or return;
-	my $n = hex $1;
-	$n <= 0x10FFFF ? $n : undef;
+	return unless $name =~ /\A[Uu]\+0*([0-9A-Fa-f]{1,8})\z/;
+	hex $1;
 }
 
 sub norm_deps
 {
-	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
+	my $kwds = _getkwds(\@_);
+	my $prog = _getprog($kwds, 'norm_deps');
+	my $keep = $kwds->{pass_thru};
 	my (@ret);
 	foreach (@_) {
-		my $spec = $_;
 		my $out = '';
+		pos($_) = 0;
 		for (;;) {
-			if ($spec =~ /\G([^\$]+)/gc) {
+			if (/\G([^\$]+)/gc) {
 				$out .= $1;
-			} elsif ($spec =~ /\G\$\{([Uu]\+[^}]*)\}/gc) {
+			} elsif (/\G\$\{([Uu]\+[^}]*)\}/gc) {
 				# A character, not a variable
 				my $name = $1;
 				my $n = _code_point($name);
 				if (defined $n) {
 					$out .= sprintf '${U+%04X}', $n;
 				} else {
-					$opt->{strict}
-						and die diag(__("norm_deps: %s is no code point in %q"),
-							"\${$name}", $_) . "\n";
-					$out .= ($opt->{pass_thru} ? '$' : '${$}') . "{$name}";
+					$kwds->{strict} and die tagmsg($prog => diag(__(
+						"cannot normalize %q: bad Unicode code point %s"),
+						$_, "\${$name}"));
+					$out .= ($keep ? '$' : '${$}') . "{$name}";
 				}
-			} elsif ($spec =~ /\G\$\{([^}]+)\}/gc) {
+			} elsif (/\G\$\{([^}]+)\}/gc) {
 				$out .= "\${$1}";
-			} elsif ($spec =~ /\G\$([\w\$])/gc) {
+			} elsif (/\G\$([\w\$])/gc) {
 				# includes "$$"
 				$out .= "\${$1}";
-			} elsif ($spec =~ /\G\$/gc) {
+			} elsif (/\G\$/gc) {
 				# Anything else is not a variable we recognize
-				if ($opt->{strict}) {
-					die diag(__("norm_deps: trailing \$ in %q"), $_) . "\n"
-						if $spec =~ /\G\z/gc;
-					die diag(__("norm_deps: unterminated or empty \${ in %q"), $_) . "\n"
-						if $spec =~ /\G\{/gc;
-					die diag(__("norm_deps: stray \$ in %q"), $_) . "\n";
+				if ($kwds->{strict}) {
+					die tagmsg($prog => diag(__(
+						"cannot normalize %q: trailing \$"), $_))
+						if /\G\z/gc;
+					die tagmsg($prog => diag(__(
+						"cannot normalize %q: unterminated or empty \${"), $_))
+						if /\G\{/gc;
+					die tagmsg($prog => diag(__("stray \$ in %q"), $_));
 				}
-				$out .= $opt->{pass_thru} ? '$' : '${$}';
+				$out .= ($keep ? '$' : '${$}');
 			} else {
 				last;
 			}
@@ -693,8 +761,8 @@ sub norm_deps
 
 sub norm_dep
 {
-	my ($spec, %opt) = @_;
-	scalar norm_deps($spec, \%opt);
+	my ($spec, %kwds) = @_;
+	scalar norm_deps($spec, \%kwds);
 }
 
 =item B<subs_dep> \%D, I<spec>, [ strict => 0, on_missing => 'vanish' ]
@@ -748,40 +816,45 @@ Added in 0.0002.
 
 sub _bad_subs
 {
-	# HEY!  "bad" means undefined in the substitution
-	# map here -- think `set -u' in your Bourne shell.
-	# It is technically also double entendre, since
-	# the map-less version of subs_deps is used as a
-	# pure decode operation... in which case a named
-	# substitution that is not an escape at all as "bad"
-	# as in, "wait.... that's illegal."
-	die diag(__("subs_deps: bad substitution: %s"), "\${$_[0]}") . "\n";
+	my ($prog) = @_;
+	sub {
+		# HEY!  "bad" means undefined in the substitution
+		# map here -- think `set -u' in your Bourne shell.
+		# It is technically also double entendre, since
+		# the map-less version of subs_deps is used as a
+		# pure decode operation... in which case a named
+		# substitution that is not an escape at all as "bad"
+		# as in, "wait.... that's illegal."
+		die tagmsg($prog, diag(__("bad substitution: %s"), "\${$_[0]}"));
+	};
 }
 
 sub subs_deps
 {
+	my $kwds = _getkwds(\@_);
+	my $prog = _getprog($kwds, 'subs_deps');
 	my $D = shift;
-	my $opt = ref($_[-1]) eq 'HASH' ? pop : {};
 	# pass_thru is not for us :)  Unpaired $s
 	# will round-trip when we substitute them.
-	if ($opt->{pass_thru}) {
-		$opt = {%$opt};
-		delete $opt->{pass_thru};
+	if ($kwds->{pass_thru}) {
+		$kwds = +{ %$kwds };
+		delete $kwds->{pass_thru};
 	}
 	my $fb;
-	if (defined $opt->{on_missing}) {
-		my $missing = delete $opt->{on_missing};
+	if (defined $kwds->{on_missing}) {
+		$kwds = +{ %$kwds };
+		my $missing = delete $kwds->{on_missing};
 		if (ref($missing) eq 'CODE') {
 			$fb = $missing;
 		} elsif ($missing eq 'croak') {
-			$fb = \&_bad_subs;
+			$fb = _bad_subs($prog);
 		} else {
 			# $missing could be "vanish"
 			# but i don't really care.
 		}
 	}
 	my @ret;
-	foreach my $spec (norm_deps(@_, $opt)) {
+	foreach my $spec (norm_deps(@_, $kwds)) {
 		my $out = '';
 		# Whether we are at the start of a path segment
 		my $seg = 1;
@@ -905,7 +978,7 @@ Added in 0.0002.
 
 sub split_dep
 {
-	my $spec = norm_deps(@_);
+	my $spec = norm_deps($_[0]);
 #	pos($spec) = 0;
 	my $root = '';
 	# (an escaped $, ${$}, is no variable, and so no root; nor
@@ -1001,10 +1074,10 @@ sub follow_ok
 
 sub walk_deps
 {
+	my $kwds = _getkwds(\@_);
 	my $D = shift;
-	my %opt = ref($_[-1]) eq 'HASH' ? %{ pop() } : ();
-	my $G = $opt{graph} || +{};
-	my $ok = $opt{follow} || \&follow_ok;
+	my $G = $kwds->{graph} || +{};
+	my $ok = $kwds->{follow} || \&follow_ok;
 
 	# Everything is kept in normalized form, so that $a/x and ${a}/x
 	# are one and the same node, whichever way a header spells it

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 223;
+use Test::More tests => 224;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use E2E qw( lines );
@@ -809,33 +809,38 @@ SKIP: {
 		'... that is no code point') or diag $@;
 }
 
-# --- literal spaces survive expansion; ordinary variables remain lists
+# --- literal spaces survive expansion; a variable is always one name
 {
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED a\${U+20}b.html\n",
 		'Makefile.in' => "\${B}/\${b}/a\${U+0020}b.html: \${a}/\${\@} \${A}/d\${u+20}x \${X} WANT:\${A}/maybe\${U+20}dep\n\tcp \${a:Q}/\${<:Q} \${b:Q}/\${\@:Q}\n",
-		'html/a b.html' => '', 'd x' => '', y => '', 'maybe dep' => '',
-	}, X => ' x y ');
+		'html/a b.html' => '', 'd x' => '', 'x y' => '', 'maybe dep' => '',
+	}, X => 'x y');
 	my $plan = eval { plan_of($dir) };
 	is_deeply($plan && $plan->{node}{'a b.html'}{deps},
-		['html/a b.html', 'd x', 'x', 'y', 'maybe dep', 'site/.ok'],
-		'escaped targets, ${@} as the source, NEEDs and WANTs with spaces') or diag $@;
+		['html/a b.html', 'd x', 'x y', 'maybe dep', 'site/.ok'],
+		'escaped targets, ${@} as the source, NEEDs and WANTs with spaces; a variable is one name') or diag $@;
 	is($plan && $plan->{node}{'a b.html'}{recipe}, "\tcp html/'a b.html' site/'a b.html'\n",
 		':Q quotes each whole name');
 	my $sc = bless { D => { X => ' x y ', a => 'source dir' } }, 'RdKw::WwW::SiteConf';
 	for my $case (
-		['${U+20}x${U+0020}', [' x ']],
-		['x${U+20}${u+20}y', ['x  y']],
-		['${X}d${U+20}x${X}', ['x', 'y', 'd x', 'x', 'y']],
-		['${a}/${@}', ['source dir/a b']],
-		['${U+24}{U+20}', ['${U+20}']],
+		['${U+20}x${U+0020}', ' x '],
+		['x${U+20}${u+20}y', 'x  y'],
+		['${X}d${U+20}x${X}', ' x y d x x y '],
+		['${a}/${@}', 'source dir/a b'],
+		['${U+24}{U+20}', '${U+20}'],
 	) {
-		is_deeply([$sc->_subst_words($case->[0], 'a b', 'test')], $case->[1], $case->[0]);
+		is($sc->_subst_name($case->[0], 'a b', 'test'), $case->[1], $case->[0]);
 	}
 	$dir = project({ MANIFEST => $manifest,
-		'Makefile.in' => "a.html: \${a}/\${X}\n\ttrue\n" }, X => 'x y');
+		'Makefile.in' => "a.html: \${a}/\${X}\n\ttrue\n", 'html/x y' => '' }, X => 'x y');
+	$plan = eval { plan_of($dir) };
+	is_deeply($plan && $plan->{node}{'a.html'}{deps}, ['html/x y', 'site/.ok'],
+		'a variable with a space is one source, not a list') or diag $@;
+	$dir = project({ MANIFEST => $manifest,
+		'Makefile.in' => "a.html: \${a}/a.src \${X}\n\ttrue\n" }, X => '');
 	eval { plan_of($dir) };
-	like($@, qr/must be one name in \$\{a\}/, 'a list variable is still not one source');
+	like($@, qr/expands to nothing/, 'a name that is empty is not a file');
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED a\${U+20}b.html\n",
 		'Makefile.in' => "a\${U+20}b.html: \${a}/../escape\${U+20}name\n\ttrue\n" });
 	eval { plan_of($dir) };

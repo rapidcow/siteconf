@@ -11,7 +11,7 @@ use RdKw::WwW::GenGenLib qw( read_make );
 
 my $root = getcwd();
 my $script = script_path();
-plan tests => 119;
+plan tests => 125;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -205,6 +205,18 @@ for my $case (
 	%D = read_make('repeat-state/MY/config.mk');
 	%O = read_make('repeat-state/MY/option.mk');
 	is_deeply([$D{tailwind}, $O{theme}], ['', 'new'], 'last value wins, including a bare name');
+	# ... and a value says what a line cannot hold, as in configure
+	($status, $out) = invoke('init', '-o', 'escaped', '-Dpath=evil${U+20}path', '-Oraw=a${$}{U+20}b',
+		'-Onl=a${U+000A}b');
+	is($status, 0, 'escapes in defaults') or diag $out;
+	is(system($^X, 'escaped', '-q', '-DB=escaped-state'), 0, 'configure with escaped defaults');
+	%D = read_make('escaped-state/MY/config.mk');
+	%O = read_make('escaped-state/MY/option.mk');
+	is($D{path}, 'evil path', '${U+20} is a space in a default');
+	is($O{raw}, 'a${U+20}b', '${$}{U+20} is not one');
+	is($O{nl}, "a\nb", 'a newline can be a default');
+	($status, $out) = invoke('init', '-o', 'bad-escape', '-Dx=${U+110000}');
+	isnt($status, 0, 'no such code point as a default');
 	for my $kind (qw(D O)) {
 		for my $arg ('', '=value') {
 			($status, $out) = invoke('init', '-o', 'bad-default', "-$kind", $arg);

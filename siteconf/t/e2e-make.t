@@ -18,7 +18,7 @@ use E2E;
 my $script = E2E::setup();
 my $make = E2E::make();
 # (only now: we may have skipped all)
-plan tests => 65;
+plan tests => 66;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build
 	-MRdKw::WwW::GenLib=0 ));
@@ -74,6 +74,7 @@ unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
 my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build ));
 like($err, qr/WANTs `extra\/index\.html', but cannot be made/, 'WANT with a missing need is dropped');
 like($err, qr/WANTs `ghost\.html', but cannot be made/, 'WANT without a rule is dropped');
+unlike(slurp('build/Makefile'), qr/^include\b/m, 'the Makefile includes nothing: it says all of it itself');
 like(slurp('build/MY/MANIFEST.all'), qr/\A.*^MAKE all\n\tNEED index\.html\n\tNEED sub\/index\.html\n\tNEED robots\.txt\n/ms,
 	'MY/MANIFEST.all');
 like(slurp('build/MY/MANIFEST.basic'), qr/NEED sub\/index\.html/, 'WANT that can be had is kept');

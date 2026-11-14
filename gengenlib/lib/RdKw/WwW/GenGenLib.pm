@@ -58,17 +58,20 @@ use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 our @EXPORT_OK = qw(
-	read_make write_make
-	escape_make unescape_make
-	update_file load_state
-	read_deps
-	norm_deps norm_dep
-	subs_deps subs_dep
+	read_make write_make update_file load_state
+	read_deps norm_deps norm_dep subs_deps subs_dep
+	escape_vars escape_var
 	escape_deps escape_dep
+	unescape_vars unescape_vars
+	unescape_deps unescape_deps
 	split_dep walk_deps follow_ok
 	enroot uproot
 	read_manifest
 );
+
+# POSIX white space since [[:space:]] is too broad.
+# (This is the same character set used in SiteConf.pm)
+my $SP = '\t\n\cK\f\r ';
 
 =head1 ROUTINES
 
@@ -86,11 +89,11 @@ that's what we call ourselves: read L<make(1)>-like
 declarations.  Helps keep the mind sane. ;D
 
 A value says the characters it cannot spell, as a header does:
-C<${U+0020}> is a space and C<${$}> a C<$> (see B<unescape_make>).
-A name is as it is.
+C<${U+0020}> is a space and C<${$}> a C<$> (see B<unescape_vars>).
+Code points above U+10FFFF are accepted as-is; invalidate them if you care
+about only the valid Unicode code points.
 
-I<prog>, what we are called when we cannot spell I<file> for the
-file system, is C<read_make> unless said otherwise.
+Errors are prefixed with I<prog>, else C<'read_make'>.
 
 =cut
 
@@ -101,17 +104,19 @@ sub read_make
 	defined $prog or $prog = 'read_make';
 
 	open my $fh, '<', to_fs($file, { prog => $prog })
-		or die diag(__("read_make: cannot open file %q: %m"), $file) . "\n";
+		or die diag("%#q: %s\n", diag(__(
+			"cannot open file %q: %m"), $file));
 	binmode $fh, ':encoding(UTF-8)';
 
 	my %O;
 	while (<$fh>) {
 		next if /^\s*#/ or /^\s*$/;
 		my ($k, $v) = split /=/, $_, 2;
-		defined $v or die diag(__("read_make: %q line %s: no `='"), $file, $.) . "\n";
-		$k =~ s/^\s+|\s+$//g;
-		$v =~ s/^\s+|\s+$//g;
-		my $text = unescape_make($v);
+		defined $v or die diag("%#q: %s\n", diag(__(
+			"%q line %s: missing `='"), $file, $.));
+		$k =~ s/^[$SP]+|[$SP]+$//g;
+		$v =~ s/^[$SP]+|[$SP]+$//g;
+		my $text = unescape_vars($v);
 		$O{$k} = $text;
 	}
 
@@ -123,14 +128,15 @@ sub read_make
 
 The reverse of B<read_make>, through B<update_file>.  Keys are
 sorted by length, then alphabetically.  I<prog> is credited in the
-header comment.  Values are escaped by B<escape_make>.
+header comment.  Values are escaped by B<escape_var>.
 
 =cut
 
 sub write_make
 {
 	my ($file, $H, $prog) = @_;
-	my $text = "#\n# configured by `$prog'\n#\n";
+	my $text = RdKw::I18N::CodeSets->new( diag => 'ascii' )
+		->diag("#\n# configured by %q\n#\n", $prog);
 	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
 		my $v = defined $H->{$k} ? $H->{$k} : '';
 		# HEY!  by bad we mean the make variable name contains
@@ -139,13 +145,16 @@ sub write_make
 		# is allowed... like IL-legal in the sense of invalid.
 		# (but let's not get into the topic of identity crisis...
 		# we're talking about SYNTACTICALLY invalid names here.))
-		$k =~ /\A[^\s=#]+\z/ or die diag(__("write_make: bad name: %q"), $k) . "\n";
-		$text .= "$k=\t" . escape_make($v) . "\n";
+		$k =~ /\A[^\s=#]+\z/ or die diag("%#q: %s\n",
+			$prog, diag(__("bad name: %q"), $k));
+		$text .= "$k=\t" . escape_vars($v) . "\n";
 	}
 	update_file($file, $text);
 }
 
-=item B<escape_make> I<value>
+=item B<escape_vars> I<value>, ...
+
+=item B<escape_var> I<value>
 
 I<value> as one line of a B<MY/*.mk> file can hold it, which is as it is
 but for what a line, a shell reading it, or a person reading it could
@@ -158,17 +167,24 @@ and every other character, including those of any script, is itself.
 A C<$> is C<${$}> if a C<{> comes next, so that it cannot be taken for the
 start of an escape; any other C<$> is just a C<$>.
 
-This is much less than B<escape_dep> does, which escapes whatever means
-something to make, a shell or a header, because a file made for
+This is much less than what B<escape_deps> does, which escapes whatever
+means something to make, a shell or a header, because a file made for
 B<read_make> (and a shell loop that reads a line at a time) does not
 need to say any of that.  Names are never escaped.
 
+Added in 0.0100.  EXPERIMENTAL.
+
 =cut
 
-sub escape_make
+sub escape_vars
+{
+	wantarray ? map { escape_var($_) } @_ : escape_var($_[0]);
+}
+
+sub escape_var
 {
 	my ($v) = @_;
-	defined $v or return '';
+	return undef unless defined $v;
 	my $n = length $v;
 	my $out = '';
 	for my $i (0 .. $n - 1) {
@@ -188,16 +204,27 @@ sub escape_make
 	$out;
 }
 
-=item B<unescape_make> I<text>
+=item B<unescape_vars> I<text>, ...
 
-The reverse of B<escape_make>: C<${U+XXXX}> (one to eight hexadecimal
-digits, and C<u+> will do) is the character of that code point, and C<${$}> is
-a C<$>.  Anything else, a C<$> that comes before a C<{> included, is itself.
-Dies if a code point is above U+10FFFF.
+=item B<unescape_var> I<text>
+
+The inverse of B<escape_vars>: C<${U+XXXX}> (one to eight hexadecimal
+digits, and C<u+> will do) is the character of that code point, and
+C<${$}> is a C<$>.  Anything else, a C<$> that comes before a C<{>
+included, is itself.
+
+Code points above U+10FFFF are accepted as-is;
+invalidation of invalid Unicode code points
+would have to be done externally.
 
 =cut
 
-sub unescape_make
+sub unescape_vars
+{
+	wantarray ? map { unescape_var($_) } @_ : unescape_var($_[0]);
+}
+
+sub unescape_var
 {
 	my ($text) = @_;
 	$text =~ s{\$\{(?:(\$)|[Uu]\+([0-9A-Fa-f]{1,8}))\}}{

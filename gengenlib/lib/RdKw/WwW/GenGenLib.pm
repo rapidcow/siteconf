@@ -111,9 +111,7 @@ sub read_make
 		defined $v or die diag(__("read_make: %q line %s: no `='"), $file, $.) . "\n";
 		$k =~ s/^\s+|\s+$//g;
 		$v =~ s/^\s+|\s+$//g;
-		my ($text, $bad) = _unescape($v);
-		defined $text or die diag(__("%s: %q line %s: bad escape %s"),
-			$prog, $file, $., $bad) . "\n";
+		my $text = unescape_make($v);
 		$O{$k} = $text;
 	}
 
@@ -202,22 +200,10 @@ Dies if a code point is above U+10FFFF.
 sub unescape_make
 {
 	my ($text) = @_;
-	my ($v, $bad) = _unescape($text);
-	defined $v or die diag(__("unescape_make: %q: bad escape %s"), $text, $bad) . "\n";
-	$v;
-}
-
-# (the characters, or undef and the escape that is no code point)
-sub _unescape
-{
-	my ($text) = @_;
-	my $bad;
 	$text =~ s{\$\{(?:(\$)|[Uu]\+([0-9A-Fa-f]{1,8}))\}}{
-		defined $1 ? '$'
-		: hex($2) <= 0x10FFFF ? chr hex $2
-		: do { $bad = "\${U+$2}" unless defined $bad; '' }
+		defined $1 ? '$' : chr hex $2
 	}ge;
-	defined $bad ? (undef, $bad) : ($text);
+	$text;
 }
 
 =item B<update_file> I<file>, I<text>

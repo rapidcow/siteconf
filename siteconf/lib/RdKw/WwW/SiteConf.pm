@@ -140,12 +140,14 @@ such names.  Quote the names in recipes with C<:Q>:
     MAKE all
         NEED my${U+0020}page.html
 
-In prerequisites, escaped characters and the known path variables
-C<${A}>, C<${B}>, C<${a}>, C<${b}>, C<${c}> and C<${@}>
-stay within one name.  Other variables still expand to lists of words.
-This does not change the word modifiers: C<:E>, C<:H>, C<:R>,
-C<:T> and ordinary C<:S> still operate on whitespace-separated
-words, including in C<${@}> and C<${<}>.  C<:Q> quotes the whole value.
+Words are told apart where they are written, never by what a variable
+holds: every word of a target or prerequisite list is one name, however
+many blanks its variables expand to, so C<-Dx='my dir'> makes C<${x}/a>
+one file, F<my dir/a>.  (A name that expands to nothing is an error.)
+Recipes are different, since they are for the shell: a variable there is
+text, and C<-DPY='python3 -m foo'> may be a command; C<:Q> quotes a
+value as a whole.  The word modifiers (C<:E>, C<:H>, C<:R>, C<:T>, C<:S>)
+take a value as one name, too: see L<RdKw::WwW::SiteConf::Modifiers>.
 
 Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along
@@ -685,7 +687,7 @@ sub read_manifest
 # where each one is in what we return, as [ offset, length ].
 sub _subst
 {
-	my ($self, $line, $node, $where, $src, $quoted, $literal) = @_;
+	my ($self, $line, $node, $where, $src, $quoted) = @_;
 	my $D = $self->{D};
 	my $out = '';
 	my $pos = 0;
@@ -763,36 +765,23 @@ sub _subst
 			($val, $slash) = ('', '');
 		}
 		push @$quoted, [ length $out, length $val ] if $q && $quoted;
-		# Code points and known paths are parts of one name, even when
-		# they contain blanks.  Ordinary variables can still be lists.
-		push @$literal, [ length $out, length($out) + length($val) ]
-			if $literal && $x =~ /\A(?:[Uu]\+.*|[ABabc@<]|\.TARGET|\.IMPSRC|\^X)\z/;
 		$out .= $val . $slash;
 	}
 	$out . substr($line, $pos);
 }
 
-# Split an expanded prerequisite without splitting literal characters or
-# known paths.  Keep offsets, rather than reserving a sentinel character.
-sub _subst_words
+# A prerequisite (or a source), as it is written in Makefile.in, expanded.
+# It is one name: words are told apart where they are written (see
+# _raw_words), never by what a variable holds, so `evil path' in ${x} is
+# one file, and a name that is empty is not a file at all.
+sub _subst_name
 {
-	my ($self, $line, $node, $where) = @_;
-	my @literal;
-	my $text = $self->_subst($line, $node, $where, undef, undef, \@literal);
-	my (@words, $word);
-	$word = '';
-	while ($text =~ /([^$SP]+|[$SP])/go) {
-		my ($part, $at) = ($1, $-[0]);
-		shift @literal while @literal && $literal[0][1] <= $at;
-		if ($part =~ /\A[$SP]\z/o && !(@literal && $literal[0][0] <= $at)) {
-			push @words, $word if length $word;
-			$word = '';
-		} else {
-			$word .= $part;
-		}
-	}
-	push @words, $word if length $word;
-	@words;
+	my ($self, $word, $node, $where) = @_;
+	my $name = $self->_subst($word, $node, $where);
+	length $name or die _say(E => diag(__(
+		# HEY!  The first %s is where, the second what is in Makefile.in
+		"%s: %q expands to nothing"), $where, $word));
+	$name;
 }
 
 # A target as Makefile.in spells it: `name' (in b), `${b}/name' or
@@ -915,15 +904,9 @@ sub _read_rules
 					my ($first) = $dep =~ /\A[$SP]*($WORD)/o;
 					if (defined $first and defined(my $from = _source_of($first))) {
 						# ${a} alone says there is none (and ${<} is not known)
-						my @name_of = $self->_subst_words($from, $name, $where);
-						my $name_of = @name_of ? $name_of[0] : '';
-						length $from and do {
-							@name_of == 1
-								or die _say(E => diag(__(
-									'%s: %q must be one name in ${a}'),
-									$where, $first));
-							_check_file($name_of, $where);
-						};
+						my $name_of = length $from
+							? $self->_subst_name($from, $name, $where) : '';
+						length $from and _check_file($name_of, $where);
 						$rule->{src} = $name_of;
 						$dep =~ s/\A[$SP]*\Q$first\E//;
 					}
@@ -946,7 +929,7 @@ sub _read_rules
 							$where, "$1:"));
 					}
 					push @{ $rule->{$kind} },
-						$self->_subst_words($word, $name, $where);
+						$self->_subst_name($word, $name, $where);
 				}
 			}
 			$recipe->($cmd) if defined $cmd;

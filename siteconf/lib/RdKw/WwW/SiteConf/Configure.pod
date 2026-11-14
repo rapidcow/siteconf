@@ -70,6 +70,15 @@ Unknown names are accepted for the project to interpret.  A preset may
 validate particular options.  C<-Dname> or C<-Oname> supplies an empty
 value; this is not a way to delete a saved key.
 
+A value may say a character as F<Makefile.in> and F<MANIFEST> do:
+C<${U+0020}> (or C<${U+20}>) is a space, C<${U+000A}> a newline, and C<${$}>
+a C<$>.  That is the only way to give what a line cannot hold, and to
+say that a space is a space and not a separator, as in
+C<-Devil_path='evil${U+20}path'> (here the quotes are for the shell, and
+C<-Devil_path='evil path'> says the same).  A C<$> that comes before a C<{>
+must be written C<${$}>, to say that it is no escape.  The saved files say
+the same: see L</FILES>.
+
 =head2 Saved values and defaults
 
 Each invocation reads the existing configuration in the selected build
@@ -323,6 +332,12 @@ can configure it without regenerating the script.
 =item F<${B}/MY/config.mk>
 
 Saved filesystem definitions.  C<A> and C<B> are recalculated on every run.
+A line is a name, an equals sign, and a value, which is as it was given
+but for what a line cannot hold: a control, a format character, any white
+space but a lone space between other characters (a space at either end,
+or two together, are not) become C<${U+XXXX}> and a C<$> before a C<{>
+becomes C<${$}>.  Letters of any script are left alone.  The generated
+build scripts do not read this file: they say all of it themselves.
 
 =item F<${B}/MY/option.mk>
 

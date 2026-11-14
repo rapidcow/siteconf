@@ -10,7 +10,7 @@ use Cwd ();
 my $script = script_path();
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
-plan tests => 38;
+plan tests => 38 + 12;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -130,5 +130,33 @@ sub cof {
 	run('configure', '-q', '--reset', '-Db=site', '-Dc=site');
 	run('configure', '-q', '-Db=other');
 	is(cof('.'), 'other', 'an explicit c equal to b still means no distinction');
+	chdir $here or die;
+}
+
+# --- values: what a line cannot hold is ${U+XXXX}, and -D says it so too
+{
+	my $here = Cwd::getcwd();
+	mkdir 'esc' or die; chdir 'esc' or die;
+	($status, $out) = run($script, 'init');
+	is($status, 0, 'init (escapes)') or diag $out;
+	sub slurp { open my $fh, '<:encoding(UTF-8)', $_[0] or die "$_[0]: $!"; local $/; <$fh> }
+
+	($status, $out) = run('configure', '-q', '-Dx=a${U+20}b', '-Dy=my dir/sub dir', '-Dz=a${$}{U+20}b',
+		"-Dnl=a\nb", '-Dlead= x', '-Oo=t${u+09}ab');
+	is($status, 0, 'configure with escapes') or diag $out;
+	my $conf = slurp('MY/config.mk');
+	like($conf, qr/^x=\ta b$/m, '${U+20} in -D is a space; a lone one is written as it is');
+	like($conf, qr/^y=\tmy dir\/sub dir$/m, 'a space between others stays');
+	like($conf, qr/^z=\ta\$\{\$\}\{U\+20\}b$/m, '${$} before { is a literal $, and written so');
+	like($conf, qr/^nl=\ta\$\{U\+000A\}b$/m, 'a newline is written as an escape, not refused');
+	like($conf, qr/^lead=\t\$\{U\+0020\}x$/m, 'a space at the end is too');
+	like(slurp('MY/option.mk'), qr/^o=\tt\$\{U\+0009\}ab$/m, 'so is a tab in -O');
+	($status, $out) = run('configure', '-q');
+	is($status, 0, 'configure again, from what was saved') or diag $out;
+	like(slurp('MY/config.mk'), qr/^nl=\ta\$\{U\+000A\}b$/m, '... and it reads and writes back the same');
+
+	($status, $out) = run('configure', '-q', '-Dbad=${U+110000}');
+	isnt($status, 0, 'no such code point');
+	like($out, qr/-Dbad: .*bad escape \$\{U\+110000\}/, '... and says which');
 	chdir $here or die;
 }

@@ -59,6 +59,7 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 our @EXPORT_OK = qw(
 	read_make write_make
+	escape_make unescape_make
 	update_file load_state
 	read_deps
 	norm_deps norm_dep
@@ -73,25 +74,33 @@ our @EXPORT_OK = qw(
 
 =over
 
-=item B<read_make> I<file>
+=item B<read_make> I<file>[, I<prog>]
 
 This reads user-configured B<MY/*.mk> files.
 They're kind of like DOS-INI / GNU libconfini, but
-well... dumber.  Namely, we implement no escapes,
+well... dumber.  Namely, there is no line continuation,
 and whitespaces are heartlessly stripped.  And
-certainly no line continuation.  We also want to
+certainly no comments but whole lines.  We also want to
 see C<=>, which is admittedly unnecessary, but
 that's what we call ourselves: read L<make(1)>-like
 declarations.  Helps keep the mind sane. ;D
+
+A value says the characters it cannot spell, as a header does:
+C<${U+0020}> is a space and C<${$}> a C<$> (see B<unescape_make>).
+A name is as it is.
+
+I<prog>, what we are called when we cannot spell I<file> for the
+file system, is C<read_make> unless said otherwise.
 
 =cut
 
 sub read_make
 {
 	local ($_, $.);
-	my ($file) = @_;
+	my ($file, $prog) = @_;
+	defined $prog or $prog = 'read_make';
 
-	open my $fh, '<', to_fs($file, { prog => 'read_make' })
+	open my $fh, '<', to_fs($file, { prog => $prog })
 		or die diag(__("read_make: cannot open file %q: %m"), $file) . "\n";
 	binmode $fh, ':encoding(UTF-8)';
 
@@ -102,7 +111,10 @@ sub read_make
 		defined $v or die diag(__("read_make: %q line %s: no `='"), $file, $.) . "\n";
 		$k =~ s/^\s+|\s+$//g;
 		$v =~ s/^\s+|\s+$//g;
-		$O{$k} = $v;
+		my ($text, $bad) = _unescape($v);
+		defined $text or die diag(__("%s: %q line %s: bad escape %s"),
+			$prog, $file, $., $bad) . "\n";
+		$O{$k} = $text;
 	}
 
 	close $fh;
@@ -113,7 +125,7 @@ sub read_make
 
 The reverse of B<read_make>, through B<update_file>.  Keys are
 sorted by length, then alphabetically.  I<prog> is credited in the
-header comment.
+header comment.  Values are escaped by B<escape_make>.
 
 =cut
 
@@ -130,10 +142,82 @@ sub write_make
 		# (but let's not get into the topic of identity crisis...
 		# we're talking about SYNTACTICALLY invalid names here.))
 		$k =~ /\A[^\s=#]+\z/ or die diag(__("write_make: bad name: %q"), $k) . "\n";
-		$v =~ /[\r\n]/ and die diag(__("write_make: %q: value has a newline"), $k) . "\n";
-		$text .= "$k=\t$v\n";
+		$text .= "$k=\t" . escape_make($v) . "\n";
 	}
 	update_file($file, $text);
+}
+
+=item B<escape_make> I<value>
+
+I<value> as one line of a B<MY/*.mk> file can hold it, which is as it is
+but for what a line, a shell reading it, or a person reading it could
+take for something else.  A character that is a control, a format
+character (a zero-width joiner, a bidirectional override), a private use
+or surrogate code point, or any white space (even a no-break space)
+is C<${U+XXXX}>, and so is a space at either end of the value or next to
+another space.  A space with something else on both sides is just a space,
+and every other character, including those of any script, is itself.
+A C<$> is C<${$}> if a C<{> comes next, so that it cannot be taken for the
+start of an escape; any other C<$> is just a C<$>.
+
+This is much less than B<escape_dep> does, which escapes whatever means
+something to make, a shell or a header, because a file made for
+B<read_make> (and a shell loop that reads a line at a time) does not
+need to say any of that.  Names are never escaped.
+
+=cut
+
+sub escape_make
+{
+	my ($v) = @_;
+	defined $v or return '';
+	my $n = length $v;
+	my $out = '';
+	for my $i (0 .. $n - 1) {
+		my $c = substr $v, $i, 1;
+		if ($c eq ' ') {
+			$out .= $i > 0 && $i < $n - 1
+				&& substr($v, $i - 1, 1) ne ' ' && substr($v, $i + 1, 1) ne ' '
+				? ' ' : '${U+0020}';
+		} elsif ($c eq '$') {
+			$out .= substr($v, $i + 1, 1) eq '{' ? '${$}' : '$';
+		} elsif ($c =~ /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Z}]/) {
+			$out .= sprintf '${U+%04X}', ord $c;
+		} else {
+			$out .= $c;
+		}
+	}
+	$out;
+}
+
+=item B<unescape_make> I<text>
+
+The reverse of B<escape_make>: C<${U+XXXX}> (one to eight hexadecimal
+digits, and C<u+> will do) is the character of that code point, and C<${$}> is
+a C<$>.  Anything else, a C<$> that comes before a C<{> included, is itself.
+Dies if a code point is above U+10FFFF.
+
+=cut
+
+sub unescape_make
+{
+	my ($text) = @_;
+	my ($v, $bad) = _unescape($text);
+	defined $v or die diag(__("unescape_make: %q: bad escape %s"), $text, $bad) . "\n";
+	$v;
+}
+
+# (the characters, or undef and the escape that is no code point)
+sub _unescape
+{
+	my ($text) = @_;
+	my $bad;
+	$text =~ s{\$\{(?:(\$)|[Uu]\+([0-9A-Fa-f]{1,8}))\}}{
+		defined $1 ? '$'
+		: hex($2) <= 0x10FFFF ? chr hex $2
+		: do { $bad = "\${U+$2}" unless defined $bad; '' }
+	}ge;
+	defined $bad ? (undef, $bad) : ($text);
 }
 
 =item B<update_file> I<file>, I<text>

@@ -307,8 +307,7 @@ sub _blame
 # makes of it, is reserved too: see _clean_pattern.)
 my %reserved_goal = map { $_ => 1 } qw( Makefile MY );
 
-# White space, as make and the shell (and POSIX) know it: these six, and
-# nothing else.  A no-break space, say, is part of a name.
+# POSIX white space.
 my $SP = '\t\n\cK\f\r ';
 
 # A word of Makefile.in as it is written: a ${...} may hold spaces

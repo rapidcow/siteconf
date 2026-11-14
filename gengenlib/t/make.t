@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 13 + 22;
+use Test::More tests => 13 + 19;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -14,7 +14,7 @@ use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw(
 	read_make write_make update_file
-	escape_make unescape_make
+	escape_vars unescape_vars
 	load_state
 );
 
@@ -89,15 +89,12 @@ my $dir = tempdir(CLEANUP => 1);
 	open $fh, '>:encoding(UTF-8)', $f or die;
 	print $fh "a=\tx\${U+110000}\n";
 	close $fh;
-	ok(!eval { read_make($f); 1 }, 'read_make: no such code point');
-	like($@, qr/\Aread_make: .*\bline 1: bad escape \$\{U\+110000\}\n\z/, '... says where');
-	ok(!eval { read_make($f, 'configure'); 1 }, 'read_make: ... and who we are');
-	like($@, qr/\Aconfigure: /, '... as we are called');
+	ok(eval { read_make($f); 1 }, 'read_make: pass through');
 	ok(!eval { read_make("$dir/nonesuch.mk", 'configure'); 1 }, 'read_make: no file');
 }
-is(escape_make(undef), '', 'escape_make: undef is empty');
-is(unescape_make('a${U+0020}b${$}{x}'), 'a b${x}', 'unescape_make');
-ok(!eval { unescape_make('${U+FFFFFFFF}'); 1 }, 'unescape_make: no such code point');
+is(escape_vars(undef), undef, 'escape_vars: undef is undef');
+is(unescape_vars('a${U+0020}b${$}{x}'), 'a b${x}', 'unescape_vars');
+ok(eval { unescape_vars('${U+FFFFFFFF}'); 1 }, 'unescape_vars: pass through');
 
 # --- load_state
 {

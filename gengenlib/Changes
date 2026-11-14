@@ -2,6 +2,19 @@ Revision history of WwW-GenGenLib
 
 
 0.01_00  2026-11-13  RC
+    *** write_make and read_make hold any value.  What a line
+        cannot hold is ${U+XXXX} (and a $ before a { is ${$},
+        so that it is no escape): a control, a format character,
+        a private use code point, any white space, and a space
+        at either end or next to another.  A lone space between
+        other characters, and letters of any script, are as they
+        are.  Names are never escaped.  write_make no longer
+        refuses a value with a newline.  Files that have none of
+        these are the same as before.
+    + escape_make, unescape_make: that, for those who want to
+      say it themselves (it is far less than escape_dep does).
+    + read_make takes a prog, as write_make does: what it is
+      called when it cannot spell a file name for the system.
     *** Perl 5.8 is required.
     *** RdKw::I18N::CodeSets is required: what we say says names
         as it does (%q of diag: `name' if it is printable ASCII,

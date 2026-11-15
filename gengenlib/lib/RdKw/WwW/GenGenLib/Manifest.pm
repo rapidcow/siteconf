@@ -76,7 +76,7 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 =cut
 
 use Encode ();
-use RdKw::WwW::GenGenLib qw( subs_dep );
+use RdKw::WwW::GenGenLib qw( subs_dep tagmsg );
 
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
 # Use the same gettext domain as our parent GenGenLib.pm.
@@ -85,6 +85,11 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 # POSIX white space since [[:space:]] is too broad.
 # (This is the same character set used in SiteConf.pm)
 my $SP = '\t\n\cK\f\r ';
+
+# Our own name, given to everything we call (to_fs, subs_dep) so
+# that whatever they die with already says who's talking, and we
+# never have to guess at (or strip) a prefix we did not put there.
+my $PROG = 'read_manifest';
 
 =item B<read> I<file>
 
@@ -109,11 +114,11 @@ sub read
 	my $fh;
 	if (ref $file) {
 		open $fh, '<', $file
-			or die diag(__("read_manifest: cannot open string: %m")) . "\n";
+			or die tagmsg($PROG => diag(__("cannot open string: %m")));
 		$file = 'MANIFEST';
 	} else {
-		open $fh, '<', to_fs($file, { prog => 'read_manifest' })
-			or die diag(__("read_manifest: cannot open file %q: %m"), $file) . "\n";
+		open $fh, '<', to_fs($file, { prog => $PROG })
+			or die tagmsg($PROG => diag(__("cannot open file %q: %m"), $file));
 	}
 
 	my (@goal, %goal, $goal);
@@ -121,55 +126,58 @@ sub read
 		# HEY!  %#q is the file name of the faulty
 		# MANIFEST and %d is its lineno.
 		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
-			or die diag(__("read_manifest: %s: not UTF-8"),
-				_blame($file, $.)) . "\n";
+			or die tagmsg($PROG => diag(__("%s: not UTF-8"),
+				_blame($file, $.)));
 		s/(?:^|[$SP])#.*//so;
 		my ($kw, @arg) = /([^$SP]+)/go;
 		defined $kw or next;
 		if ($kw eq 'MAKE') {
-			@arg == 1 or die diag(__("read_manifest: %s: "
-				. "MAKE takes exactly one goal name"),
-				_blame($file, $.)) . "\n";
+			@arg == 1 or die tagmsg($PROG => diag(__(
+				"%s: MAKE takes exactly one goal name"),
+				_blame($file, $.)));
 			my $name = $arg[0];
 			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
-				or die diag(__("read_manifest: %s: bad goal name %q"),
-				_blame($file, $.), $name) . "\n";
-			$goal{$name} and die diag(__("read_manifest: %s: "
-				. "goal %q is already made"),
-				_blame($file, $.), $name) . "\n";
+				or die tagmsg($PROG => diag(__("%s: bad goal name %q"),
+				_blame($file, $.), $name));
+			$goal{$name} and die tagmsg($PROG => diag(__(
+				"%s: goal %q is already made"),
+				_blame($file, $.), $name));
 			push @goal, $goal = $goal{$name}
 				= { name => $name, need => [], want => [], line => $. };
 			next;
 		}
 		if ($kw eq 'NEED' or $kw eq 'WANT') {
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			$goal or die diag(__("read_manifest: %s: %s before any MAKE"),
-				_blame($file, $.), $kw) . "\n";
+			$goal or die tagmsg($PROG => diag(__("%s: %s before any MAKE"),
+				_blame($file, $.), $kw));
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			@arg == 1 or die diag(__("read_manifest: %s: %s takes exactly one file"
-				. " (use # for comments)"), _blame($file, $.), $kw) . "\n";
+			@arg == 1 or die tagmsg($PROG => diag(__("%s: %s takes exactly one file"
+				. " (use # for comments)"), _blame($file, $.), $kw));
 			my $name = eval { subs_dep(undef, $arg[0],
-				strict => 1, on_missing => 'croak') };
+				strict => 1, on_missing => 'croak', prog => $PROG) };
 			defined $name or do {
-				(my $why = $@) =~ s/\A\w+: //;
-				die diag(__("read_manifest: %s: %s"), _blame($file, $.), $why);
+				# We gave subs_dep our own name, so we know exactly
+				# what to take off before we say it again ourselves,
+				# this time with the line it happened on.
+				(my $why = $@) =~ s/\A\Q$PROG\E: //;
+				die tagmsg($PROG => diag(__("%s: %s"), _blame($file, $.), $why));
 			};
-			length $name or die diag(__("read_manifest: %s: %q is no name"),
-				_blame($file, $.), $arg[0]) . "\n";
-			$name =~ /\0/ and die diag(__("read_manifest: %s: %q has a NUL in it"),
-				_blame($file, $.), $arg[0]) . "\n";
+			length $name or die tagmsg($PROG => diag(__("%s: %q is no name"),
+				_blame($file, $.), $arg[0]));
+			$name =~ /\0/ and die tagmsg($PROG => diag(__("%s: %q has a NUL in it"),
+				_blame($file, $.), $arg[0]));
 			push @{ $goal->{lc $kw} }, { file => $name, line => $. };
 			next;
 		}
-		die diag(__("read_manifest: %s: expected MAKE, NEED or WANT, not %q"),
-			_blame($file, $.), $kw) . "\n";
+		die tagmsg($PROG => diag(__("%s: expected MAKE, NEED or WANT, not %q"),
+			_blame($file, $.), $kw));
 	}
-	close $fh or die diag(__("read_manifest: cannot read file %q: %m"), $file) . "\n";
+	close $fh or die tagmsg($PROG => diag(__("cannot read file %q: %m"), $file));
 	# HEY!  I (ethan/rc) didn't write this message.
 	# I'm frankly a bit surprised Claude made it
 	# a question... anyways go wild at it i don't
 	# really have any idea lol :v
-	@goal or die diag(__("read_manifest: %q: no goals; what should I make?"), $file) . "\n";
+	@goal or die tagmsg($PROG => diag(__("%q: no goals; what should I make?"), $file));
 	bless { file => $file, goals => \@goal, goal => \%goal }, $class;
 }
 
@@ -214,8 +222,8 @@ sub _goal
 {
 	my ($self, $name) = @_;
 	defined $name or return $self->{goals}[0];
-	$self->{goal}{$name} or die diag(__("read_manifest: %q: no goal %q"),
-		$self->{file}, $name) . "\n";
+	$self->{goal}{$name} or die tagmsg($PROG => diag(__("%q: no goal %q"),
+		$self->{file}, $name));
 }
 
 sub needed { map { $_->{file} } @{ $_[0]->_goal($_[1])->{need} } }

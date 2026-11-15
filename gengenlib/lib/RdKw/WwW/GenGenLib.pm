@@ -154,7 +154,7 @@ sub read_make
 		next if /^\s*#/ or /^\s*$/;
 		my ($k, $v) = split /=/, $_, 2;
 		defined $v or die tagmsg($prog => diag(__(
-			"%q line %d: missing `='"), $file, $.));
+			"%#q line %d: missing `='"), $file, $.));
 		$k =~ s/^[$SP]+|[$SP]+$//g;
 		$v =~ s/^[$SP]+|[$SP]+$//g;
 		my $text = unescape_vars($v);  # no $kwds
@@ -313,13 +313,13 @@ sub update_file
 	my ($tmp_fs, $file_fs) = map { to_fs($_, { prog => $prog }) } $tmp, $file;
 
 	open my $fh, '>:encoding(UTF-8)', $tmp_fs
-		or die diag("%#q: %s\n", diag($prog, __(
+		or die tagmsg($prog => diag(__(
 			"cannot create file %q: %m"), $tmp));
 	print $fh $text
-		or die diag("%#q: %s\n", diag($prog, __(
+		or die tagmsg($prog => diag(__(
 			"cannot write file %q: %m"), $tmp));
 	close $fh
-		or die diag("%#q: %s\n", diag($prog, __(
+		or die tagmsg($prog => diag(__(
 			"cannot write file %q: %m"), $tmp));
 
 	my $exists = -e $file_fs;
@@ -328,7 +328,7 @@ sub update_file
 		return 0;  # make it numeric so `>' isn't upset
 	}
 	rename $tmp_fs, $file_fs
-		or die diag("%#q: %s\n", diag($prog, __(
+		or die tagmsg($prog => diag(__(
 			"cannot rename %q to %q: %m"),
 			$tmp, $file));
 	$exists ? 1 : 2;
@@ -357,16 +357,14 @@ sub load_state
 		my $file = File::Spec->catfile($Bdir, "MY/$_.mk");
 		$file = File::Spec->canonpath($file);
 		unless (-f to_fs($file, { prog => $prog })) {
-			my $mesg = diag(__(
+			die tagmsg($prog => diag(__(
 			# HEY!  Keep a winky face in the translation ;)
 			# This message is likely to get seen by newbies,
 			# so we want to keep it fun.
 			"You have not configured! (no %q)\n"
-			. "You should ./configure first. ;)"), $file);
-			$mesg =~ s/^/diag("%#q", $prog)/gem;
-			die "$mesg\n";
+			. "You should ./configure first. ;)"), $file));
 		}
-		$S{$_} = { read_make($file, $prog) };
+		$S{$_} = { read_make($file, { prog => $prog }) };
 	}
 	%S;
 }
@@ -529,9 +527,9 @@ sub read_deps
 	my %I = ();
 
 	# (A name we cannot even spell is not missing: it is an error.)
-	open (my $fh, '<', to_fs($file, { prog => 'read_deps' })) or ($missing_ok
+	open (my $fh, '<', to_fs($file, { prog => $prog })) or ($missing_ok
 		? return ()
-		: die diag(__("read_deps: cannot open file %q: %m"), $file) . "\n");
+		: die tagmsg($prog => diag(__("cannot open file %q: %m"), $file)));
 
 	while (<$fh>) {
 		# Not UTF-8 is not text, and so has no header: give up on the
@@ -565,7 +563,7 @@ sub read_deps
 				# in... "you HAVE too many.  The hell are
 				# you tryin' to be, the whole universe?"
 				# Like that.
-				die diag(__("read_deps: %q line %s: You HAVE too many."), $file, $.) . "\n"
+				die tagmsg($prog => diag(__("%#q line %d: You HAVE too many."), $file, $.))
 					if @list > 1 or exists $I{$type};
 				$I{HAVE} = $list[0];
 			} else {
@@ -580,7 +578,7 @@ sub read_deps
 	}
 
 	if ($fh->error()) {
-		die diag(__("read_deps: cannot read file %q: %m"), $file) . "\n";
+		die tagmsg($prog => diag(__("cannot read file %q: %m"), $file));
 	}
 
 	close $fh;

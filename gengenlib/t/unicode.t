@@ -48,7 +48,7 @@ is($bad, "x\x{D800}", '... leaving the name be');
 # --- update_file, write_make, read_make: the name on disk is the locale's
 {
 	my $f = "$udir/ß.mk";
-	cmp_ok(write_make($f, { name => 'résumé' }, 'test'), '==', 2, 'write_make: created');
+	cmp_ok(write_make($f, { name => 'résumé' }, { prog => 'test' }), '==', 2, 'write_make: created');
 	ok(-f fs($f), '... under its locale name');
 	is_deeply({ read_make($f) }, { name => 'résumé' }, 'read_make: by character name');
 	cmp_ok(update_file($f, "#\n# configured by `test'\n#\nname=\trésumé\n"), '==', 0,
@@ -59,7 +59,7 @@ is($bad, "x\x{D800}", '... leaving the name be');
 {
 	mkdir fs("$udir/ディレクトリ") or die $!;
 	mkdir fs("$udir/ディレクトリ/MY") or die $!;
-	write_make("$udir/ディレクトリ/MY/$_.mk", { a => 'ディレクトリ' }, 'test')
+	write_make("$udir/ディレクトリ/MY/$_.mk", { a => 'ディレクトリ' }, { prog => 'test' })
 		for qw( config option );
 	my %S = eval { load_state("$udir/ディレクトリ") };
 	is($S{config}{a}, 'ディレクトリ', 'load_state: in a directory of any name') or diag $@;

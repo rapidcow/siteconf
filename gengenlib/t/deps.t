@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 132;
+use Test::More tests => 133;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -243,14 +243,17 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 	is(subs_dep({ a => 's' }, '${U+002F}${a}/x'), '/s/x', '${U+002F} is a slash, before a directory too');
 	is_deeply([ split_dep('${U+0041}/x') ], [ '', '${U+0041}/x' ], 'split_dep: no root');
 	is_deeply([ split_dep('${a}/${U+0041}/x') ], [ '${a}', '${U+0041}/x' ], '... after one either');
-	for my $bad ('${U+110000}', '${U+}', '${U+123456789}', '${U+x}', '${u+-1}') {
-		ok(!defined eval { norm_dep("x$bad", strict => 1) } && $@ =~ /is no code point/,
+	for my $bad ('${U+100000000}', '${U+}', '${U+123456789}', '${U+x}', '${u+-1}') {
+		ok(!defined eval { norm_dep("x$bad", strict => 1) } && $@ =~ /bad Unicode code point/,
 			"strict: no code point: $bad");
 	}
-	(my $lit = '${U+110000}') =~ s/\A\$/\${\$}/;
-	is(norm_dep('${U+110000}'), $lit, 'not strict: a literal $');
-	is(norm_dep('${U+110000}', pass_thru => 1), '${U+110000}', 'pass_thru: as it is');
-	is(subs_dep(undef, '${U+110000}'), '${U+110000}', '... and so subs_dep gives it back');
+	# Beyond Unicode (past U+10FFFF) is still a code point, as long
+	# as it fits an unsigned 32-bit int (up to U+FFFFFFFF) -- we are
+	# not validating Unicode here, just parsing an escape.
+	is(norm_dep('${U+110000}'), '${U+110000}', 'not Unicode, but still a code point: unchanged');
+	is(norm_dep('${U+FFFFFFFF}'), '${U+FFFFFFFF}', '... up to the top of an unsigned 32-bit int');
+	is(norm_dep('${U+110000}', pass_thru => 1), '${U+110000}', 'pass_thru: still recognized, unchanged all the same');
+	is(subs_dep(undef, '${U+110000}'), chr(0x110000), '... and so subs_dep gives back the character itself');
 	require RdKw::WwW::GenGenLib;
 	ok(!RdKw::WwW::GenGenLib::follow_ok({ a => 's' }, '${a}/${U+002E}${U+002E}/${U+002E}${U+002E}/etc'),
 		'follow_ok: a climb by code point is a climb');

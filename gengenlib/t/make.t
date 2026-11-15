@@ -23,7 +23,7 @@ my $dir = tempdir(CLEANUP => 1);
 # --- write_make / read_make / update_file
 {
 	my $f = "$dir/x.mk";
-	cmp_ok(write_make($f, { b => 'site', aa => 'a b', c => 'é' }, 'test'),
+	cmp_ok(write_make($f, { b => 'site', aa => 'a b', c => 'é' }, { prog => 'test' }),
 		'==', 2, 'write_make creates');
 	is_deeply({ read_make($f) }, { b => 'site', aa => 'a b', c => 'é' },
 		'read_make reads it back');
@@ -32,13 +32,13 @@ my $dir = tempdir(CLEANUP => 1);
 
 	# Preserve the mtime of an unchanged file.
 	utime 1000000000, 1000000000, $f;
-	cmp_ok(write_make($f, { b => 'site', aa => 'a b', c => 'é' }, 'test'),
+	cmp_ok(write_make($f, { b => 'site', aa => 'a b', c => 'é' }, { prog => 'test' }),
 		'==', 0, 'unchanged');
 	is((stat $f)[9], 1000000000, 'mtime kept');
-	cmp_ok(write_make($f, { b => 'docs' }, 'test'),
+	cmp_ok(write_make($f, { b => 'docs' }, { prog => 'test' }),
 		'==', 1, 'changed');
 	ok(!-e "$dir/tmp-x.mk", 'no temporary left behind');
-	ok(!eval { write_make($f, { 'a=b' => 1 }, 'test'); 1 }, 'bad name refused');
+	ok(!eval { write_make($f, { 'a=b' => 1 }, { prog => 'test' }); 1 }, 'bad name refused');
 }
 
 # --- values say what a line cannot hold
@@ -63,7 +63,7 @@ my $dir = tempdir(CLEANUP => 1);
 		lit    => 'a${U+20}b ${$}',         # what looks like an escape, spelled out
 		empty  => '',
 	);
-	cmp_ok(write_make($f, \%v, 'test'), '==', 2, 'write_make: any value');
+	cmp_ok(write_make($f, \%v, { prog => 'test' }), '==', 2, 'write_make: any value');
 	is_deeply({ read_make($f) }, \%v, 'read_make: all of them back');
 	my $text = do { open my $fh, '<:encoding(UTF-8)', $f or die; local $/; <$fh> };
 	my %line = $text =~ /^(\w+)=\t(.*)$/mg;
@@ -78,7 +78,7 @@ my $dir = tempdir(CLEANUP => 1);
 	is($line{lit}, 'a${$}{U+20}b ${$}{$}', 'an escape that is not one is spelled out');
 	is($text =~ tr/\n//, 3 + keys %v, 'a line for each, and no more');
 
-	cmp_ok(write_make($f, \%v, 'test'), '==', 0, 'the same values, the same file');
+	cmp_ok(write_make($f, \%v, { prog => 'test' }), '==', 0, 'the same values, the same file');
 
 	# written by hand: any case, any width
 	open my $fh, '>:encoding(UTF-8)', $f or die;
@@ -90,7 +90,7 @@ my $dir = tempdir(CLEANUP => 1);
 	print $fh "a=\tx\${U+110000}\n";
 	close $fh;
 	ok(eval { read_make($f); 1 }, 'read_make: pass through');
-	ok(!eval { read_make("$dir/nonesuch.mk", 'configure'); 1 }, 'read_make: no file');
+	ok(!eval { read_make("$dir/nonesuch.mk", { prog => 'configure' }); 1 }, 'read_make: no file');
 }
 is(escape_vars(undef), undef, 'escape_vars: undef is undef');
 is(unescape_vars('a${U+0020}b${$}{x}'), 'a b${x}', 'unescape_vars');
@@ -101,8 +101,8 @@ ok(eval { unescape_vars('${U+FFFFFFFF}'); 1 }, 'unescape_vars: pass through');
 	mkdir "$dir/MY" or die;
 	ok(!eval { load_state($dir); 1 }, 'unconfigured');
 	like($@, qr/not configured/, '... says so');
-	write_make("$dir/MY/config.mk", { a => 'html' }, 't');
-	write_make("$dir/MY/option.mk", { base_url => '/' }, 't');
+	write_make("$dir/MY/config.mk", { a => 'html' }, { prog => 't' });
+	write_make("$dir/MY/option.mk", { base_url => '/' }, { prog => 't' });
 	my ($D, $O) = @{+{ load_state($dir) }}{ qw(config option) };
 	is($D->{a}, 'html', 'D from config.mk');
 	is($O->{base_url}, '/', 'O from option.mk');

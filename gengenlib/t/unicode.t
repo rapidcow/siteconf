@@ -2,10 +2,10 @@
 #
 # t/unicode.t - file names are characters, spelled as CodeSets says
 
+use utf8;
 use 5.008;
 use strict;
 use warnings;
-use utf8;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";

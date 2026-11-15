@@ -2,10 +2,10 @@
 #
 # t/make.t - make file serialization and MY/*.mk state tests
 
+use utf8;
 use 5.006;
 use strict;
 use warnings;
-use utf8;
 use Test::More tests => 13 + 19;
 use FindBin;
 use lib "$FindBin::Bin/lib";

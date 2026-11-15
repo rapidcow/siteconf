@@ -2,10 +2,10 @@
 #
 # t/deps.t - dependency graph
 
+use utf8;
 use 5.006;
 use strict;
 use warnings;
-use utf8;
 use Test::More tests => 133;
 use FindBin;
 use lib "$FindBin::Bin/lib";

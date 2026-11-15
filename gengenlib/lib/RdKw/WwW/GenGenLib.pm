@@ -181,8 +181,12 @@ sub write_make
 	my $prog = _getprog(_getkwds(\@_), 'write_make');
 	my $kwds = { prog => $prog };
 	my ($file, $H) = @_;
-	my $text = RdKw::I18N::CodeSets->new( diag => 'ascii' )
-		->diag("#\n# configured by %q\n#\n", $prog);
+	# quoting with $cs->diag in case $prog contains
+	# a newline, and breaks the whole file for us.
+	my $text = defined $prog && length $prog
+		? RdKw::I18N::CodeSets->new(diag => 'ascii')
+		->diag("#\n# configured by %q\n#\n", $prog)
+		: "";
 	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
 		my $v = defined $H->{$k} ? $H->{$k} : '';
 		# HEY!  by bad we mean the make variable name contains

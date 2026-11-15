@@ -36,6 +36,7 @@ only say how else to spell them.
 =cut
 
 use RdKw::I18N::CodeSets::Functions qw( diag );
+use RdKw::WwW::GenGenLib 0.0100 qw( tagmsg );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
@@ -89,7 +90,7 @@ sub _name
 	my $c = $1;
 	require RdKw::WwW::SiteConf::GMake;
 	my $gnu_can = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
-	die RdKw::WwW::SiteConf::_say(E => diag($gnu_can
+	die tagmsg(E => diag($gnu_can
 		# HEY!  the %s is a character, as `$' or U+0020.
 		# You don't need to keep the ";)"; it's just
 		# reflexive for me as a tone indicator... :x

@@ -17,7 +17,7 @@ use Getopt::Long qw( GetOptions );
 
 # Pin GenGenLib 0.01 and its Unicode
 # dependency modules transitively.
-use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make unescape_make );
+use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make unescape_vars tagmsg );
 
 # Initialize locale and gettext.
 use RdKw::I18N::CodeSets ();
@@ -85,6 +85,26 @@ sub shell_quote
 
 my (%D, %O, $reset, $shutup, $mkpath, $prog, $usage);
 
+# A value says what it cannot spell as a header does: ${U+0020} is a
+# space, ${$} a $ (as MY/*.mk says them, which is where it goes).
+#
+# GenGenLib is dumb about ${U+...} on purpose: it lets a code point
+# above U+10FFFF through, as it does in a name.  We do not, as a
+# header does not (see the _subst of WwW::SiteConf).  What it would
+# not read as an escape at all (${U+zz}) it leaves alone; so do we.
+sub unescape_value
+{
+	my ($text) = @_;
+	# the same escapes, split the same way, as unescape_vars reads:
+	# so the ${U+110000} of `${$}{U+110000}' is no escape here either
+	while ($text =~ /\$\{(?:\$|([Uu]\+([0-9A-Fa-f]{1,8})))\}/g) {
+		defined $1 && hex($2) > 0x10FFFF
+			# HEY!  %s is what was written, as ${U+110000}.
+			and die $cs->diag(__("bad escape %s"), "\${$1}") . "\n";
+	}
+	unescape_vars($text);
+}
+
 # -Dname=val, -Oname=val (a lone -Dname is -Dname=)
 sub setter
 {
@@ -92,14 +112,12 @@ sub setter
 	sub {
 		my ($k, $v) = split(/=/, $_[1], 2);
 		# HEY!  %s is the option, -D or -O.
-		length $k or die $cs->diag("%#q: %s\n", "$prog: ",
+		length $k or die tagmsg($prog =>
 			$cs->diag(__("%s: empty name."), "-$S"));
-		# A value says what it cannot spell as a header does: ${U+0020}
-		# is a space, ${$} a $ (as MY/*.mk says them).
-		my $text = eval { unescape_make(defined $v ? $v : "") };
+		my $text = eval { unescape_value(defined $v ? $v : "") };
 		defined $text or do {
 			(my $why = $@) =~ s/\n\z//;
-			die $cs->diag("%#q: %s\n", "$prog: ", "-$S$k: $why");
+			die tagmsg($prog => "-$S$k: $why");
 		};
 		$H->{$k} = $text;
 	};

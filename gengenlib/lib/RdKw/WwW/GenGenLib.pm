@@ -674,7 +674,8 @@ the closing brace (there are no escapes in there), or C<$n>
 for a single word character as it is in L<siteconf(1)>; and
 C<$$> is a literal C<$>.  C<${U+>I<hex>C<}> is not a variable
 but a character, by its code point: 1 to 8 hex digits, in any
-case (and so is the C<U>), up to C<10FFFF>; it is normalized to
+case (and so is the C<U>), up to C<FFFFFFFF> (it fits an unsigned
+32-bit int; Unicode validity is not checked); it is normalized to
 C<${U+>I<HEX>C<}>, in capitals and of at least 4 digits, and the
 character is what B<subs_deps> gives (see B<escape_deps>).  Any
 other C<$> is malformed: a trailing one, an unterminated C<${>,
@@ -702,6 +703,9 @@ C<${U+...}> escapes added in 0.0100.
 sub _code_point
 {
 	my ($name) = @_;
+	# 8 hex digits caps this at 0xFFFFFFFF, i.e. it always
+	# fits in an unsigned 32-bit int; Unicode validity is
+	# not our concern here, so nothing above this is checked.
 	return unless $name =~ /\A[Uu]\+0*([0-9A-Fa-f]{1,8})\z/;
 	hex $1;
 }

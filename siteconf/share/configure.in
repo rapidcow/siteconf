@@ -278,13 +278,13 @@ my $Babs = un_fs(getcwd());
 unless ($reset) {
 	my %Dc = %D;   # cool times
 	my %Oc = %O;   # trade anyone?
-	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk", $prog) : ();
+	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk", { prog => $prog }) : ();
 	# A c that was the same as b (as it was last time: no distinction
 	# between build and cache, however it came to be) follows b, if b
 	# is now set to something else -- unless c is explicitly set.
 	$D{c} = $Dc{b} if !exists $Dc{c} && exists $Dc{b} && !isnull($D{c})
 		&& !isnull($D{b}) && $D{c} eq $D{b};
-	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk", $prog) : ();
+	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk", { prog => $prog }) : ();
 	@D{keys %Dc} = values %Dc;
 	@O{keys %Oc} = values %Oc;
 }
@@ -339,7 +339,7 @@ $D{e} =~ m!/! and die "E: " . $cs->diag(__(
 	"cannot mkdir %q: %m"), 'MY') . "\n";
 foreach my $f ([ config => \%D ], [ option => \%O ]) {
 	my ($name, $H) = @$f;
-	my $what = write_make("MY/$name.mk", $H, $prog);
+	my $what = write_make("MY/$name.mk", $H, { prog => $prog });
 	$what and print STDERR $cs->diag(
 		$what > 1 ? __("Writing %#q") : __("Updating %#q"),
 		"MY/$name.mk"), "\n" unless $shutup;

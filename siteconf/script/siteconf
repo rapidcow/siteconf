@@ -430,9 +430,10 @@ if ($vee) {
 		eval { require $path; 1 } or next;
 		my $name = $fren eq 'RdKw::WwW::SiteConf' ? $prog : $fren;
 		$name =~ s/^RdKw:://;
+		my $where = $vee > 2 ? " " . pq($INC{$path}) : "";
 		# Obtain version without using symbolic ref :x
 		my $ver = $fren->VERSION();
-		print "$name version " . (defined $ver ? $ver : '(none)') . "\n";
+		print "$name$where version " . (defined $ver ? $ver : '(none)') . "\n";
 	}
 	exit unless $vee > 2;
 

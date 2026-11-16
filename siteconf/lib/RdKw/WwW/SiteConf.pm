@@ -331,11 +331,14 @@ sub _words
 	$s =~ /([^$SP]+)/go;
 }
 
-=item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, quiet =E<gt> 1 ]
+=item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, quiet =E<gt> 1, strict =E<gt> 1 ]
 
 I<dir> is the build directory, as seen from the current directory.
 C<MY/config.mk> there must exist.  Warnings are not printed when
-I<quiet> is true.  I<D> overrides C<MY/config.mk> parameters.
+I<quiet> is true.  When I<strict> is true, a C<WANT> that cannot be
+had is an error (said even if I<quiet>), as it is for a C<NEED>,
+except that the build is still planned and written without it, and
+L</failed> says so afterwards.  I<D> overrides C<MY/config.mk> parameters.
 (C<F> and C<R>, whether from here or from there, are paths from the
 current directory, not from the project root.)
 
@@ -352,6 +355,7 @@ sub new
 	my $self = bless {
 		B => defined $arg{B} && length $arg{B} ? $arg{B} : '.',
 		quiet => $arg{quiet},
+		strict => $arg{strict},
 		goals => [ @{ $arg{goals} || [] } ],
 		prog => defined $arg{prog} ? $arg{prog} : 'siteconf',
 	}, $class;
@@ -419,6 +423,33 @@ sub _warn
 	my ($self, @mesg) = @_;
 	$self->{quiet} or print STDERR @mesg;
 }
+
+# A WANT that cannot be had: a warning, or (if strict) an error that
+# is said whatever quiet says, and remembered in `failed'.  The first
+# argument is the prefix of the message (see _soft_tag).
+sub _soft
+{
+	my ($self, @mesg) = @_;
+	if ($self->{strict}) {
+		$self->{failed}++;
+		print STDERR @mesg;
+	} else {
+		$self->_warn(@mesg);
+	}
+}
+
+# `W' for a warning, `E' for an error
+sub _soft_tag { $_[0]{strict} ? 'E' : 'W' }
+
+=item B<failed>
+
+True if the C<strict> build left out a C<WANT> (see L</new>), so that
+whoever runs us should exit with a failure status; always false
+otherwise.
+
+=cut
+
+sub failed { $_[0]{failed} ? 1 : 0 }
 
 # A path seen from the build directory, as a path we can open.
 sub _fs
@@ -1118,7 +1149,7 @@ sub _node
 			# is yours to keep; i added it because "W"
 			# felt like a weak indication of a soft dep
 			# failing....
-			$self->_warn(tagmsg(W => diag(__("target %q WANTs %q\n"
+			$self->_soft(tagmsg($self->_soft_tag => diag(__("target %q WANTs %q\n"
 				. "  (%s)\n"
 				. "... but it is missing; going on without it :("),
 				$file, $d->[1], $d->[2])));
@@ -1274,8 +1305,9 @@ sub plan
 						. $causes->('E:');
 				} else {
 					push @dropped, [ $file, $why ];
-					$self->_warn(tagmsg(W => diag(__("goal %q WANTs %q, but cannot be made:"),
-						$spec->{name}, $file)), $causes->('W:'));
+					my $tag = $self->_soft_tag;
+					$self->_soft(tagmsg($tag => diag(__("goal %q WANTs %q, but cannot be made:"),
+						$spec->{name}, $file)), $causes->("$tag:"));
 				}
 			}
 		}
@@ -1479,7 +1511,7 @@ sub generate
 		};
 	}
 
-	$plan->{prog} = "$self->{prog} -g -G $G" . join '', map {
+	$plan->{prog} = "$self->{prog} -g" . ($self->{strict} ? 'A' : '') . " -G $G" . join '', map {
 		" -$_ " . shell_quote($self->{fromhere}{$_})
 	} sort keys %{ $self->{fromhere} };
 	$plan->{prog} .= " -o " . shell_quote($out) if $named;

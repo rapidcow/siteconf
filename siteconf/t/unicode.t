@@ -159,16 +159,44 @@ spew("$C/Makefile.in", "ないもの.html:\n");
 spew("$C/MANIFEST", "MAKE all\n\tNEED ないもの.html\n");
 run($C, {}, $script, 'init', '-q');
 run($C, {}, 'configure', '-q', '-DB=build', '-Da=.');
+# Probe in a new interpreter: Encode::Locale has already cached this
+# process's locale, and C is not necessarily ASCII (notably on Termux).
+my ($probe_status, $probe) = run($C, { LC_ALL => 'C' },
+	'-MRdKw::I18N::CodeSets', '-e', q{
+		my $cs = RdKw::I18N::CodeSets->new;
+		$cs->parse_from_env('SITECONF_CODESETS');
+		print join("\n", $cs->encoding('argv'),
+			$cs->encoding('stderr'), $cs->diag_mode), "\n";
+	});
+$probe_status == 0 or BAIL_OUT("cannot probe C locale: $probe");
+my ($c_argv, $c_stderr, $c_diag) = split /\n/, $probe;
+sub rejects_argv
+{
+	my ($arg) = @_;
+	!eval {
+		Encode::decode($c_argv, spell(locale => $arg),
+			Encode::FB_CROAK() | Encode::LEAVE_SRC());
+		1;
+	};
+}
 ($status, $out) = run($C, { LC_ALL => 'C' }, $script, '-g', '-B', 'build');
 isnt($status, 0, 'a missing source is still missing');
-like($out, qr/\\x\{306a\}\\x\{3044\}\\x\{3082\}\\x\{306e\}\.html/,
-	'... and says so as \\x{...} where the locale cannot say it');
-unlike($out, qr/[^\x00-\x7f]/, '... in nothing but ASCII');
+SKIP: {
+	skip "C locale diagnostics use $c_diag ($c_stderr)", 2
+		unless $c_diag eq 'ascii' && $c_stderr eq Encode::find_encoding('ascii')->name;
+	like($out, qr/\\x\{306a\}\\x\{3044\}\\x\{3082\}\\x\{306e\}\.html/,
+		'... and says so as \\x{...} where the locale cannot say it');
+	unlike($out, qr/[^\x00-\x7f]/, '... in nothing but ASCII');
+}
 
 # (bytes, as a UTF-8 locale would have said `-Sa=é')
-($status, $out) = run($C, { LC_ALL => 'C' }, $script, 'init', '-o', '/dev/null',
-	Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
-like($out, qr/: cannot decode argv 4: /, 'unreadable arguments are an error');
+SKIP: {
+	skip "C locale argv ($c_argv) accepts these bytes", 1
+		unless rejects_argv(Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
+	($status, $out) = run($C, { LC_ALL => 'C' }, $script, 'init', '-o', '/dev/null',
+		Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
+	like($out, qr/: cannot decode argv 4: /, 'unreadable arguments are an error');
+}
 
 # --- SITECONF_CODESETS, and -C, say otherwise than the locale
 ($status, $out) = run($C, { SITECONF_CODESETS => 'console:ascii' }, $script, '-g', '-B', 'build');
@@ -191,8 +219,12 @@ like($out, qr/\Asiteconf: too late to -C now\./, '-C after anything else: too la
 like($out, qr/\Asiteconf: too late to -C now\./, '... even glued to it');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-C', 'argv:UTF-8');
 like($out, qr/\Aconfigure: too late to -C now\./, 'configure: too late, too');
-($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-DB=build', '-Dx=é');
-like($out, qr/: cannot decode argv 3: /, 'configure: unreadable arguments are an error');
+SKIP: {
+	skip "C locale argv ($c_argv) accepts these bytes", 1
+		unless rejects_argv('-Dx=é');
+	($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-DB=build', '-Dx=é');
+	like($out, qr/: cannot decode argv 3: /, 'configure: unreadable arguments are an error');
+}
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-C', 'argv:UTF-8', '-q', '-DB=build', '-Dx=é');
 is($status, 0, 'configure -C argv:UTF-8: reads them') or diag $out;
 is({ read_make("$C/build/MY/config.mk") }->{x}, 'é', '... as it says');

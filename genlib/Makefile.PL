@@ -21,7 +21,6 @@ my %WriteMakefileArgs = (
 		'Exporter' => '0',
 		'RdKw::I18N::CodeSets' => '0',
 		'RdKw::L10N::TextDomain' => '0',
-		'RdKw::WwW::GenGenLib' => '0',
 		'URI' => '0',
 		'URI::Escape' => '0',
 	},

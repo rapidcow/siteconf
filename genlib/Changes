@@ -8,7 +8,7 @@ Revision history of WwW-GenLib
 
     + parse_base takes prog => NAME, the prefix of its error
       messages (which was always `parse_base').  Prefixes are
-      put on by GenGenLib's tagmsg, so GenGenLib is required.
+      put on by RdKw::I18N::CodeSets' tagmsg.
 
 
 0.02_03  2026-11-09  RC

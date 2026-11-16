@@ -76,9 +76,9 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 =cut
 
 use Encode ();
-use RdKw::WwW::GenGenLib qw( subs_dep tagmsg );
+use RdKw::WwW::GenGenLib qw( subs_dep );
 
-use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 # Use the same gettext domain as our parent GenGenLib.pm.
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 

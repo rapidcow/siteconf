@@ -302,7 +302,8 @@ use IO::Handle ();  # for $fh->flush() prior to 5.014
 use Encode ();
 use RdKw::I18N::CodeSets ();
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-use RdKw::WwW::GenGenLib 0.01 qw( escape_dep read_manifest tagmsg );
+use RdKw::WwW::GenGenLib 0.01 qw( escape_dep read_manifest );
+use RdKw::I18N::CodeSets::Functions qw( tagmsg );
 use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
@@ -813,12 +814,12 @@ out:	while (my ($name, $dest) = each %out) {
 				"\n" unless $opt->{q};
 		}
 		$written{$name} = 1;
-		# HEY!  "Overwrote" clobbers a file the user
-		# explicitly lets us with -f, and "wrote" means
-		# the file is simply created.  I don't know why
-		# Claude felt the need to clarify this; this
-		# seems pretty clear to me. :/
 		print STDERR $cs->diag(
+			# HEY!  "Overwrote" clobbers a file the user
+			# explicitly lets us with -f, and "wrote" means
+			# the file is simply created.  I don't know why
+			# Claude felt the need to clarify this; this
+			# seems pretty clear to me. :/
 			$exists ? __("Overwrote %#q") : __("Wrote %#q"), $dest),
 			"\n" unless $opt->{q};
 	}

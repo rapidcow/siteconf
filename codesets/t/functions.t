@@ -6,7 +6,7 @@ use 5.008;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 14;
+use Test::More tests => 16;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -40,6 +40,8 @@ unsetenv('CODESETS_FUNCTIONS_T');
 ok(!exists $ENV{CODESETS_FUNCTIONS_T}, 'unsetenv');
 is(diag('%q', '炒饭'), '"\x{7092}\x{996d}"', 'diag: by the locale');
 is(diag_name('a.png'), "`a.png'", 'diag_name');
+is(tagmsg(E => "a\nb\n"), "E: a\nE: b\n", 'tagmsg');
+is(tagmsg(W => tagmsg(E => 'x')), "W: E: x\n", '... chained');
 {
 	$! = 2;
 	my $m = diag('%m');

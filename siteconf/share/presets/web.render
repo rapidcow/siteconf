@@ -35,12 +35,13 @@ use warnings;
 
 use Encode ();
 use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use Getopt::Long qw( GetOptions );
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_deps load_state
-	norm_dep subs_dep uproot tagmsg );
+	norm_dep subs_dep uproot );
 @USE_GENLIB@
 use Template;
 @USE_TT_EXC@@USE_PROVIDER@

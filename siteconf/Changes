@@ -25,6 +25,9 @@ Revision history of WwW-SiteConf
 
     * render reads its options with Getopt::Long (-B, -C; still
       -- before the files), not Getopt::Std.
+    + siteconf -g -A: a WANT that cannot be had is an error (E:,
+      even with -q) and the exit status is 1, though the build
+      file is still written without it.  Not for -i or -l.
     + siteconf -VV: prints even more versions.
     + siteconf -VVV: prints module/locale paths.
     + siteconf -l (list) [-F manifest] [-t [goal][:NEED|:WANT]]

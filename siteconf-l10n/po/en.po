@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 08:28-0600\n"
+"POT-Creation-Date: 2026-11-16 08:38-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -16,196 +16,202 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../siteconf/script/siteconf:334 ../siteconf/share/configure.in:206
-#: ../siteconf/share/presets/tem.render:63
-#: ../siteconf/share/presets/web.render:71
+#: ../siteconf/script/siteconf:335 ../siteconf/share/configure.in:207
+#: ../siteconf/share/presets/tem.render:64
+#: ../siteconf/share/presets/web.render:72
 #, perl-format
 msgid "usage: %s"
 msgstr "usage: %s"
 
-#: ../siteconf/script/siteconf:371 ../siteconf/share/configure.in:116
+#. HEY!  %s is the option, -D or -O.
+#: ../siteconf/script/siteconf:372 ../siteconf/share/configure.in:117
 #, perl-format
 msgid "%s: empty name."
 msgstr "%s: empty name."
 
-#: ../siteconf/script/siteconf:398 ../siteconf/share/configure.in:221
-#: ../siteconf/share/presets/tem.render:60
-#: ../siteconf/share/presets/web.render:68
+#: ../siteconf/script/siteconf:399 ../siteconf/share/configure.in:222
+#: ../siteconf/share/presets/tem.render:61
+#: ../siteconf/share/presets/web.render:69
 msgid "too late to -C now."
 msgstr "too late to -C now."
 
-#: ../siteconf/script/siteconf:431
+#: ../siteconf/script/siteconf:432
 #, perl-format
 msgid "conflicting modes: %s and %s"
 msgstr "conflicting modes: %s and %s"
 
-#: ../siteconf/script/siteconf:435 ../siteconf/share/configure.in:223
+#: ../siteconf/script/siteconf:436 ../siteconf/share/configure.in:224
 msgid "too many arguments"
 msgstr "too many arguments"
 
-#: ../siteconf/script/siteconf:443
+#: ../siteconf/script/siteconf:444
 msgid "named outputs are only for init"
 msgstr "named outputs are only for init"
 
-#: ../siteconf/script/siteconf:445
+#: ../siteconf/script/siteconf:446
 msgid "unknown output name: %q"
 msgstr "unknown output name: %q"
 
-#: ../siteconf/script/siteconf:447
+#: ../siteconf/script/siteconf:448
 msgid "empty output path"
 msgstr "empty output path"
 
-#: ../siteconf/script/siteconf:456
+#: ../siteconf/script/siteconf:457
 #, perl-format
 msgid "%s is not permitted in mode %s"
 msgstr "%s is not permitted in mode %s"
 
-#: ../siteconf/script/siteconf:525
+#: ../siteconf/script/siteconf:526
 msgid "%#q: not a valid ASCII octal code point"
 msgstr "%#q: not a valid ASCII octal code point"
 
-#: ../siteconf/script/siteconf:539 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1344
+#: ../siteconf/script/siteconf:540 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1344
 msgid "%q: expected NEED or WANT, not %q"
 msgstr "%q: expected NEED or WANT, not %q"
 
 #. HEY!  the %s is the separator, as the option that
 #. says it: -0 for a NUL, -012 for a newline
-#: ../siteconf/script/siteconf:548
+#: ../siteconf/script/siteconf:549
 msgid "%q: %q conflicts with record separator %s"
 msgstr "%q: %q conflicts with record separator %s"
 
-#: ../siteconf/script/siteconf:551 ../siteconf/script/siteconf:558
+#: ../siteconf/script/siteconf:552 ../siteconf/script/siteconf:559
 msgid "cannot write to stdout: %m"
 msgstr "cannot write to stdout: %m"
 
-#: ../siteconf/script/siteconf:569
+#: ../siteconf/script/siteconf:570
 msgid "cannot find %q (is WwW-SiteConf installed?)"
 msgstr "cannot find %q (is WwW-SiteConf installed?)"
 
-#: ../siteconf/script/siteconf:578 ../siteconf/lib/RdKw/WwW/SiteConf.pm:830
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:149
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:532
+#: ../siteconf/script/siteconf:579 ../siteconf/lib/RdKw/WwW/SiteConf.pm:830
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:127
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:510
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:121
 msgid "cannot open file %q: %m"
 msgstr "cannot open file %q: %m"
 
-#: ../siteconf/script/siteconf:580 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:581
+#: ../siteconf/script/siteconf:581 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:559
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:175
 msgid "cannot read file %q: %m"
 msgstr "cannot read file %q: %m"
 
-#: ../siteconf/script/siteconf:634
+#: ../siteconf/script/siteconf:635
 msgid "Host-relative base URL"
 msgstr "Host-relative base URL"
 
-#: ../siteconf/script/siteconf:635
+#: ../siteconf/script/siteconf:636
 msgid "Absolute base URL"
 msgstr "Absolute base URL"
 
 #. HEY!  %s is the option (-Sx), and then what it may be
-#: ../siteconf/script/siteconf:639
+#: ../siteconf/script/siteconf:640
 #, perl-format
 msgid "%s: no such thing (valid: %s)"
 msgstr "%s: no such thing (valid: %s)"
 
 #. HEY!  %s is an option, as -Sa (and likewise in the next few)
-#: ../siteconf/script/siteconf:643 ../siteconf/script/siteconf:663
+#: ../siteconf/script/siteconf:644 ../siteconf/script/siteconf:664
 #, perl-format
 msgid "%s may not be empty."
 msgstr "%s may not be empty."
 
-#: ../siteconf/script/siteconf:646 ../siteconf/script/siteconf:650
+#: ../siteconf/script/siteconf:647 ../siteconf/script/siteconf:651
 #, perl-format
 msgid "%s must be a relative path."
 msgstr "%s must be a relative path."
 
-#: ../siteconf/script/siteconf:655
+#: ../siteconf/script/siteconf:656
 #, perl-format
 msgid "%s and %s are the same thing; pick one."
 msgstr "%s and %s are the same thing; pick one."
 
-#: ../siteconf/script/siteconf:669
+#: ../siteconf/script/siteconf:670
 msgid "bad preset name: %q"
 msgstr "bad preset name: %q"
 
-#: ../siteconf/script/siteconf:671
+#: ../siteconf/script/siteconf:672
 msgid "no such preset: %q"
 msgstr "no such preset: %q"
 
 #. HEY!  %s is the option, as -MModule=version (here and
 #. in the next four)
-#: ../siteconf/script/siteconf:690
+#: ../siteconf/script/siteconf:691
 #, perl-format
 msgid "%s: bad module name"
 msgstr "%s: bad module name"
 
-#: ../siteconf/script/siteconf:692
+#: ../siteconf/script/siteconf:693
 #, perl-format
 msgid "%s: no version for what is dropped"
 msgstr "%s: no version for what is dropped"
 
-#: ../siteconf/script/siteconf:695
+#: ../siteconf/script/siteconf:696
 #, perl-format
 msgid "%s: bad version"
 msgstr "%s: bad version"
 
-#: ../siteconf/script/siteconf:698
+#: ../siteconf/script/siteconf:699
 #, perl-format
 msgid "%s: configure always needs it"
 msgstr "%s: configure always needs it"
 
-#: ../siteconf/script/siteconf:702
+#: ../siteconf/script/siteconf:703
 #, perl-format
 msgid "%s: version %s or later is required"
 msgstr "%s: version %s or later is required"
 
-#: ../siteconf/script/siteconf:736
+#: ../siteconf/script/siteconf:737
 msgid "preset does not supply a render output"
 msgstr "preset does not supply a render output"
 
-#: ../siteconf/script/siteconf:742
+#: ../siteconf/script/siteconf:743
 msgid "dangerous name for render: %q is not supported (yet)"
 msgstr "dangerous name for render: %q is not supported (yet)"
 
-#: ../siteconf/script/siteconf:785
+#: ../siteconf/script/siteconf:786
 msgid "Not changing %#q"
 msgstr "Not changing %#q"
 
-#: ../siteconf/script/siteconf:791
+#: ../siteconf/script/siteconf:792
 msgid "cannot remove %q: %m"
 msgstr "cannot remove %q: %m"
 
-#: ../siteconf/script/siteconf:804 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:317
+#: ../siteconf/script/siteconf:805 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:295
 msgid "cannot create file %q: %m"
 msgstr "cannot create file %q: %m"
 
-#: ../siteconf/script/siteconf:807 ../siteconf/script/siteconf:809
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:320
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:323
+#: ../siteconf/script/siteconf:808 ../siteconf/script/siteconf:810
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:298
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:301
 msgid "cannot write file %q: %m"
 msgstr "cannot write file %q: %m"
 
-#: ../siteconf/script/siteconf:812
+#: ../siteconf/script/siteconf:813
 msgid "cannot chmod %q: %m"
 msgstr "cannot chmod %q: %m"
 
-#: ../siteconf/script/siteconf:822
+#. HEY!  "Overwrote" clobbers a file the user
+#. explicitly lets us with -f, and "wrote" means
+#. the file is simply created.  I don't know why
+#. Claude felt the need to clarify this; this
+#. seems pretty clear to me. :/
+#: ../siteconf/script/siteconf:823
 msgid "Overwrote %#q"
 msgstr "Overwrote %#q"
 
-#: ../siteconf/script/siteconf:822
+#: ../siteconf/script/siteconf:823
 msgid "Wrote %#q"
 msgstr "Wrote %#q"
 
-#: ../siteconf/script/siteconf:827
+#: ../siteconf/script/siteconf:828
 msgid "You already have configure."
 msgstr "You already have configure."
 
-#: ../siteconf/script/siteconf:828
+#: ../siteconf/script/siteconf:829
 msgid "You already have configure at %q."
 msgstr "You already have configure at %q."
 
-#: ../siteconf/script/siteconf:830
+#: ../siteconf/script/siteconf:831
 msgid ""
 "Pass -o /dev/null if you did mean to not generate configure,\n"
 "or -f to overwrite the existing one."
@@ -237,8 +243,8 @@ msgstr "%q: %q is missing.  Try reconfiguring."
 #. HEY!  %q is a variable of config.mk: `b' or `c', which are where
 #. what we make goes (the target tree, and the cache)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:386
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:391 ../siteconf/share/configure.in:320
-#: ../siteconf/share/configure.in:332
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:391 ../siteconf/share/configure.in:321
+#: ../siteconf/share/configure.in:333
 msgid "%q prefix must be a relative path."
 msgstr "%q prefix must be a relative path."
 
@@ -370,7 +376,8 @@ msgstr "%s: null target list"
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:912
 msgid ""
 "%s: %q: a prerequisite must start with either `NEED:' or `WANT:', not %q"
-msgstr "%s: %q: a prerequisite must start with either `NEED:' or `WANT:', not %q"
+msgstr ""
+"%s: %q: a prerequisite must start with either `NEED:' or `WANT:', not %q"
 
 #. HEY!  %q is `NEED:' or `WANT:', literally.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:917
@@ -539,7 +546,7 @@ msgstr "bad output name %q: stay in the build directory please"
 msgid "Removing %q"
 msgstr "Removing %q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1497 ../siteconf/share/configure.in:353
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1497 ../siteconf/share/configure.in:354
 msgid "Done!"
 msgstr "Done!"
 
@@ -549,11 +556,18 @@ msgstr "Done!"
 msgid "To build, run: %s"
 msgstr "To build, run: %s"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1516 ../siteconf/share/configure.in:342
+#. HEY!  ``Writing'' creates the file, and
+#. ``Updating'' overwrites it.   (The phrasing
+#. is different from what we call it over at
+#. `siteconf -i', primarily because MY/MANIFEST
+#. is considered to be our files, so it is
+#. assumed that the state prior to updating is
+#. consistent with the state now.)
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1516 ../siteconf/share/configure.in:343
 msgid "Writing %#q"
 msgstr "Writing %#q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1517 ../siteconf/share/configure.in:342
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1517 ../siteconf/share/configure.in:343
 msgid "Updating %#q"
 msgstr "Updating %#q"
 
@@ -570,7 +584,7 @@ msgstr "GNU make cannot name %q (reserved for archive members)"
 #. HEY!  the %s is a character, as `$' or U+0020.
 #. You don't need to keep the ";)"; it's just
 #. reflexive for me as a tone indicator... :x
-#: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:97
+#: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:96
 msgid ""
 "make cannot name %q (with inescapable %s),\n"
 "... but GNU Make can!  (Pass -G gmake if you want that. ;)"
@@ -578,7 +592,7 @@ msgstr ""
 "make cannot name %q (with inescapable %s),\n"
 "... but GNU Make can!  (Pass -G gmake if you want that. ;)"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:99
+#: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:98
 msgid "make cannot name %q (with inescapable %s)"
 msgstr "make cannot name %q (with inescapable %s)"
 
@@ -618,17 +632,17 @@ msgstr "%q: no recipe to make it (and ninja has no way to make nothing)"
 msgid "ninja cannot name %q (with inescapable %s)"
 msgstr "ninja cannot name %q (with inescapable %s)"
 
-#: ../siteconf/share/configure.in:51
+#: ../siteconf/share/configure.in:52
 #, perl-format
 msgid "missing %s"
 msgstr "missing %s"
 
-#: ../siteconf/share/configure.in:55
+#: ../siteconf/share/configure.in:56
 #, perl-format
 msgid "%s: version %s required (this is %s)"
 msgstr "%s: version %s required (this is %s)"
 
-#: ../siteconf/share/configure.in:64
+#: ../siteconf/share/configure.in:65
 #, perl-format
 msgid "%d module missing.  Looks like you got some work to do..."
 msgid_plural "%d modules missing.  Looks like you got some work to do..."
@@ -636,91 +650,91 @@ msgstr[0] "%d module missing.  Looks like you got some work to do..."
 msgstr[1] "%d modules missing.  Looks like you got some work to do..."
 
 #. HEY!  %s is what was written, as ${U+110000}.
-#: ../siteconf/share/configure.in:103
+#: ../siteconf/share/configure.in:104
 #, perl-format
 msgid "bad escape %s"
 msgstr "bad escape %s"
 
-#: ../siteconf/share/configure.in:156
+#: ../siteconf/share/configure.in:157
 msgid "Project root, seen from current directory"
 msgstr "Project root, seen from current directory"
 
-#: ../siteconf/share/configure.in:157
+#: ../siteconf/share/configure.in:158
 msgid "Build directory, seen from the source tree"
 msgstr "Build directory, seen from the source tree"
 
-#: ../siteconf/share/configure.in:158
+#: ../siteconf/share/configure.in:159
 msgid "Source directory, seen from the source tree"
 msgstr "Source directory, seen from the source tree"
 
-#: ../siteconf/share/configure.in:159
+#: ../siteconf/share/configure.in:160
 msgid "Target directory, seen from the build directory"
 msgstr "Target directory, seen from the build directory"
 
-#: ../siteconf/share/configure.in:160
+#: ../siteconf/share/configure.in:161
 msgid "Cache directory, seen from the build directory"
 msgstr "Cache directory, seen from the build directory"
 
-#: ../siteconf/share/configure.in:162
+#: ../siteconf/share/configure.in:163
 msgid "Transformation rules, from current directory"
 msgstr "Transformation rules, from current directory"
 
-#: ../siteconf/share/configure.in:163
+#: ../siteconf/share/configure.in:164
 msgid "Manifest, from current directory"
 msgstr "Manifest, from current directory"
 
-#: ../siteconf/share/configure.in:164
+#: ../siteconf/share/configure.in:165
 msgid "Directory marker"
 msgstr "Directory marker"
 
-#: ../siteconf/share/configure.in:165
+#: ../siteconf/share/configure.in:166
 msgid "Clean rule template"
 msgstr "Clean rule template"
 
-#: ../siteconf/share/configure.in:170
+#: ../siteconf/share/configure.in:171
 msgid "Code sets overrides (see I18N::CodeSets)"
 msgstr "Code sets overrides (see I18N::CodeSets)"
 
-#: ../siteconf/share/configure.in:171
+#: ../siteconf/share/configure.in:172
 msgid "This help message"
 msgstr "This help message"
 
-#: ../siteconf/share/configure.in:172
+#: ../siteconf/share/configure.in:173
 msgid "Clear all configuration at this point"
 msgstr "Clear all configuration at this point"
 
-#: ../siteconf/share/configure.in:173
+#: ../siteconf/share/configure.in:174
 msgid "Disable tips"
 msgstr "Disable tips"
 
-#: ../siteconf/share/configure.in:174
+#: ../siteconf/share/configure.in:175
 msgid "Create non-leaf build directory components"
 msgstr "Create non-leaf build directory components"
 
-#: ../siteconf/share/configure.in:188
+#: ../siteconf/share/configure.in:189
 #, perl-format
 msgid "%s (default: %s)"
 msgstr "%s (default: %s)"
 
-#: ../siteconf/share/configure.in:189
+#: ../siteconf/share/configure.in:190
 #, perl-format
 msgid "(default: %s)"
 msgstr "(default: %s)"
 
-#: ../siteconf/share/configure.in:193
+#: ../siteconf/share/configure.in:194
 #, perl-format
 msgid "%s (alias: %s)"
 msgstr "%s (alias: %s)"
 
-#: ../siteconf/share/configure.in:208
+#: ../siteconf/share/configure.in:209
 msgid "The following variables may be defined:"
 msgstr "The following variables may be defined:"
 
-#: ../siteconf/share/configure.in:210
+#: ../siteconf/share/configure.in:211
 msgid "Options with defaults:"
 msgstr "Options with defaults:"
 
-#: ../siteconf/share/configure.in:211
+#: ../siteconf/share/configure.in:212
 msgid ""
 "Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
 "respectively, for the rulebook or for the files being transformed."
@@ -728,43 +742,44 @@ msgstr ""
 "Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
 "respectively, for the rulebook or for the files being transformed."
 
-#: ../siteconf/share/configure.in:214
+#: ../siteconf/share/configure.in:215
 msgid "See also WwW::SiteConf::Configure."
 msgstr "See also WwW::SiteConf::Configure."
 
-#: ../siteconf/share/configure.in:235
+#: ../siteconf/share/configure.in:236
 msgid "cannot find $A (aka %q): %m"
 msgstr "cannot find $A (aka %q): %m"
 
-#: ../siteconf/share/configure.in:238
+#: ../siteconf/share/configure.in:239
 msgid "cannot chdir to $A (aka %q): %m"
 msgstr "cannot chdir to $A (aka %q): %m"
 
-#: ../siteconf/share/configure.in:258
+#: ../siteconf/share/configure.in:259
 msgid "cannot create %q: %s"
 msgstr "cannot create %q: %s"
 
-#: ../siteconf/share/configure.in:267
+#: ../siteconf/share/configure.in:268
 msgid "cannot mkdir %q: %m (missing non-leaf components?)"
 msgstr "cannot mkdir %q: %m (missing non-leaf components?)"
 
-#: ../siteconf/share/configure.in:268 ../siteconf/share/configure.in:337
+#: ../siteconf/share/configure.in:269 ../siteconf/share/configure.in:338
 msgid "cannot mkdir %q: %m"
 msgstr "cannot mkdir %q: %m"
 
-#: ../siteconf/share/configure.in:272
+#: ../siteconf/share/configure.in:273
 msgid "cannot chdir to $B (aka %q): %m"
 msgstr "cannot chdir to $B (aka %q): %m"
 
-#: ../siteconf/share/configure.in:313 ../siteconf/share/configure.in:328
+#: ../siteconf/share/configure.in:314 ../siteconf/share/configure.in:329
 msgid "%q may not be empty."
 msgstr "%q may not be empty."
 
-#: ../siteconf/share/configure.in:334
+#: ../siteconf/share/configure.in:335
 msgid "%q may not contain a slash."
 msgstr "%q may not contain a slash."
 
-#: ../siteconf/share/configure.in:356
+#. HEY!  %s is a command.
+#: ../siteconf/share/configure.in:357
 #, perl-format
 msgid "To generate build script, run: %s"
 msgstr "To generate build script, run: %s"
@@ -774,40 +789,42 @@ msgid "missing %q option"
 msgstr "missing %q option"
 
 #. HEY!  The usage is `./render apath bpath', which is two arguments.
-#: ../siteconf/share/presets/tem.render:66
-#: ../siteconf/share/presets/web.render:74
+#: ../siteconf/share/presets/tem.render:67
+#: ../siteconf/share/presets/web.render:75
 msgid "need exactly two arguments"
 msgstr "need exactly two arguments"
 
-#: ../siteconf/share/presets/web.render:89
+#: ../siteconf/share/presets/web.render:90
 msgid "%q: HAVE declaration not found"
 msgstr "%q: HAVE declaration not found"
 
 #. HEY!  The first %q is the symbolic form, and
 #. (aka %q) is expanded form.
-#: ../siteconf/share/presets/web.render:110
+#: ../siteconf/share/presets/web.render:111
 #, perl-brace-format
 msgid "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
 msgstr "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
 
-#: ../siteconf/share/presets/web.render:112
+#: ../siteconf/share/presets/web.render:113
 #, perl-brace-format
 msgid "%q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr "%q: Your HAVE %q is not under ${a} (aka %q)"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:288
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:287
 msgid "missing site_url"
 msgstr "missing site_url"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:295
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:294
 msgid "site_url has no file or www URI scheme: %q"
 msgstr "site_url has no file or www URI scheme: %q"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:312
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:311
 msgid "base_url must begin with a slash"
 msgstr "base_url must begin with a slash"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:320
+#. HEY!  the first %q is the path of site_url, and the
+#. second is base_url
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:319
 msgid ""
 "site_url has a nonempty path (%q), and\n"
 "is inconsistent with base_url (%q)"
@@ -815,7 +832,7 @@ msgstr ""
 "site_url has a nonempty path (%q), and\n"
 "is inconsistent with base_url (%q)"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:334
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:333
 msgid ""
 "base_url cannot be inferred from site_url,\n"
 "as the latter has an empty path"
@@ -823,22 +840,28 @@ msgstr ""
 "base_url cannot be inferred from site_url,\n"
 "as the latter has an empty path"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:157
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:135
 msgid "%#q line %d: missing `='"
 msgstr "%#q line %d: missing `='"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:199
+#. HEY!  by bad we mean the make variable name contains
+#. metacharacters which should not exist in a legal name.
+#. (Not your "legal name", of course, i mean a name that
+#. is allowed... like IL-legal in the sense of invalid.
+#. (but let's not get into the topic of identity crisis...
+#. we're talking about SYNTACTICALLY invalid names here.))
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:177
 msgid "bad name: %q"
 msgstr "bad name: %q"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:332
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:310
 msgid "cannot rename %q to %q: %m"
 msgstr "cannot rename %q to %q: %m"
 
 #. HEY!  Keep a winky face in the translation ;)
 #. This message is likely to get seen by newbies,
 #. so we want to keep it fun.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:364
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:342
 msgid ""
 "You have not configured! (no %q)\n"
 "You should ./configure first. ;)"
@@ -852,23 +875,23 @@ msgstr ""
 #. in... "you HAVE too many.  The hell are
 #. you tryin' to be, the whole universe?"
 #. Like that.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:566
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:544
 msgid "%#q line %d: You HAVE too many."
 msgstr "%#q line %d: You HAVE too many."
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:735
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:713
 msgid "cannot normalize %q: bad Unicode code point %s"
 msgstr "cannot normalize %q: bad Unicode code point %s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:748
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:726
 msgid "cannot normalize %q: trailing $"
 msgstr "cannot normalize %q: trailing $"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:751
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:729
 msgid "cannot normalize %q: unterminated or empty ${"
 msgstr "cannot normalize %q: unterminated or empty ${"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:753
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:731
 msgid "stray $ in %q"
 msgstr "stray $ in %q"
 
@@ -879,7 +902,7 @@ msgstr "stray $ in %q"
 #. pure decode operation... in which case a named
 #. substitution that is not an escape at all as "bad"
 #. as in, "wait.... that's illegal."
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:834
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:812
 #, perl-format
 msgid "bad substitution: %s"
 msgstr "bad substitution: %s"

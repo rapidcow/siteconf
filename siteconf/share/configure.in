@@ -17,10 +17,11 @@ use Getopt::Long qw( GetOptions );
 
 # Pin GenGenLib 0.01 and its Unicode
 # dependency modules transitively.
-use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make unescape_vars tagmsg );
+use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make unescape_vars );
 
 # Initialize locale and gettext.
 use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets::Functions qw( tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 my ($cs, $me, $offset);
@@ -111,8 +112,8 @@ sub setter
 	my ($S, $H) = @_;
 	sub {
 		my ($k, $v) = split(/=/, $_[1], 2);
-		# HEY!  %s is the option, -D or -O.
 		length $k or die tagmsg($prog =>
+			# HEY!  %s is the option, -D or -O.
 			$cs->diag(__("%s: empty name."), "-$S"));
 		my $text = eval { unescape_value(defined $v ? $v : "") };
 		defined $text or do {
@@ -351,8 +352,8 @@ my $Bhere = File::Spec->file_name_is_absolute($B) ? $B
 my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);
 unless ($shutup) {
 	print STDERR __("Done!"), "\n";
-	# HEY!  %s is a command.
 	print STDERR $cs->diag(__(
+		# HEY!  %s is a command.
 		"To generate build script, run: %s"),
 		"@PROG@ -g$where"), "\n";
 }

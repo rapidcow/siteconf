@@ -55,11 +55,10 @@ use File::Spec;
 
 # Set up locale and gettext.
 use RdKw::I18N::CodeSets ();
-use RdKw::I18N::CodeSets::Functions qw( diag to_fs );
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 our @EXPORT_OK = qw(
-	tagmsg
 	read_make write_make update_file load_state
 	read_deps norm_deps norm_dep subs_deps subs_dep
 	escape_vars escape_var
@@ -78,27 +77,6 @@ my $SP = '\t\n\cK\f\r ';
 =head1 ROUTINES
 
 =over
-
-=item B<tagmsg> prog, mesg
-
-Prepend message with a prefix.  This seems
-common enough to warrant a special function.
-
-If the prefix is missing, return the message
-itself.
-
-Added in 0.0100.
-
-=cut
-
-sub tagmsg
-{
-	my ($prog, $diag) = @_;
-	chomp $diag;
-	return "$diag\n" unless defined $prog && length $prog;
-	$diag =~ s/^/diag("%#q: ", $prog)/gem;
-	"$diag\n";
-}
 
 =item B<read_make> I<file>[, { prog => 'read_make' }]
 
@@ -189,13 +167,13 @@ sub write_make
 		: "";
 	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
 		my $v = defined $H->{$k} ? $H->{$k} : '';
-		# HEY!  by bad we mean the make variable name contains
-		# metacharacters which should not exist in a legal name.
-		# (Not your "legal name", of course, i mean a name that
-		# is allowed... like IL-legal in the sense of invalid.
-		# (but let's not get into the topic of identity crisis...
-		# we're talking about SYNTACTICALLY invalid names here.))
 		$k =~ /\A[^\s=#]+\z/ or die tagmsg(
+			# HEY!  by bad we mean the make variable name contains
+			# metacharacters which should not exist in a legal name.
+			# (Not your "legal name", of course, i mean a name that
+			# is allowed... like IL-legal in the sense of invalid.
+			# (but let's not get into the topic of identity crisis...
+			# we're talking about SYNTACTICALLY invalid names here.))
 			$prog => diag(__("bad name: %q"), $k));
 		$text .= "$k=\t" . escape_vars($v) . "\n";  # no $opt
 	}

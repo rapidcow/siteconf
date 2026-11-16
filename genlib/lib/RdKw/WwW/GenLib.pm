@@ -89,9 +89,8 @@ use URI ();
 use URI::Escape qw( uri_unescape );
 
 # Set up locale and gettext.
-use RdKw::I18N::CodeSets::Functions qw( diag );
+use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
-use RdKw::WwW::GenGenLib qw( tagmsg );
 
 our @EXPORT_OK = qw(
 	locate
@@ -314,9 +313,9 @@ sub parse_base
 		unless ($site_url->path eq '' or $base_url eq $site_url->path) {
 			# This is probably one of the more grave cases;
 			# so report it thoroughly to the console.
-			# HEY!  the first %q is the path of site_url, and the
-			# second is base_url
 			die tagmsg($prog => diag(__(
+				# HEY!  the first %q is the path of site_url, and the
+				# second is base_url
 				"site_url has a nonempty path (%q), and\n"
 				. "is inconsistent with base_url (%q)"),
 				$site_url->path, $base_url));

@@ -39,7 +39,10 @@ are not here.
 
 =item B<diag_name>( I<name>, inner => 0 )
 
-L<RdKw::I18N::CodeSets/diag> and L<RdKw::I18N::CodeSets/diag_name>.
+=item B<tagmsg>( I<prog>, I<mesg> )
+
+L<RdKw::I18N::CodeSets/diag>, L<RdKw::I18N::CodeSets/diag_name> and
+L<RdKw::I18N::CodeSets/tagmsg>.
 
 =item B<to_fs>( I<name>, ...[, { I<option> => I<value>, ... }] )
 
@@ -83,7 +86,7 @@ L<RdKw::I18N::CodeSets/initstd>.
 use RdKw::I18N::CodeSets;
 
 our @EXPORT_OK = qw(
-	diag diag_name
+	diag diag_name tagmsg
 	to_fs un_fs
 	to_argv un_argv encode_argv decode_argv
 	getenv setenv unsetenv
@@ -99,6 +102,7 @@ our @CARP_NOT = ('RdKw::I18N::CodeSets');
 # locale saves it).
 sub diag        { RdKw::I18N::CodeSets->locale->diag(@_) }
 sub diag_name   { RdKw::I18N::CodeSets->locale->diag_name(@_) }
+sub tagmsg      { RdKw::I18N::CodeSets->locale->tagmsg(@_) }
 sub to_fs       { RdKw::I18N::CodeSets->locale->to_fs(@_) }
 sub un_fs       { RdKw::I18N::CodeSets->locale->un_fs(@_) }
 sub to_argv     { RdKw::I18N::CodeSets->locale->to_argv(@_) }

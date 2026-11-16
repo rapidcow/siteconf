@@ -943,6 +943,31 @@ sub diag
 	sprintf $out . _perlqq($enc, substr($format, pos $format)), @out;
 }
 
+=item I<cs>->B<tagmsg>( I<prog>, I<mesg> )
+
+Prepend each line of the message with C<< diag("%#q: ", I<prog>) >>,
+and end it with a newline (just one: a newline already at the end of
+I<mesg> is not another line).  This seems common enough to warrant a
+special method; I<mesg> is typically the result of L</diag>.
+
+If I<prog> is missing or empty, return the message itself (ended by
+a newline).
+
+Since I<mesg> is chomped, calls can be chained:
+C<< tagmsg(E => tagmsg(prog => ...)) >>.
+
+=cut
+
+sub tagmsg
+{
+	my ($self, $prog, $mesg) = @_;
+	chomp $mesg;
+	return "$mesg\n" unless defined $prog && length $prog;
+	my $tag = $self->diag("%#q: ", $prog);
+	$mesg =~ s/^/$tag/gm;
+	"$mesg\n";
+}
+
 # $! of `errno', as characters: in the language of the locale, as perl
 # says it in the scope of `use locale' (from 5.22; before, always), and
 # decoded from the locale's code set if perl has not (which it does

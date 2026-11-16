@@ -267,12 +267,12 @@ use Cwd qw( abs_path );
 use File::Spec ();
 
 # Set up locale and gettext.
-use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use RdKw::WwW::SiteConf::Modifiers;
 use RdKw::WwW::GenGenLib 0.0100 qw(
-	tagmsg read_make read_deps update_file escape_dep
+	read_make read_deps update_file escape_dep
 	norm_dep uproot );
 
 # A name as the file system spells it, and back;
@@ -1505,14 +1505,14 @@ sub _report
 	my ($self, $name, $what) = @_;
 	return unless $what;
 	$name = "MY/$name" if $name =~ /^MANIFEST\./;
-	# HEY!  ``Writing'' creates the file, and
-	# ``Updating'' overwrites it.   (The phrasing
-	# is different from what we call it over at
-	# `siteconf -i', primarily because MY/MANIFEST
-	# is considered to be our files, so it is
-	# assumed that the state prior to updating is
-	# consistent with the state now.)
 	$self->_warn(diag($what > 1
+		# HEY!  ``Writing'' creates the file, and
+		# ``Updating'' overwrites it.   (The phrasing
+		# is different from what we call it over at
+		# `siteconf -i', primarily because MY/MANIFEST
+		# is considered to be our files, so it is
+		# assumed that the state prior to updating is
+		# consistent with the state now.)
 		? __("Writing %#q")
 		: __("Updating %#q"), $name) . "\n");
 }

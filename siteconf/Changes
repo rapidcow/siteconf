@@ -1,10 +1,13 @@
 Revision history of WwW-SiteConf
 
 
-0.03_00  2026-11-13  RC
+0.03_00  2026-11-16  RC
     BIG Unicode (I18N) update!  Due to the sheer size of
     this patch, many items aren't written by me.
 
+    *** Perl 5.8 is required, and so is GenGenLib 0.0100.
+        Two new modules are required (RdKw::I18N::CodeSets and
+        RdKw::L10N::TextDomain, the former requires Encode::Locale.)
     *** File names, arguments and messages are spelled as
         RdKw::I18N::CodeSets says, which is required now (and
         Encode::Locale no longer is, but by it): as the locale
@@ -16,9 +19,13 @@ Revision history of WwW-SiteConf
         configure checks for CodeSets, not Encode::Locale.
         Their own names ($0) are read as arguments, and \xHH
         where they cannot be.
+    *** Arguments are decoded as the locale says (decode_argv),
+        and an error if they cannot be; they used to be UTF-8
+        or else left alone.
+
     * render reads its options with Getopt::Long (-B, -C; still
       -- before the files), not Getopt::Std.
-    + siteconf -V -V: I18N::CodeSets' version, too.
+    + siteconf -V -V: prints even more versions.
     + siteconf -l (list) [-F manifest] [-t [goal][:NEED|:WANT]]
       [-0[octal]]: the names a goal of the manifest NEEDs
       and WANTs (the default one, both, if not said), once
@@ -61,19 +68,6 @@ Revision history of WwW-SiteConf
       templates through it: only what the page declares, and
       what that declares, and so on.  Only if asked for: no
       preset asks, and render is the same as ever without it.
-    *** Perl 5.8 is required, and so is Encode::Locale (by
-        siteconf, the configure it writes, and GenGenLib 0.0100,
-        which is required too).
-    *** File names are characters, spelled as the file system's
-        locale says (locale_fs) only on their way to it, and an
-        error if it cannot spell them: Makefile.in, MANIFEST,
-        headers, -B, -o, and what configure makes and finds.
-        What is in the files is UTF-8, as it always was -- the
-        Makefile and build.ninja too, so a name that is not ASCII
-        is found by make or ninja only where locale_fs is UTF-8.
-    *** Arguments are decoded as the locale says (decode_argv),
-        and an error if they cannot be; they used to be UTF-8
-        or else left alone.
     * Messages are written as the locale says, with \x{...} for
       what it cannot say, by siteconf, configure and render
       (configure wrote UTF-8, and siteconf whatever perl had).

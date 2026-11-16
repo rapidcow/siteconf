@@ -105,6 +105,36 @@ is fine; C<-iC0> is not): what comes after it is read as it says, and
 after that, it is too late.  It is not written into F<configure>, which
 takes C<-C> of its own.
 
+Added in 0.0300.
+
+=item B<-P> I<preset>
+
+With C<-i>, select a preset: C<web> for a web renderer, or C<tem>
+for a Template Toolkit renderer without web-specific options.
+The default is no preset.  See L<RdKw::WwW::SiteConf::Configure>.
+
+The C<tem> preset was added in 0.0300.
+
+=item B<-S>I<name>B<=>I<value>
+
+With C<-i>, set a default standard definition, such as C<-SB=build>.
+See L<RdKw::WwW::SiteConf::Configure/PATHS> for the names and defaults.
+May be repeated.
+
+C<c> and C<clean> were added in 0.0201.
+
+=item B<-h>, B<--help>
+
+Print usage and exit.
+
+=item B<-V>, B<--version>
+
+Print the siteconf version and exit.  Repeat as C<-VV> for library
+versions, or C<-VVV> for module and locale paths as well.
+
+Added in 0.0100.  The additional versions now shown by C<-VV>, and
+C<-VVV>, were added in 0.0300.
+
 =item B<-i>, B<init>
 
 Write F<configure> (or whatever I<-o> says).
@@ -130,6 +160,8 @@ C<INCLUDE>s (or C<PROCESS>es, C<WRAPPER>s, C<INSERT>s) must be declared
 in its header, or in the header of what that declares, and so on; and
 the names are spelled as CodeSets says.
 
+Added in 0.0100.  The C<-M-module> spelling was added in 0.0300.
+
 =item B<-g>, B<make>
 
 Write the build file, reading the configuration from C<-B>
@@ -144,6 +176,8 @@ is kept in the generated options comment.  Split at the first C<=>;
 the rest belongs to the value.  An empty name is an error, and the
 last value for a repeated name wins.
 
+Names without C<=> are accepted since 0.0300.
+
 =item B<-A>
 
 With C<-g>, require everything: a C<WANT> that cannot be had is an
@@ -154,6 +188,8 @@ is 1.  So C<siteconf -gA> succeeds only if all of the manifest could
 be had, and C<siteconf -gAt static> only if all of C<static> could.
 (The comment in the build file that says how it was generated has
 C<-A> too.)  A boolean; not for C<-i> or C<-l>.
+
+Added in 0.0300.
 
 =item B<-B> I<dir>
 
@@ -168,6 +204,8 @@ make, which can name files that make cannot (with blanks, C<#>, C<:>,
 C<$>, wildcards and so on: see L<RdKw::WwW::SiteConf::GMake>); or
 C<ninja>, writing F<build.ninja>.  A name that the generator cannot
 spell is an error.
+
+The C<gmake> generator was added in 0.0300.
 
 =item B<-o> I<file>
 
@@ -207,6 +245,9 @@ F<MY/option.mk>, so option changes still rebuild its targets.)
 
 Named mappings are only for C<-i>.
 
+Support for C<-g> was added in 0.0101; named mappings for C<-i>
+were added in 0.0200.
+
 =item B<-f>
 
 With C<-i>, overwrite existing configure and renderer files.  Without it,
@@ -219,11 +260,15 @@ fails (status 1) if F<configure> already exists and was therefore not
 written; suppressing it with F</dev/null> is not a failure, and neither
 is a skipped renderer.
 
+Added in 0.0200.
+
 =item B<-q>, B<--quiet>
 
 Say nothing but errors: not the C<WANT>s that were dropped, nor the
 files that are written, updated, or removed, nor what to run to
 build.  (F<configure> takes C<-q> too.)
+
+Support for C<-g> was added in 0.0101.
 
 =item B<-F> I<manifest>
 
@@ -231,11 +276,15 @@ Specifies a different manifest to use.
 Overrides the configured C<F>.  Like it, this is a path from the
 current directory (not from C<${A}>, like everything else).
 
+Added in 0.0101; support for C<-l> was added in 0.0300.
+
 =item B<-R> I<rulebook>
 
 Specifies a different rulebook to use.
 Overrides the configured C<R>.  Like it, this is a path from the
 current directory.
+
+Added in 0.0101.
 
 =item B<-l>, B<list>
 
@@ -257,6 +306,8 @@ To list what a build made, list what F<siteconf -g> resolved, from
 which every C<WANT> that could not be made is gone:
 C<-F /MY/MANIFEST.>I<goal>.  The manifest itself still has them.
 
+Added in 0.0300.
+
 =item B<-t> [I<goal>][B<:NEED>|B<:WANT>]
 
 With C<-l>, list what I<goal> (the default one, if left out) says,
@@ -264,6 +315,8 @@ instead: both C<NEED> and C<WANT>, or only the one that is given.
 May be given more than once, in which case the lists are joined (and
 a name is still listed once).  So C<-t :NEED> is what the default goal
 needs, and C<-t all -t small> everything that either of them says.
+
+Added in 0.0300.
 
 =item B<-t> [B<NEED:>|B<WANT:>]I<goal>
 
@@ -278,12 +331,16 @@ with the last prefix given for it.  The first selected goal is the
 default build goal.  Without C<-t>, all manifest goals are generated
 as declared, as before.
 
+Added in 0.0300.
+
 =item B<-0>[I<octal>]
 
 With C<-l>, end each name with the character of that octal number
 (up to C<377>, a byte), instead of a newline, as with L<perl(1)>'s
 C<-0>: a NUL by itself, as for C<xargs -0> and C<tar --null>, or
 C<-072> for a colon.  C<-012> is the default.
+
+Added in 0.0300.
 
 =back
 
@@ -296,6 +353,8 @@ C<-072> for a colon.  C<-012> is the default.
 What code sets to read and write in, instead of the locale's: see
 L<RdKw::WwW::SiteConf::Configure/ENVIRONMENT>.  C<-C> overrides it.
 F<configure> and F<render> read it too (and take C<-C> as well).
+
+Added in 0.0300.
 
 =back
 

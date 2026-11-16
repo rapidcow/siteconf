@@ -105,9 +105,14 @@ on demand.
 
 =over
 
-=item B<locate> \%O, I<base>, I<spec>
+=item B<locate> \%O, I<base>, I<spec>...
 
 Implements the synonymous TT function.
+
+Relative specifications are preserved since 0.0202.  Variadic
+specifications, an optional options hash (defaulting C<site_url> and
+C<base_url> to C</>), and relative components following an absolute
+or site-relative specification are supported since 0.0203.
 
 =cut
 
@@ -150,6 +155,9 @@ the notion of the "current directory".  That is, the
 trailing slash (all of them!) will be honored, and the
 lack of one will be taken to indicate a directory
 (formally a path with an empty trailing segment).
+
+Since 0.0203, leading C<./> has no special treatment and trailing
+slashes are no longer collapsed.
 
 =cut
 
@@ -219,6 +227,8 @@ Reverse operation of B<relapath>.  This is
 typically called something like "resolve" in
 URL libraries, but I call things my way. >:)
 
+Added in 0.0203.
+
 =cut
 
 sub joinpath
@@ -272,7 +282,7 @@ I<base_url> and I<site_url>.
 
 Optionally I<prog> supplies a prefix for error messages,
 which was previously hard-coded to the string C<'parse_base'>.
-Added in 0.0300.
+The I<prog> option was added in 0.0300.
 
 =cut
 

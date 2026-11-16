@@ -155,6 +155,8 @@ and what reads it (siteconf itself) refuses one without.  So that
 whoever relies on C<${b}> and C<${c}> being two places can tell,
 and is not surprised when they turn out to be one.
 
+Added in 0.0201.
+
 Nothing checks that C<a>, C<b> and C<c> are different directories, nor
 that none is inside another: with explicit C<${b}/> and C<${c}/>
 targets, they may be the same.  Whoever must have them apart should
@@ -193,6 +195,8 @@ have a goal called C<clean> then.  It is an error for a rule to have
 the name of a goal, or of C<Makefile> or C<MY>.  This only matters to
 the Makefile backend.
 
+Added in 0.0201.
+
 =back
 
 The project author sets these defaults with C<siteconf -i -Sname=value>.
@@ -230,6 +234,8 @@ C<siteconf -i -P tem> writes a Template Toolkit renderer like the web
 preset's, but with nothing of the web: no options are required, and
 the renderer exposes definitions as C<D> and options as C<O>, and
 nothing else.  It requires Template.
+
+Added in 0.0300.
 
 =head1 OUTPUT LOCATIONS
 
@@ -281,6 +287,8 @@ given more than once; a later one overrides what came before.  It
 must come first, before anything else (C<-C0>, glued, is fine): what
 comes after it is read as it says, and after that, it is too late.
 
+Added in 0.0300.
+
 =item C<--reset>
 
 Ignore saved configuration and clear earlier command-line assignments.
@@ -289,6 +297,8 @@ Ignore saved configuration and clear earlier command-line assignments.
 
 Suppress progress messages and the suggested generation command.
 Errors are still reported.
+
+Added in 0.0101.
 
 =item C<--mkpath>
 
@@ -317,6 +327,8 @@ encoding alone for everything (C<UTF-8>; C<0> is short for ASCII,
 C<1> for UTF-8), or I<category>B<:>I<encoding> for one thing
 (C<filesys:UTF-8,console:ascii>).  F<siteconf> and the renderers the
 presets write read it too, and take C<-C> as well.
+
+Added in 0.0300.
 
 =back
 

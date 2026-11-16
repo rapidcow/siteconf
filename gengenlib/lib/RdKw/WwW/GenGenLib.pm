@@ -95,7 +95,7 @@ Code points above U+10FFFF are accepted as-is; invalidate them if you care
 about only the valid Unicode code points.
 
 Errors are prefixed with I<prog>, else C<'read_make'>.
-The I<prog> option was added in 0.0100.
+The I<prog> option and escaped values were added in 0.0100.
 
 =cut
 
@@ -150,7 +150,7 @@ sorted by length, then alphabetically.  I<prog> is credited in the
 header comment.  Values are escaped by B<escape_var>.
 
 Errors are prefixed with I<prog>, else C<'write_make'>.
-The I<prog> option was added in 0.0100.
+The I<prog> option and escaped values were added in 0.0100.
 
 =cut
 
@@ -245,6 +245,8 @@ included, is itself.
 Code points above U+10FFFF are accepted as-is;
 invalidation of invalid Unicode code points
 would have to be done externally.
+
+Added in 0.0100.
 
 =cut
 
@@ -671,7 +673,8 @@ Recognized variables and the project root are still normalized.
 C<strict> takes precedence: malformed input still dies even
 with C<pass_thru> enabled.  Defaults to C<< pass_thru => 0 >>.
 
-Added in 0.0002.  C<pass_thru> added in 0.0003.
+Added in 0.0002.  C<pass_thru> added in 0.0003;
+C<${U+hex}> escapes added in 0.0100.
 C<${U+...}> escapes added in 0.0100.
 
 =cut
@@ -760,7 +763,7 @@ is given the options, if any).  The map is
 optional since 0.0100, so this could be an
 inverse operation of C<escape_deps>.
 C<strict> is passed to B<norm_deps>.
-The C<on_missing> option may be one of:
+The C<on_missing> option (added in 0.0100) may be one of:
 
 =over
 
@@ -793,6 +796,7 @@ C<< enroot($B) . $p >>.
 A C<${U+...}> is its character, and is nothing more:
 C<${U+002E}${U+002E}/> is F<../> as much as C<../> is,
 and C<${U+002F}> is a slash like any other.
+These character escapes were added in 0.0100.
 
 Added in 0.0002.
 

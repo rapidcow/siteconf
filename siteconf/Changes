@@ -157,6 +157,11 @@ Revision history of WwW-SiteConf
         and ${U+20} is a space: -Devil_path='evil${U+20}path'.
         (A literal ${U+20} is ${$}{U+20}.)  Requires the
         GenGenLib of this release.
+    + The web preset's configure asks parse_base for the E prefix
+      itself (prog => 'E') if it is told that GenLib is 0.0300
+      or later, and tags the message as before otherwise.  (A
+      preset may have @NAME@ lines of its own, filled in by
+      siteconf, for this sort of thing.)
 
 
 0.02_03  2026-11-09  RC

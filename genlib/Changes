@@ -6,6 +6,10 @@ Revision history of WwW-GenLib
         RdKw::I18N::CodeSets, RdKw::L10N::TextDomain,
         and the version pragmatic module.
 
+    + parse_base takes prog => NAME, the prefix of its error
+      messages (which was always `parse_base').  Prefixes are
+      put on by GenGenLib's tagmsg, so GenGenLib is required.
+
 
 0.02_03  2026-11-09  RC
     + locate absolute/site-relative specifications

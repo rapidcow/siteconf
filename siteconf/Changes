@@ -20,12 +20,13 @@ Revision history of WwW-SiteConf
         Their own names ($0) are read as arguments, and \xHH
         where they cannot be.
     *** Arguments are decoded as the locale says (decode_argv),
-        and an error if they cannot be; they used to be UTF-8
-        or else left alone.
+        and an error if they cannot be; they used to be assumed
+        to be UTF-8.
 
     * render reads its options with Getopt::Long (-B, -C; still
       -- before the files), not Getopt::Std.
-    + siteconf -V -V: prints even more versions.
+    + siteconf -VV: prints even more versions.
+    + siteconf -VVV: prints module/locale paths.
     + siteconf -l (list) [-F manifest] [-t [goal][:NEED|:WANT]]
       [-0[octal]]: the names a goal of the manifest NEEDs
       and WANTs (the default one, both, if not said), once

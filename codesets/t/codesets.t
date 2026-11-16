@@ -30,7 +30,7 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs->argv, 'utf-8-strict', 'argv: canonical name');
 	is($cs->env, 'iso-8859-1', 'env: canonical name');
 	is($cs->filesys, undef, 'filesys: locale is not set');
-	is($cs->_encoding('filesys'), canon('locale_fs'), '... and is spelled as locale_fs');
+	is($cs->encoding('filesys'), canon('locale_fs'), '... and is spelled as locale_fs');
 	$cs->argv(undef);
 	is($cs->argv, undef, 'undef unsets');
 	ok(!eval { $CS->new(argv => 'no-such-thing'); 1 }, 'unknown encoding');

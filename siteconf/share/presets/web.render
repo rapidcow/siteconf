@@ -40,7 +40,7 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 use Getopt::Long qw( GetOptions );
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_deps load_state
-	norm_dep subs_dep uproot );
+	norm_dep subs_dep uproot tagmsg );
 @USE_GENLIB@
 use Template;
 @USE_TT_EXC@@USE_PROVIDER@
@@ -65,13 +65,13 @@ my $B = '.';
 GetOptions(
 	'B=s' => \$B,
 	# Reject misplaced -C arguments
-	'C:s' => sub { die $cs->diag("%#q: %s\n", $prog, __("too late to -C now.")); },
+	'C:s' => sub { die tagmsg($prog => __("too late to -C now.")); },
 )
 # The usage may be altered, so we only translate the "usage:" part.
 	or die $cs->diag(__("usage: %s"), $cs->diag("%#q %s\n",
 		$prog => '[-B dir] apath bpath'));
 # HEY!  The usage is `./render apath bpath', which is two arguments.
-@ARGV == 2 or die "$prog: " . __("need exactly two arguments") . "\n";
+@ARGV == 2 or die tagmsg($prog => __("need exactly two arguments"));
 my ($apath, $bpath) = @ARGV;
 
 # Load configuration parameters and build options,
@@ -86,7 +86,7 @@ my ($D, $O) = @S{qw( config option )};
 # as a predefined constant (like how ${A} is).
 #
 my %I = read_deps($apath);
-defined $I{HAVE} or die "E: " . $cs->diag(__("%q: HAVE declaration not found"), $apath) . "\n";
+defined $I{HAVE} or die tagmsg(E => $cs->diag(__("%q: HAVE declaration not found"), $apath));
 # relapath doesn't do well with the leading slash,
 # though people may have a habit of including it...
 (my $target = do {
@@ -104,13 +104,13 @@ defined $I{HAVE} or die "E: " . $cs->diag(__("%q: HAVE declaration not found"), 
 		$name;
 	}
 	else {
-		die "E: " . ($real ne $I{HAVE}
+		die tagmsg(E => $real ne $I{HAVE}
 			# HEY!  The first %q is the symbolic form, and
 			# (aka %q) is expanded form.
 			? $cs->diag(__('%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)'),
 				$apath, $I{HAVE}, $real, $D->{a})
 			: $cs->diag(__('%q: Your HAVE %q is not under ${a} (aka %q)'),
-				$apath, $I{HAVE}, $D->{a})) . "\n";
+				$apath, $I{HAVE}, $D->{a}));
 	}
 }) =~ s/\A\/+//;
 

@@ -307,6 +307,8 @@ use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
 our $GENLIB_NEW = '0.0203';
+# GenLib whose parse_base takes prog => and tags its own errors
+our $GENLIB_PROG = '0.0300';
 # GenGenLib that is locale-aware (and has norm_dep, subs_dep and
 # uproot): what configure and render are written for, and no older
 our $GENGENLIB_MIN = '0.0100';
@@ -711,6 +713,23 @@ sub do_init
 		$opt->{genlib_min} = $mods{'RdKw::WwW::GenLib'};
 		# (only ever because -M said so: no preset asks for it)
 		$opt->{provider} = $user{$PROVIDER} && exists $mods{$PROVIDER};
+	}
+	# A preset may vary with what it can count on (see presets/web.config).
+	{
+		my $can_prog = exists $mods{'RdKw::WwW::GenLib'}
+			&& version_ge($mods{'RdKw::WwW::GenLib'}, $GENLIB_PROG);
+		my %psub = (
+			PARSE_BASE => $can_prog
+				? <<\NEW
+	RdKw::WwW::GenLib::parse_base($O, prog => 'E');
+NEW
+				: <<\OLD,
+	eval { RdKw::WwW::GenLib::parse_base($O); 1 } or do {
+		die tagmsg(E => $@);
+	};
+OLD
+		);
+		$preset =~ s/^@(\w+)@\n/exists $psub{$1} ? $psub{$1} : die "$prog: $opt->{P}.config preset: \@$1\@?\n"/gme;
 	}
 	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
 	exists $opt->{output}{render} && !defined $render

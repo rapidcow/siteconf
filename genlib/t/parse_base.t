@@ -6,7 +6,7 @@ use 5.006;
 use strict;
 use warnings;
 use utf8;
-use Test::More tests => 7;
+use Test::More tests => 9;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenLib qw( parse_base );
@@ -25,4 +25,8 @@ use RdKw::WwW::GenLib qw( parse_base );
 	ok(!eval { parse_base(\%O); 1 }, 'scheme');
 	%O = (base_url => '/');
 	ok(!eval { parse_base(\%O); 1 }, 'missing site_url');
+	like($@, qr/\Aparse_base: /, 'default prog');
+	%O = (base_url => '/');
+	eval { parse_base(\%O, prog => 'E'); 1 };
+	like($@, qr/\AE: [^\n]*\n\z/, 'prog says the prefix');
 }

@@ -91,6 +91,7 @@ use URI::Escape qw( uri_unescape );
 # Set up locale and gettext.
 use RdKw::I18N::CodeSets::Functions qw( diag );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
+use RdKw::WwW::GenGenLib qw( tagmsg );
 
 our @EXPORT_OK = qw(
 	locate
@@ -265,28 +266,34 @@ COMP:		while (@path) {
 	join '/', @base;
 }
 
-=item B<parse_base> \%O
+=item B<parse_base> \%O[, prog => 'parse_base' ]
 
 Sanitize, normalize, and whine about user-supplied
 I<base_url> and I<site_url>.
+
+Optionally I<prog> supplies a prefix for error messages,
+which was previously hard-coded to the string C<'parse_base'>.
+Added in 0.0300.
 
 =cut
 
 sub parse_base
 {
-	my ($D) = @_;
+	my ($D, %kwds) = @_;
+	my $prog = exists $kwds{prog} ? $kwds{prog} : 'parse_base';
 	my ($base_url, $site_url);
 
 	# site_url cannot be derived, so it is required.
 	defined $D->{site_url} and $D->{site_url} ne ''
-		or die __("parse_base: missing site_url") . "\n";
+		or die tagmsg($prog => __("missing site_url"));
 	$site_url = URI->new($D->{site_url});
 
 	{
 		my $proto = $site_url->scheme;
 		unless (defined $proto and grep { lc($proto) eq $_ } qw( file http https )) {
-			die diag(__("parse_base: site_url has no file or www URI scheme: %q"),
-				$D->{site_url}) . "\n";
+			die tagmsg($prog => diag(__(
+				"site_url has no file or www URI scheme: %q"),
+				$D->{site_url}));
 		}
 	}
 
@@ -302,16 +309,17 @@ sub parse_base
 	) {
 		$base_url = $D->{base_url};
 		unless ($base_url =~ m!^/!) {
-			die __("parse_base: base_url must begin with a slash") . "\n";
+			die tagmsg($prog => __("base_url must begin with a slash"));
 		}
 		unless ($site_url->path eq '' or $base_url eq $site_url->path) {
 			# This is probably one of the more grave cases;
 			# so report it thoroughly to the console.
 			# HEY!  the first %q is the path of site_url, and the
 			# second is base_url
-			die diag(__("parse_base: site_url has a nonempty path (%q), and\n"
-				. "parse_base: is inconsistent with base_url (%q)"),
-				$site_url->path, $base_url) . "\n";
+			die tagmsg($prog => diag(__(
+				"site_url has a nonempty path (%q), and\n"
+				. "is inconsistent with base_url (%q)"),
+				$site_url->path, $base_url));
 		}
 	} else {
 		# An empty site_url path leaves nothing to inherit,
@@ -322,8 +330,9 @@ sub parse_base
 		$base_url = $site_url->path;
 		if ($base_url eq '') {
 			defined $D->{base_url} and $D->{base_url} eq '/'
-				or die __("parse_base: base_url cannot be inferred from site_url,\n"
-					. "parse_base: as the latter has an empty path") . "\n";
+				or die tagmsg($prog => __(
+					"base_url cannot be inferred from site_url,\n"
+					. "as the latter has an empty path"));
 			$base_url = '/';
 		}
 	}

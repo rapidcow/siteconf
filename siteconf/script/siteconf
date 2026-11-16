@@ -131,9 +131,10 @@ Print usage and exit.
 
 Print the siteconf version and exit.  Repeat as C<-VV> for library
 versions, or C<-VVV> for module and locale paths as well.
+The format and order are subject to change.
 
-Added in 0.0100.  The additional versions now shown by C<-VV>, and
-C<-VVV>, were added in 0.0300.
+C<-V> and C<-VV> were added and implemented in 0.0100.
+C<-VVV> was extended in 0.0300.
 
 =item B<-i>, B<init>
 

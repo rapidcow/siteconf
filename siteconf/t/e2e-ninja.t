@@ -7,6 +7,7 @@ use warnings;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
+
 use E2E;
 
 my $script = E2E::setup();

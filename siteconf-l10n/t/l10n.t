@@ -3,17 +3,18 @@
 # t/l10n.t - what siteconf says, in the catalogs made here (mo/,
 # as made by perl Makefile.PL LINGUAS="en zh")
 
+use utf8;
 use 5.008;
 use strict;
 use warnings;
-use utf8;
-use Cwd ();
-use File::Spec;
-use List::Util ();
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
+
+use Cwd ();
+use File::Spec;
+use List::Util ();
 
 my $mo = File::Spec->rel2abs('mo');
 plan skip_all => q[no catalogs made (re-run with `perl Makefile.PL LINGUAS="en zh"'?)]

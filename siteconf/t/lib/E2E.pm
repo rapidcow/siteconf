@@ -6,10 +6,12 @@ package E2E;
 use strict;
 use warnings;
 use Test::More;
-use TestPaths qw( project_root script_path perl5lib );
-use File::Temp qw( tempdir );
 
-use parent qw( Exporter );
+use File::Temp qw( tempdir );
+use TestPaths qw( project_root script_path perl5lib );
+
+use Exporter ();
+our @ISA = qw( Exporter );
 our @EXPORT = qw( run slurp lines );
 our @EXPORT_OK = @EXPORT;
 

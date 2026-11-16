@@ -2,11 +2,12 @@
 #
 # t/parse_base.t - MY/*.mk, HAVE/NEED/WANT headers, base_url, TT2 stash
 
+use utf8;
 use 5.006;
 use strict;
 use warnings;
-use utf8;
 use Test::More tests => 9;
+
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenLib qw( parse_base );

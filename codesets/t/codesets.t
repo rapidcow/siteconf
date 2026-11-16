@@ -9,6 +9,7 @@ use Test::More tests => 129;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
+
 use Encode ();
 use Encode::Locale ();
 

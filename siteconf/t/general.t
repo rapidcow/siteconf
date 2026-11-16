@@ -7,9 +7,10 @@ use warnings;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use TestPaths qw( project_root script_path perl5lib );
+
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
+use TestPaths qw( project_root script_path perl5lib );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 my $script = script_path();

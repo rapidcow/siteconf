@@ -2,18 +2,19 @@
 #
 # t/unicode.t - template names are characters, spelled as CodeSets says
 
+use utf8;
 use 5.008;
 use strict;
 use warnings;
-use utf8;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
+
+use Cwd qw( getcwd );
 use Encode ();
 use Encode::Locale ();
 use File::Temp qw( tempdir );
-use Cwd qw( getcwd );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 require RdKw::WwW::GenGenLib::Template::Provider;

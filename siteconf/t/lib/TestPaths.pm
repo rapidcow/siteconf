@@ -2,11 +2,14 @@ package TestPaths;
 
 use strict;
 use warnings;
+use Test::More ();
+
 use Cwd qw( abs_path );
 use File::Basename qw( dirname );
 use File::Spec;
-use Test::More ();
-use parent qw( Exporter );
+
+use Exporter ();
+our @ISA = qw( Exporter );
 our @EXPORT_OK = qw( project_root script_path perl5lib fs_surprise );
 
 # Use locale encoding for wide-characters, since console

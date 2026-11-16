@@ -6,10 +6,11 @@ use 5.006;
 use strict;
 use warnings;
 
+use Test::More;
+
 use File::Find; # find
 use File::Spec;
 use IPC::Open3 qw(open3);
-use Test::More;
 
 # Explicitly load IO::Handle for perls older than v5.14.0.
 use IO::Handle;

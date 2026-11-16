@@ -9,9 +9,10 @@ use Test::More tests => 71;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
-use File::Temp qw( tempdir );
-use File::Path qw( make_path );
+
 use Cwd qw( getcwd );
+use File::Path qw( make_path );
+use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( split_dep walk_deps follow_ok norm_deps );
 

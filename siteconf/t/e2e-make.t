@@ -6,14 +6,15 @@
 use strict;
 use warnings;
 use Test::More;
-use Cwd ();
-use File::Spec;
-use File::Find;
-use File::Path qw( make_path );
-use File::Temp qw( tempdir );
 use FindBin;
 use lib "$FindBin::Bin/lib";
+
+use Cwd ();
 use E2E;
+use File::Find;
+use File::Path qw( make_path );
+use File::Spec;
+use File::Temp qw( tempdir );
 
 my $script = E2E::setup();
 my $make = E2E::make();

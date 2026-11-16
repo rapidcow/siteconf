@@ -2,10 +2,10 @@
 #
 # t/diag.t - diag_mode, diag_name, diag
 
+use utf8;
 use 5.008;
 use strict;
 use warnings;
-use utf8;
 use Test::More tests => 51;
 use FindBin;
 use lib "$FindBin::Bin/lib";

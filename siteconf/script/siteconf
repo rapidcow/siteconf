@@ -303,7 +303,6 @@ use Encode ();
 use RdKw::I18N::CodeSets ();
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 use RdKw::WwW::GenGenLib 0.01 qw( escape_dep read_manifest );
-use RdKw::I18N::CodeSets::Functions qw( tagmsg );
 use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
@@ -846,7 +845,7 @@ out:	while (my ($name, $dest) = each %out) {
 			. "\n" . __(
 			"Pass -o /dev/null if you did mean to not generate configure,\n"
 			. "or -f to overwrite the existing one.");
-		print STDERR tagmsg(E => $msg) unless $opt->{q};
+		print STDERR $cs->tagmsg(E => $msg) unless $opt->{q};
 		return 1;
 	}
 	return 0;

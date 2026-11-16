@@ -443,7 +443,7 @@ if ($vee) {
 		print "L10N locale directory " . pq($RdKw::WwW::SiteConf::L10N::LOCALEDIR) . "\n";
 	}
 	my $dist = eval { File::ShareDir::dist_dir('WwW-SiteConf') };
-	print "dist directory " . (defined $dist ? pq($dist) : '(none)') . "\n";
+	print "share directory " . (defined $dist ? pq($dist) : '(none)') . "\n";
 
 	# (stdin, stdout, stderr are in the order of their file numbers)
 	# What each category is set to (empty if it is not), and what it
@@ -455,7 +455,7 @@ if ($vee) {
 		my $enc = $cs->encoding($_);
 		"$_:" . ($set eq $enc ? $set : "$set(=$enc)");
 	} qw( argv env filesys stdin stdout stderr );
-	print "codesets @cats\n";
+	print "@cats\n";
 	exit;
 }
 

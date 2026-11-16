@@ -2,14 +2,15 @@
 #
 # t/io.t - initstd, reinitstd, file names, arguments and the environment
 
+use utf8;
 use 5.008;
 use strict;
 use warnings;
-use utf8;
 use Test::More tests => 89;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
+
 use File::Spec;
 
 use RdKw::I18N::CodeSets;

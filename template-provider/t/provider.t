@@ -9,8 +9,9 @@ use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
-use File::Temp qw( tempdir );
+
 use Cwd qw( getcwd abs_path );
+use File::Temp qw( tempdir );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 require RdKw::WwW::GenGenLib::Template::Provider;

@@ -8,9 +8,10 @@ use warnings;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use TestPaths qw( project_root script_path perl5lib );
+
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
+use TestPaths qw( project_root script_path perl5lib );
 use RdKw::WwW::GenGenLib qw( write_make );
 
 for my $m (qw( Template RdKw::WwW::GenLib )) {

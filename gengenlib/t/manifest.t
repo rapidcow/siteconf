@@ -10,6 +10,7 @@ use Test::More tests => 60;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
+
 use Encode ();
 use File::Temp qw( tempdir );
 

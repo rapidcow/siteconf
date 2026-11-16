@@ -3,17 +3,18 @@
 # t/unicode.t - names that are not ASCII, from the command line to make,
 # and what we say about them where the locale cannot say them
 
+use utf8;
 use 5.008;
 use strict;
 use warnings;
-use utf8;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use TestPaths qw( script_path perl5lib );
+
 use Encode ();
 use Encode::Locale ();
 use File::Temp qw( tempdir );
+use TestPaths qw( script_path perl5lib );
 use RdKw::WwW::GenGenLib qw( read_deps read_make subs_dep );
 
 eval { require File::ShareDir; 1 }

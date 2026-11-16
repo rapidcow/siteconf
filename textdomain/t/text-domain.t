@@ -3,11 +3,12 @@
 # t/text-domain.t - __, __n and N__, with catalogs, without, and
 # without Locale::Messages
 
+use utf8;
 use 5.008;
 use strict;
 use warnings;
-use utf8;
 use Test::More;
+
 use File::Spec;
 use File::Temp qw( tempdir );
 

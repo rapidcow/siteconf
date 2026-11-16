@@ -7,13 +7,14 @@ use warnings;
 use Test::More tests => 224;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use E2E qw( lines );
-use TestPaths qw( fs_surprise );
+
 use Cwd ();
+use E2E qw( lines );
+use Encode ();
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
-use Encode ();
 use RdKw::I18N::CodeSets ();
+use TestPaths qw( fs_surprise );
 use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 use RdKw::WwW::SiteConf;
 

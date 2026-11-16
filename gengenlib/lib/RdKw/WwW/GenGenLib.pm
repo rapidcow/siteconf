@@ -48,10 +48,10 @@ L<RdKw::I18N::CodeSets> says: C<< RdKw::I18N::CodeSets->locale >>, or
 =cut
 
 use Encode ();
-use IO::Handle ();
 use File::Basename qw( basename dirname );
 use File::Compare ();
 use File::Spec;
+use IO::Handle ();
 
 # Set up locale and gettext.
 use RdKw::I18N::CodeSets ();

@@ -3,9 +3,10 @@ use warnings;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use TestPaths qw( script_path perl5lib fs_surprise );
-use File::Temp qw( tempdir );
+
 use Cwd ();
+use File::Temp qw( tempdir );
+use TestPaths qw( script_path perl5lib fs_surprise );
 
 my $script = script_path();
 eval { require File::ShareDir; 1 }

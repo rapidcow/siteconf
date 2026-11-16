@@ -262,18 +262,18 @@ spells it in UTF-8 too.
 
 =cut
 
-use File::Basename qw( dirname basename );
 use Cwd qw( abs_path );
+use File::Basename qw( dirname basename );
 use File::Spec ();
 
 # Set up locale and gettext.
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
-use RdKw::WwW::SiteConf::Modifiers;
 use RdKw::WwW::GenGenLib 0.0100 qw(
 	read_make read_deps update_file escape_dep
 	norm_dep uproot );
+use RdKw::WwW::SiteConf::Modifiers;
 
 # A name as the file system spells it, and back;
 # or an error prefixed `E:'.

@@ -34,8 +34,8 @@ use RdKw::I18N::CodeSets::Functions qw( tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use Getopt::Long qw( GetOptions );
-use RdKw::WwW::GenGenLib 0.0100 qw( load_state );
 use Template;
+use RdKw::WwW::GenGenLib 0.0100 qw( load_state );
 @USE_PROVIDER@
 
 my $cs = RdKw::I18N::CodeSets->new();

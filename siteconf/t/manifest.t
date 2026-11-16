@@ -5,6 +5,7 @@
 use strict;
 use warnings;
 use Test::More tests => 40;
+
 use File::Temp qw( tempdir );
 # (what is said is said as it is written, whatever the locale)
 BEGIN { $ENV{LANGUAGE} = 'C' }

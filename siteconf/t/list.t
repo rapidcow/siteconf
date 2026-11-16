@@ -6,10 +6,11 @@ use utf8;
 use strict;
 use warnings;
 use Test::More;
-use Encode ();
-use File::Temp qw( tempdir );
 use FindBin;
 use lib "$FindBin::Bin/lib";
+
+use Encode ();
+use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib );
 
 my $script = script_path();

@@ -5,9 +5,10 @@ use warnings;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
-use TestPaths qw( script_path perl5lib );
-use File::Temp qw( tempdir );
+
 use File::Path qw( make_path );
+use File::Temp qw( tempdir );
+use TestPaths qw( script_path perl5lib );
 use RdKw::WwW::GenGenLib qw( write_make read_manifest );
 use RdKw::WwW::SiteConf;
 

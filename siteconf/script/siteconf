@@ -400,28 +400,62 @@ GetOptions(
 ) or die $usage;
 
 if ($vee) {
-	print <<VAR;
-$prog version $RdKw::WwW::SiteConf::VERSION
-VAR
+	# -V: ours alone; -VV: what we run on, and what we found; -VVV:
+	# also where we found our catalogs and share, and how we spell
+	# things.  None of it goes through $cs->diag, which may not work.
+	# (at -VV and up, it is in the list below)
+	if ($vee == 1) {
+		print "$prog version $RdKw::WwW::SiteConf::VERSION\n";
+		exit;
+	}
 
-	exit unless $vee > 1;
-	print <<LVER;
-perl version $], @{[ $cs->un_fs($^X) ]}
-I18N::CodeSets version $RdKw::I18N::CodeSets::VERSION
-L10N::TextDomain version $L10N::TextDomain::VERSION
-WwW::GenGenLib version $RdKw::WwW::GenGenLib::VERSION
-LVER
+	print "perl version $], @{[ $cs->un_fs($^X) ]}\n";
 
+	# Sorted by module path (with RdKw:: not counted) by hand, not by sort;
+	# keep it so.  The version of siteconf is that of SiteConf.pm.
 	foreach my $fren (qw(
-		Template URI URI::Escape RdKw::WwW::GenLib
+		File::ShareDir
+		RdKw::I18N::CodeSets
+		RdKw::L10N::TextDomain
+		Template
+		URI
+		URI::Escape
+		RdKw::WwW::GenGenLib
 		RdKw::WwW::GenGenLib::Template::Provider
+		RdKw::WwW::GenLib
+		RdKw::WwW::SiteConf
+		RdKw::WwW::SiteConf::L10N
 	)) {
 		(my $path = "$fren.pm") =~ s!::!/!g;
 		eval { require $path; 1 } or next;
-		(my $cheeky = $fren) =~ s/^RdKw:://;
+		my $name = $fren eq 'RdKw::WwW::SiteConf' ? $prog : $fren;
+		$name =~ s/^RdKw:://;
 		# Obtain version without using symbolic ref :x
-		print "$cheeky version " . $fren->VERSION() . "\n";
+		my $ver = $fren->VERSION();
+		print "$name version " . (defined $ver ? $ver : '(none)') . "\n";
 	}
+	exit unless $vee > 2;
+
+	# Perl-ish quotes, as pq() makes them; these are bytes, as the system spells them
+	my $l10n = $INC{'RdKw/WwW/SiteConf/L10N.pm'};
+	if ($l10n) {
+		print "L10N domain " . pq($RdKw::WwW::SiteConf::L10N::DOMAIN) . "\n";
+		print "L10N locale directory " . pq($RdKw::WwW::SiteConf::L10N::LOCALEDIR) . "\n";
+	}
+	my $dist = eval { File::ShareDir::dist_dir('WwW-SiteConf') };
+	print "dist directory " . (defined $dist ? pq($dist) : '(none)') . "\n";
+
+	# (stdin, stdout, stderr are in the order of their file numbers)
+	# What each category is set to (empty if it is not), and what it
+	# is spelled in for all that: `argv:(=utf-8-strict)' for one that
+	# follows the locale, `argv:utf-8-strict' for one that was set
+	my @cats = map {
+		my $set = $cs->$_();
+		defined $set or $set = '';
+		my $enc = $cs->encoding($_);
+		"$_:" . ($set eq $enc ? $set : "$set(=$enc)");
+	} qw( argv env filesys stdin stdout stderr );
+	print "codesets @cats\n";
 	exit;
 }
 

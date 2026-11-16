@@ -467,8 +467,16 @@ sub all
 	+{ map { $_ => $self->{$_} } @CATEGORIES, 'diag' };
 }
 
-# What a category is spelled in, set or not
-sub _encoding
+=item I<cs>->B<encoding>( I<category> )
+
+Returns the code set a category is spelled in, by its canonical name
+in L<Encode>, whether it is set or not: for one that is not, what it
+follows (see above) is looked up, as it is when the category is used.
+Unlike the accessors, it is never undef.
+
+=cut
+
+sub encoding
 {
 	my ($self, $name) = @_;
 	defined $self->{$name} ? $self->{$name}
@@ -479,7 +487,7 @@ sub _encoding
 sub _say_encoding
 {
 	my ($self, $name) = @_;
-	my $obj = Encode::find_encoding($self->_encoding($name));
+	my $obj = Encode::find_encoding($self->encoding($name));
 	$obj->mime_name || $obj->name;
 }
 
@@ -517,7 +525,7 @@ sub diag_mode
 		}
 	}
 	return $self->{diag} if defined $self->{diag};
-	_is_ascii($self->_encoding('stderr')) ? 'ascii' : 'unicode';
+	_is_ascii($self->encoding('stderr')) ? 'ascii' : 'unicode';
 }
 
 =item I<cs>->B<initstd>([ I<file> => I<fallback>, ... ][, { prog => I<prog> }])
@@ -560,7 +568,7 @@ sub _initstd
 	}
 	for my $name (qw( stdin stdout stderr )) {
 		next unless exists $fallback{$name};
-		my $enc = $self->_encoding($name);
+		my $enc = $self->encoding($name);
 		local $PerlIO::encoding::fallback = $fallback{$name}
 			if defined $fallback{$name};
 		binmode $STD{$name}, ":raw:encoding($enc)"
@@ -612,7 +620,7 @@ sub _fs
 {
 	my ($self, $code, $what, $sub, @names) = @_;
 	my $opt = _opt($sub => \@names, qw( prog check ));
-	my $enc = $self->_encoding('filesys');
+	my $enc = $self->encoding('filesys');
 	my @new;
 	for my $name (@names) {
 		my ($new) = _code($code, $enc, $name, $opt->{check});
@@ -675,7 +683,7 @@ sub _argv
 	my $start = exists $opt->{start} ? $opt->{start} : 0;
 	Carp::croak("$sub: start is not a number")
 		unless defined $start && $start =~ /\A[0-9]+\z/;
-	my $enc = $self->_encoding('argv');
+	my $enc = $self->encoding('argv');
 	my @new;
 	for my $i (0 .. $#args) {
 		my ($new, $err) = _code($code, $enc, $args[$i], $opt->{check});
@@ -747,7 +755,7 @@ sub getenv
 {
 	my ($self, @names) = @_;
 	my $opt = _opt(getenv => \@names, qw( prog check ));
-	my $enc = $self->_encoding('env');
+	my $enc = $self->encoding('env');
 	my @values;
 	for my $name (@names) {
 		my $value = $ENV{ $self->_env_key($enc, $name, $opt) };
@@ -766,7 +774,7 @@ sub setenv
 	my ($self, @pairs) = @_;
 	my $opt = _opt(setenv => \@pairs, qw( prog check ));
 	Carp::croak('setenv: odd number of arguments') if @pairs % 2;
-	my $enc = $self->_encoding('env');
+	my $enc = $self->encoding('env');
 	my %set;
 	while (my ($name, $value) = splice @pairs, 0, 2) {
 		my $key = $self->_env_key($enc, $name, $opt);
@@ -874,7 +882,7 @@ sub diag_name
 	}
 	return "`$name'" if $name =~ /\A(?:(?![`'])[\x20-\x7e])*\z/;
 	$self->diag_mode eq 'ascii' ? _qq_ascii($name)
-		: _qq_unicode($name, $self->_encoding('stderr'));
+		: _qq_unicode($name, $self->encoding('stderr'));
 }
 
 =item I<cs>->B<diag>( I<format>, I<arg>, ... )
@@ -905,7 +913,7 @@ sub diag
 {
 	my ($self, $format, @args) = @_;
 	my $errno = 0 + $!;
-	my $enc = $self->_encoding('stderr');
+	my $enc = $self->encoding('stderr');
 	# What sprintf is given: the format, with what we say ourselves
 	# (%m, %%) said, and every other conversion numbered, and the
 	# arguments of those, one each (as %1$q and %1$s are not the same)

@@ -277,8 +277,8 @@ use RdKw::WwW::SiteConf::Modifiers;
 
 # A name as the file system spells it, and back;
 # or an error prefixed `E:'.
-sub _to_fs { to_fs($_[0], { prog => 'E' }) }
-sub _un_fs { un_fs($_[0], { prog => 'E' }) }
+sub _to_fs { to_fs($_[0], { prog => 'E' }); }
+sub _un_fs { un_fs($_[0], { prog => 'E' }); }
 
 # Where in a file: `file' line 3
 # (Since our standard names (MANIFEST and Makefile.in)
@@ -424,22 +424,20 @@ sub _warn
 	$self->{quiet} or print STDERR @mesg;
 }
 
-# A WANT that cannot be had: a warning, or (if strict) an error that
-# is said whatever quiet says, and remembered in `failed'.  The first
-# argument is the prefix of the message (see _soft_tag).
+# A WANT that cannot be had.  This is a wrapper
+# for _warn that prints loudly and increments
+# that sets failure status if -A (all; strict
+# mode) is on.
 sub _soft
 {
 	my ($self, @mesg) = @_;
 	if ($self->{strict}) {
-		$self->{failed}++;
+		$self->{failed} = 1;
 		print STDERR @mesg;
 	} else {
 		$self->_warn(@mesg);
 	}
 }
-
-# `W' for a warning, `E' for an error
-sub _soft_tag { $_[0]{strict} ? 'E' : 'W' }
 
 =item B<failed>
 
@@ -449,7 +447,7 @@ otherwise.
 
 =cut
 
-sub failed { $_[0]{failed} ? 1 : 0 }
+sub failed { $_[0]{failed} ? 1 : 0; }
 
 # A path seen from the build directory, as a path we can open.
 sub _fs
@@ -1149,7 +1147,7 @@ sub _node
 			# is yours to keep; i added it because "W"
 			# felt like a weak indication of a soft dep
 			# failing....
-			$self->_soft(tagmsg($self->_soft_tag => diag(__("target %q WANTs %q\n"
+			$self->_soft(tagmsg(W => diag(__("target %q WANTs %q\n"
 				. "  (%s)\n"
 				. "... but it is missing; going on without it :("),
 				$file, $d->[1], $d->[2])));
@@ -1296,18 +1294,17 @@ sub plan
 				}
 				# (one line for the manifest, which has one; else a line each)
 				my $why = join ' ', map { (my $l = $_) =~ s/\A\s+//; $l } @{ $node->{why} };
-				my $causes = sub { my $p = shift; join '', map { "$p   $_\n" } @{ $node->{why} } };
+				my $causes = sub { my $p = shift; join '', map { tagmsg($p => "  $_") } @{ $node->{why} } };
 				if ($kind eq 'need') {
 					# HEY!  the %s is where (`file' line 3); what
 					# follows the colon is why, a line each
 					push @err, tagmsg(E => diag(__("%s: goal %q NEEDs %q, but cannot be made:"),
 						_blame($D->{F}, $ent->{line}), $spec->{name}, $file))
-						. $causes->('E:');
+						. $causes->('E');
 				} else {
 					push @dropped, [ $file, $why ];
-					my $tag = $self->_soft_tag;
-					$self->_soft(tagmsg($tag => diag(__("goal %q WANTs %q, but cannot be made:"),
-						$spec->{name}, $file)), $causes->("$tag:"));
+					$self->_soft(tagmsg(W => diag(__("goal %q WANTs %q, but cannot be made:"),
+						$spec->{name}, $file)), $causes->('W'));
 				}
 			}
 		}
@@ -1526,9 +1523,11 @@ sub generate
 	push @cmd, '-C', shell_quote($self->{B}) unless $self->{B} eq '.';
 	push @cmd, '-f', shell_quote($outfile) if $named;
 	push @cmd, shell_quote($plan->{goals}[0]{name}) if @{ $plan->{goals} };
-	$self->_warn(__("Done!") . "\n");
-	# HEY!  %s is a command line, as the shell would read it
-	$self->_warn(diag(__("To build, run: %s"), "@cmd") . "\n");
+	unless ($self->failed()) {
+		$self->_warn(__("Done!") . "\n");
+		# HEY!  %s is a command line, as the shell would read it
+		$self->_warn(diag(__("To build, run: %s"), "@cmd") . "\n");
+	}
 	$plan;
 }
 

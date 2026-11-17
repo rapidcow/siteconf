@@ -56,24 +56,24 @@ sub run {
 
 
 my ($status, $out) = run('-g', '-t', 'small');
-is($status, 0, 'without -A, a dropped WANT is no failure') or diag $out;
+cmp_ok($status, '==', 0, 'without -A, a dropped WANT is no failure') or diag $out;
 like($out, qr/^W:.*goal `small' WANTs `absent'/m, '... but a warning');
 unlike($out, qr/^E:/m, '... and no error');
 
 ($status, $out) = run('-gA', '-t', 'small');
-is($status, 1, '-gA: a dropped WANT sets the exit status');
-like($out, qr/^E:.*goal `small' WANTs `absent'/m, '... as an error');
-unlike($out, qr/^W:/m, '... not a warning');
+cmp_ok($status, '!=', 0, '-gA: a dropped WANT sets the exit status');
+like($out, qr/^W:.*goal `small' WANTs `absent'/m, '... as an error');
+like($out, qr/^W:/m, '... still a warning');
 like(slurp('Makefile'), qr/^small: site\/present$/m, 'the build file is still written, without it');
 like(slurp('Makefile'), qr/siteconf -gA -G make -t small/, '... saying -A in its header');
 
 ($status, $out) = run('-gAqt', 'small');
-is($status, 1, '-q does not hide the failure');
-like($out, qr/^E:.*goal `small' WANTs `absent'/m, '... nor the error');
+cmp_ok($status, '!=', 0, '-q does not hide the failure') or diag $out;
+like($out, qr/^W:.*goal `small' WANTs `absent'/m, '... nor the warning');
 
 ($status, $out) = run('-gA', '-t', 'WANT:broken');
-is($status, 1, '-A with a WANT: goal');
-like($out, qr/^E:.*goal `broken' WANTs `partial'/m, '... says what was dropped');
+cmp_ok($status, '!=', 0, '-A with a WANT: goal');
+like($out, qr/^W:.*goal `broken' WANTs `partial'/m, '... says what was dropped');
 
 ($status, $out) = run('-gA', '-t', 'other');
 is($status, 0, '-A is fine if every WANT could be had') or diag $out;

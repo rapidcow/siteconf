@@ -475,7 +475,7 @@ if ($vee) {
 	# (at -VV and up, it is in the list below)
 	if ($vee == 1) {
 		print "$prog version $RdKw::WwW::SiteConf::VERSION\n";
-		exit;
+		exit 0;
 	}
 
 	print "perl version $], @{[ $cs->un_fs($^X) ]}\n";
@@ -527,7 +527,7 @@ if ($vee) {
 		"$_:" . ($set eq $enc ? $set : "$set(=$enc)");
 	} qw( argv env filesys stdin stdout stderr );
 	print "@cats\n";
-	exit;
+	exit 0;
 }
 
 # `siteconf init', `siteconf make', `siteconf list'
@@ -612,10 +612,15 @@ if ($opt{mode} eq 'init') {
 	);
 	$sc->generate($opt{G}, $opt{o});
 
-	# (the build file is written all the same; but what -A asked for is gone)
-	exit($sc->failed ? 1 : 0);
+	if ($sc->failed()) {
+		die $cs->tagmsg(E => $cs->diag(__(
+			"missing soft dependencies and -A was requested."
+		)));
+	}
+
+	exit 0;
 }
-exit;
+exit 0;
 
 # ---
 

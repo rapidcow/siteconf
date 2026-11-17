@@ -1,12 +1,13 @@
 Revision history of WwW-GenLib
 
 
-0.03_00  2026-11-16  RC
-    *** Perl 5.8 is required, and so are
+0.03_00  2026-11-17  RC
+    *** Perl 5.008 is required, and so are
         RdKw::I18N::CodeSets, RdKw::L10N::TextDomain,
         and the version pragmatic module.
 
-    *** Encode is required.
+    *** Encode is required (though it should be core if
+        you have Perl v5.7.3 or later.)
 
     + file2uri and uri2file convert between file names
       (character-based Unicode strings) and URI paths, with

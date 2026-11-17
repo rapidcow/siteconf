@@ -20,7 +20,7 @@ RdKw::WwW::GenLib - static web-site generation library
     # in a `render' script...
     use RdKw::WwW::GenGenLib 0.0002 qw(
         read_deps load_state
-        norm_dep subs_dep uproot );
+        norm_deps subs_deps uproot );
     use RdKw::WwW::GenLib 0.0203 qw(
         parse_base locate );
     use Template;
@@ -42,20 +42,17 @@ RdKw::WwW::GenLib - static web-site generation library
         my ($name, $norm, $real);
         # Try symbolic prefix
         if (defined ($name = uproot('${a}',
-            $norm = norm_dep($I{HAVE}))))
-        {
-            subs_dep($D, $name);
-        }
+            $norm = norm_deps($I{HAVE}))))
+            { subs_deps($D, $name); }
         # Try literal prefix
         elsif (defined ($name = uproot($D->{a},
-            $real = subs_dep($D, $norm))))
+            $real = subs_deps($D, $norm))))
+            { $name; }
+        else
         {
-            $name;
-        }
-        else {
-            my $aka = $real eq $I{HAVE} ? "" : " (which is `$real')";
+            my $aka = $real eq $I{HAVE} ? "" : " (aka `$real')";
             die "E: $apath: HAVE `$I{HAVE}'$aka not "
-                . "under \${a} (which is `$D->{a}')\n";
+                . "under \${a} (aka `$D->{a}')\n";
         }
     }) =~ s/\A\/+//;
 

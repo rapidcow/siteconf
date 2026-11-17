@@ -782,14 +782,16 @@ SKIP: {
 			or diag $@;
 	}
 	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
-	like(eval { RdKw::WwW::SiteConf::GMake->_emit(\%emit) },
+	# _emit spells names as the file system does.  Here that is UTF-8.
+	my $emit = sub { my $t = eval { $_[0]->_emit(\%emit) }; defined $t ? Encode::decode('UTF-8', $t) : undef };
+	like($emit->('RdKw::WwW::SiteConf::GMake'),
 		qr/^site\/a\.html: html\/a\.html x d\\ x d\\#h d\x{1F600} d\/y site\/\.ok$/m,
 		'GNU Make: escaped') or diag $@;
 	ok(!eval { RdKw::WwW::SiteConf::Make->_emit(\%emit) }
 		&& $@ =~ /make cannot name `d x' \(with inescapable U\+0020\).*GNU Make can/s,
 		'make: a space cannot be') or diag $@;
 	require RdKw::WwW::SiteConf::Ninja;
-	like(eval { RdKw::WwW::SiteConf::Ninja->_emit(\%emit) },
+	like($emit->('RdKw::WwW::SiteConf::Ninja'),
 		qr/^build site\/a\.html: rule1 html\/a\.html \| x d\$ x d#h d\x{1F600} d\/y \|\| site\/\.ok$/m,
 		'ninja: escaped') or diag $@;
 }
@@ -866,8 +868,14 @@ SKIP: {
 		ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name($name) }
 			&& $@ =~ /\AE: GNU Make cannot name/, "GNU Make cannot: `" . escape_dep($name) . "'");
 	}
-	is(RdKw::WwW::SiteConf::Make->_name("a+b,c\x{e9}\x{a0}%\\d"), "a+b,c\x{e9}\x{a0}%\\d",
-		'make: what needs no escape is as it is');
+	{
+		# Spelled as the file system does.  Here that is UTF-8.
+		local $RdKw::I18N::CodeSets::LOCALE =
+			RdKw::I18N::CodeSets->locale->new(filesys => 'UTF-8');
+		is(RdKw::WwW::SiteConf::Make->_name("a+b,c\x{e9}\x{a0}%\\d"),
+			Encode::encode('UTF-8', "a+b,c\x{e9}\x{a0}%\\d"),
+			'make: what needs no escape is as it is');
+	}
 	ok(!defined eval { RdKw::WwW::SiteConf::Make->_name('a;b') }
 		&& $@ =~ /make cannot name `a;b' \(with inescapable `;'\)$/, '... and there is no -G gmake for some');
 	for my $name ("a\nb", "a\rb", "a\x{2028}b", 'a|b') {

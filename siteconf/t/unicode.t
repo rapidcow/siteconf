@@ -14,7 +14,7 @@ use lib "$FindBin::Bin/lib";
 use Encode ();
 use Encode::Locale ();
 use File::Temp qw( tempdir );
-use TestPaths qw( script_path perl5lib );
+use TestPaths qw( script_path perl5lib fs_surprise );
 use RdKw::WwW::GenGenLib qw( read_deps read_make subs_dep );
 
 eval { require File::ShareDir; 1 }
@@ -55,7 +55,7 @@ for (@args) {
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
-plan tests => 31;
+plan tests => 39;
 
 local $ENV{PERL5LIB} = perl5lib();
 
@@ -88,6 +88,21 @@ sub slurp
 	open my $fh, '<:encoding(UTF-8)', fs($_[0]) or return '';
 	local $/; <$fh>;
 }
+# Bytes, from a path in bytes.  The build file is spelled as the
+# file system spells names, and so are the files make makes.
+sub slurp_raw
+{
+	open my $fh, '<:raw', $_[0] or return '';
+	local $/; <$fh>;
+}
+sub spew_raw
+{
+	my ($path, $text) = @_;
+	open my $fh, '>:encoding(UTF-8)', $path or die "$path: $!";
+	print $fh $text;
+	close $fh or die;
+}
+sub slurp_fs { unfs(slurp_raw(fs($_[0]))) }
 
 # --- a project in a directory not named in ASCII, built somewhere else
 # that is not either: what configure finds (A) and what it is told (B)
@@ -110,8 +125,8 @@ like($mk, qr/^A=\t\.\.\/\.\.\/プロジェクト$/m, 'A, as it was found');
 
 ($status, $out) = run($P, {}, $script, '-g', '-q', '-B', $Bdir);
 is($status, 0, 'siteconf -g') or diag $out;
-like(slurp("$Bdir/Makefile"), qr/^site\/résumé\.html: /m, 'the Makefile names it (in UTF-8)');
-like(slurp("$Bdir/Makefile"), qr/^site\/no\x{a0}break\.html: [^ ]*html\/no\x{a0}break\.html [^ ]*html\/résumé\.html /m,
+like(slurp_fs("$Bdir/Makefile"), qr/^site\/résumé\.html: /m, 'the Makefile names it (as the file system does)');
+like(slurp_fs("$Bdir/Makefile"), qr/^site\/no\x{a0}break\.html: [^ ]*html\/no\x{a0}break\.html [^ ]*html\/résumé\.html /m,
 	'... and a no-break space is part of a name, in headers too');
 ok(-f fs("$Bdir/MY/MANIFEST.all"), '... and its manifest');
 
@@ -119,12 +134,50 @@ SKIP: {
 	my $make = $ENV{MAKE} || 'make';
 	system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0
 		or skip 'no make', 2;
-	$Encode::Locale::ENCODING_LOCALE_FS =~ /\Autf-?8\z/i
-		or skip 'make finds what the Makefile names only in UTF-8', 2;
 	($status, $out) = run($Bdir, {}, '-e', 'exec @ARGV', $make, '-s');
 	is(slurp("$Bdir/site/résumé.html"), "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n",
 		'make makes it') or diag $out;
 	ok(-f fs("$Bdir/site/no\x{a0}break.html"), '... all of it');
+}
+
+# --- the build file spells names as the file system does, so make
+# finds them.  Here the file system spells them in ISO-8859-1.  A name
+# the file system cannot spell is an error.
+SKIP: {
+	my $L = "$utmp/latin1";
+	mkdir fs($L) or die "$L: $!";
+	my $name = "r\xe9sum\xe9.html";  # bytes, as ISO-8859-1 spells résumé.html
+	my $why = fs_surprise($name, fs($L));
+	skip "file system: $why", 8 if defined $why;
+	my %L1 = ( SITECONF_CODESETS => 'filesys:ISO-8859-1' );
+	mkdir fs("$L/html") or die $!;
+	spew_raw(fs("$L/html/") . $name, "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n");
+	spew("$L/Makefile.in", "résumé.html:\n\t"
+		. 'cp ${A:Q}/${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}' . "\n");
+	spew("$L/MANIFEST", "MAKE all\n\tNEED résumé.html\n");
+	run($L, {}, $script, 'init', '-q');
+	run($L, {}, 'configure', '-q', '-DB=build');
+	($status, $out) = run($L, {%L1}, $script, '-g', '-q', '-B', 'build');
+	is($status, 0, 'siteconf -g, filesys:ISO-8859-1') or diag $out;
+	my $text = slurp_raw(fs("$L/build/Makefile"));
+	like($text, qr/^site\/r\xe9sum\xe9\.html: [^ ]*html\/r\xe9sum\xe9\.html /m,
+		'the Makefile spells it as the file system does');
+	unlike($text, qr/r\xc3\xa9sum/, '... and not as UTF-8');
+	($status, $out) = run($L, {%L1}, $script, '-g', '-q', '-B', 'build', '-G', 'ninja');
+	is($status, 0, 'siteconf -g -G ninja') or diag $out;
+	like(slurp_raw(fs("$L/build/build.ninja")), qr/^build site\/r\xe9sum\xe9\.html: rule1 [^ ]*html\/r\xe9sum\xe9\.html /m,
+		'... and so does build.ninja');
+	($status, $out) = run($L, { SITECONF_CODESETS => 'filesys:ascii' }, $script, '-g', '-q', '-B', 'build');
+	isnt($status, 0, 'a name the file system cannot spell is an error');
+	like($out, qr/^E: cannot encode "[^"]*r\\x\{e9\}sum\\x\{e9\}\.html" in US-ASCII/m, '... and says so');
+	SKIP: {
+		my $make = $ENV{MAKE} || 'make';
+		system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0
+			or skip 'no make', 1;
+		($status, $out) = run("$L/build", {}, '-e', 'exec @ARGV', $make, '-s');
+		is(slurp_raw(fs("$L/build/site/") . $name), "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n",
+			'make makes it, under that name') or diag $out;
+	}
 }
 
 # --- render: arguments as the locale says, files as the file system does

@@ -251,10 +251,10 @@ what was dropped left as comments).
 File names, here and in what we are given, are character strings:
 they are spelled as L<RdKw::I18N::CodeSets> says (B<filesys> of
 C<< RdKw::I18N::CodeSets->locale >>) on their way out to the system,
-and a name it cannot spell is an error.  What is in the files is
-UTF-8, the build file we write included; so a name that is not ASCII
-is found by L<make(1)> or L<ninja(1)> only where the file system
-spells it in UTF-8 too.
+and a name it cannot spell is an error.  F<Makefile.in>, F<MANIFEST>
+and F<MY/MANIFEST.I<goal>> are UTF-8.  The build file is bytes:
+L<make(1)> and L<ninja(1)> read it so, and every name in it is spelled
+as the file system spells it.  The backends say how.
 
 =head1 METHODS
 
@@ -1515,8 +1515,9 @@ sub generate
 	} sort keys %{ $self->{fromhere} };
 	$plan->{prog} .= " -o " . shell_quote($out) if $named;
 	$plan->{prog} .= " -t " . shell_quote($_) for @{ $self->{goals} || [] };
+	# Bytes.  The backends spell the names as the file system does.
 	my $text = $module->_emit($plan);
-	$self->_report($outfile, update_file("$self->{B}/$outfile", $text));
+	$self->_report($outfile, update_file("$self->{B}/$outfile", $text, { raw => 1 }));
 
 	# What to type next: the builder (named after the generator), with
 	# -C if we are not in the build directory, -f if the file is not

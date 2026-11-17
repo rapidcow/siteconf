@@ -410,7 +410,7 @@ my $usage = do {
 		"-g [-A] [-B builddir] [-G generator] [-F manifest] [-R rulebook]\n"
 		. "$pad         [-o file] [-t [NEED:|WANT:]goal ...]",
 		"-l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]",
-		"-V [-V]";
+		"-V [-V [-V]]";
 };
 
 # How wide a string is on a terminal: two columns for each character

@@ -37,7 +37,7 @@ C<|> cannot be, and is an error.
 
 =cut
 
-use RdKw::I18N::CodeSets::Functions qw( diag );
+use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
@@ -74,8 +74,9 @@ NINJA
 		my $node = $plan->{node}{$file};
 		my $command = _command($node->{recipe});
 		defined $command and length $command
-			or die _status 0, "E: " . diag(__("%q: no recipe to make it (and ninja has no"
-				. " way to make nothing)"), $file) . "\n";
+			or die _status 0, tagmsg(E => diag(__(
+				"%#q: no recipe to make it (and ninja has no"
+				. " way to make nothing)"), $file));
 		my $rule = 'rule' . ++$n;
 		$out .= "rule $rule\n  command = $command\n";
 
@@ -109,8 +110,9 @@ sub _path
 	my ($s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}|])/
 		# HEY!  the %s is a character, as `|' or U+000A
-		and die _status 0, "E: " . diag(__("ninja cannot name %q (with inescapable %s)"),
-			$s, $1 eq '|' ? "`|'" : sprintf('U+%04X', ord $1)) . "\n";
+		and die _status 0, tagmsg(E => diag(__(
+			"ninja cannot name %q (with inescapable %s)"),
+			$s, $1 eq '|' ? "`|'" : sprintf('U+%04X', ord $1)));
 	$s =~ s/([ :\$])/\$$1/g;
 	$s;
 }

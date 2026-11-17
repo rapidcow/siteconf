@@ -31,7 +31,7 @@ name that ends in parentheses, which would be an archive member.
 
 =cut
 
-use RdKw::I18N::CodeSets::Functions qw( diag );
+use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
@@ -43,12 +43,14 @@ sub _name
 	my ($class, $s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029};=]|\\\z)/
 		# HEY!  the %s is a character, as `;' or U+000A
-		and die _status 0, "E: " . diag(__("GNU Make cannot name %q (with inescapable %s)"),
-			$s, $class->_char($1)) . "\n";
+		and die _status 0, tagmsg(E => diag(__(
+			"GNU Make cannot name %q (with inescapable %s)"),
+			$s, $class->_char($1)));
 	$s =~ /\(.*\)\z/s
 		# HEY!  lib(member.o) is how make names a member of an archive
-		and die _status 0, "E: " . diag(__("GNU Make cannot name %q (reserved for archive members)"),
-			$s) . "\n";
+		and die _status 0, tagmsg(E => diag(__(
+			"GNU Make cannot name %q (reserved for archive members)"),
+			$s));
 	$s =~ s/\$/\$\$/g;
 	$s =~ s/(\\*)([\t #:|])/$1$1\\$2/g;
 	$s =~ s/(\\*)([*?\[])/$1$1\[$2\]/g;

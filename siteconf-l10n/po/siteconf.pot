@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 04:26-0600\n"
+"POT-Creation-Date: 2026-11-17 06:00-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -782,27 +782,27 @@ msgstr ""
 msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr ""
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:299
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:312
 msgid "missing site_url"
 msgstr ""
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:306
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:319
 msgid "site_url has no file or www URI scheme: %q"
 msgstr ""
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:323
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:336
 msgid "base_url must begin with a slash"
 msgstr ""
 
 #. HEY!  the first %q is the path of site_url, and the
 #. second is base_url
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:331
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:344
 msgid ""
 "site_url has a nonempty path (%q), and\n"
 "is inconsistent with base_url (%q)"
 msgstr ""
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:345
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:358
 msgid ""
 "base_url cannot be inferred from site_url,\n"
 "as the latter has an empty path"

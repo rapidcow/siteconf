@@ -171,8 +171,9 @@ is always I<path>.
 sub relapath
 {
 	my ($path, $base) = @_;
-	my @path = split('/', $path, -1);
-	my @base = split('/', $base, -1);
+	# split gives () for an empty string; that is one empty segment.
+	my @path = length $path ? split('/', $path, -1) : ('');
+	my @base = length $base ? split('/', $base, -1) : ('');
 
 	my $comm = 0;
 COMM:	while () {
@@ -225,15 +226,13 @@ COMM:	while () {
 	# is the trailing slash that `..' does not need.
 	#
 	pop @rest if $upupup && @rest && !grep { length } @rest;
-	my $rela = join '/', ('..') x $upupup, @rest;
 	#
-	# Empty means "this very document", which is only right
-	# when the two paths are the same.  If $path is merely
-	# the directory $base is in, say so with a dot.
+	# Empty means "this very document": every segment matched,
+	# and @rest is ().  With no `..', a lone empty segment means
+	# $path is the directory $base is in, so say so with a dot.
 	#
-	$rela = '.' if $rela eq ''
-		&& uri_unescape ($path) ne uri_unescape ($base);
-	$rela;
+	@rest = ('.') if !$upupup && @rest == 1 && $rest[0] eq '';
+	join '/', ('..') x $upupup, @rest;
 }
 
 =item B<joinpath> I<base>, I<spec>...

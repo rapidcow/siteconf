@@ -15,7 +15,7 @@ Run `../env.pl make test` from each package directory: `codesets`,
 `textdomain`, `gengenlib`, `genlib`, `siteconf-l10n`,
 `template-provider`, and `siteconf`. This rebuilds
 `blib` and uses the workspace packages; direct `prove` runs can use
-obsolete share directory.
+obsolete share directory (which holds the template files).
 
 Before testing `siteconf-l10n`, run
 `perl Makefile.PL LINGUAS='en zh'` in that directory so both language

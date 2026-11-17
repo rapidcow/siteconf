@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 02:36-0600\n"
+"POT-Creation-Date: 2026-11-17 03:45-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -790,14 +790,14 @@ msgstr "need exactly two arguments"
 msgid "%q: HAVE declaration not found"
 msgstr "%q: HAVE declaration not found"
 
-#. HEY!  The first %q is the symbolic form, and
-#. (aka %q) is expanded form.
-#: ../siteconf/share/presets/web.render:109
+#. HEY!  The first %q is the symbolic form,
+#. and (aka %q) is expanded form.
+#: ../siteconf/share/presets/web.render:106
 #, perl-brace-format
 msgid "%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
 msgstr "%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
 
-#: ../siteconf/share/presets/web.render:111
+#: ../siteconf/share/presets/web.render:108
 #, perl-brace-format
 msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr "%#q: Your HAVE %q is not under ${a} (aka %q)"

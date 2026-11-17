@@ -86,7 +86,8 @@ my ($D, $O) = @S{qw( config option )};
 # as a predefined constant (like how ${A} is).
 #
 my %I = read_deps($apath);
-defined $I{HAVE} or die tagmsg(E => $cs->diag(__("%q: HAVE declaration not found"), $apath));
+defined $I{HAVE} or die $cs->tagmsg(E => $cs->diag(__(
+	"%q: HAVE declaration not found"), $apath));
 # relapath doesn't do well with the leading slash,
 # though people may have a habit of including it...
 (my $target = do {
@@ -104,7 +105,7 @@ defined $I{HAVE} or die tagmsg(E => $cs->diag(__("%q: HAVE declaration not found
 		$name;
 	}
 	else {
-		die tagmsg(E => $real ne $I{HAVE}
+		die $cs->tagmsg(E => $real ne $I{HAVE}
 			# HEY!  The first %q is the symbolic form, and
 			# (aka %q) is expanded form.
 			? $cs->diag(__('%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)'),

@@ -21,7 +21,6 @@ use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make unescape_vars );
 
 # Initialize locale and gettext.
 use RdKw::I18N::CodeSets ();
-use RdKw::I18N::CodeSets::Functions qw( tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 my ($cs, $me, $offset);
@@ -59,9 +58,9 @@ BEGIN {
 		}
 	}
 	if (@bad) {
-		print STDERR tagmsg(E => $_) for @bad;
+		print STDERR $cs->tagmsg(E => $_) for @bad;
 		my $count = @bad;
-		die tagmsg(E => $cs->diag(__n(
+		die $cs->tagmsg(E => $cs->diag(__n(
 			"%d module missing.  Looks like you got some work to do...",
 			"%d modules missing.  Looks like you got some work to do...",
 			$count), $count));
@@ -112,12 +111,12 @@ sub setter
 	my ($S, $H) = @_;
 	sub {
 		my ($k, $v) = split(/=/, $_[1], 2);
-		length $k or die tagmsg($prog =>
+		length $k or die $cs->tagmsg($prog =>
 			# HEY!  %s is the option, -D or -O.
 			$cs->diag(__("%s: empty name."), "-$S"));
 		my $text = eval { unescape_value(defined $v ? $v : "") };
 		defined $text or do {
-			die tagmsg($prog => "-$S$k: $@");
+			die $cs->tagmsg($prog => "-$S$k: $@");
 		};
 		$H->{$k} = $text;
 	};
@@ -232,10 +231,10 @@ my $start = un_fs(getcwd());
 # relative to the base directory of this script).
 my $A = isnull($D{A}) ? $Dd{A} : $D{A};
 my $srcdir = abs_path(to_fs(File::Spec->rel2abs($A, $start)));
-defined $srcdir or die tagmsg(E => $cs->diag(__(
+defined $srcdir or die $cs->tagmsg(E => $cs->diag(__(
 	'cannot find $A (aka %q): %m'), $A));
 $srcdir = un_fs($srcdir);
-chdir to_fs($srcdir) or die tagmsg(E => $cs->diag(__(
+chdir to_fs($srcdir) or die $cs->tagmsg(E => $cs->diag(__(
 	'cannot chdir to $A (aka %q): %m'), $srcdir));
 
 # -DB is the build directory, seen from the source tree; like
@@ -256,12 +255,12 @@ unless (-d to_fs($B)) {
 		File::Path::make_path(to_fs($B), { error => \my $err });
 		if (@$err) {
 			my ($path, $why) = %{ $err->[0] };
-			die tagmsg(E => $cs->diag(__("cannot create %q: %s"),
+			die $cs->tagmsg(E => $cs->diag(__("cannot create %q: %s"),
 				length $path ? un_fs($path) : $B, $why));
 		}
 	} else {
 		mkdir to_fs($B) or $!{EEXIST}   # Forgive race condition...
-		or die tagmsg(E => $cs->diag($!{ENOENT}
+		or die $cs->tagmsg(E => $cs->diag($!{ENOENT}
 			# Provide a plausible explanation for ENOENT.
 			# There might be weirder cases with symlinks,
 			# but I'm not gonna investigate further lol.
@@ -269,7 +268,7 @@ unless (-d to_fs($B)) {
 			: __("cannot mkdir %q: %m"), $B));
 	}
 }
-chdir to_fs($B) or die tagmsg(E => $cs->diag(__(
+chdir to_fs($B) or die $cs->tagmsg(E => $cs->diag(__(
 	'cannot chdir to $B (aka %q): %m'), $B));
 my $Babs = un_fs(getcwd());
 
@@ -310,14 +309,14 @@ preset_finish(\%D, \%O) if defined &preset_finish;
 
 foreach my $k (qw( a b R F )) {
 	$D{$k} =~ s!/+$!!;
-	length $D{$k} or die tagmsg(E => $cs->diag(__(
+	length $D{$k} or die $cs->tagmsg(E => $cs->diag(__(
 		"%q may not be empty."), $k));
 }
 # `b' is a directory we create rules under, one parent at a time;
 # that walk ends at `.', so it must be relative.  (`a', on the
 # other hand, is free to be absolute for foreign source files.)
 File::Spec->file_name_is_absolute($D{b})
-	and die tagmsg(E => $cs->diag(__(
+	and die $cs->tagmsg(E => $cs->diag(__(
 	"%q prefix must be a relative path."), 'b'));
 # `c', the cache: defaults to -Dc from the command-line, or
 # else -Sc (but *only* if it differs from -Sc), or else `b'.
@@ -325,16 +324,16 @@ File::Spec->file_name_is_absolute($D{b})
 isnull($D{c}) and $D{c} = !isnull($Dd{c}) && $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
 length $D{c}
-	or die tagmsg(E => $cs->diag(__(
+	or die $cs->tagmsg(E => $cs->diag(__(
 	"%q may not be empty."), 'c'));
 # We also create rules under `c', so it must be relative too.
 File::Spec->file_name_is_absolute($D{c})
-	and die tagmsg(E => $cs->diag(__(
+	and die $cs->tagmsg(E => $cs->diag(__(
 	"%q prefix must be a relative path."), 'c'));
-$D{e} =~ m!/! and tagmsg(E => $cs->diag(__(
+$D{e} =~ m!/! and $cs->tagmsg(E => $cs->diag(__(
 	"%q may not contain a slash."), 'e'));
 
--d 'MY' or mkdir 'MY' or die tagmsg(E => $cs->diag(__(
+-d 'MY' or mkdir 'MY' or die $cs->tagmsg(E => $cs->diag(__(
 	"cannot mkdir %q: %m"), 'MY'));
 foreach my $f ([ config => \%D ], [ option => \%O ]) {
 	my ($name, $H) = @$f;

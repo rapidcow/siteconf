@@ -88,7 +88,7 @@ use File::Spec ();
 use URI ();
 use URI::Escape qw( uri_unescape );
 
-# Set up locale and gettext.
+# Import locale and set up gettext.
 use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 

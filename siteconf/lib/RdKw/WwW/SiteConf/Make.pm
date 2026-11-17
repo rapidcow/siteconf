@@ -39,6 +39,8 @@ use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+sub _status { $! = 0; $? = shift; @_; }
+
 sub _emit
 {
 	my ($class, $plan) = @_;
@@ -89,7 +91,7 @@ sub _name
 	my $c = $1;
 	require RdKw::WwW::SiteConf::GMake;
 	my $gnu_can = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
-	die tagmsg(E => diag($gnu_can
+	die _status 0, tagmsg(E => diag($gnu_can
 		# HEY!  the %s is a character, as `$' or U+0020.
 		# You don't need to keep the ";)"; it's just
 		# reflexive for me as a tone indicator... :x

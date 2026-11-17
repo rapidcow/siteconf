@@ -82,6 +82,8 @@ use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 # Use the same gettext domain as our parent GenGenLib.pm.
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+sub _status { $! = 0; $? = shift; @_; }
+
 # POSIX white space since [[:space:]] is too broad.
 # (This is the same character set used in SiteConf.pm)
 my $SP = '\t\n\cK\f\r ';
@@ -125,20 +127,20 @@ sub read
 		# HEY!  %#q is the file name of the faulty
 		# MANIFEST and %d is its lineno.
 		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
-			or die tagmsg($prog => diag(__("%s: not UTF-8"),
+			or die _status 0, tagmsg($prog => diag(__("%s: not UTF-8"),
 				_blame($file, $.)));
 		s/(?:^|[$SP])#.*//so;
 		my ($kw, @arg) = /([^$SP]+)/go;
 		defined $kw or next;
 		if ($kw eq 'MAKE') {
-			@arg == 1 or die tagmsg($prog => diag(__(
+			@arg == 1 or die _status 0, tagmsg($prog => diag(__(
 				"%s: MAKE takes exactly one goal name"),
 				_blame($file, $.)));
 			my $name = $arg[0];
 			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
-				or die tagmsg($prog => diag(__("%s: bad goal name %q"),
+				or die _status 0, tagmsg($prog => diag(__("%s: bad goal name %q"),
 				_blame($file, $.), $name));
-			$goal{$name} and die tagmsg($prog => diag(__(
+			$goal{$name} and die _status 0, tagmsg($prog => diag(__(
 				"%s: goal %q is already made"),
 				_blame($file, $.), $name));
 			push @goal, $goal = $goal{$name}
@@ -147,10 +149,10 @@ sub read
 		}
 		if ($kw eq 'NEED' or $kw eq 'WANT') {
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			$goal or die tagmsg($prog => diag(__("%s: %s before any MAKE"),
+			$goal or die _status 0, tagmsg($prog => diag(__("%s: %s before any MAKE"),
 				_blame($file, $.), $kw));
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			@arg == 1 or die tagmsg($prog => diag(__("%s: %s takes exactly one file"
+			@arg == 1 or die _status 0, tagmsg($prog => diag(__("%s: %s takes exactly one file"
 				. " (use # for comments)"), _blame($file, $.), $kw));
 			my $name = eval { subs_deps(undef, $arg[0],
 				{ strict => 1, on_missing => 'croak', prog => undef }) };
@@ -158,22 +160,22 @@ sub read
 				# Prefix subs_deps' error message with our name
 				# and a blame line.
 				(my $why = $@) =~ s/^/_blame($file, $.) . ": "/gem;
-				die tagmsg($prog => $why);
+				die _status 0, tagmsg($prog => $why);
 			};
-			length $name or die tagmsg($prog => diag(__("%s: %q is no name"),
+			length $name or die _status 0, tagmsg($prog => diag(__("%s: %q is no name"),
 				_blame($file, $.), $arg[0]));
-			$name =~ /\0/ and die tagmsg($prog => diag(__("%s: %q has a NUL in it"),
+			$name =~ /\0/ and die _status 0, tagmsg($prog => diag(__("%s: %q has a NUL in it"),
 				_blame($file, $.), $arg[0]));
 			push @{ $goal->{lc $kw} }, { file => $name, line => $. };
 			next;
 		}
-		die tagmsg($prog => diag(__("%s: expected MAKE, NEED or WANT, not %q"),
+		die _status 0, tagmsg($prog => diag(__("%s: expected MAKE, NEED or WANT, not %q"),
 			_blame($file, $.), $kw));
 	}
 	close $fh or die tagmsg($prog => diag(__("cannot read file %q: %m"), $file));
 	# HEY!  It's singular because "no mind to think,
 	# no will to break, no voice to cry suffering..."
-	@goal or die tagmsg($prog => diag(__("%#q: no goal"), $file));
+	@goal or die _status 0, tagmsg($prog => diag(__("%#q: no goal"), $file));
 	bless { file => $file, goals => \@goal, goal => \%goal, prog => $prog }, $class;
 }
 
@@ -218,7 +220,7 @@ sub _goal
 {
 	my ($self, $name) = @_;
 	defined $name or return $self->{goals}[0];
-	$self->{goal}{$name} or die tagmsg($self->{prog} =>
+	$self->{goal}{$name} or die _status 0, tagmsg($self->{prog} =>
 		diag(__("%#q: missing goal %q"), $self->{file}, $name));
 }
 

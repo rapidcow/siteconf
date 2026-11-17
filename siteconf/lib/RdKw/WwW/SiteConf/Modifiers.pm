@@ -81,6 +81,8 @@ use RdKw::I18N::CodeSets::Functions qw( diag );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+sub _status { $! = 0; $? = shift; @_; }
+
 # Each takes a name and returns a name.
 my %WORD = (
 	E => sub { $_[0] =~ m!\.([^./]*)\z! ? $1 : '' },
@@ -112,7 +114,7 @@ sub _expr_end
 			return $i + 1 unless --$depth;
 		}
 	}
-	die diag(__("unterminated %q"), substr($str, $pos)) . "\n";
+	die _status 0, diag(__("unterminated %q"), substr($str, $pos)) . "\n";
 }
 
 # One part of :S/old/new/, from `pos' of `str' up to its delimiter.
@@ -163,7 +165,7 @@ sub _part
 			$pos++;
 		}
 	}
-	die __("unterminated :S modifier") . "\n";
+	die _status 0, __("unterminated :S modifier") . "\n";
 }
 
 # :S on one word: the new word, or undef if `old' is not in it.
@@ -210,7 +212,7 @@ sub _apply
 	my ($val, $mods, %o) = @_;
 	my $pos = 0;
 	my $len = length $mods;
-	$len or die __("empty modifier") . "\n";
+	$len or die _status 0, __("empty modifier") . "\n";
 	while ($pos < $len) {
 		my $start = $pos;
 		my $c = substr($mods, $pos++, 1);
@@ -219,31 +221,31 @@ sub _apply
 		} elsif ($c eq 'Q') {
 			$val = $o{quote}->($val);
 		} elsif ($c eq 'S') {
-			$pos < $len or die __("unterminated :S modifier") . "\n";
+			$pos < $len or die _status 0, __("unterminated :S modifier") . "\n";
 			my $delim = substr($mods, $pos++, 1);
-			$delim =~ /\A[\\\$:]\z/ and die diag(__("bad delimiter %q for :S"), $delim) . "\n";
+			$delim =~ /\A[\\\$:]\z/ and die _status 0, diag(__("bad delimiter %q for :S"), $delim) . "\n";
 			my ($old, $bol, $eol, @new);
 			($pos, $old, $bol, $eol) = _part($mods, $pos, $delim, 0, $o{expand});
 			($pos, @new) = _part($mods, $pos, $delim, 1, $o{expand});
 			my %flag;
 			while ($pos < $len && substr($mods, $pos, 1) ne ':') {
 				my $f = substr($mods, $pos++, 1);
-				$f =~ /\A[1gW]\z/ or die diag(__("unknown flag %q for :S"), $f) . "\n";
+				$f =~ /\A[1gW]\z/ or die _status 0, diag(__("unknown flag %q for :S"), $f) . "\n";
 				$flag{$f} = 1;
 			}
 			my $r = _replace($val, $old, \@new, $bol, $eol, $flag{g});
 			$val = $r if defined $r;
 		} else {
 			(my $name = substr($mods, $start)) =~ s/:.*//s;
-			die diag(__("unknown modifier %q"), ":$name") . "\n";
+			die _status 0, diag(__("unknown modifier %q"), ":$name") . "\n";
 		}
 		if ($pos < $len) {
 			if (substr($mods, $pos, 1) ne ':') {
 				(my $name = substr($mods, $start)) =~ s/:.*//s;
-				die diag(__("unknown modifier %q"), ":$name") . "\n";
+				die _status 0, diag(__("unknown modifier %q"), ":$name") . "\n";
 			}
 			$pos++;
-			$pos < $len or die __("empty modifier") . "\n";
+			$pos < $len or die _status 0, __("empty modifier") . "\n";
 		}
 	}
 	$val;

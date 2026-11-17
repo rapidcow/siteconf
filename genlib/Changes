@@ -8,8 +8,9 @@ Revision history of WwW-GenLib
 
     *** Encode is required.
 
-    + file2uri and uri2file convert between file names (character
-      strings) and URI paths, with UTF-8 escapes.
+    + file2uri and uri2file convert between file names
+      (character-based Unicode strings) and URI paths, with
+      UTF-8 escapes.
 
     + parse_base takes prog => NAME, the prefix of its error
       messages (which was always `parse_base').  Prefixes are

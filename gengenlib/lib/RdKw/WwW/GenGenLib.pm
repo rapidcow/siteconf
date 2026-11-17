@@ -53,7 +53,7 @@ use File::Compare ();
 use File::Spec;
 use IO::Handle ();
 
-# Set up locale and gettext.
+# Import locale and set up gettext.
 use RdKw::I18N::CodeSets ();
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';

@@ -509,6 +509,7 @@ if ($vee) {
 	# Perl-ish quotes, as pq() makes them; these are bytes, as the system spells them
 	my $l10n = $INC{'RdKw/WwW/SiteConf/L10N.pm'};
 	if ($l10n) {
+		no warnings 'once';
 		print "L10N domain " . pq($RdKw::WwW::SiteConf::L10N::DOMAIN) . "\n";
 		print "L10N locale directory " . pq($RdKw::WwW::SiteConf::L10N::LOCALEDIR) . "\n";
 	}

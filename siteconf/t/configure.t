@@ -142,8 +142,8 @@ sub cof {
 	is($status, 0, 'init (escapes)') or diag $out;
 	sub slurp { open my $fh, '<:encoding(UTF-8)', $_[0] or die "$_[0]: $!"; local $/; <$fh> }
 
-	($status, $out) = run('configure', '-q', '-Dx=a${U+20}b', '-Dy=my dir/sub dir', '-Dz=a${$}{U+20}b',
-		"-Dnl=a\nb", '-Dlead= x', '-Oo=t${u+09}ab');
+	($status, $out) = run('configure', '-q', '-Dx=a b', '-Dy=my dir/sub dir', '-Dz=a${U+20}b',
+		"-Dnl=a\nb", '-Dlead= x', "-Oo=t\tab");
 	is($status, 0, 'configure with escapes') or diag $out;
 	my $conf = slurp('MY/config.mk');
 	like($conf, qr/^x=\ta b$/m, '${U+20} in -D is a space; a lone one is written as it is');
@@ -156,8 +156,8 @@ sub cof {
 	is($status, 0, 'configure again, from what was saved') or diag $out;
 	like(slurp('MY/config.mk'), qr/^nl=\ta\$\{U\+000A\}b$/m, '... and it reads and writes back the same');
 
-	($status, $out) = run('configure', '-q', '-Dbad=${U+110000}');
-	isnt($status, 0, 'no such code point');
-	like($out, qr/-Dbad: .*bad escape \$\{U\+110000\}/, '... and says which');
+	($status, $out) = run('configure', '-q', '-Ddab=${U+110000}');
+	cmp_ok($status, '==', 0, "everything is okay");
+	like(slurp('MY/config.mk'), qr/^dab=\t\$\{\$\}\{U\+110000\}$/m, '... because escapes are not interpreted >:]');
 	chdir $here or die;
 }

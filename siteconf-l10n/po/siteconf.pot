@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 06:00-0600\n"
+"POT-Creation-Date: 2026-11-17 06:51-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../siteconf/script/siteconf:404 ../siteconf/share/configure.in:205
+#: ../siteconf/script/siteconf:404 ../siteconf/share/configure.in:181
 #: ../siteconf/share/presets/tem.render:60
 #: ../siteconf/share/presets/web.render:68
 #, perl-format
@@ -26,12 +26,12 @@ msgid "usage: %s"
 msgstr ""
 
 #. HEY!  %s is the option, -D or -O.
-#: ../siteconf/script/siteconf:441 ../siteconf/share/configure.in:115
+#: ../siteconf/script/siteconf:441 ../siteconf/share/configure.in:95
 #, perl-format
 msgid "%s: empty name."
 msgstr ""
 
-#: ../siteconf/script/siteconf:469 ../siteconf/share/configure.in:220
+#: ../siteconf/script/siteconf:469 ../siteconf/share/configure.in:196
 #: ../siteconf/share/presets/tem.render:57
 #: ../siteconf/share/presets/web.render:65
 msgid "too late to -C now."
@@ -42,7 +42,7 @@ msgstr ""
 msgid "conflicting modes: %s and %s"
 msgstr ""
 
-#: ../siteconf/script/siteconf:543 ../siteconf/share/configure.in:222
+#: ../siteconf/script/siteconf:543 ../siteconf/share/configure.in:198
 msgid "too many arguments"
 msgstr ""
 
@@ -236,8 +236,8 @@ msgstr ""
 #. HEY!  %q is a variable of config.mk: `b' or `c', which are where
 #. what we make goes (the target tree, and the cache)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:392
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:397 ../siteconf/share/configure.in:319
-#: ../siteconf/share/configure.in:331
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:397 ../siteconf/share/configure.in:295
+#: ../siteconf/share/configure.in:307
 msgid "%q prefix must be a relative path."
 msgstr ""
 
@@ -525,7 +525,7 @@ msgstr ""
 msgid "Removing %q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1530 ../siteconf/share/configure.in:352
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1530 ../siteconf/share/configure.in:328
 msgid "Done!"
 msgstr ""
 
@@ -542,11 +542,11 @@ msgstr ""
 #. is considered to be our files, so it is
 #. assumed that the state prior to updating is
 #. consistent with the state now.)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1550 ../siteconf/share/configure.in:341
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1550 ../siteconf/share/configure.in:317
 msgid "Writing %#q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1551 ../siteconf/share/configure.in:341
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1551 ../siteconf/share/configure.in:317
 msgid "Updating %#q"
 msgstr ""
 
@@ -623,135 +623,129 @@ msgid_plural "%d modules missing.  Looks like you got some work to do..."
 msgstr[0] ""
 msgstr[1] ""
 
-#. HEY!  %s is what was written, as ${U+110000}.
-#: ../siteconf/share/configure.in:102
-#, perl-format
-msgid "bad escape %s"
-msgstr ""
-
-#: ../siteconf/share/configure.in:155
+#: ../siteconf/share/configure.in:131
 msgid "Project root, seen from current directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:156
+#: ../siteconf/share/configure.in:132
 msgid "Build directory, seen from the source tree"
 msgstr ""
 
-#: ../siteconf/share/configure.in:157
+#: ../siteconf/share/configure.in:133
 msgid "Source directory, seen from the source tree"
 msgstr ""
 
-#: ../siteconf/share/configure.in:158
+#: ../siteconf/share/configure.in:134
 msgid "Target directory, seen from the build directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:159
+#: ../siteconf/share/configure.in:135
 msgid "Cache directory, seen from the build directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:161
+#: ../siteconf/share/configure.in:137
 msgid "Transformation rules, from current directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:162
+#: ../siteconf/share/configure.in:138
 msgid "Manifest, from current directory"
 msgstr ""
 
-#: ../siteconf/share/configure.in:163
+#: ../siteconf/share/configure.in:139
 msgid "Directory marker"
 msgstr ""
 
-#: ../siteconf/share/configure.in:164
+#: ../siteconf/share/configure.in:140
 msgid "Clean rule template"
 msgstr ""
 
-#: ../siteconf/share/configure.in:169
+#: ../siteconf/share/configure.in:145
 msgid "Code sets overrides (see I18N::CodeSets)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:170
+#: ../siteconf/share/configure.in:146
 msgid "This help message"
 msgstr ""
 
-#: ../siteconf/share/configure.in:171
+#: ../siteconf/share/configure.in:147
 msgid "Clear all configuration at this point"
 msgstr ""
 
-#: ../siteconf/share/configure.in:172
+#: ../siteconf/share/configure.in:148
 msgid "Disable tips"
 msgstr ""
 
-#: ../siteconf/share/configure.in:173
+#: ../siteconf/share/configure.in:149
 msgid "Create non-leaf build directory components"
 msgstr ""
 
-#: ../siteconf/share/configure.in:187
+#: ../siteconf/share/configure.in:163
 #, perl-format
 msgid "%s (default: %s)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:188
+#: ../siteconf/share/configure.in:164
 #, perl-format
 msgid "(default: %s)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:192
+#: ../siteconf/share/configure.in:168
 #, perl-format
 msgid "%s (alias: %s)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:207
+#: ../siteconf/share/configure.in:183
 msgid "The following variables may be defined:"
 msgstr ""
 
-#: ../siteconf/share/configure.in:209
+#: ../siteconf/share/configure.in:185
 msgid "Options with defaults:"
 msgstr ""
 
-#: ../siteconf/share/configure.in:210
+#: ../siteconf/share/configure.in:186
 msgid ""
 "Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
 "respectively, for the rulebook or for the files being transformed."
 msgstr ""
 
-#: ../siteconf/share/configure.in:213
+#: ../siteconf/share/configure.in:189
 msgid "See also WwW::SiteConf::Configure."
 msgstr ""
 
-#: ../siteconf/share/configure.in:234
+#: ../siteconf/share/configure.in:210
 msgid "cannot find $A (aka %q): %m"
 msgstr ""
 
-#: ../siteconf/share/configure.in:237
+#: ../siteconf/share/configure.in:213
 msgid "cannot chdir to $A (aka %q): %m"
 msgstr ""
 
-#: ../siteconf/share/configure.in:257
+#: ../siteconf/share/configure.in:233
 msgid "cannot create %q: %s"
 msgstr ""
 
-#: ../siteconf/share/configure.in:266
+#: ../siteconf/share/configure.in:242
 msgid "cannot mkdir %q: %m (missing non-leaf components?)"
 msgstr ""
 
-#: ../siteconf/share/configure.in:267 ../siteconf/share/configure.in:336
+#: ../siteconf/share/configure.in:243 ../siteconf/share/configure.in:312
 msgid "cannot mkdir %q: %m"
 msgstr ""
 
-#: ../siteconf/share/configure.in:271
+#: ../siteconf/share/configure.in:247
 msgid "cannot chdir to $B (aka %q): %m"
 msgstr ""
 
-#: ../siteconf/share/configure.in:312 ../siteconf/share/configure.in:327
+#: ../siteconf/share/configure.in:288 ../siteconf/share/configure.in:303
 msgid "%q may not be empty."
 msgstr ""
 
-#: ../siteconf/share/configure.in:333
+#: ../siteconf/share/configure.in:309
 msgid "%q may not contain a slash."
 msgstr ""
 
 #. HEY!  %s is a command.
-#: ../siteconf/share/configure.in:355
+#: ../siteconf/share/configure.in:331
 #, perl-format
 msgid "To generate build script, run: %s"
 msgstr ""

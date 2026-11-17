@@ -85,7 +85,9 @@ that have moved.
 use File::Basename qw( dirname basename );
 use File::Compare ();
 use File::Spec ();
+use Encode ();
 use URI ();
+use URI::file ();
 use URI::Escape qw( uri_unescape );
 
 # Import locale and set up gettext.
@@ -97,6 +99,7 @@ sub _status { $! = 0; $? = shift; @_; }
 our @EXPORT_OK = qw(
 	locate
 	relapath joinpath
+	file2uri uri2file
 	parse_base
 );
 
@@ -287,6 +290,54 @@ COMP:		while (@path) {
 		push @base, ('') if $dot && @base;
 	}
 	join '/', @base;
+}
+
+=item B<file2uri> I<file>[, I<os>]
+
+Write the file name I<file> as a URI.  A relative name gives a
+relative URI path; an absolute one gives a C<file:> URI.  I<file>
+is a character string (not the octets the file system uses), and
+its characters are written as UTF-8 escapes: C<r\x{e9}> gives
+C<r%C3%A9>.  It dies if I<file> cannot be encoded as UTF-8
+(e.g. a lone surrogate).
+
+I<os> is the system whose file names I<file> follows, as
+in L<URI::file>; it defaults to C<$^O>.  So C<a\b> on C<MSWin32>
+gives C<a/b>.
+
+(L<URI::file> alone escapes a character below U+0100 as one octet,
+or as UTF-8, depending on how Perl stores the string.)
+
+Added in 0.03_00.
+
+=cut
+
+sub file2uri
+{
+	my ($file, $os) = @_;
+	my $octets = Encode::encode('UTF-8', $file,
+		Encode::FB_CROAK() | Encode::LEAVE_SRC());
+	URI::file->new($octets, $os)->as_string;
+}
+
+=item B<uri2file> I<uri>[, I<os>]
+
+Reverse operation of B<file2uri>: the file name, as a character
+string, that I<uri> names on I<os> (default C<$^O>).  Escapes are
+decoded as UTF-8, in either case of hex digits.  Returns undef if
+I<uri> names no file on I<os> (e.g. C<a%2Fb>, a name with a slash
+in it), and dies if the escapes are not UTF-8 (e.g. C<r%E9>).
+
+Added in 0.03_00.
+
+=cut
+
+sub uri2file
+{
+	my ($uri, $os) = @_;
+	my $octets = URI->new($uri, 'file')->file($os);
+	defined $octets or return undef;
+	Encode::decode('UTF-8', $octets, Encode::FB_CROAK());
 }
 
 =item B<parse_base> \%O[, prog => 'parse_base' ]

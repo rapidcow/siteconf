@@ -55,7 +55,7 @@ for (@args) {
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
-plan tests => 42;
+plan tests => 44;
 
 local $ENV{PERL5LIB} = perl5lib();
 
@@ -204,6 +204,29 @@ SKIP: {
 	($status, $out) = run($P, {}, 'render', '-B', $Bdir, '--',
 		'html/résumé.html', 'résumé.out.html');
 	like(slurp("$P/résumé.out.html"), qr/^résumé$/m, 'render renders it') or diag $out;
+}
+
+# --- by default (GenLib 0.0300), location is a URI path (UTF-8
+# escapes), and target is the file name (characters); locate
+# compares URI paths
+SKIP: {
+	for my $m (qw( Template RdKw::WwW::GenLib )) {
+		eval "require $m; 1" or skip "$m is not installed", 2;
+	}
+	($status, $out) = run($P, {}, $script, 'init', '-q', '-P', 'web',
+		'-o', 'configure:/dev/null', '-o', 'render:render-uri');
+	is($status, 0, 'init -P web') or diag $out;
+	mkdir fs("$P/html/文書") or die "文書: $!";
+	spew("$P/html/文書/résumé.html", "[%# HAVE: \${a}/文書/résumé.html : -%]\n"
+		. "[% location %]|[% target %]|[% locate(file2uri('文書/ないもの.html')) %]"
+		. "|[% locate('./r%c3%a9sum%c3%a9.html') %]|[% uri2file(location) %]\n");
+	($status, $out) = run($P, {}, 'render-uri', '-B', $Bdir, '--',
+		'html/文書/résumé.html', 'résumé.uri.html');
+	is(slurp("$P/résumé.uri.html"),
+		"%E6%96%87%E6%9B%B8/r%C3%A9sum%C3%A9.html|文書/résumé.html"
+		. "|%E3%81%AA%E3%81%84%E3%82%82%E3%81%AE.html"
+		. "||文書/résumé.html\n",
+		'location, target, locate and uri2file') or diag $out;
 }
 
 # --- a render named with a no-break space, which is no white space to

@@ -20,9 +20,11 @@
 #
 # (Multiple files are okay!)
 #
-# GenLib is used solely for implementing [% locate PATH %].
-# If you prefer not to use it, simply remove the module
-# import line and exclude it from %v.  The script works
+# GenLib is used solely for implementing [% locate PATH %]
+# (and, since GenLib 0.0300, for writing the location as a
+# URI path with file2uri).  If you prefer not to use it,
+# simply remove the module import line and exclude it from
+# %v (and set location to $target).  The script works
 # fine without it. ;)
 #
 # More information about Template Toolkit here:
@@ -108,7 +110,7 @@ defined $I{HAVE} or die $cs->tagmsg(E => $cs->diag(__(
 			$apath, $I{HAVE}, $D->{a}));
 	}
 }) =~ s/\A\/+//;
-
+@LOCATION@
 #
 # Define Template variables (see also Template::Stash
 # if you want access to these from a plugin/filter).
@@ -116,8 +118,7 @@ defined $I{HAVE} or die $cs->tagmsg(E => $cs->diag(__(
 my %v = (
 	D => $D,
 	O => $O,
-@V_LOCATE@	location => $target,
-);
+@V_LOCATE@);
 
 #
 # Specify UTF-8 on both ends of Template Toolkit's I/O:

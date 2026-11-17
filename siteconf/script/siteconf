@@ -870,8 +870,9 @@ sub do_init
 		DEFHELP => $dhelp,
 		OPTHELP => $help,
 	);
-	# XXX: here too.
-	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die $cs->tagmsg($prog => "configure template: \@$1\@?")/ge;
+	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} :
+		die $cs->tagmsg($prog => $cs->diag(__("%s template: unknown placeholder %q"),
+			'configure', "\@$1\@"))/ge;
 
 	my $out = exists $opt->{output}{configure} ? $opt->{output}{configure} : 'configure';
 	my %out = ( configure => $out );
@@ -1035,9 +1036,7 @@ NEW
 OLD
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} :
-		# XXX: Should probably translate this as well,
-		# if we are already translating the (unlikely)
-		# installation failure with a wrong dist_dir?
-		die $cs->tagmsg($prog => "$opt->{P}.render template: \@$1\@?\n")/ge;
+		die $cs->tagmsg($prog => $cs->diag(__("%s template: unknown placeholder %q"),
+			"$opt->{P}.render", "\@$1\@"))/ge;
 	$text;
 }

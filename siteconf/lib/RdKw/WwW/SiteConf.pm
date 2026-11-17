@@ -1041,7 +1041,7 @@ sub _node
 	if (defined $I{HAVE}) {
 		# The source's own name, as a header spells it, is the one
 		# the rule says it is: ${A}/${a}/FILE.
-		my $where = diag('%q: HAVE', $apath);
+		my $where = diag('%#q: HAVE', $apath);
 		my $have = $self->_expand($I{HAVE}, $where);
 		my $want = File::Spec->canonpath("$D->{a}/$src");
 		$have eq $want or die _status 0, tagmsg(E => $have ne $I{HAVE}
@@ -1053,7 +1053,7 @@ sub _node
 	}
 
 	# What the headers say they need, and what the rules do
-	my $where = diag('%q', $nosrc ? $file : $apath);
+	my $where = diag('%#q', $nosrc ? $file : $apath);
 	# HEY!  This and the next three are where a NEED (or a WANT)
 	# was said, and are said in parentheses after what is needed
 	my $from = $nosrc ? __("in header") : diag(__("in header of %q"), $apath);
@@ -1172,7 +1172,7 @@ sub _inherit
 		my $fs = $self->_fs($dep);
 		my %I = !defined $self->_target($dep) && -f _to_fs($fs) && -T _
 			? read_deps($fs) : ();
-		my $where = diag('%q', $dep);
+		my $where = diag('%#q', $dep);
 		my $from = diag(__("in header of %q"), $dep);
 		[
 			[ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] } ],
@@ -1224,7 +1224,7 @@ sub _tool
 		my %I = !defined $self->_target($dep) && -f _to_fs($fs) && -T _
 			? read_deps($fs) : ();
 		if (defined $I{HAVE}) {
-			my $have = $self->_dep($I{HAVE}, diag('%q: HAVE', $dep));
+			my $have = $self->_dep($I{HAVE}, diag('%#q: HAVE', $dep));
 			my $at = _blame($self->{D}{R}, $rule->{line});
 			$self->_same($have, $dep)
 				or die _status 0, tagmsg(E => $have ne $I{HAVE}
@@ -1237,7 +1237,7 @@ sub _tool
 						. "but I need %q for the rule for %q (%s)?"),
 						$dep, $I{HAVE}, $dep, $file, $at));
 		}
-		my $where = diag('%q', $dep);
+		my $where = diag('%#q', $dep);
 		my $from = diag(__("in header of %q"), $dep);
 		{
 			need => [ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] } ],

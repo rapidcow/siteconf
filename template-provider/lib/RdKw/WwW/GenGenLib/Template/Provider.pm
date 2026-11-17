@@ -486,7 +486,7 @@ sub _template_content
 	my $fs = _to_fs($path);
 	my ($data, $error, $mod_date);
 	if (-d $fs) {
-		$error = diag(__("%q: not a file"), $path);
+		$error = diag(__("%#q: not a file"), $path);
 	} elsif (open my $fh, '<', $fs) {
 		local $/;
 		binmode $fh;

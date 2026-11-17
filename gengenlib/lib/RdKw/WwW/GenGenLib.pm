@@ -283,6 +283,8 @@ This function is not compatible with the original B<update_file>
 in genlib 0.0000; use
 C<< $r > 1 ? 'created' : $r ? 'updated' : 'unchanged' >>.
 
+The I<prog> and raw options were added in 0.0100.
+
 =cut
 
 sub update_file
@@ -330,6 +332,8 @@ Dies kindly if you have not configured.
 This function not compatible with the original B<load_state>
 in genlib 0.0000.  Namely, you must obtain C<\%D> and C<\%O>
 by name.
+
+The I<prog> option was added in 0.0100.
 
 =cut
 
@@ -459,6 +463,8 @@ C<forgive_missing> is an optional boolean that decides
 whether a file that cannot be opened to begin with can
 be forgiven.  Defaults to 0 (false; do not forgive).
 (This option was added in 0.0002.)
+
+The I<prog> option was added in 0.0100.
 
 =cut
 

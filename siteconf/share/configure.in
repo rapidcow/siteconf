@@ -25,11 +25,10 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 my ($cs, $me, $offset);
 BEGIN {
-	$cs = RdKw::I18N::CodeSets->new;
+	$cs = RdKw::I18N::CodeSets->locale;
 	$me = basename($0);
 	$cs->parse_from_env('SITECONF_CODESETS', prog => $me);
 	$offset = $cs->parse_from_argv(\@ARGV, prog => $me);
-	RdKw::I18N::CodeSets->locale($cs);
 	$cs->initstd( stderr => Encode::FB_PERLQQ() );
 }
 

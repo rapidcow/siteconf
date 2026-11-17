@@ -55,7 +55,7 @@ for (@args) {
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
-plan tests => 39;
+plan tests => 42;
 
 local $ENV{PERL5LIB} = perl5lib();
 
@@ -112,7 +112,7 @@ spew("$P/html/résumé.html", "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n");
 spew("$P/html/no\x{a0}break.html", "# NEED: \${A}/\${a}/résumé.html\n");
 # (a no-break space is not white space: not to make, nor to us)
 spew("$P/Makefile.in", "résumé.html no\x{a0}break.html:\n\t"
-	. 'cp ${A:Q}/${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}' . "\n");
+	. 'cd ${A:Q} && cp ${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}' . "\n");
 spew("$P/MANIFEST", "MAKE all\n\tNEED résumé.html\n\tNEED no\x{a0}break.html\n");
 
 my ($status, $out) = run($P, {}, $script, 'init', '-q');
@@ -140,6 +140,20 @@ SKIP: {
 	ok(-f fs("$Bdir/site/no\x{a0}break.html"), '... all of it');
 }
 
+# Exercise a relative B even where Latin-1 file names are unavailable.
+($status, $out) = run($P, {}, 'configure', '-q', '-DB=build-rel');
+is($status, 0, 'configure with relative B') or diag $out;
+($status, $out) = run($P, {}, $script, '-g', '-q', '-B', 'build-rel');
+is($status, 0, 'generate with relative B') or diag $out;
+SKIP: {
+	my $make = $ENV{MAKE} || 'make';
+	system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0
+		or skip 'no make', 1;
+	($status, $out) = run("$P/build-rel", {}, '-e', 'exec @ARGV', $make, '-s');
+	is(slurp("$P/build-rel/site/résumé.html"), "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n",
+		'make copies to relative B') or diag $out;
+}
+
 # --- the build file spells names as the file system does, so make
 # finds them.  Here the file system spells them in ISO-8859-1.  A name
 # the file system cannot spell is an error.
@@ -153,7 +167,7 @@ SKIP: {
 	mkdir fs("$L/html") or die $!;
 	spew_raw(fs("$L/html/") . $name, "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n");
 	spew("$L/Makefile.in", "résumé.html:\n\t"
-		. 'cp ${A:Q}/${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}' . "\n");
+		. 'cd ${A:Q} && cp ${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}' . "\n");
 	spew("$L/MANIFEST", "MAKE all\n\tNEED résumé.html\n");
 	run($L, {}, $script, 'init', '-q');
 	run($L, {}, 'configure', '-q', '-DB=build');

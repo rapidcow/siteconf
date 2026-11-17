@@ -75,13 +75,13 @@ is (relapath('archive//', $deep), '../../archive//', 'extra slash after a name')
 is (relapath('archive///', $deep), '../../archive///', 'many slashes after a name');
 is (relapath('a//b/', $deep), '../../a//b/', 'inner empty segment is kept');
 
-# relapath is the inverse of joinpath:
+# For a fixed normalized PATH relapath is the right inverse of joinpath:
 #
 #     joinpath(BASE, relapath(PATH, BASE)) eq PATH
 #
-# for any PATH of plain names, empty segments (slashes) and %2E (a
-# name like any other, never a dot).  It breaks down in two places,
-# both pinned here so that it does not change by accident.
+# The identity holds for PATH of plain names, empty segments (slashes)
+# and %2E (which is literal and not path traversal).  It breaks down in
+# two places, both pinned here so that it does not change by accident.
 #
 # (1) A literal `.' or `..' segment in PATH.  relapath takes it for
 # a name, as tested above, but joinpath resolves it:

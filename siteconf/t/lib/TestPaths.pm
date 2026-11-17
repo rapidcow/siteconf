@@ -86,8 +86,7 @@ sub fs_surprise
 		@found = grep { $_ eq $name } readdir $dh;
 		closedir $dh;
 	}
-	# XXX DEBUG
-	print STDERR pq(\@found), " => ", pq($dir), " ", pq($name), "\n";
+	Test::More::note(pq(\@found), " => ", pq($dir), " ", pq($name));
 	rmdir $path or return "@{[pq($name)]}: rmdir: $!";
 	return "@{[pq($name)]}: the name is not listed as it was given" unless @found == 1;
 	return "@{[pq($name)]}: rmdir left something" if -e $path || -l $path;

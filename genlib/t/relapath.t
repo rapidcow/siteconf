@@ -75,22 +75,24 @@ is (relapath('archive//', $deep), '../../archive//', 'extra slash after a name')
 is (relapath('archive///', $deep), '../../archive///', 'many slashes after a name');
 is (relapath('a//b/', $deep), '../../a//b/', 'inner empty segment is kept');
 
-# For a fixed normalized PATH relapath is the right inverse of joinpath:
+# For a fixed BASE, relapath(., BASE) is the right inverse of
+# joinpath(BASE, .):
 #
 #     joinpath(BASE, relapath(PATH, BASE)) eq PATH
 #
-# The identity holds for PATH of plain names, empty segments (slashes)
-# and %2E (which is literal and not path traversal).  It breaks down in
-# two places, both pinned here so that it does not change by accident.
+# The identity holds for any normalized PATH (no literal `.' or `..'
+# segments) of plain names, empty segments (slashes) and %2E (which is
+# literal and not path traversal).  It breaks down in two places, both
+# pinned here so that it does not change by accident.
 #
-# (1) A literal `.' or `..' segment in PATH.  relapath takes it for
-# a name, as tested above, but joinpath resolves it:
+# (1) A literal `.' or `..' segment in PATH or BASE.  relapath takes
+# it for a name, as tested above, but joinpath resolves it:
 #
 #     relapath('.', 'a')    -> '.'     joinpath('a', '.')   -> ''
 #     relapath('./', '')    -> './'    joinpath('', './')   -> '/'
 #     relapath('/.', '/')   -> '.'     joinpath('/', '.')   -> '/'
 #
-# PATH is meant to be normalized, so this is not a bug.
+# PATH and BASE are meant to be normalized, so this is not a bug.
 is (relapath('.', 'a'), '.', 'dot in path: relapath');
 is (joinpath('a', '.'), '', 'dot in path: joinpath resolves it');
 is (relapath('./', ''), './', 'dot slash in path: relapath');
@@ -104,7 +106,8 @@ is (joinpath('/', '.'), '/', 'leading slash dot: joinpath resolves it');
 #
 #     relapath('%61', 'a')  -> ''      joinpath('a', '')    -> 'a'
 #
-# (and %2E vs a literal `.' is not this: %2E stays a name in joinpath.)
+# (This includes %2E against a literal `.' in BASE: the two compare
+# equal, though joinpath itself never resolves %2E as a dot.)
 is (relapath('%61', 'a'), '', 'same name, other spelling: empty');
 is (joinpath('a', ''), 'a', 'same name, other spelling: base\'s');
 is (relapath('%62/b/%2E/%61', 'b/%62/a'), '%2E/%61',

@@ -189,7 +189,7 @@ SKIP: {
 		system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0
 			or skip 'no make', 1;
 		($status, $out) = run("$L/build", {}, '-e', 'exec @ARGV', $make, '-s');
-		is(slurp_raw(fs("$L/build/site/") . $name), "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n",
+		is(Encode::decode('UTF-8', slurp_raw(fs("$L/build/site/") . $name), Encode::FB_CROAK()), "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n",
 			'make makes it, under that name') or diag $out;
 	}
 }

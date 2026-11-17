@@ -4,13 +4,14 @@ use strict;
 use warnings;
 use Test::More ();
 
-use Cwd qw( abs_path );
-use File::Basename qw( dirname );
-use File::Spec;
-
 use Exporter ();
 our @ISA = qw( Exporter );
 our @EXPORT_OK = qw( project_root script_path perl5lib fs_surprise );
+
+use Cwd qw( abs_path );
+use Data::Dumper ();
+use File::Basename qw( dirname );
+use File::Spec;
 
 # Use locale encoding for wide-characters, since console
 # output/error is often meant for humans and not machine-
@@ -48,6 +49,12 @@ sub perl5lib
 	join ':', map { abs_path($_) } grep { defined && !ref && -d } @INC;
 }
 
+sub pq
+{
+	my ($s) = @_;
+	Data::Dumper->new([$s])->Terse(1)->Indent(0)->Useqq(1)->Dump();
+}
+
 # Does the file system (of a directory; the current one if not given)
 # take these bytes for a name as they are, as we expect of it?  That
 # is: a directory under a missing one of that name is ENOENT (and not
@@ -63,24 +70,27 @@ sub fs_surprise
 {
 	my ($name, $dir) = @_;
 	defined $dir or $dir = '.';
-	my $path = "$dir/$name";
-	return 'the name is already taken' if -e $path || -l $path;
-	if (mkdir "$path/x") {
-		rmdir "$path/x"; rmdir $path;
-		return 'mkdir under a missing directory worked';
+	my $path = File::Spec->catfile($dir, $name);
+	return "@{[pq($name)]}: the name is already taken" if -e $path || -l $path;
+	my $pathx = File::Spec->catfile($path, "x");
+	if (mkdir $pathx) {
+		rmdir $pathx; rmdir $path;
+		return "@{[pq($name)]}: mkdir under a missing directory worked";
 	}
-	return "mkdir under a missing directory: $! (expected ENOENT)"
+	return "@{[pq($name)]}: mkdir under a missing directory: $! (expected ENOENT)"
 		unless $!{ENOENT};
-	return 'a failed mkdir made something' if -e $path || -l $path;
-	mkdir $path or return "mkdir: $!";
+	return "@{[pq($name)]}: a failed mkdir made something" if -e $path || -l $path;
+	mkdir $path or return "@{[pq($name)]}: mkdir: $!";
 	my @found;
 	if (opendir my $dh, $dir) {
 		@found = grep { $_ eq $name } readdir $dh;
 		closedir $dh;
 	}
-	rmdir $path or return "rmdir: $!";
-	return 'the name is not listed as it was given' unless @found == 1;
-	return 'rmdir left something' if -e $path || -l $path;
+	# XXX DEBUG
+	print STDERR pq(\@found), " => ", pq($dir), " ", pq($name), "\n";
+	rmdir $path or return "@{[pq($name)]}: rmdir: $!";
+	return "@{[pq($name)]}: the name is not listed as it was given" unless @found == 1;
+	return "@{[pq($name)]}: rmdir left something" if -e $path || -l $path;
 	undef;
 }
 

@@ -579,7 +579,7 @@ msgid ""
 "... but GNU Make can!  (Pass -G gmake if you want that. ;)"
 msgstr ""
 "make 无法表示 %q（其中有 %s），\n"
-"……但 GNU make 可以！（想用的话请传 -G gmake。;)"
+"... 但 GNU make 可以！（想用的话请传 -G gmake。;)"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:100
 msgid "make cannot name %q (with inescapable %s)"

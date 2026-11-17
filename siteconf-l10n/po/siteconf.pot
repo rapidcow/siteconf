@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 23:53-0600\n"
+"POT-Creation-Date: 2026-11-16 23:59-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -910,7 +910,7 @@ msgid "%s: %s takes exactly one file (use # for comments)"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:165
-msgid "%s: %q is no name"
+msgid "%s: %q is empty"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:167

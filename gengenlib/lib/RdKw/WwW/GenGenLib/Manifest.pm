@@ -162,7 +162,7 @@ sub read
 				(my $why = $@) =~ s/^/_blame($file, $.) . ": "/gem;
 				die _status 0, tagmsg($prog => $why);
 			};
-			length $name or die _status 0, tagmsg($prog => diag(__("%s: %q is no name"),
+			length $name or die _status 0, tagmsg($prog => diag(__("%s: %q is empty"),
 				_blame($file, $.), $arg[0]));
 			$name =~ /\0/ and die _status 0, tagmsg($prog => diag(__("%s: %q has a NUL in it"),
 				_blame($file, $.), $arg[0]));

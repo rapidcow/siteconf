@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 23:53-0600\n"
+"POT-Creation-Date: 2026-11-16 23:59-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -414,8 +414,7 @@ msgid ""
 "but I need %q?"
 msgstr ""
 "%#q: You HAVE %q (aka %q),\n"
-"but I need %q?"
-"but I need %q?"
+"but I need %q?but I need %q?"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1052
 msgid ""
@@ -423,8 +422,7 @@ msgid ""
 "but I need %q?"
 msgstr ""
 "%#q: You HAVE %q,\n"
-"but I need %q?"
-"but I need %q?"
+"but I need %q?but I need %q?"
 
 #. HEY!  This and the next three are where a NEED (or a WANT)
 #. was said, and are said in parentheses after what is needed
@@ -486,8 +484,8 @@ msgid ""
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
 "%#q: You HAVE %q (aka %q),\n"
-"but I need %q for the rule for %q (%s)?"
-"but I need %q for the rule for %q (%s)?"
+"but I need %q for the rule for %q (%s)?but I need %q for the rule for %q "
+"(%s)?"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1236
 msgid ""
@@ -495,8 +493,8 @@ msgid ""
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
 "%#q: You HAVE %q,\n"
-"but I need %q for the rule for %q (%s)?"
-"but I need %q for the rule for %q (%s)?"
+"but I need %q for the rule for %q (%s)?but I need %q for the rule for %q "
+"(%s)?"
 
 #. HEY!  the %s is where (`file' line 3); what
 #. follows the colon is why, a line each
@@ -938,8 +936,8 @@ msgid "%s: %s takes exactly one file (use # for comments)"
 msgstr "%s: %s takes exactly one file (use # for comments)"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:165
-msgid "%s: %q is no name"
-msgstr "%s: %q is no name"
+msgid "%s: %q is empty"
+msgstr "%s: %q is empty"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:167
 msgid "%s: %q has a NUL in it"

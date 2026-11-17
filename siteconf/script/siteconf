@@ -378,7 +378,7 @@ use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
 our $GENLIB_NEW = '0.0203';
-# GenGenLib that is locale-aware (and has norm_dep, subs_dep and
+# GenGenLib that is locale-aware (and has norm_deps, subs_deps and
 # uproot): what configure and render are written for, and no older
 our $GENGENLIB_MIN = '0.0100';
 # Our preferred provider, if (and only if) the user requests it via -M
@@ -437,7 +437,7 @@ sub default_setter
 	sub {
 		my ($name, $value) = split(/=/, $_[1], 2);
 		defined $name && length $name
-			or die "$prog: " . $cs->diag(__("%s: empty name."), "-$kind") . "\n";
+			or die $cs->tagmsg($prog => $cs->diag(__("%s: empty name."), "-$kind"));
 		$values->{$name} = defined $value ? $value : '';
 		push @written, "-$kind$_[1]";
 	};
@@ -465,7 +465,7 @@ GetOptions(
 	'A'        => \$opt{A},
 	'f'        => \$opt{f},
 	# Reject misplaced -C arguments
-	'C:s'      => sub { die "$prog: " . __("too late to -C now.") . "\n" },
+	'C:s'      => sub { die $cs->tagmsg($prog => __("too late to -C now.")); },
 ) or die $usage;
 
 if ($vee) {
@@ -534,11 +534,12 @@ if ($vee) {
 if (@ARGV and $ARGV[0] =~ /\A(?:init|make|list)\z/) {
 	my $word = shift @ARGV;
 	defined $opt{mode} and $opt{mode} ne $word
-		and die "$prog: " . $cs->diag(__("conflicting modes: %s and %s"), $opt{mode}, $word) . "\n";
+		and die $cs->tagmsg($prog => $cs->diag(__(
+			"conflicting modes: %s and %s"), $opt{mode}, $word));
 	$opt{mode} = $word;
 }
 defined $opt{mode} or die $usage;
-@ARGV and die "$prog: " . __("too many arguments") . "\n";
+@ARGV and die $cs->tagmsg($prog => __("too many arguments"));
 
 # Keep output routing separate from the defaults written into configure.
 for my $output (@{ $opt{outputs} }) {
@@ -546,11 +547,11 @@ for my $output (@{ $opt{outputs} }) {
 	if ($output =~ m!\A([^/:]+):(.*)\z!s) {
 		($name, $path) = ($1, $2);
 		$opt{mode} eq 'init'
-			or die "$prog: " . __("named outputs are only for init") . "\n";
+			or die $cs->tagmsg($prog => __("named outputs are only for init"));
 		$name eq 'configure' || $name eq 'render'
-			or die "$prog: " . $cs->diag(__("unknown output name: %q"), $name) . "\n";
+			or die $cs->tagmsg($prog => $cs->diag(__("unknown output name: %q"), $name));
 	}
-	length $path or die "$prog: " . __("empty output path") . "\n";
+	length $path or die $cs->tagmsg($prog => __("empty output path"));
 	$opt{mode} eq 'init' ? ($opt{output}{$name} = $path) : ($opt{o} = $path);
 }
 
@@ -558,8 +559,8 @@ for my $output (@{ $opt{outputs} }) {
 # $ tar -taf /dev/null
 # tar: Option -a is not permitted in mode -t
 sub _not_for_us {
-	die "$prog: " . $cs->diag(
-		__("%s is not permitted in mode %s"), @_) . "\n";
+	die $cs->tagmsg($prog => $cs->diag(__(
+		"option %s is not permitted in mode %s"), @_));
 }
 
 if ($opt{mode} eq 'init') {
@@ -610,6 +611,7 @@ if ($opt{mode} eq 'init') {
 		goals => $opt{t},
 	);
 	$sc->generate($opt{G}, $opt{o});
+
 	# (the build file is written all the same; but what -A asked for is gone)
 	exit($sc->failed ? 1 : 0);
 }
@@ -630,14 +632,14 @@ sub do_list
 	if (defined $opt->{0}) {
 		$opt->{0} =~ /\A[0-7]{0,3}\z/
 			&& (my $ord = oct($opt->{0} || 0)) <= 0377
-			or die "$prog: " . $cs->diag(__(
+			or die $cs->tagmsg($prog => $cs->diag(__(
 				"%#q: not a valid ASCII octal code point"),
-				"-0$opt->{0}") . "\n";
+				"-0$opt->{0}"));
 		$sep = chr $ord;
 	}
 	my $file = defined $opt->{F} ? $opt->{F} : 'MANIFEST';
 	eval {
-		my $mf = read_manifest($file);
+		my $mf = read_manifest($file, prog => undef);
 		my (%seen, @name);
 		for my $t (@{ $opt->{t} } ? @{ $opt->{t} } : ':') {
 			my ($goal, $type) = split /:/, $t, 2;
@@ -645,8 +647,9 @@ sub do_list
 			my @kind = !defined $type || $type eq '' ? qw( needed wanted )
 				: $type eq 'NEED' ? 'needed'
 				: $type eq 'WANT' ? 'wanted'
-				: die $cs->diag(__("%q: expected NEED or WANT, not %q"),
-					"-t $t", $type) . "\n";
+				: die $cs->tagmsg($prog => $cs->diag(__(
+					"%q: expected NEED or WANT, not %q"),
+					"-t $t", $type));
 			push @name, grep { !$seen{$_}++ } map { $mf->$_($goal) } @kind;
 		}
 		for my $name (@name) {
@@ -656,15 +659,13 @@ sub do_list
 				# says it: -0 for a NUL, -012 for a newline
 				"%q: %q conflicts with record separator %s"),
 				$file, $name, sprintf('-0%o', ord $sep)) . "\n";
-			print STDOUT $fs, $sep or die "$prog: " . $cs->diag(__(
-				"cannot write to stdout: %m")) . "\n";
+			print STDOUT $fs, $sep or die $cs->tagmsg($prog => $cs->diag(__(
+				"cannot write to stdout: %m")));
 		}
 		1;
-	} or do {
-		(my $why = $@) =~ s/\Aread_manifest: //;
-		die "$prog: $why";
-	};
-	STDOUT->flush() or die "$prog: " . $cs->diag(__("cannot write to stdout: %m")) . "\n";
+	} or die $cs->tagmsg($prog => "$@");
+	STDOUT->flush() or die $cs->tagmsg($prog =>
+		$cs->diag(__("cannot write to stdout: %m")));
 	0;
 }
 
@@ -675,8 +676,9 @@ sub share_file
 {
 	my ($file) = @_;
 	my $path = eval { File::ShareDir::dist_file('WwW-SiteConf', $file) };
-	defined $path or die "$prog: " . $cs->diag(__("cannot find %q (is WwW-SiteConf installed?)"),
-		"share/$file") . "\n";
+	defined $path or die $cs->tagmsg($prog => $cs->diag(__(
+			"cannot find %q (is WwW-SiteConf installed?)"),
+		"share/$file"));
 	$cs->un_fs($path, { prog => $prog });
 }
 
@@ -684,9 +686,9 @@ sub slurp
 {
 	my ($file) = @_;
 	open my $fh, '<:encoding(UTF-8)', $cs->to_fs($file, { prog => $prog })
-		or die "$prog: " . $cs->diag(__("cannot open file %q: %m"), $file) . "\n";
+		or die $cs->tagmsg($prog => $cs->diag(__("cannot open file %q: %m"), $file));
 	my $text = do { local $/; readline $fh };
-	close $fh or die "$prog: " . $cs->diag(__("cannot read file %q: %m"), $file) . "\n";
+	close $fh or die $cs->tagmsg($prog => $cs->diag(__("cannot read file %q: %m"), $file));
 	$text;
 }
 
@@ -745,39 +747,47 @@ sub do_init
 	);
 	for my $k (keys %S) {
 		# HEY!  %s is the option (-Sx), and then what it may be
-		exists $Dd{$k} || $k eq 'c' or die "$prog: " . $cs->diag(__("%s: no such thing (valid: %s)"),
-			"-S$k", 'A B a b c R F e clean') . "\n";
+		exists $Dd{$k} || $k eq 'c' or die $cs->tagmsg($prog => $cs->diag(__(
+			"%s: no such thing (valid: %s)"), "-S$k", 'A B a b c R F e clean'));
 		$Dd{$k} = $S{$k};
 		# HEY!  %s is an option, as -Sa (and likewise in the next few)
-		length $Dd{$k} or die "$prog: " . $cs->diag(__("%s may not be empty."), "-S$k") . "\n";
+		length $Dd{$k} or die $cs->tagmsg($prog => $cs->diag(__(
+			"%s may not be empty."), "-S$k"));
 	}
 	File::Spec->file_name_is_absolute($Dd{b})
-		and die "$prog: " . $cs->diag(__("%s must be a relative path."), '-Sb') . "\n";
+		and die $cs->tagmsg($prog => $cs->diag(__(
+			"%s must be a relative path."), '-Sb'));
 	# c is always there; the same as b means it goes where b goes
 	exists $Dd{c} or $Dd{c} = $Dd{b};
 	File::Spec->file_name_is_absolute($Dd{c})
-		and die "$prog: " . $cs->diag(__("%s must be a relative path."), '-Sc') . "\n";
+		and die $cs->tagmsg($prog => $cs->diag(__(
+			"%s must be a relative path."), '-Sc'));
 
 	# -D and -O set what defaults to have in addition.
 	for my $k (sort keys %{ $opt->{D} }) {
 		exists $opt->{S}{$k}
-			and die "$prog: " . $cs->diag(__("%s and %s are the same thing; pick one."),
-				"-S$k", "-D$k") . "\n";
+			and die $cs->tagmsg($prog => $cs->diag(__(
+				"%s and %s are the same thing; pick one."),
+				"-S$k", "-D$k"));
 	}
 	my %Dx = (%Dd, %{ $opt->{D} });
 	# (-Db here moves c too, unless c is said)
 	exists $S{c} || exists $opt->{D}{c} or $Dx{c} = $Dx{b};
 	# -SA or -DA: where render goes, too
 	my $A = $Dx{A};
-	length $A or die "$prog: " . $cs->diag(__("%s may not be empty."), '-DA') . "\n";
+	length $A or die $cs->tagmsg($prog => $cs->diag(__(
+		"%s may not be empty."), '-DA'));
 	my %Ox = %{ $opt->{O} };
 
 	my $preset = '';
 	my $render;
 	if (defined $opt->{P} and $opt->{P} ne 'none') {
-		$opt->{P} =~ /\A\w+\z/ or die "$prog: " . $cs->diag(__("bad preset name: %q"), $opt->{P}) . "\n";
+		$opt->{P} =~ /\A\w+\z/
+			or die $cs->tagmsg($prog => $cs->diag(__(
+			"bad preset name: %q"), $opt->{P}));
 		my $file = eval { share_file("presets/$opt->{P}.config") }
-			or die "$prog: " . $cs->diag(__("no such preset: %q"), $opt->{P}) . "\n";
+			or die $cs->tagmsg($prog => $cs->diag(__(
+			"no such preset: %q"), $opt->{P}));
 		$preset = slurp($file);
 		$preset =~ s/\n*\z/\n/;
 		$render = eval { share_file("presets/$opt->{P}.render") };
@@ -796,20 +806,26 @@ sub do_init
 		my ($drop, $module, $min) = $m =~ /\A(-?)([^=]*)(?:=(.*))?\z/s;
 		# HEY!  %s is the option, as -MModule=version (here and
 		# in the next four)
-		$module =~ /\A\w+(?:::\w+)*\z/ or die "$prog: " . $cs->diag(__("%s: bad module name"), "-M$m") . "\n";
+		$module =~ /\A\w+(?:::\w+)*\z/
+			or die $cs->tagmsg($prog => $cs->diag(__(
+			"%s: bad module name"), "-M$m"));
 		$drop && defined $min
-			and die "$prog: " . $cs->diag(__("%s: no version for what is dropped"), "-M$m") . "\n";
+			and die $cs->tagmsg($prog => $cs->diag(__(
+			"%s: no version for what is dropped"), "-M$m"));
 		my $said = defined $min;
 		$min = $drop ? '' : 0 unless $said;
-		$min =~ /\A(?:v?[0-9][0-9._]*|0|)\z/ or die "$prog: " . $cs->diag(__("%s: bad version"), "-M$m") . "\n";
+		$min =~ /\A(?:v?[0-9][0-9._]*|0|)\z/
+			or die $cs->tagmsg($prog => $cs->diag(__("%s: bad version"), "-M$m"));
 		if ($min eq '') {
 			$module eq 'RdKw::WwW::GenGenLib' || $module eq 'RdKw::I18N::CodeSets'
-				and die "$prog: " . $cs->diag(__("%s: configure always needs it"), "-M$m") . "\n";
+				and die $cs->tagmsg($prog => $cs->diag(__(
+					"%s: configure always needs it"), "-M$m"));
 			delete $mods{$module};
 		} elsif ($module eq 'RdKw::WwW::GenGenLib' && !version_ge($min, $GENGENLIB_MIN)) {
 			# (with no version, it is the one we ask for anyway)
-			$said and die "$prog: " . $cs->diag(__("%s: version %s or later is required"),
-				"-M$m", $GENGENLIB_MIN) . "\n";
+			$said and die $cs->tagmsg($prog => $cs->diag(__(
+					"%s: version %s or later is required"),
+				"-M$m", $GENGENLIB_MIN));
 			$mods{$module} = $GENGENLIB_MIN;
 		} else {
 			$mods{$module} = $min;
@@ -825,15 +841,7 @@ sub do_init
 	}
 	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
 	exists $opt->{output}{render} && !defined $render
-		and die "$prog: " . __("preset does not supply a render output") . "\n";
-	# render names itself in a HAVE, and read_deps cannot take just
-	# anything there (" is reserved for an escape mechanism, and ?
-	# is for soft-deps).
-	if (defined(my $path = $opt->{output}{render})) {
-		$path eq '' || $path =~ /\A"/ || $path =~ /[?"]\z/ || $path =~ /[\t\n\cK\f\r ]/
-			and die "$prog: " . $cs->diag(__("dangerous name for render: %q is not supported (yet)"),
-				$path) . "\n";
-	}
+		and die $cs->tagmsg($prog => __("preset does not supply a render output"));
 	# The help of configure, as rows of its tables (see there): -D beyond
 	# B a b R F e clean (which configure already describes), and -O, with
 	# what we know of them (said with __ there, so N__ here)
@@ -857,7 +865,8 @@ sub do_init
 		DEFHELP => $dhelp,
 		OPTHELP => $help,
 	);
-	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: configure template: \@$1\@?\n"/ge;
+	# XXX: here too.
+	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die $cs->tagmsg($prog => "configure template: \@$1\@?")/ge;
 
 	my $out = exists $opt->{output}{configure} ? $opt->{output}{configure} : 'configure';
 	my %out = ( configure => $out );
@@ -879,9 +888,9 @@ out:	while (my ($name, $dest) = each %out) {
 			next out;
 		}
 		if ($exists && !(-l $dest_fs || unlink $dest_fs)) {
-			print STDERR "$prog: ",
-				$cs->diag(__("cannot remove %q: %m"), $dest),
-				"\n" unless $opt->{q};
+			print STDERR $cs->tagmsg($prog => $cs->diag(__(
+				"cannot remove %q: %m"), $dest))
+				unless $opt->{q};
 		}
 		my $contents;
 		if ($name eq 'configure') {
@@ -892,17 +901,15 @@ out:	while (my ($name, $dest) = each %out) {
 			die "Unreachable\n";
 		}
 		open my $fh, '>:encoding(UTF-8)', $dest_fs
-			or die "$prog: "
-				. $cs->diag(__("cannot create file %q: %m"), $dest)
-				. "\n";
-		print $fh $contents or die "$prog: "
-			. $cs->diag(__("cannot write file %q: %m"), $dest) . "\n";
-		close $fh or die "$prog: "
-			. $cs->diag(__("cannot write file %q: %m"), $dest) . "\n";
+			or die $cs->tagmsg($prog => $cs->diag(__(
+				"cannot create file %q: %m"), $dest));
+		print $fh $contents and close $fh
+			or die $cs->tagmsg($prog => $cs->diag(__(
+				"cannot write file %q: %m"), $dest));
 		unless (chmod 0777 & ~umask, $dest_fs) {
-			print STDERR "$prog: ",
-				$cs->diag(__("cannot chmod %q: %m"), $dest),
-				"\n" unless $opt->{q};
+			print STDERR $cs->tagmsg($prog => $cs->diag(__(
+				"cannot chmod %q: %m"), $dest))
+				unless $opt->{q};
 		}
 		$written{$name} = 1;
 		print STDERR $cs->diag(
@@ -1022,6 +1029,10 @@ NEW
 	},
 OLD
 	);
-	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} : die "$prog: $opt->{P}.render template: \@$1\@?\n"/ge;
+	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} :
+		# XXX: Should probably translate this as well,
+		# if we are already translating the (unlikely)
+		# installation failure with a wrong dist_dir?
+		die $cs->tagmsg($prog => "$opt->{P}.render template: \@$1\@?\n")/ge;
 	$text;
 }

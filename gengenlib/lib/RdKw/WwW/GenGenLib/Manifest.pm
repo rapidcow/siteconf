@@ -57,7 +57,7 @@ digits, C<_>, C<->, C<.> and C<+>, and nothing to escape.  A goal is
 only made once.
 
 C<NEED> and C<WANT> take one name each, which belongs to the last
-C<MAKE> and is unescaped as a spec of B<subs_dep> without definitions
+C<MAKE> and is unescaped as a spec of B<subs_deps> without definitions
 is (see L<RdKw::WwW::GenGenLib/escape_dep>, which writes one): C<${$}>
 or C<$$> is a C<$>, C<${U+>I<hex>C<}> is that character (C<${U+0020}>
 for a space, C<${U+0023}> for a C<#> that is no comment), and a
@@ -76,7 +76,7 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 =cut
 
 use Encode ();
-use RdKw::WwW::GenGenLib qw( subs_dep );
+use RdKw::WwW::GenGenLib qw( subs_deps );
 
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 # Use the same gettext domain as our parent GenGenLib.pm.
@@ -85,11 +85,6 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 # POSIX white space since [[:space:]] is too broad.
 # (This is the same character set used in SiteConf.pm)
 my $SP = '\t\n\cK\f\r ';
-
-# Our own name, given to everything we call (to_fs, subs_dep) so
-# that whatever they die with already says who's talking, and we
-# never have to guess at (or strip) a prefix we did not put there.
-my $PROG = 'read_manifest';
 
 =item B<read> I<file>
 
@@ -110,15 +105,19 @@ sub _blame
 sub read
 {
 	local ($_, $.);
-	my ($class, $file) = @_;
+	# Usually read_manifest delegates to us;
+	# so we are them.
+	my ($class, $file, %kwds) = @_;
+	my $prog = RdKw::WwW::GenGenLib::_getprog(\%kwds, 'read_manifest');
+	my $kwds = { prog => $prog };
 	my $fh;
 	if (ref $file) {
 		open $fh, '<', $file
-			or die tagmsg($PROG => diag(__("cannot open string: %m")));
+			or die tagmsg($prog => diag(__("cannot open string: %m")));
 		$file = 'MANIFEST';
 	} else {
-		open $fh, '<', to_fs($file, { prog => $PROG })
-			or die tagmsg($PROG => diag(__("cannot open file %q: %m"), $file));
+		open $fh, '<', to_fs($file, { prog => $prog })
+			or die tagmsg($prog => diag(__("cannot open file %q: %m"), $file));
 	}
 
 	my (@goal, %goal, $goal);
@@ -126,20 +125,20 @@ sub read
 		# HEY!  %#q is the file name of the faulty
 		# MANIFEST and %d is its lineno.
 		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
-			or die tagmsg($PROG => diag(__("%s: not UTF-8"),
+			or die tagmsg($prog => diag(__("%s: not UTF-8"),
 				_blame($file, $.)));
 		s/(?:^|[$SP])#.*//so;
 		my ($kw, @arg) = /([^$SP]+)/go;
 		defined $kw or next;
 		if ($kw eq 'MAKE') {
-			@arg == 1 or die tagmsg($PROG => diag(__(
+			@arg == 1 or die tagmsg($prog => diag(__(
 				"%s: MAKE takes exactly one goal name"),
 				_blame($file, $.)));
 			my $name = $arg[0];
 			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
-				or die tagmsg($PROG => diag(__("%s: bad goal name %q"),
+				or die tagmsg($prog => diag(__("%s: bad goal name %q"),
 				_blame($file, $.), $name));
-			$goal{$name} and die tagmsg($PROG => diag(__(
+			$goal{$name} and die tagmsg($prog => diag(__(
 				"%s: goal %q is already made"),
 				_blame($file, $.), $name));
 			push @goal, $goal = $goal{$name}
@@ -148,37 +147,34 @@ sub read
 		}
 		if ($kw eq 'NEED' or $kw eq 'WANT') {
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			$goal or die tagmsg($PROG => diag(__("%s: %s before any MAKE"),
+			$goal or die tagmsg($prog => diag(__("%s: %s before any MAKE"),
 				_blame($file, $.), $kw));
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			@arg == 1 or die tagmsg($PROG => diag(__("%s: %s takes exactly one file"
+			@arg == 1 or die tagmsg($prog => diag(__("%s: %s takes exactly one file"
 				. " (use # for comments)"), _blame($file, $.), $kw));
-			my $name = eval { subs_dep(undef, $arg[0],
-				strict => 1, on_missing => 'croak', prog => $PROG) };
+			my $name = eval { subs_deps(undef, $arg[0],
+				{ strict => 1, on_missing => 'croak', prog => undef }) };
 			defined $name or do {
-				# We gave subs_dep our own name, so we know exactly
-				# what to take off before we say it again ourselves,
-				# this time with the line it happened on.
-				(my $why = $@) =~ s/\A\Q$PROG\E: //;
-				die tagmsg($PROG => diag(__("%s: %s"), _blame($file, $.), $why));
+				# Prefix subs_deps' error message with our name
+				# and a blame line.
+				(my $why = $@) =~ s/^/_blame($file, $.) . ": "/gem;
+				die tagmsg($prog => $why);
 			};
-			length $name or die tagmsg($PROG => diag(__("%s: %q is no name"),
+			length $name or die tagmsg($prog => diag(__("%s: %q is no name"),
 				_blame($file, $.), $arg[0]));
-			$name =~ /\0/ and die tagmsg($PROG => diag(__("%s: %q has a NUL in it"),
+			$name =~ /\0/ and die tagmsg($prog => diag(__("%s: %q has a NUL in it"),
 				_blame($file, $.), $arg[0]));
 			push @{ $goal->{lc $kw} }, { file => $name, line => $. };
 			next;
 		}
-		die tagmsg($PROG => diag(__("%s: expected MAKE, NEED or WANT, not %q"),
+		die tagmsg($prog => diag(__("%s: expected MAKE, NEED or WANT, not %q"),
 			_blame($file, $.), $kw));
 	}
-	close $fh or die tagmsg($PROG => diag(__("cannot read file %q: %m"), $file));
-	# HEY!  I (ethan/rc) didn't write this message.
-	# I'm frankly a bit surprised Claude made it
-	# a question... anyways go wild at it i don't
-	# really have any idea lol :v
-	@goal or die tagmsg($PROG => diag(__("%q: no goals; what should I make?"), $file));
-	bless { file => $file, goals => \@goal, goal => \%goal }, $class;
+	close $fh or die tagmsg($prog => diag(__("cannot read file %q: %m"), $file));
+	# HEY!  It's singular because "no mind to think,
+	# no will to break, no voice to cry suffering..."
+	@goal or die tagmsg($prog => diag(__("%#q: no goal"), $file));
+	bless { file => $file, goals => \@goal, goal => \%goal, prog => $prog }, $class;
 }
 
 =item B<file>
@@ -222,8 +218,8 @@ sub _goal
 {
 	my ($self, $name) = @_;
 	defined $name or return $self->{goals}[0];
-	$self->{goal}{$name} or die tagmsg($PROG => diag(__("%q: no goal %q"),
-		$self->{file}, $name));
+	$self->{goal}{$name} or die tagmsg($self->{prog} =>
+		diag(__("%#q: missing goal %q"), $self->{file}, $name));
 }
 
 sub needed { map { $_->{file} } @{ $_[0]->_goal($_[1])->{need} } }

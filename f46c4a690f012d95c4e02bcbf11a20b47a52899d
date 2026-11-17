@@ -1,0 +1,67 @@
+rapidcow@RCs-T480:~/my/project/siteconf/siteconf $ prove -v t/unicode.t
+t/unicode.t .. 
+1..39
+ok 1 - init
+ok 2 - configure, told a B of any name
+ok 3 - B, as it was told
+ok 4 - A, as it was found
+ok 5 - siteconf -g
+ok 6 - the Makefile names it (as the file system does)
+ok 7 - ... and a no-break space is part of a name, in headers too
+ok 8 - ... and its manifest
+ok 9 - make makes it
+ok 10 - ... all of it
+# ["r\351sum\351.html"] => "/tmp/2wU5bQGmab/latin1" "r\351sum\351.html"
+ok 11 - siteconf -g, filesys:ISO-8859-1
+ok 12 - the Makefile spells it as the file system does
+ok 13 - ... and not as UTF-8
+ok 14 - siteconf -g -G ninja
+ok 15 - ... and so does build.ninja
+ok 16 - a name the file system cannot spell is an error
+ok 17 - ... and says so
+[31mnot ok 18 - make makes it, under that name
+
+[39m#   Failed test 'make makes it, under that name'
+#   at t/unicode.t line 178.
+#          got: ''
+#     expected: '# HAVE: ${A}/${a}/résumé.html
+# résumé
+# '
+# cp: build/site/résumé.html: No such file or directory
+# *** Error code 1
+# 
+# Stop.
+# make: stopped making "all" in /tmp/2wU5bQGmab/latin1/build
+ok 19 - init -P web
+ok 20 - render renders it
+ok 21 - init: a render name with a no-break space
+ok 22 - ... HAVEs just that, the space by code point
+ok 23 - ... which is the name
+ok 24 - a missing source is still missing
+ok 25 - ... and says so as \x{...} where the locale cannot say it
+ok 26 - ... in nothing but ASCII
+ok 27 - unreadable arguments are an error
+ok 28 - SITECONF_CODESETS=console:ascii: \x{...}
+ok 29 - ... which is checked
+ok 30 - siteconf -C argv:UTF-8: reads them
+ok 31 - SITECONF_CODESETS=argv:ascii: cannot read them
+ok 32 - ... but -C1 overrides it
+ok 33 - -C is checked too
+ok 34 - -C after anything else: too late
+ok 35 - ... even glued to it
+ok 36 - configure: too late, too
+ok 37 - configure: unreadable arguments are an error
+ok 38 - configure -C argv:UTF-8: reads them
+ok 39 - ... as it says
+# Looks like you failed 1 test of 39.
+[31mDubious, test returned 1 (wstat 256, 0x100)
+Failed 1/39 subtests 
+
+[39mTest Summary Report
+-------------------
+[31mt/unicode.t (Wstat: 256 (exited 1) Tests: 39 Failed: 1)
+  Failed test:  18
+  Non-zero exit status: 1
+[39mFiles=1, Tests=39,  2 wallclock secs ( 0.02 usr  0.00 sys +  1.54 cusr  0.32 csys =  1.88 CPU)
+Result: FAIL
+rapidcow@RCs-T480:~/my/project/siteconf/siteconf $ 

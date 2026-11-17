@@ -7,12 +7,12 @@ use lib "$FindBin::Bin/lib";
 use Cwd qw(getcwd);
 use File::Path qw(make_path);
 use File::Temp qw(tempdir);
-use TestPaths qw( script_path perl5lib );
-use RdKw::WwW::GenGenLib qw( read_make );
+use TestPaths qw( script_path perl5lib fs_surprise );
+use RdKw::WwW::GenGenLib qw( read_make read_deps subs_dep );
 
 my $root = getcwd();
 my $script = script_path();
-plan tests => 126;
+plan tests => 139;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -150,25 +150,19 @@ for my $flags ([], ['-f'], ['-q']) {
 }
 is((stat '/dev/null')[2], $nullmode, 'force leaves null device permissions alone');
 
-{
-	local $TODO = <<XXX;
-test that these names are escaped (also call fs_surprise
-to see if the file system accepts them in the first place)
-XXX
-	# Names we cannot write in a HAVE (or the Makefile example);
-	# rejected before anything is written.
-	for my $bad ('a b', '"quoted', "tab\there", 'what?', 'quoted"', 'bin/"x"') {
+# A renderer name is a literal dependency, even with header or make
+# metacharacters, a variable-looking name, or a path outside the root.
+for my $name ('a b', '"quoted', "tab\there", 'what?', 'quoted"', 'bin/"x"',
+	'what?.pl', 'a"b', '../stuff', '${a}', "no\x{a0}break") {
+	SKIP: {
+		my $why = fs_surprise($name, 'project');
+		skip $why, 3 if defined $why;
 		($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-			'-o', 'configure:bad-name', '-o', "render:$bad");
-		isnt($status, 0, "reject render name <$bad>");
-		like($out, qr/^siteconf: dangerous name for render/, 'useful diagnostic');
-		ok(!-e "project/$bad" && !-e 'bad-name', 'nothing written');
-	}
-	# (and a no-break space, which is not white space: see t/unicode.t)
-	for my $ok ('what?.pl', 'a"b') {
-		($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-			'-o', 'configure:/dev/null', '-o', "render:$ok");
-		is($status, 0, "accept render name <$ok>") or diag $out;
+			'-o', 'configure:/dev/null', '-o', "render:$name");
+		is($status, 0, "accept render name <$name>") or diag $out;
+		my %I = eval { read_deps("project/$name") };
+		is($@, '', 'renderer header can be read');
+		is(subs_dep(undef, $I{HAVE}), $name, 'HAVE gives back the literal renderer name');
 	}
 }
 

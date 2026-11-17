@@ -58,7 +58,7 @@ bad("MAKE a\nMAKE a\n", qr/already made/, 'duplicate goal');
 bad("MAKE clean\n", qr/reserved/, 'reserved goal');
 bad("MAKE\n", qr/exactly one goal/, 'nameless goal');
 bad("FROB x\n", qr/expected MAKE/, 'unknown keyword');
-bad("# nothing\n", qr/no goals/, 'empty');
+bad("# nothing\n", qr/no goal/, 'empty');
 
 # Names are unescaped (by GenGenLib) before anything else looks at them
 @g = parse("MAKE all\n\tNEED \${A}/x\${U+002E}html\n\tWANT r\${U+00E9}sum\${U+00E9}.html\n");

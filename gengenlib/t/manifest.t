@@ -46,7 +46,7 @@ is_deeply([ $mf->wanted('third') ], ['sunshine'], 'WANT');
 is_deeply([ map $mf->needed($_), $mf->target ], [qw( sunshine rainbow a/b.c )], 'all NEEDs');
 is_deeply([ map $mf->wanted($_), $mf->target ], [qw( disco_ball sunshine )], 'all WANTs');
 ok(!eval { $mf->needed('nope'); 1 }, 'needed: no such goal');
-like($@, qr/\Aread_manifest: `MANIFEST': no goal `nope'$/, '... says so');
+like($@, qr/\Aread_manifest: MANIFEST: missing goal `nope'$/, '... says so');
 
 my @g = $mf->goals;
 is_deeply($g[0], { name => 'goal', line => 3,
@@ -85,7 +85,7 @@ bad("MAKE a\nMAKE a\n", qr/line 2: goal `a' is already made/, 'duplicate goal');
 bad("MAKE\n", qr/exactly one goal/, 'nameless goal');
 bad("MAKE a\${U+0020}b\n", qr/bad goal name/, 'goal names are not unescaped');
 bad("FROB x\n", qr/expected MAKE, NEED or WANT, not `FROB'/, 'unknown keyword');
-bad("# nothing\n", qr/\Aread_manifest: `MANIFEST': no goals/, 'empty');
+bad("# nothing\n", qr/\Aread_manifest: MANIFEST: no goal/, 'empty');
 bad("MAKE a\nNEED a\$b\n", qr/line 2: bad substitution: \$\{b\}$/, 'a variable');
 bad("MAKE a\nNEED \${a}/x\n", qr/bad substitution: \$\{a\}/, '... even a well-known one');
 bad("MAKE a\nNEED a\$\n", qr/line 2: cannot normalize `a\$': trailing \$/, 'a stray $');

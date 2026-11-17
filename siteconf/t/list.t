@@ -92,7 +92,7 @@ sub bad_late
 	ok(!$ok && $out eq $sofar, "$what: fails, and lists no more");
 	like($err, $re, "$what: says why");
 }
-bad(qr/\Asiteconf: `MANIFEST': no goal `nope'$/, 'no such goal', '-l', '-t', 'nope');
+bad(qr/\Asiteconf: MANIFEST: missing goal `nope'$/, 'no such goal', '-l', '-t', 'nope');
 bad(qr/`-t all:need': expected NEED or WANT, not `need'/, 'no such type', '-l', '-t', 'all:need');
 bad(qr/-0400: not a valid ASCII octal code point/, 'too big a separator', '-l', '-0400');
 bad(qr/-0 is not permitted in mode -g \(make\)/, '-0 elsewhere', '-g', '-0');

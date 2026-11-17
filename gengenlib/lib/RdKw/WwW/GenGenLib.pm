@@ -1099,12 +1099,14 @@ sub walk_deps
 	@pool;
 }
 
-=item B<read_manifest> I<file>
+=item B<read_manifest> I<file>[, prog => 'read_manifest' ]
 
 The goals in I<file> (a name, or a reference to the text), as an
 L<RdKw::WwW::GenGenLib::Manifest>, which says what that looks like.
 The names in it are unescaped, as B<subs_dep> does without definitions:
 C<${U+0020}> is a space, and C<${$}> a C<$>.
+
+Errors are prefixed with I<prog>, else C<'read_manifest'>.
 
 Added in 0.0100.
 

@@ -161,6 +161,11 @@ lack of one will be taken to indicate a directory
 Since 0.0203, leading C<./> has no special treatment and trailing
 slashes are no longer collapsed.
 
+Since 0.03_00, if I<path> is the directory that I<base> is in, the
+result is C<.> rather than the empty string (which, like in a web
+browser, means I<base> itself).  So I<base> joined with the result
+is always I<path>.
+
 =cut
 
 sub relapath
@@ -220,7 +225,15 @@ COMM:	while () {
 	# is the trailing slash that `..' does not need.
 	#
 	pop @rest if $upupup && @rest && !grep { length } @rest;
-	join '/', ('..') x $upupup, @rest;
+	my $rela = join '/', ('..') x $upupup, @rest;
+	#
+	# Empty means "this very document", which is only right
+	# when the two paths are the same.  If $path is merely
+	# the directory $base is in, say so with a dot.
+	#
+	$rela = '.' if $rela eq ''
+		&& uri_unescape ($path) ne uri_unescape ($base);
+	$rela;
 }
 
 =item B<joinpath> I<base>, I<spec>...

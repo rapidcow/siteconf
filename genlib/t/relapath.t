@@ -5,9 +5,9 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 32;
+use Test::More tests => 37;
 
-use RdKw::WwW::GenLib qw( locate relapath );
+use RdKw::WwW::GenLib qw( locate relapath joinpath );
 
 # From cooper-www, gen/t/02-url.t
 # relapath
@@ -27,6 +27,14 @@ is (relapath('foo/path', 'foo/base/'), '../path',
 # should be swallowed by the strict-prefix correction below.
 is (relapath('a/b/c', 'a/b/c'), '',
 	'exact match is empty');
+
+# Empty is the document itself; the directory it is in is `.'.
+is (relapath('a/index.html', 'a/index.html'), '', 'same file is empty');
+is (relapath('a/', 'a/'), '', 'same directory is empty');
+is (relapath('a/', 'a/index.html'), '.', 'directory of base is dot');
+is (relapath('', 'index.html'), '.', 'root from a file in root');
+is (joinpath('a/b/c', relapath('a/b/', 'a/b/c')), 'a/b/',
+	'joinpath reverses relapath');
 
 # (regression tests by Anthropic Claude)
 # $path is a strict prefix of $base's directory chain (i.e. we

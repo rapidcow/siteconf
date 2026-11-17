@@ -18,6 +18,11 @@ Revision history of WwW-GenGenLib
       not.  Neither is required.
     * read_make, update_file, read_deps, read_manifest: `cannot
       open file NAME: why' (and so on), not `open <NAME: why'.
+    *** read_make, write_make, update_file, load_state and
+        read_deps take options as a flat hash after their fixed
+        arguments: read_deps($file, forgive_missing => 1).
+        The trailing options hash reference is no longer accepted.
+        walk_deps keeps its trailing options hash reference.
     + read_manifest: the goals of a MANIFEST (MAKE, NEED, WANT),
       as an RdKw::WwW::GenGenLib::Manifest: target (the default
       one in scalar context, all in list), default_target,

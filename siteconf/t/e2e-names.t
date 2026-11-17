@@ -53,7 +53,7 @@ sub project
 		close $fh or die;
 	}
 	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
-		R => 'Makefile.in', F => 'MANIFEST', e => '.ok' }, 'test');
+		R => 'Makefile.in', F => 'MANIFEST', e => '.ok' }, prog => 'test');
 	$dir;
 }
 

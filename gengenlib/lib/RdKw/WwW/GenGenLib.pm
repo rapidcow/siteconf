@@ -80,7 +80,7 @@ my $SP = '\t\n\cK\f\r ';
 
 =over
 
-=item B<read_make> I<file>[, { prog => 'read_make' }]
+=item B<read_make> I<file>[, prog => 'read_make']
 
 This reads user-configured B<MY/*.mk> files.
 They're kind of like DOS-INI / GNU libconfini, but
@@ -120,9 +120,9 @@ The I<prog> option and escaped values were added in 0.0100.
 sub read_make
 {
 	local ($_, $.);
-	my $prog = _getprog(_getkwds(\@_), 'read_make');
+	my ($file, %opt) = @_;
+	my $prog = _getprog(\%opt, 'read_make');
 	my $kwds = { prog => $prog };
-	my ($file) = @_;
 
 	open my $fh, '<', to_fs($file, $kwds)
 		or die tagmsg($prog => diag(__(
@@ -145,7 +145,7 @@ sub read_make
 	%O;
 }
 
-=item B<write_make> I<file>, \%vars[, { prog => 'write_make' }]
+=item B<write_make> I<file>, \%vars[, prog => 'write_make']
 
 The reverse of B<read_make>, through B<update_file>.  Keys are
 sorted by length, then alphabetically.  I<prog> is credited in the
@@ -158,9 +158,8 @@ The I<prog> option and escaped values were added in 0.0100.
 
 sub write_make
 {
-	my $prog = _getprog(_getkwds(\@_), 'write_make');
-	my $kwds = { prog => $prog };
-	my ($file, $H) = @_;
+	my ($file, $H, %opt) = @_;
+	my $prog = _getprog(\%opt, 'write_make');
 	# quoting with $cs->diag in case $prog contains
 	# a newline, and breaks the whole file for us.
 	my $text = defined $prog && length $prog
@@ -179,7 +178,7 @@ sub write_make
 			$prog => diag(__("bad name: %q"), $k));
 		$text .= "$k=\t" . escape_vars($v) . "\n";  # no $opt
 	}
-	update_file($file, $text, $kwds);
+	update_file($file, $text, prog => $prog);
 }
 
 =item B<escape_vars> I<value>, ...
@@ -268,7 +267,7 @@ sub unescape_var
 	$text;
 }
 
-=item B<update_file> I<file>, I<text>[, { prog => I<prog>, raw => 1 }]
+=item B<update_file> I<file>, I<text>[, prog => I<prog>, raw => 1]
 
 Replace I<file> with I<text> (characters, written as UTF-8) -- but
 only if that would change anything.  Preserving the mtime means a
@@ -289,9 +288,9 @@ The I<prog> and raw options were added in 0.0100.
 
 sub update_file
 {
-	my ($file, $text, $opt) = @_;
-	my $prog = $opt && exists $opt->{prog} ? $opt->{prog} : 'update_file';
-	my $layer = $opt && $opt->{raw} ? ':raw' : ':encoding(UTF-8)';
+	my ($file, $text, %opt) = @_;
+	my $prog = _getprog(\%opt, 'update_file');
+	my $layer = $opt{raw} ? ':raw' : ':encoding(UTF-8)';
 	#
 	# Try writing to the same file system to ensure atomicity.
 	# Polluting directory is fine, since we usually own the
@@ -323,7 +322,7 @@ sub update_file
 	$exists ? 1 : 2;
 }
 
-=item B<load_state> I<B>[, { prog => 'load_state' }]
+=item B<load_state> I<B>[, prog => 'load_state']
 
 Read C<${B}/MY/config.mk> and C<${B}/MY/option.mk> and return
 an associative map of hashes, keyed by I<config> and I<option>.
@@ -339,8 +338,8 @@ The I<prog> option was added in 0.0100.
 
 sub load_state
 {
-	my ($Bdir, $opt) = @_;
-	my $prog = $opt && exists $opt->{prog} ? $opt->{prog} : 'load_state';
+	my ($Bdir, %opt) = @_;
+	my $prog = _getprog(\%opt, 'load_state');
 	$Bdir = '.' unless defined $Bdir and length $Bdir;
 
 	my %S;
@@ -355,12 +354,12 @@ sub load_state
 			"You have not configured! (no %q)\n"
 			. "You should ./configure first. ;)"), $file));
 		}
-		$S{$_} = { read_make($file, { prog => $prog }) };
+		$S{$_} = { read_make($file, prog => $prog) };
 	}
 	%S;
 }
 
-=item B<read_deps> I<file>, { forgive_missing => 0, prog => 'read_deps' }
+=item B<read_deps> I<file>[, forgive_missing => 0, prog => 'read_deps']
 
 This is an ambitious one.  Essentially, we're trying
 to propose a framework for a lean, but robust build
@@ -513,9 +512,9 @@ my $header_field = qr{
 sub read_deps
 {
 	local ($_, $.);
-	my ($file, $opt) = @_;
-	my $missing_ok = $opt && $opt->{forgive_missing};
-	my $prog = $opt && exists $opt->{prog} ? $opt->{prog} : 'read_deps';
+	my ($file, %opt) = @_;
+	my $missing_ok = $opt{forgive_missing};
+	my $prog = _getprog(\%opt, 'read_deps');
 	my $onit = 0;
 	my %I = ();
 
@@ -1097,7 +1096,7 @@ sub walk_deps
 				# opens fine but cannot be read, and a FIFO would hang
 				my $file = subs_deps($D, $spec);
 				$G->{$spec} = -f to_fs($file, { prog => 'walk_deps' })
-					? { read_deps($file, { forgive_missing => 1 }) }
+					? { read_deps($file, forgive_missing => 1) }
 					: {};
 			} else {
 				$G->{$spec} = undef;

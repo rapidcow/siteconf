@@ -6,7 +6,7 @@ use utf8;
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 133;
+use Test::More tests => 136;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -282,3 +282,10 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 	is(escape_dep(q{;#:%"'*?[]\\=~,}), join('', map { sprintf '${U+%04X}', ord }
 		split //, q{;#:%"'*?[]\\=~,}), '... metacharacters, by code point');
 }
+
+# --- flat options for missing files
+is_deeply({ read_deps("$dir/missing", forgive_missing => 1, prog => 'deps-test') },
+	{}, 'read_deps: missing file forgiven');
+ok(!eval { read_deps("$dir/missing", forgive_missing => 0, prog => 'deps-test'); 1 },
+	'read_deps: missing file refused');
+like($@, qr/^deps-test:/, 'read_deps: chosen prefix');

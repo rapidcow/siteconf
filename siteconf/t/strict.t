@@ -41,7 +41,7 @@ put('html/partial', "# NEED: missing-dependency\n");
 write_make("$dir/MY/config.mk", {
 	A => '.', B => '.', a => 'html', b => 'site', c => 'site', e => '.ok',
 	F => "$dir/MANIFEST", R => "$dir/Makefile.in", clean => 'clean-&',
-}, 'test');
+}, prog => 'test');
 sub run {
 	open my $fh, '-|' or do {
 		chdir $dir or die $!;

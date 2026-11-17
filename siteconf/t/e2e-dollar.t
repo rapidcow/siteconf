@@ -62,7 +62,7 @@ sub builds
 		close $fh or die;
 	}
 	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
-		R => 'Makefile.in', F => 'MANIFEST', e => '.ok', X => $X }, 'test');
+		R => 'Makefile.in', F => 'MANIFEST', e => '.ok', X => $X }, prog => 'test');
 	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G);
 	is($status, 0, "siteconf -g -G $G") or return diag $out;
 	($status, $out) = run($dir, @tool);

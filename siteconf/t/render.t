@@ -62,7 +62,7 @@ sub render {
 	my ($a, $have, $file, %D) = @_;
 	write_make('B/MY/config.mk', {
 		A => '.', B => '../B', a => $a, b => 'public', c => 'public',
-		R => 'Makefile.in', F => 'MANIFEST', e => '.ok', %D }, 'test');
+		R => 'Makefile.in', F => 'MANIFEST', e => '.ok', %D }, prog => 'test');
 	my $header = defined $have ? "[%\n# HAVE: $have\n-%]\n" : '';
 	spew("project/$file", $header . "[% location %]|[% locate('y.html') %]\n");
 	unlink 'project/out.html';

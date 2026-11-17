@@ -42,7 +42,7 @@ put('html/partial', "# NEED: missing-dependency\n");
 write_make("$dir/MY/config.mk", {
 	A => '.', B => '.', a => 'html', b => 'site', c => 'site', e => '.ok',
 	F => "$dir/MANIFEST", R => "$dir/Makefile.in", clean => 'clean-&',
-}, 'test');
+}, prog => 'test');
 sub plan_of { RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ @_ ])->plan }
 sub names { [ map { $_->{name} } @{ $_[0]{goals} } ] }
 sub run {

@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 37;
+use Test::More tests => 47;
 
 use RdKw::WwW::GenLib qw( locate relapath joinpath );
 
@@ -74,6 +74,43 @@ is (relapath('archive/', $deep), '../../archive/', 'sibling dir keeps slash');
 is (relapath('archive//', $deep), '../../archive//', 'extra slash after a name');
 is (relapath('archive///', $deep), '../../archive///', 'many slashes after a name');
 is (relapath('a//b/', $deep), '../../a//b/', 'inner empty segment is kept');
+
+# relapath is the inverse of joinpath:
+#
+#     joinpath(BASE, relapath(PATH, BASE)) eq PATH
+#
+# for any PATH of plain names, empty segments (slashes) and %2E (a
+# name like any other, never a dot).  It breaks down in two places,
+# both pinned here so that it does not change by accident.
+#
+# (1) A literal `.' or `..' segment in PATH.  relapath takes it for
+# a name, as tested above, but joinpath resolves it:
+#
+#     relapath('.', 'a')    -> '.'     joinpath('a', '.')   -> ''
+#     relapath('./', '')    -> './'    joinpath('', './')   -> '/'
+#     relapath('/.', '/')   -> '.'     joinpath('/', '.')   -> '/'
+#
+# PATH is meant to be normalized, so this is not a bug.
+is (relapath('.', 'a'), '.', 'dot in path: relapath');
+is (joinpath('a', '.'), '', 'dot in path: joinpath resolves it');
+is (relapath('./', ''), './', 'dot slash in path: relapath');
+is (joinpath('', './'), '/', 'dot slash in path: joinpath adds a slash');
+is (relapath('/.', '/'), '.', 'leading slash dot: relapath');
+is (joinpath('/', '.'), '/', 'leading slash dot: joinpath resolves it');
+
+# (2) Segments are compared unescaped, so the same name spelled two
+# ways is one segment: the spelling of the common part (and of an
+# empty result) is BASE's, not PATH's.
+#
+#     relapath('%61', 'a')  -> ''      joinpath('a', '')    -> 'a'
+#
+# (and %2E vs a literal `.' is not this: %2E stays a name in joinpath.)
+is (relapath('%61', 'a'), '', 'same name, other spelling: empty');
+is (joinpath('a', ''), 'a', 'same name, other spelling: base\'s');
+is (relapath('%62/b/%2E/%61', 'b/%62/a'), '%2E/%61',
+	'common part is compared unescaped');
+is (joinpath('b/%62/a', '%2E/%61'), 'b/%62/%2E/%61',
+	'common part comes back as base wrote it');
 
 # --- locate
 {

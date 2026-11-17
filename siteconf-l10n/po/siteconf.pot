@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 03:45-0600\n"
+"POT-Creation-Date: 2026-11-17 04:26-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,8 +19,8 @@ msgstr ""
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: ../siteconf/script/siteconf:404 ../siteconf/share/configure.in:205
-#: ../siteconf/share/presets/tem.render:61
-#: ../siteconf/share/presets/web.render:69
+#: ../siteconf/share/presets/tem.render:60
+#: ../siteconf/share/presets/web.render:68
 #, perl-format
 msgid "usage: %s"
 msgstr ""
@@ -32,8 +32,8 @@ msgid "%s: empty name."
 msgstr ""
 
 #: ../siteconf/script/siteconf:469 ../siteconf/share/configure.in:220
-#: ../siteconf/share/presets/tem.render:58
-#: ../siteconf/share/presets/web.render:66
+#: ../siteconf/share/presets/tem.render:57
+#: ../siteconf/share/presets/web.render:65
 msgid "too late to -C now."
 msgstr ""
 
@@ -761,23 +761,23 @@ msgid "missing %q option"
 msgstr ""
 
 #. HEY!  The usage is `./render apath bpath', which is two arguments.
-#: ../siteconf/share/presets/tem.render:64
-#: ../siteconf/share/presets/web.render:72
+#: ../siteconf/share/presets/tem.render:63
+#: ../siteconf/share/presets/web.render:71
 msgid "need exactly two arguments"
 msgstr ""
 
-#: ../siteconf/share/presets/web.render:88
+#: ../siteconf/share/presets/web.render:87
 msgid "%q: HAVE declaration not found"
 msgstr ""
 
 #. HEY!  The first %q is the symbolic form,
 #. and (aka %q) is expanded form.
-#: ../siteconf/share/presets/web.render:106
+#: ../siteconf/share/presets/web.render:105
 #, perl-brace-format
 msgid "%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
 msgstr ""
 
-#: ../siteconf/share/presets/web.render:108
+#: ../siteconf/share/presets/web.render:107
 #, perl-brace-format
 msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr ""

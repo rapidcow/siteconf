@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 04:26-0600\n"
+"POT-Creation-Date: 2026-11-17 06:00-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -797,21 +797,21 @@ msgstr "%#q：你的 HAVE %q（又名 %q）不在 ${a}（又名 %q）之下"
 msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr "%#q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:299
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:312
 msgid "missing site_url"
 msgstr "缺少 site_url"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:306
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:319
 msgid "site_url has no file or www URI scheme: %q"
 msgstr "site_url 没有 file 或 www 的 URI 协议：%q"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:323
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:336
 msgid "base_url must begin with a slash"
 msgstr "base_url 必须以斜杠开头"
 
 #. HEY!  the first %q is the path of site_url, and the
 #. second is base_url
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:331
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:344
 msgid ""
 "site_url has a nonempty path (%q), and\n"
 "is inconsistent with base_url (%q)"
@@ -819,7 +819,7 @@ msgstr ""
 "site_url 的路径不为空（%q），\n"
 "与 base_url（%q）不一致"
 
-#: ../genlib/lib/RdKw/WwW/GenLib.pm:345
+#: ../genlib/lib/RdKw/WwW/GenLib.pm:358
 msgid ""
 "base_url cannot be inferred from site_url,\n"
 "as the latter has an empty path"

@@ -1,0 +1,402 @@
+https://github.com/rapidcow/foss.rapidcow.org/actions/runs/44007518483/job/133786324725
+
+Run prefix="$RUNNER_TEMP/siteconf"
+  prefix="$RUNNER_TEMP/siteconf"
+  export PERL5LIB="$prefix/lib/perl5"
+  for ref in "$CODESETS_REF" "$TEXTDOMAIN_REF" "$GENGENLIB_REF" "$GENLIB_REF" "$TEMPLATE_PROVIDER_REF" "$SITECONF_REF"; do
+    part=${ref%%/*}
+    git -c advice.detachedHead=false clone --quiet --depth 1 \
+      --single-branch --branch "$ref" "$SITECONF_URL" "$RUNNER_TEMP/src/$part"
+    (cd "$RUNNER_TEMP/src/$part/$part" &&
+      perl Makefile.PL INSTALL_BASE="$prefix" &&
+      make && make test && make install)
+  done
+  echo "PERL5LIB=$PERL5LIB" >> "$GITHUB_ENV"
+  echo "$prefix/bin" >> "$GITHUB_PATH"
+  shell: /usr/bin/bash -e {0}
+  env:
+    SITECONF_URL: https://github.com/rapidcow/siteconf.git
+    CODESETS_REF: codesets/v0.00_00
+    TEXTDOMAIN_REF: textdomain/v0.00_00
+    GENGENLIB_REF: gengenlib/v0.01_00
+    GENLIB_REF: genlib/v0.03_00
+    TEMPLATE_PROVIDER_REF: template-provider/v0.00_00
+    SITECONF_REF: siteconf/v0.03_00
+warning: refs/tags/codesets/v0.00_00 5a7f6d89db9552ad8df492c0d32c37b1065ce1e2 is not a commit!
+Checking if your kit is complete...
+Looks good
+Generating a Unix-style Makefile
+Writing Makefile for I18N::CodeSets
+Writing MYMETA.yml and MYMETA.json
+cp lib/RdKw/I18N/CodeSets/Functions.pm blib/lib/RdKw/I18N/CodeSets/Functions.pm
+cp lib/RdKw/I18N/CodeSets.pm blib/lib/RdKw/I18N/CodeSets.pm
+Manifying 2 pod documents
+PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+# Testing RdKw::I18N::CodeSets 0.00_00, Perl 5.040001, /usr/bin/perl
+t/00-load.t .... ok
+t/codesets.t ... ok
+t/diag.t ....... ok
+t/functions.t .. ok
+t/io.t ......... ok
+All tests successful.
+Files=5, Tests=287,  0 wallclock secs ( 0.03 usr  0.01 sys +  0.33 cusr  0.06 csys =  0.43 CPU)
+Result: PASS
+Manifying 2 pod documents
+Installing /home/runner/work/_temp/siteconf/lib/perl5/RdKw/I18N/CodeSets.pm
+Installing /home/runner/work/_temp/siteconf/lib/perl5/RdKw/I18N/CodeSets/Functions.pm
+Installing /home/runner/work/_temp/siteconf/man/man3/RdKw::I18N::CodeSets.3pm
+Installing /home/runner/work/_temp/siteconf/man/man3/RdKw::I18N::CodeSets::Functions.3pm
+Appending installation info to /home/runner/work/_temp/siteconf/lib/perl5/x86_64-linux-gnu-thread-multi/perllocal.pod
+warning: refs/tags/textdomain/v0.00_00 d647071753bfdcbda3af985f6bd5d59b34cc9ca3 is not a commit!
+Checking if your kit is complete...
+Looks good
+Generating a Unix-style Makefile
+Writing Makefile for L10N::TextDomain
+Writing MYMETA.yml and MYMETA.json
+cp lib/RdKw/L10N/TextDomain.pm blib/lib/RdKw/L10N/TextDomain.pm
+Manifying 1 pod document
+PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+# Testing RdKw::L10N::TextDomain 0.00_00, Perl 5.040001, /usr/bin/perl
+t/00-load.t ...... ok
+t/text-domain.t .. ok
+All tests successful.
+Files=2, Tests=33,  0 wallclock secs ( 0.01 usr  0.01 sys +  0.11 cusr  0.03 csys =  0.16 CPU)
+Result: PASS
+Manifying 1 pod document
+Installing /home/runner/work/_temp/siteconf/lib/perl5/RdKw/L10N/TextDomain.pm
+Installing /home/runner/work/_temp/siteconf/man/man3/RdKw::L10N::TextDomain.3pm
+Appending installation info to /home/runner/work/_temp/siteconf/lib/perl5/x86_64-linux-gnu-thread-multi/perllocal.pod
+warning: refs/tags/gengenlib/v0.01_00 e31f710b969cd1a379f9806f7812c12c433d0d17 is not a commit!
+Checking if your kit is complete...
+Looks good
+Generating a Unix-style Makefile
+Writing Makefile for WwW::GenGenLib
+Writing MYMETA.yml and MYMETA.json
+cp lib/RdKw/WwW/GenGenLib/Manifest.pm blib/lib/RdKw/WwW/GenGenLib/Manifest.pm
+cp lib/RdKw/WwW/GenGenLib.pm blib/lib/RdKw/WwW/GenGenLib.pm
+Manifying 2 pod documents
+PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+# Testing RdKw::WwW::GenGenLib 0.01_00, Perl 5.040001, /usr/bin/perl
+t/00-load.t ... ok
+t/deps.t ...... ok
+t/make.t ...... ok
+t/manifest.t .. ok
+t/path.t ...... ok
+t/unicode.t ... ok
+t/walk.t ...... ok
+All tests successful.
+Files=7, Tests=358,  3 wallclock secs ( 0.04 usr  0.01 sys +  1.17 cusr  0.60 csys =  1.82 CPU)
+Result: PASS
+Manifying 2 pod documents
+Installing /home/runner/work/_temp/siteconf/lib/perl5/RdKw/WwW/GenGenLib.pm
+Installing /home/runner/work/_temp/siteconf/lib/perl5/RdKw/WwW/GenGenLib/Manifest.pm
+Installing /home/runner/work/_temp/siteconf/man/man3/RdKw::WwW::GenGenLib::Manifest.3pm
+Installing /home/runner/work/_temp/siteconf/man/man3/RdKw::WwW::GenGenLib.3pm
+Appending installation info to /home/runner/work/_temp/siteconf/lib/perl5/x86_64-linux-gnu-thread-multi/perllocal.pod
+warning: refs/tags/genlib/v0.03_00 e64d8ef242ea1a746cdf0c0d48d8c9a10f20e868 is not a commit!
+Checking if your kit is complete...
+Looks good
+Generating a Unix-style Makefile
+Writing Makefile for WwW::GenLib
+Writing MYMETA.yml and MYMETA.json
+cp lib/RdKw/WwW/GenLib.pm blib/lib/RdKw/WwW/GenLib.pm
+Manifying 1 pod document
+PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+# Testing RdKw::WwW::GenLib 0.03_00, Perl 5.040001, /usr/bin/perl
+t/00-load.t ..... ok
+t/joinpath.t .... ok
+t/parse_base.t .. ok
+t/relapath.t .... ok
+All tests successful.
+Files=4, Tests=101,  0 wallclock secs ( 0.02 usr  0.01 sys +  0.23 cusr  0.06 csys =  0.32 CPU)
+Result: PASS
+Manifying 1 pod document
+Installing /home/runner/work/_temp/siteconf/lib/perl5/RdKw/WwW/GenLib.pm
+Installing /home/runner/work/_temp/siteconf/man/man3/RdKw::WwW::GenLib.3pm
+Appending installation info to /home/runner/work/_temp/siteconf/lib/perl5/x86_64-linux-gnu-thread-multi/perllocal.pod
+warning: refs/tags/template-provider/v0.00_00 789d1ef3d3b8e87b0b46b60be126d3abaa7409c2 is not a commit!
+Checking if your kit is complete...
+Looks good
+Generating a Unix-style Makefile
+Writing Makefile for WwW::GenGenLib::Template::Provider
+Writing MYMETA.yml and MYMETA.json
+cp lib/RdKw/WwW/GenGenLib/Template/Provider.pm blib/lib/RdKw/WwW/GenGenLib/Template/Provider.pm
+Manifying 1 pod document
+PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+# Testing RdKw::WwW::GenGenLib::Template::Provider 0.00_00, Perl 5.040001, /usr/bin/perl
+t/00-load.t ... ok
+t/provider.t .. ok
+t/unicode.t ... ok
+All tests successful.
+Files=3, Tests=91,  1 wallclock secs ( 0.01 usr  0.01 sys +  0.29 cusr  0.06 csys =  0.37 CPU)
+Result: PASS
+Manifying 1 pod document
+Installing /home/runner/work/_temp/siteconf/lib/perl5/RdKw/WwW/GenGenLib/Template/Provider.pm
+Installing /home/runner/work/_temp/siteconf/man/man3/RdKw::WwW::GenGenLib::Template::Provider.3pm
+Appending installation info to /home/runner/work/_temp/siteconf/lib/perl5/x86_64-linux-gnu-thread-multi/perllocal.pod
+warning: refs/tags/siteconf/v0.03_00 8166fe3ebdccf0a9c2280d3c2d8bd2ad72f8a1f2 is not a commit!
+Checking if your kit is complete...
+Looks good
+Generating a Unix-style Makefile
+Writing Makefile for WwW::SiteConf
+Writing MYMETA.yml and MYMETA.json
+cp share/presets/tem.render blib/lib/auto/share/dist/WwW-SiteConf/presets/tem.render
+cp share/presets/tem.config blib/lib/auto/share/dist/WwW-SiteConf/presets/tem.config
+cp share/presets/web.config blib/lib/auto/share/dist/WwW-SiteConf/presets/web.config
+cp share/presets/web.render blib/lib/auto/share/dist/WwW-SiteConf/presets/web.render
+cp share/configure.in blib/lib/auto/share/dist/WwW-SiteConf/configure.in
+cp lib/RdKw/WwW/SiteConf/Ninja.pm blib/lib/RdKw/WwW/SiteConf/Ninja.pm
+cp lib/RdKw/WwW/SiteConf/GMake.pm blib/lib/RdKw/WwW/SiteConf/GMake.pm
+cp lib/RdKw/WwW/SiteConf/Configure.pod blib/lib/RdKw/WwW/SiteConf/Configure.pod
+cp lib/RdKw/WwW/SiteConf/Modifiers.pm blib/lib/RdKw/WwW/SiteConf/Modifiers.pm
+cp lib/RdKw/WwW/SiteConf.pm blib/lib/RdKw/WwW/SiteConf.pm
+cp lib/RdKw/WwW/SiteConf/Make.pm blib/lib/RdKw/WwW/SiteConf/Make.pm
+cp script/siteconf blib/script/siteconf
+"/usr/bin/perl" -MExtUtils::MY -e 'MY->fixin(shift)' -- blib/script/siteconf
+Manifying 1 pod document
+Manifying 6 pod documents
+Skip blib/lib/auto/share/dist/WwW-SiteConf/configure.in (unchanged)
+Skip blib/lib/auto/share/dist/WwW-SiteConf/presets/tem.render (unchanged)
+Skip blib/lib/auto/share/dist/WwW-SiteConf/presets/web.config (unchanged)
+Skip blib/lib/auto/share/dist/WwW-SiteConf/presets/web.render (unchanged)
+Skip blib/lib/auto/share/dist/WwW-SiteConf/presets/tem.config (unchanged)
+PERL_DL_NONLAZY=1 "/usr/bin/perl" "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness(0, 'blib/lib', 'blib/arch')" t/*.t
+# Testing RdKw::WwW::SiteConf 0.03_00, Perl 5.040001, /usr/bin/perl
+t/00-load.t ..... ok
+t/clean.t ....... ok
+t/configure.t ... ok
+t/e2e-dollar.t .. ok
+
+#   Failed test '... is what it NEEDs'
+#   at t/e2e-make.t line 85.
+#          got: 'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# index.html
+# sub/index.html
+# robots.txt
+# '
+#     expected: 'index.html
+# sub/index.html
+# robots.txt
+# '
+# Looks like you failed 1 test of 66.
+t/e2e-make.t .... 
+Dubious, test returned 1 (wstat 256, 0x100)
+Failed 1/66 subtests 
+t/e2e-names.t ... ok
+t/e2e-ninja.t ... ok
+t/general.t ..... ok
+t/goals.t ....... ok
+t/graph.t ....... ok
+
+#   Failed test 'quiet says nothing'
+#   at t/init.t line 118.
+#          got: 'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# '
+#     expected: ''
+
+#   Failed test 'force does not imply an overwrite'
+#   at t/init.t line 140.
+#          got: 'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Wrote brand-new
+# '
+#     expected: 'Wrote brand-new
+# '
+
+#   Failed test 'quiet suppresses overwrite messages'
+#   at t/init.t line 143.
+#          got: 'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# '
+#     expected: ''
+
+#   Failed test '... and quiet'
+#   at t/init.t line 149.
+#          got: 'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# '
+#     expected: ''
+
+#   Failed test '... and quiet'
+#   at t/init.t line 149.
+#          got: 'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# '
+#     expected: ''
+
+#   Failed test '... and quiet'
+#   at t/init.t line 149.
+#          got: 'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# '
+#     expected: ''
+
+#   Failed test 'useful diagnostic'
+#   at t/init.t line 159.
+#                   'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# siteconf: dangerous name for render: `a b' is not supported (yet)
+# '
+#     doesn't match '(?^:^siteconf: dangerous name for render: .* is not supported)'
+
+#   Failed test 'useful diagnostic'
+#   at t/init.t line 159.
+#                   'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# siteconf: dangerous name for render: `"quoted' is not supported (yet)
+# '
+#     doesn't match '(?^:^siteconf: dangerous name for render: .* is not supported)'
+
+#   Failed test 'useful diagnostic'
+#   at t/init.t line 159.
+#                   'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# siteconf: dangerous name for render: "tab\there" is not supported (yet)
+# '
+#     doesn't match '(?^:^siteconf: dangerous name for render: .* is not supported)'
+
+#   Failed test 'useful diagnostic'
+#   at t/init.t line 159.
+#                   'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# siteconf: dangerous name for render: `what?' is not supported (yet)
+# '
+#     doesn't match '(?^:^siteconf: dangerous name for render: .* is not supported)'
+
+#   Failed test 'useful diagnostic'
+#   at t/init.t line 159.
+#                   'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# siteconf: dangerous name for render: `quoted"' is not supported (yet)
+# '
+#     doesn't match '(?^:^siteconf: dangerous name for render: .* is not supported)'
+
+#   Failed test 'useful diagnostic'
+#   at t/init.t line 159.
+#                   'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# siteconf: dangerous name for render: `bin/"x"' is not supported (yet)
+# '
+#     doesn't match '(?^:^siteconf: dangerous name for render: .* is not supported)'
+# Looks like you failed 12 tests of 126.
+t/init.t ........ 
+Dubious, test returned 12 (wstat 3072, 0xc00)
+Failed 12/126 subtests 
+
+#   Failed test '... and nothing else is said'
+#   at t/list.t line 59.
+#          got: 'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# '
+#     expected: ''
+
+#   Failed test 'no such goal: says why'
+#   at t/list.t line 85.
+#                   'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# siteconf: `MANIFEST': no goal `nope'
+# '
+#     doesn't match '(?^:\Asiteconf: `MANIFEST': no goal `nope'$)'
+
+#   Failed test 'no manifest: says why'
+#   at t/list.t line 85.
+#                   'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# siteconf: cannot open file `nope': No such file or directory
+# '
+#     doesn't match '(?^:\Asiteconf: cannot open file `nope': )'
+
+#   Failed test 'ASCII cannot spell résumé: says why'
+#   at t/list.t line 93.
+#                   'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# siteconf: MANIFEST: cannot encode "r\x{e9}sum\x{e9}.html" in US-ASCII
+# '
+#     doesn't match '(?^:\Asiteconf: MANIFEST: cannot encode "r\\x\{e9\}sum\\x\{e9\}\.html" in US-ASCII$)'
+
+#   Failed test 'Latin-1 can spell résumé'
+#   at t/list.t line 107.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+
+#   Failed test 'a name the file system cannot spell (not even with \x{...}): says why'
+#   at t/list.t line 93.
+#                   'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# siteconf: BAD: cannot encode "x\x{d800}y" in UTF-8
+# '
+#     doesn't match '(?^:\Asiteconf: BAD: cannot encode "x\\x\{d800\}y")'
+# Looks like you failed 6 tests of 38.
+t/list.t ........ 
+Dubious, test returned 6 (wstat 1536, 0x600)
+Failed 6/38 subtests 
+t/manifest.t .... ok
+t/modifiers.t ... ok
+t/ninja.t ....... ok
+t/render.t ...... ok
+t/strict.t ...... ok
+
+#   Failed test '-C is checked too'
+#   at t/unicode.t line 202.
+#                   'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# siteconf: -C (argv 3): unknown category or encoding "nope"
+# '
+#     doesn't match '(?^:\Asiteconf: -C \(argv 3\): unknown category or encoding "nope")'
+
+#   Failed test '-C after anything else: too late'
+#   at t/unicode.t line 204.
+#                   'Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# siteconf: too late to -C now.
+# usage: siteconf [-C codeset ...] [-q] [-i|-g|-l|-V] [<args>]
+#        siteconf -i [-P preset] [-o [name:]path ...] [-f] [-M[-]module[=version] ...]
+#                 [-Sopt=val ...] [-Dvar[=val] ...] [-Ovar[=val] ...]
+#        siteconf -g [-A] [-B builddir] [-G generator] [-F manifest] [-R rulebook]
+#                 [-o file] [-t [NEED:|WANT:]goal ...]
+#        siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+#        siteconf -V [-V [-V]]
+# '
+#     doesn't match '(?^:\Asiteconf: too late to -C now\.)'
+
+#   Failed test '... even glued to it'
+#   at t/unicode.t line 206.
+#                   'Name "RdKw::WwW::SiteConf::L10N::DOMAIN" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 512.
+# Name "RdKw::WwW::SiteConf::L10N::LOCALEDIR" used only once: possible typo at /home/runner/work/_temp/src/siteconf/siteconf/blib/script/siteconf line 513.
+# siteconf: too late to -C now.
+# usage: siteconf [-C codeset ...] [-q] [-i|-g|-l|-V] [<args>]
+#        siteconf -i [-P preset] [-o [name:]path ...] [-f] [-M[-]module[=version] ...]
+#                 [-Sopt=val ...] [-Dvar[=val] ...] [-Ovar[=val] ...]
+#        siteconf -g [-A] [-B builddir] [-G generator] [-F manifest] [-R rulebook]
+#                 [-o file] [-t [NEED:|WANT:]goal ...]
+#        siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+#        siteconf -V [-V [-V]]
+# '
+#     doesn't match '(?^:\Asiteconf: too late to -C now\.)'
+# Looks like you failed 3 tests of 31.
+t/unicode.t ..... 
+Dubious, test returned 3 (wstat 768, 0x300)
+Failed 3/31 subtests 
+
+Test Summary Report
+-------------------
+t/e2e-make.t  (Wstat: 256 (exited 1) Tests: 66 Failed: 1)
+  Failed test:  33
+  Non-zero exit status: 1
+t/init.t      (Wstat: 3072 (exited 12) Tests: 126 Failed: 12)
+  Failed tests:  44, 57, 59, 61, 63, 65, 68, 71, 74, 77
+                80, 83
+  Non-zero exit status: 12
+t/list.t      (Wstat: 1536 (exited 6) Tests: 38 Failed: 6)
+  Failed tests:  3, 18, 30, 34-35, 38
+  Non-zero exit status: 6
+t/unicode.t   (Wstat: 768 (exited 3) Tests: 31 Failed: 3)
+  Failed tests:  25-27
+  Non-zero exit status: 3
+Files=18, Tests=938, 17 wallclock secs ( 0.13 usr  0.03 sys + 12.53 cusr  3.71 csys = 16.40 CPU)
+Result: FAIL
+Failed 4/18 test programs. 22/938 subtests failed.
+make: *** [Makefile:896: test_dynamic] Error 3
+Error: Process completed with exit code 2.

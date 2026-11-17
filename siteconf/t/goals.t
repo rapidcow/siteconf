@@ -2,7 +2,7 @@
 # Goal selection and optional goals when generating a build file.
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 32;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 

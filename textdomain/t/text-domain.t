@@ -7,7 +7,7 @@ use utf8;
 use 5.008;
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 32;
 
 use File::Spec;
 use File::Temp qw( tempdir );

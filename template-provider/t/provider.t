@@ -14,6 +14,7 @@ use Cwd qw( getcwd abs_path );
 use File::Temp qw( tempdir );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
+plan tests => 83;
 require RdKw::WwW::GenGenLib::Template::Provider;
 Template::Constants->import(qw( STATUS_ERROR STATUS_DECLINED ));
 my $P = 'RdKw::WwW::GenGenLib::Template::Provider';

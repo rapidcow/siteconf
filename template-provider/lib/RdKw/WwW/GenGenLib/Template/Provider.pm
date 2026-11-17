@@ -187,10 +187,13 @@ sub new
 	for my $k (qw( COMPILE_DIR COMPILE_EXT )) {
 		# HEY!  the first %s is the class name (in every message
 		# that starts so), and the second is an option name
-		defined $args->{$k} and die _status 0, diag(__("%s: %s is not supported"), $class, $k) . "\n";
+		defined $args->{$k}
+			and die _status 0, "$class: " .
+			diag(__("%s is not supported"), $class, $k)
+			. "\n";
 	}
 	defined $args->{SOURCE}
-		or die _status 0, diag(__("%s: SOURCE (the template to process) is required"), $class) . "\n";
+		or die _status 0, "$class: " . __("SOURCE (the template to process) is required") . "\n";
 	# We give Template::Provider whole paths, once we have said yes;
 	# its own ABSOLUTE and RELATIVE are ours to say.
 	my $self = $class->SUPER::new({ %$args, ABSOLUTE => 1, RELATIVE => 1 }) or return;
@@ -204,7 +207,9 @@ sub new
 		for (@{ $args->{ALLOW_PREFIXES} }) {
 			my ($root, $rest) = split_dep($_);
 			$rest =~ m{\A/*\z}
-				or die _status 0, diag(__("%s: ALLOW_PREFIXES: %q is not a symbolic root"), $class, $_) . "\n";
+				or die _status 0, "$class: " . diag(__(
+				"ALLOW_PREFIXES: %q is not a symbolic root"), $_)
+				. "\n";
 			$self->{ALLOW_PREFIXES}{$root} = 1;
 		}
 	}
@@ -215,13 +220,20 @@ sub new
 		or return $self;
 
 	my $source = $self->_entry;
-	defined $source or die _status 0, diag(__("%s: source %q not found"), $class, $args->{SOURCE}) . "\n";
+	defined $source
+		or die _status 0, "$class: ", diag(__(
+		"source %q not found"), $class, $args->{SOURCE});
 	my %I = read_deps($source);
 	if ($self->{CHECK_HAVE}) {
-		defined $I{HAVE} or die _status 0, diag(__("%s: %#q: missing HAVE"), $class, $source) . "\n";
+		defined $I{HAVE}
+			or die _status 0, "$class: " . diag(__(
+			"%#q: missing HAVE"), $source)
+			. "\n";
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
-			or die _status 0, diag(__("%s: %#q: You HAVE %q, but it is actually %s"),
-				$class, $source, $I{HAVE}, $self->_named($source)) . "\n";
+			or die _status 0, "$class: " . diag(__(
+			"%#q: You HAVE %q, but it is actually %s"),
+			$source, $I{HAVE}, $self->_named($source))
+			. "\n";
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;
 
@@ -256,8 +268,10 @@ sub _vars
 	my ($self, $spec) = @_;
 	for my $x (norm_dep($spec) =~ /\$\{([^}]+)\}/g) {
 		$x eq '$' || $x =~ /\AU\+/ || defined $self->{DEFINITION}{$x}
-			# HEY!  the last %s is the variable, as ${name}
-			or die _status 0, diag(__("%s: %q: no such variable %s"), __PACKAGE__, $spec, "\${$x}") . "\n";
+			# HEY!  the last %s is the variable, as ${name}.
+			or die _status 0, __PACKAGE__ . ": " . diag(__(
+			"%q: no such variable %s"), $spec, "\${$x}")
+			. "\n";
 	}
 	1;
 }

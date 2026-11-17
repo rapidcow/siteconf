@@ -2,7 +2,7 @@
 # siteconf -g -A: every WANT that cannot be had is an error.
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 19;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -87,5 +87,3 @@ for my $mode ('-i', '-l') {
 	isnt($status, 0, "-A is not for $mode");
 	like($out, qr/-A is not permitted in mode/, '... and it says so');
 }
-
-done_testing;

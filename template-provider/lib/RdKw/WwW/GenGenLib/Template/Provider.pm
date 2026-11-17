@@ -189,7 +189,7 @@ sub new
 		# that starts so), and the second is an option name
 		defined $args->{$k}
 			and die _status 0, "$class: " .
-			diag(__("%s is not supported"), $class, $k)
+			diag(__("%s is not supported"), $k)
 			. "\n";
 	}
 	defined $args->{SOURCE}
@@ -221,8 +221,9 @@ sub new
 
 	my $source = $self->_entry;
 	defined $source
-		or die _status 0, "$class: ", diag(__(
-		"source %q not found"), $class, $args->{SOURCE});
+		or die _status 0, "$class: " . diag(__(
+		"source %q not found"), $args->{SOURCE})
+		. "\n";
 	my %I = read_deps($source);
 	if ($self->{CHECK_HAVE}) {
 		defined $I{HAVE}

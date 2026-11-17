@@ -18,6 +18,7 @@ my %WriteMakefileArgs = (
 	TEST_REQUIRES => {
 		'Test::More' => '0',
 		'Encode::Locale' => '0',
+		'I18N::Langinfo' => '0',
 		# RdKw::WwW::GenLib (and Template, URI) are optional:
 		# the web preset tests skip themselves without them.
 	},

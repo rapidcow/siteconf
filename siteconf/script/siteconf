@@ -380,6 +380,8 @@ use RdKw::WwW::SiteConf;
 
 # GenLib with non-broken varargs locate
 our $GENLIB_NEW = '0.0203';
+# GenLib with file2uri and uri2file: location is a URI path
+our $GENLIB_URI = '0.0300';
 # GenGenLib that is locale-aware (and has norm_deps, subs_deps and
 # uproot): what configure and render are written for, and no older
 our $GENGENLIB_MIN = '0.0100';
@@ -964,6 +966,7 @@ sub render_text
 	$path_q = RdKw::WwW::SiteConf::shell_quote($path);
 	my $text = slurp($render);
 	my $can_valoc = version_ge($opt->{genlib_min}, $GENLIB_NEW);
+	my $can_uri = version_ge($opt->{genlib_min}, $GENLIB_URI);
 	my $provider = $opt->{provider};
 	my %sub = (
 		# (a spec, in its HAVE and in Makefile.in: a $ is a $)
@@ -1019,21 +1022,39 @@ my $tt = Template->new({
 })
 	or die "[TT] ", $Template::ERROR, "\n";
 OLD
-		USE_GENLIB => $can_valoc
+		USE_GENLIB => $can_uri
+			? "use RdKw::WwW::GenLib $GENLIB_URI qw( locate file2uri uri2file );"
+			: $can_valoc
 			? "use RdKw::WwW::GenLib $GENLIB_NEW qw( locate );"
 			: 'use RdKw::WwW::GenLib qw( locate );',
 		USE_TT_EXC => $can_valoc ? '' : <<\OLD,
 use Template::Exception;
 OLD
-		V_LOCATE => $can_valoc
+		LOCATION => $can_uri
+			? <<\URI
+# $target is a file name; the page's location is its URI path.
+my $location = file2uri($target);
+URI
+			: '',
+		V_LOCATE => $can_uri
+			? <<\URI
+	locate => sub { locate($O, $location, @_); },
+	location => $location,
+	target => $target,
+	file2uri => \&file2uri,
+	uri2file => \&uri2file,
+URI
+			: $can_valoc
 			? <<\NEW
 	locate => sub { locate($O, $target, @_); },
+	location => $target,
 NEW
 			: <<\OLD,
 	locate => sub {
 		@_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
 		locate($O, $target, @_);
 	},
+	location => $target,
 OLD
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} :

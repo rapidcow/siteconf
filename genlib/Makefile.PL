@@ -18,6 +18,7 @@ my %WriteMakefileArgs = (
 	},
 	PREREQ_PM => {
 		'version' => '0',
+		'Encode' => '0',
 		'Exporter' => '0',
 		'RdKw::I18N::CodeSets' => '0',
 		'RdKw::L10N::TextDomain' => '0',

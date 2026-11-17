@@ -6,6 +6,11 @@ Revision history of WwW-GenLib
         RdKw::I18N::CodeSets, RdKw::L10N::TextDomain,
         and the version pragmatic module.
 
+    *** Encode is required.
+
+    + file2uri and uri2file convert between file names (character
+      strings) and URI paths, with UTF-8 escapes.
+
     + parse_base takes prog => NAME, the prefix of its error
       messages (which was always `parse_base').  Prefixes are
       put on by RdKw::I18N::CodeSets' tagmsg.

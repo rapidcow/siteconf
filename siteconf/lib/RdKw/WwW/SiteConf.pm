@@ -1047,9 +1047,9 @@ sub _node
 		$have eq $want or die _status 0, tagmsg(E => $have ne $I{HAVE}
 			# HEY!  Keep the question mark: we are as puzzled as
 			# anyone.  The (aka %q) is what the HAVE says, expanded
-			? diag(__("%q: You HAVE %q (aka %q),\nbut I need %q?"),
+			? diag(__("%#q: You HAVE %q (aka %q),\nbut I need %q?"),
 				$apath, $I{HAVE}, $have, $want)
-			: diag(__("%q: You HAVE %q,\nbut I need %q?"), $apath, $I{HAVE}, $want));
+			: diag(__("%#q: You HAVE %q,\nbut I need %q?"), $apath, $I{HAVE}, $want));
 	}
 
 	# What the headers say they need, and what the rules do
@@ -1230,10 +1230,10 @@ sub _tool
 				or die _status 0, tagmsg(E => $have ne $I{HAVE}
 					# HEY!  As above, for a tool of the rule; the last %s
 					# is where the rule is (`file' line 3)
-					? diag(__("%q: You HAVE %q (aka %q),\n"
+					? diag(__("%#q: You HAVE %q (aka %q),\n"
 						. "but I need %q for the rule for %q (%s)?"),
 						$dep, $I{HAVE}, $have, $dep, $file, $at)
-					: diag(__("%q: You HAVE %q,\n"
+					: diag(__("%#q: You HAVE %q,\n"
 						. "but I need %q for the rule for %q (%s)?"),
 						$dep, $I{HAVE}, $dep, $file, $at));
 		}
@@ -1375,7 +1375,7 @@ sub _select_goals
 			or die _status 0, tagmsg(E => diag(__("%q: expected NEED or WANT, not %q"),
 				"-t $select", $mode));
 		length $name or die _status 0, tagmsg(E => diag(__("%q: expected a goal name"), "-t $select"));
-		exists $goal{$name} or die _status 0, tagmsg(E => diag(__("%q: no goal %q"), $self->{D}{F}, $name));
+		exists $goal{$name} or die _status 0, tagmsg(E => diag(__("%#q: missing goal %q"), $self->{D}{F}, $name));
 		push @order, $name unless exists $mode{$name};
 		$mode{$name} = $mode;
 	}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 23:43-0600\n"
+"POT-Creation-Date: 2026-11-16 23:53-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -407,13 +407,13 @@ msgstr ""
 #. anyone.  The (aka %q) is what the HAVE says, expanded
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1050
 msgid ""
-"%q: You HAVE %q (aka %q),\n"
+"%#q: You HAVE %q (aka %q),\n"
 "but I need %q?"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1052
 msgid ""
-"%q: You HAVE %q,\n"
+"%#q: You HAVE %q,\n"
 "but I need %q?"
 msgstr ""
 
@@ -470,13 +470,13 @@ msgstr ""
 #. is where the rule is (`file' line 3)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1233
 msgid ""
-"%q: You HAVE %q (aka %q),\n"
+"%#q: You HAVE %q (aka %q),\n"
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1236
 msgid ""
-"%q: You HAVE %q,\n"
+"%#q: You HAVE %q,\n"
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
 
@@ -505,7 +505,8 @@ msgid "%q: expected a goal name"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1378
-msgid "%q: no goal %q"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:224
+msgid "%#q: missing goal %q"
 msgstr ""
 
 #. HEY!  %s is the option, as in -Dclean=clean-&
@@ -775,12 +776,12 @@ msgstr ""
 #. (aka %q) is expanded form.
 #: ../siteconf/share/presets/web.render:111
 #, perl-brace-format
-msgid "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
+msgid "%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
 msgstr ""
 
 #: ../siteconf/share/presets/web.render:113
 #, perl-brace-format
-msgid "%q: Your HAVE %q is not under ${a} (aka %q)"
+msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr ""
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:299
@@ -926,10 +927,6 @@ msgstr ""
 msgid "%#q: no goal"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:224
-msgid "%#q: missing goal %q"
-msgstr ""
-
 #. HEY!  the first %s is the class name (in every message
 #. that starts so), and the second is an option name
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:190
@@ -951,11 +948,11 @@ msgid "%s: source %q not found"
 msgstr ""
 
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:221
-msgid "%s: %q: no HAVE"
+msgid "%s: %#q: missing HAVE"
 msgstr ""
 
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:223
-msgid "%s: %q: You HAVE %q, but it is actually %s"
+msgid "%s: %#q: You HAVE %q, but it is actually %s"
 msgstr ""
 
 #. HEY!  a path, and how a header would name it (${a}/x)

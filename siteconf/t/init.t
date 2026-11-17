@@ -5,6 +5,8 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 
 use Cwd qw(getcwd);
+use Encode ();
+use Encode::Locale ();
 use File::Path qw(make_path);
 use File::Temp qw(tempdir);
 use TestPaths qw( script_path perl5lib fs_surprise );
@@ -155,10 +157,16 @@ is((stat '/dev/null')[2], $nullmode, 'force leaves null device permissions alone
 for my $name ('a b', '"quoted', "tab\there", 'what?', 'quoted"', 'bin/"x"',
 	'what?.pl', 'a"b', '../stuff', '${a}', "no\x{a0}break") {
 	SKIP: {
-		my $why = fs_surprise($name, 'project');
+		# Names are characters; the arguments and the file system
+		# have them in bytes, as the locale (and locale_fs) spell them.
+		my ($arg, $fs) = map {
+			eval { Encode::encode($_ => $name, Encode::FB_CROAK() | Encode::LEAVE_SRC()) }
+		} qw( locale locale_fs );
+		skip "the locale cannot spell <$name>", 3 unless defined $arg && defined $fs;
+		my $why = fs_surprise($fs, 'project');
 		skip $why, 3 if defined $why;
 		($status, $out) = invoke('init', '-P', 'web', '-SA=project',
-			'-o', 'configure:/dev/null', '-o', "render:$name");
+			'-o', 'configure:/dev/null', '-o', "render:$arg");
 		is($status, 0, "accept render name <$name>") or diag $out;
 		my %I = eval { read_deps("project/$name") };
 		is($@, '', 'renderer header can be read');

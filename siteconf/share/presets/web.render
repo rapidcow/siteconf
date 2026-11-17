@@ -108,9 +108,9 @@ defined $I{HAVE} or die $cs->tagmsg(E => $cs->diag(__(
 		die $cs->tagmsg(E => $real ne $I{HAVE}
 			# HEY!  The first %q is the symbolic form, and
 			# (aka %q) is expanded form.
-			? $cs->diag(__('%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)'),
+			? $cs->diag(__('%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)'),
 				$apath, $I{HAVE}, $real, $D->{a})
-			: $cs->diag(__('%q: Your HAVE %q is not under ${a} (aka %q)'),
+			: $cs->diag(__('%#q: Your HAVE %q is not under ${a} (aka %q)'),
 				$apath, $I{HAVE}, $D->{a}));
 	}
 }) =~ s/\A\/+//;

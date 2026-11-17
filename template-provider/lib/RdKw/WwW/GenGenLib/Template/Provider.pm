@@ -218,9 +218,9 @@ sub new
 	defined $source or die _status 0, diag(__("%s: source %q not found"), $class, $args->{SOURCE}) . "\n";
 	my %I = read_deps($source);
 	if ($self->{CHECK_HAVE}) {
-		defined $I{HAVE} or die _status 0, diag(__("%s: %q: no HAVE"), $class, $source) . "\n";
+		defined $I{HAVE} or die _status 0, diag(__("%s: %#q: missing HAVE"), $class, $source) . "\n";
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
-			or die _status 0, diag(__("%s: %q: You HAVE %q, but it is actually %s"),
+			or die _status 0, diag(__("%s: %#q: You HAVE %q, but it is actually %s"),
 				$class, $source, $I{HAVE}, $self->_named($source)) . "\n";
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;

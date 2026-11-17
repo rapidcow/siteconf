@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 23:43-0600\n"
+"POT-Creation-Date: 2026-11-16 23:53-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -274,13 +274,13 @@ msgstr "%1$s：%2$q：${%3$s} 是相对于 ${B} 的；请写 ${B}/${%3$s}。"
 #. HEY!  the last %s is what is in a header, as ${U+...}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:527
 msgid "%s: %q: %s is no code point"
-msgstr "%s：%q：%s 不是码位"
+msgstr "%s：%#q：%s 不是码位"
 
 #. HEY!  the last %s is the variable, as ${name}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:534
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:260
 msgid "%s: %q: no such variable %s"
-msgstr "%s：%q：没有变量 %s"
+msgstr "%s：%#q：没有变量 %s"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:538
 msgid "%s: stray $ in %q"
@@ -345,7 +345,7 @@ msgstr "%s：%q 展开后为空"
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:828
 #, perl-brace-format
 msgid "%s: %q: target is not preceded by a legal prefix (${b} or ${c})"
-msgstr "%s：%q：目标前面没有合法的前缀（${b} 或 ${c}）"
+msgstr "%s：%#q：目标前面没有合法的前缀（${b} 或 ${c}）"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:878
 #, perl-format
@@ -371,7 +371,7 @@ msgstr "%s：目标列表为空"
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:943
 msgid ""
 "%s: %q: a prerequisite must start with either `NEED:' or `WANT:', not %q"
-msgstr "%s：%q：先决条件必须以 `NEED:' 或 `WANT:' 开头，而不是 %q"
+msgstr "%s：%#q：先决条件必须以 `NEED:' 或 `WANT:' 开头，而不是 %q"
 
 #. HEY!  %q is `NEED:' or `WANT:', literally.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:948
@@ -409,18 +409,18 @@ msgstr "缺少源文件 %q"
 #. anyone.  The (aka %q) is what the HAVE says, expanded
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1050
 msgid ""
-"%q: You HAVE %q (aka %q),\n"
+"%#q: You HAVE %q (aka %q),\n"
 "but I need %q?"
 msgstr ""
-"%q：你 HAVE %q（又名 %q），\n"
+"%#q：你 HAVE %q（又名 %q），\n"
 "但我需要的是 %q？"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1052
 msgid ""
-"%q: You HAVE %q,\n"
+"%#q: You HAVE %q,\n"
 "but I need %q?"
 msgstr ""
-"%q：你 HAVE %q，\n"
+"%#q：你 HAVE %q，\n"
 "但我需要的是 %q？"
 
 #. HEY!  This and the next three are where a NEED (or a WANT)
@@ -479,18 +479,18 @@ msgstr ""
 #. is where the rule is (`file' line 3)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1233
 msgid ""
-"%q: You HAVE %q (aka %q),\n"
+"%#q: You HAVE %q (aka %q),\n"
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
-"%1$q：你 HAVE %2$q（又名 %3$q），\n"
+"%1$#q：你 HAVE %2$q（又名 %3$q），\n"
 "但 %5$q 的规则（%6$s）需要的是 %4$q？"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1236
 msgid ""
-"%q: You HAVE %q,\n"
+"%#q: You HAVE %q,\n"
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
-"%1$q：你 HAVE %2$q，\n"
+"%1$#q：你 HAVE %2$q，\n"
 "但 %4$q 的规则（%5$s）需要的是 %3$q？"
 
 #. HEY!  the %s is where (`file' line 3); what
@@ -517,8 +517,9 @@ msgid "%q: expected a goal name"
 msgstr "%q：应为目标名"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1378
-msgid "%q: no goal %q"
-msgstr "%q：不存在目标 %q"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:224
+msgid "%#q: missing goal %q"
+msgstr "%#q：缺少目标 %q"
 
 #. HEY!  %s is the option, as in -Dclean=clean-&
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1423
@@ -790,13 +791,13 @@ msgstr "%q：找不到 HAVE 声明"
 #. (aka %q) is expanded form.
 #: ../siteconf/share/presets/web.render:111
 #, perl-brace-format
-msgid "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
-msgstr "%q：你的 HAVE %q（又名 %q）不在 ${a}（又名 %q）之下"
+msgid "%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
+msgstr "%#q：你的 HAVE %q（又名 %q）不在 ${a}（又名 %q）之下"
 
 #: ../siteconf/share/presets/web.render:113
 #, perl-brace-format
-msgid "%q: Your HAVE %q is not under ${a} (aka %q)"
-msgstr "%q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
+msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
+msgstr "%#q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:299
 msgid "missing site_url"
@@ -947,10 +948,6 @@ msgstr "%s：应为 MAKE、NEED 或 WANT，而不是 %q"
 msgid "%#q: no goal"
 msgstr "%#q：没有目标"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:224
-msgid "%#q: missing goal %q"
-msgstr "%#q：缺少目标 %q"
-
 #. HEY!  the first %s is the class name (in every message
 #. that starts so), and the second is an option name
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:190
@@ -972,12 +969,12 @@ msgid "%s: source %q not found"
 msgstr "%s：找不到源文件 %q"
 
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:221
-msgid "%s: %q: no HAVE"
-msgstr "%s：%q：没有 HAVE"
+msgid "%s: %#q: missing HAVE"
+msgstr "%s：%#q：缺少 HAVE"
 
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:223
-msgid "%s: %q: You HAVE %q, but it is actually %s"
-msgstr "%s：%q：你 HAVE %q，但它其实是 %s"
+msgid "%s: %#q: You HAVE %q, but it is actually %s"
+msgstr "%s：%#q：你 HAVE %q，但它其实是 %s"
 
 #. HEY!  a path, and how a header would name it (${a}/x)
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:310
@@ -1012,6 +1009,9 @@ msgstr "不允许相对路径（没有设置 RELATIVE）"
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:475
 msgid "%q: not a file"
 msgstr "%q：不是文件"
+
+#~ msgid "%q: no goal %q"
+#~ msgstr "%q：不存在目标 %q"
 
 #~ msgid "dangerous name for render: %q is not supported (yet)"
 #~ msgstr "render 的名字很危险：（暂时）不支持 %q"

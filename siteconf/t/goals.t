@@ -81,8 +81,8 @@ eval { plan_of('WANT:broken', 'NEED:other', 'broken') };
 like($@, qr/goal `broken' NEEDs `missing'/, 'an unprefixed goal restores normal requirements');
 
 for my $case (
-	['nope', qr/no goal `nope'/],
-	['WANT:nope', qr/no goal `nope'/],
+	['nope', qr/missing goal `nope'/],
+	['WANT:nope', qr/missing goal `nope'/],
 	['want:small', qr/expected NEED or WANT/],
 	['small:WANT', qr/expected NEED or WANT/],
 	['WANT:', qr/expected a goal name/],

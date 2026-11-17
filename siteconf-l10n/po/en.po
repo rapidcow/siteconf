@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 23:43-0600\n"
+"POT-Creation-Date: 2026-11-16 23:53-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -410,18 +410,20 @@ msgstr "source %q is missing"
 #. anyone.  The (aka %q) is what the HAVE says, expanded
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1050
 msgid ""
-"%q: You HAVE %q (aka %q),\n"
+"%#q: You HAVE %q (aka %q),\n"
 "but I need %q?"
 msgstr ""
-"%q: You HAVE %q (aka %q),\n"
+"%#q: You HAVE %q (aka %q),\n"
+"but I need %q?"
 "but I need %q?"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1052
 msgid ""
-"%q: You HAVE %q,\n"
+"%#q: You HAVE %q,\n"
 "but I need %q?"
 msgstr ""
-"%q: You HAVE %q,\n"
+"%#q: You HAVE %q,\n"
+"but I need %q?"
 "but I need %q?"
 
 #. HEY!  This and the next three are where a NEED (or a WANT)
@@ -480,18 +482,20 @@ msgstr ""
 #. is where the rule is (`file' line 3)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1233
 msgid ""
-"%q: You HAVE %q (aka %q),\n"
+"%#q: You HAVE %q (aka %q),\n"
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
-"%q: You HAVE %q (aka %q),\n"
+"%#q: You HAVE %q (aka %q),\n"
+"but I need %q for the rule for %q (%s)?"
 "but I need %q for the rule for %q (%s)?"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1236
 msgid ""
-"%q: You HAVE %q,\n"
+"%#q: You HAVE %q,\n"
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
-"%q: You HAVE %q,\n"
+"%#q: You HAVE %q,\n"
+"but I need %q for the rule for %q (%s)?"
 "but I need %q for the rule for %q (%s)?"
 
 #. HEY!  the %s is where (`file' line 3); what
@@ -519,8 +523,9 @@ msgid "%q: expected a goal name"
 msgstr "%q: expected a goal name"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1378
-msgid "%q: no goal %q"
-msgstr "%q: no goal %q"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:224
+msgid "%#q: missing goal %q"
+msgstr "%#q: missing goal %q"
 
 #. HEY!  %s is the option, as in -Dclean=clean-&
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1423
@@ -793,13 +798,13 @@ msgstr "%q: HAVE declaration not found"
 #. (aka %q) is expanded form.
 #: ../siteconf/share/presets/web.render:111
 #, perl-brace-format
-msgid "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
-msgstr "%q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
+msgid "%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
+msgstr "%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)"
 
 #: ../siteconf/share/presets/web.render:113
 #, perl-brace-format
-msgid "%q: Your HAVE %q is not under ${a} (aka %q)"
-msgstr "%q: Your HAVE %q is not under ${a} (aka %q)"
+msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
+msgstr "%#q: Your HAVE %q is not under ${a} (aka %q)"
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:299
 msgid "missing site_url"
@@ -950,10 +955,6 @@ msgstr "%s: expected MAKE, NEED or WANT, not %q"
 msgid "%#q: no goal"
 msgstr "%#q: no goal"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:224
-msgid "%#q: missing goal %q"
-msgstr "%#q: missing goal %q"
-
 #. HEY!  the first %s is the class name (in every message
 #. that starts so), and the second is an option name
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:190
@@ -975,12 +976,12 @@ msgid "%s: source %q not found"
 msgstr "%s: source %q not found"
 
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:221
-msgid "%s: %q: no HAVE"
-msgstr "%s: %q: no HAVE"
+msgid "%s: %#q: missing HAVE"
+msgstr "%s: %#q: missing HAVE"
 
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:223
-msgid "%s: %q: You HAVE %q, but it is actually %s"
-msgstr "%s: %q: You HAVE %q, but it is actually %s"
+msgid "%s: %#q: You HAVE %q, but it is actually %s"
+msgstr "%s: %#q: You HAVE %q, but it is actually %s"
 
 #. HEY!  a path, and how a header would name it (${a}/x)
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:310
@@ -1015,6 +1016,9 @@ msgstr "relative paths are not allowed (RELATIVE is unset)"
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:475
 msgid "%q: not a file"
 msgstr "%q: not a file"
+
+#~ msgid "%q: no goal %q"
+#~ msgstr "%q: no goal %q"
 
 #~ msgid "dangerous name for render: %q is not supported (yet)"
 #~ msgstr "dangerous name for render: %q is not supported (yet)"

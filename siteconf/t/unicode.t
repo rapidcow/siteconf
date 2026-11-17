@@ -152,22 +152,21 @@ SKIP: {
 }
 
 # --- where the locale cannot say it: \x{...}, and the arguments it
-# cannot read are not guessed at (by SITECONF_CODESETS, not LC_ALL=C:
-# Android's libc says UTF-8 whatever the locale)
+# cannot read are not guessed at
 my $C = "$utmp/c";
 mkdir fs($C) or die $!;
 spew("$C/Makefile.in", "ないもの.html:\n");
 spew("$C/MANIFEST", "MAKE all\n\tNEED ないもの.html\n");
 run($C, {}, $script, 'init', '-q');
 run($C, {}, 'configure', '-q', '-DB=build', '-Da=.');
-($status, $out) = run($C, { SITECONF_CODESETS => 'console:ascii' }, $script, '-g', '-B', 'build');
+($status, $out) = run($C, { LC_ALL => 'C' }, $script, '-g', '-B', 'build');
 isnt($status, 0, 'a missing source is still missing');
 like($out, qr/\\x\{306a\}\\x\{3044\}\\x\{3082\}\\x\{306e\}\.html/,
 	'... and says so as \\x{...} where the locale cannot say it');
 unlike($out, qr/[^\x00-\x7f]/, '... in nothing but ASCII');
 
 # (bytes, as a UTF-8 locale would have said `-Sa=é')
-($status, $out) = run($C, { SITECONF_CODESETS => 'argv:ascii' }, $script, 'init', '-o', '/dev/null',
+($status, $out) = run($C, { LC_ALL => 'C' }, $script, 'init', '-o', '/dev/null',
 	Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
 like($out, qr/: cannot decode argv 4: /, 'unreadable arguments are an error');
 
@@ -192,7 +191,7 @@ like($out, qr/\Asiteconf: too late to -C now\./, '-C after anything else: too la
 like($out, qr/\Asiteconf: too late to -C now\./, '... even glued to it');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-C', 'argv:UTF-8');
 like($out, qr/\Aconfigure: too late to -C now\./, 'configure: too late, too');
-($status, $out) = run($C, { SITECONF_CODESETS => 'argv:ascii' }, 'configure', '-q', '-DB=build', '-Dx=é');
+($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-DB=build', '-Dx=é');
 like($out, qr/: cannot decode argv 3: /, 'configure: unreadable arguments are an error');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-C', 'argv:UTF-8', '-q', '-DB=build', '-Dx=é');
 is($status, 0, 'configure -C argv:UTF-8: reads them') or diag $out;

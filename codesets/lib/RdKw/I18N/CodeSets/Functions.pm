@@ -79,6 +79,10 @@ L<RdKw::I18N::CodeSets/unsetenv>.
 
 L<RdKw::I18N::CodeSets/initstd>.
 
+=item B<reinitstd>([ I<file> => I<fallback>, ... ][, { prog => I<prog> }])
+
+L<RdKw::I18N::CodeSets/reinitstd>.
+
 =back
 
 =cut

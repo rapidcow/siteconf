@@ -77,6 +77,9 @@ Revision history of WwW-GenGenLib
       say it themselves (it is far less than escape_dep does).
     + read_make takes a prog, as write_make does: what it is
       called when it cannot spell a file name for the system.
+    + update_file takes raw => 1: the text is bytes, and is
+      written as it is.  siteconf writes its Makefile so.  to_fs
+      spells the names in it as the file system does.
 
 
 0.00_03  2026-11-08  RC

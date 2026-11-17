@@ -28,6 +28,8 @@ in front is C<./~>.
 What it cannot name is an error still: a vertical space (a line
 break, CR, form feed, ...), a C<;> or C<=>, a C<\> at the end, or a
 name that ends in parentheses, which would be an archive member.
+The escaped name is then spelled as the file system spells it, as in
+L<RdKw::WwW::SiteConf::Make>.
 
 =cut
 
@@ -55,7 +57,7 @@ sub _name
 	$s =~ s/(\\*)([\t #:|])/$1$1\\$2/g;
 	$s =~ s/(\\*)([*?\[])/$1$1\[$2\]/g;
 	$s =~ s/\A~/.\/~/;
-	$s;
+	$class->_fs($s);
 }
 
 1;

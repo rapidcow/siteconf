@@ -268,12 +268,16 @@ sub unescape_var
 	$text;
 }
 
-=item B<update_file> I<file>, I<text>
+=item B<update_file> I<file>, I<text>[, { prog => I<prog>, raw => 1 }]
 
 Replace I<file> with I<text> (characters, written as UTF-8) -- but
 only if that would change anything.  Preserving the mtime means a
 reconfiguration that changes nothing will not rebuild the world.
 Return 2 if the file is created, 1 if updated, and 0 if not modified.
+
+With C<< raw => 1 >>, I<text> is bytes.  They are written as they are.
+Use this for a Makefile: its names are spelled by
+L<RdKw::I18N::CodeSets/to_fs>, and make reads them as bytes.
 
 This function is not compatible with the original B<update_file>
 in genlib 0.0000; use
@@ -285,6 +289,7 @@ sub update_file
 {
 	my ($file, $text, $opt) = @_;
 	my $prog = $opt && exists $opt->{prog} ? $opt->{prog} : 'update_file';
+	my $layer = $opt && $opt->{raw} ? ':raw' : ':encoding(UTF-8)';
 	#
 	# Try writing to the same file system to ensure atomicity.
 	# Polluting directory is fine, since we usually own the
@@ -294,7 +299,7 @@ sub update_file
 
 	my ($tmp_fs, $file_fs) = map { to_fs($_, { prog => $prog }) } $tmp, $file;
 
-	open my $fh, '>:encoding(UTF-8)', $tmp_fs
+	open my $fh, ">$layer", $tmp_fs
 		or die tagmsg($prog => diag(__(
 			"cannot create file %q: %m"), $tmp));
 	print $fh $text

@@ -155,6 +155,12 @@ Revision history of WwW-SiteConf
         and ${U+20} is a space: -Devil_path='evil${U+20}path'.
         (A literal ${U+20} is ${$}{U+20}.)  Requires the
         GenGenLib of this release.
+    *** The build file of -G make, gmake and ninja spells names
+        as the file system does, as -l does.  So does every recipe
+        in it.  make and ninja read it as bytes.
+        It used to be UTF-8, so a name that is not ASCII was found
+        by make only where the file system spells it so.  A name
+        the file system cannot spell is an error.
 
 
 0.02_03  2026-11-09  RC

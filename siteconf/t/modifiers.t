@@ -194,7 +194,7 @@ for my $c (
 	print $fh "MAKE all\n\tNEED blog/a.md.html\n\tNEED blog/b.md.html\n";
 	close $fh or die;
 	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
-		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
+		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, prog => 'test');
 	my $plan = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->plan;
 	is_deeply($plan->{node}{'blog/b.md.html'}{deps}, ['html/blog/b.md', 'site/blog/.ok'], 'a first prerequisite spelled with ${@:R} is the source')
 		or diag explain $plan->{node}{'blog/b.md.html'}{deps};
@@ -216,7 +216,7 @@ for my $c (
 	close $fh or die;
 	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
 		X => 'd$l $(x)', W => 'a',
-		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, 'test');
+		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, prog => 'test');
 	my $plan = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->plan;
 	is($plan->{node}{a}{recipe}, "\tx 'd\$\$l \$\$(x)' d\$l \$(x) ''\\''d\$\$l \$\$(x)'\\''' a\n",
 		'what :Q made has $$, and only that (once, however deep)');

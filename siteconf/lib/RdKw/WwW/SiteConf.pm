@@ -368,7 +368,7 @@ sub new
 		# (as GenGenLib's load_state does: newbies see it)
 		"You have not configured!  (no %q)\n"
 		. "You should ./configure first. ;)"), $conf));
-	my %D = read_make($conf, $self->{prog});
+	my %D = read_make($conf, prog => $self->{prog});
 	# F and R (the manifest and the rules) are external to the project:
 	# paths from where we are, not from the project root.  The overrides
 	# are noted so that we can credit them in the header.
@@ -1517,7 +1517,7 @@ sub generate
 	$plan->{prog} .= " -t " . shell_quote($_) for @{ $self->{goals} || [] };
 	# Bytes.  The backends spell the names as the file system does.
 	my $text = $module->_emit($plan);
-	$self->_report($outfile, update_file("$self->{B}/$outfile", $text, { raw => 1 }));
+	$self->_report($outfile, update_file("$self->{B}/$outfile", $text, raw => 1));
 
 	# What to type next: the builder (named after the generator), with
 	# -C if we are not in the build directory, -f if the file is not

@@ -29,7 +29,7 @@ sub project {
 	print $fh $manifest;
 	close $fh or die;
 	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
-		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok', %D }, 'test');
+		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok', %D }, prog => 'test');
 	$dir;
 }
 my $manifest = "MAKE all\n\tNEED a.css\n\tNEED d/b.css\nMAKE small\n\tNEED a.css\n";

@@ -292,21 +292,20 @@ COMP:		while (@path) {
 	join '/', @base;
 }
 
-=item B<file2uri> I<file>[, I<os>]
+=item B<file2uri> I<file>[, os => 'Unix', prog => 'file2uri' ]
 
 Write the file name I<file> as a URI.  A relative name gives a
 relative URI path; an absolute one gives a C<file:> URI.  I<file>
-is a character string (not the octets the file system uses), and
+is a Unicode string (not the octets the file system uses), and
 its characters are written as UTF-8 escapes: C<r\x{e9}> gives
 C<r%C3%A9>.  It dies if I<file> cannot be encoded as UTF-8
 (e.g. a lone surrogate).
 
 I<os> is the system whose file names I<file> follows, as
-in L<URI::file>; it defaults to C<$^O>.  So C<a\b> on C<MSWin32>
-gives C<a/b>.
-
-(L<URI::file> alone escapes a character below U+0100 as one octet,
-or as UTF-8, depending on how Perl stores the string.)
+in L<URI::file>; it defaults to C<'Unix'>; pass C<$^O>
+or C<undef> if you explicitly want it in your operating system's
+representation, though this may break various parts of GenGenLib.)
+For example, C<a\b> on C<MSWin32> gives C<a/b>.
 
 Added in 0.03_00.
 
@@ -314,19 +313,35 @@ Added in 0.03_00.
 
 sub file2uri
 {
-	my ($file, $os) = @_;
-	my $octets = Encode::encode('UTF-8', $file,
-		Encode::FB_CROAK() | Encode::LEAVE_SRC());
-	URI::file->new($octets, $os)->as_string;
+	my ($file, %kwds) = @_;
+	my $os = !exists $kwds{os} ? 'Unix' :
+		defined $kwds{os} ? $kwds{os} : $^O;
+	my $prog = exists $kwds{prog} ? $kwds{prog} : 'file2uri';
+	# URI::file->new alone escapes Latin-1 characters
+	# as one Latin-1 octet or as UTF-8, depending on the
+	# internal utf8 flag (see URI::Escape::escape_char).
+	# We have control over what we accept.  Encode it to
+	# ASCII so it is safe for URI::file->new to consume.
+	# (Notably, this does not obey the filesys codeset,
+	# since this is a URI and URIs are always UTF-8. ;)
+	my $uri = eval {
+		my $octets = Encode::encode('UTF-8', $file,
+			Encode::FB_CROAK() | Encode::LEAVE_SRC());
+		URI::file->new($octets, $os)->as_string;
+	};
+	defined $uri ? return $uri : die tagmsg($prog => "$@");
 }
 
 =item B<uri2file> I<uri>[, I<os>]
 
-Reverse operation of B<file2uri>: the file name, as a character
-string, that I<uri> names on I<os> (default C<$^O>).  Escapes are
-decoded as UTF-8, in either case of hex digits.  Returns undef if
-I<uri> names no file on I<os> (e.g. C<a%2Fb>, a name with a slash
-in it), and dies if the escapes are not UTF-8 (e.g. C<r%E9>).
+Reverse operation of B<file2uri>: the file name, as a Unicode
+string, that I<uri> names on I<os> (default C<'Unix'> like
+B<file2uri>.  Pass C<$^O> or C<undef> if you explicitly want it
+in your operating system's representation.)
+Escapes are decoded as UTF-8, in either case of hex digits.
+Return undef if I<uri> names no file on I<os> (e.g. C<a%2Fb>,
+a name with a slash in it), and die if the escapes are not UTF-8
+(e.g. C<r%E9>).
 
 Added in 0.03_00.
 
@@ -334,10 +349,19 @@ Added in 0.03_00.
 
 sub uri2file
 {
-	my ($uri, $os) = @_;
-	my $octets = URI->new($uri, 'file')->file($os);
-	defined $octets or return undef;
-	Encode::decode('UTF-8', $octets, Encode::FB_CROAK());
+	my ($uri, %kwds) = @_;
+	my $os = !exists $kwds{os} ? 'Unix' :
+		defined $kwds{os} ? $kwds{os} : $^O;
+	my $prog = exists $kwds{prog} ? $kwds{prog} : 'uri2file';
+	my $name = eval {
+		my $octets = URI->new($uri, 'file')->file($os);
+		defined $octets or die diag(__(
+			# HEY! %s is the operating system.
+			"%q: URI not representable in %#q"),
+			$uri, $os);
+		Encode::decode('UTF-8', $octets, Encode::FB_CROAK());
+	};
+	defined $name ? return $name : die tagmsg($prog => "$@");
 }
 
 =item B<parse_base> \%O[, prog => 'parse_base' ]

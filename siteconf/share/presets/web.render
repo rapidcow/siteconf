@@ -44,7 +44,6 @@ use RdKw::WwW::GenGenLib 0.0100 qw(
 @USE_GENLIB@
 use Template;
 @USE_TT_EXC@@USE_PROVIDER@
-
 my $cs = RdKw::I18N::CodeSets->locale;
 # Command-line arguments are decoded via the
 # argv codeset, though this may be altered by

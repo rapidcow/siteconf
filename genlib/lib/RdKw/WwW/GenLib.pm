@@ -92,6 +92,8 @@ use URI::Escape qw( uri_unescape );
 use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+sub _status { $! = 0; $? = shift; @_; }
+
 our @EXPORT_OK = qw(
 	locate
 	relapath joinpath
@@ -294,13 +296,13 @@ sub parse_base
 
 	# site_url cannot be derived, so it is required.
 	defined $D->{site_url} and $D->{site_url} ne ''
-		or die tagmsg($prog => __("missing site_url"));
+		or die _status 0, tagmsg($prog => __("missing site_url"));
 	$site_url = URI->new($D->{site_url});
 
 	{
 		my $proto = $site_url->scheme;
 		unless (defined $proto and grep { lc($proto) eq $_ } qw( file http https )) {
-			die tagmsg($prog => diag(__(
+			die _status 0, tagmsg($prog => diag(__(
 				"site_url has no file or www URI scheme: %q"),
 				$D->{site_url}));
 		}
@@ -318,12 +320,12 @@ sub parse_base
 	) {
 		$base_url = $D->{base_url};
 		unless ($base_url =~ m!^/!) {
-			die tagmsg($prog => __("base_url must begin with a slash"));
+			die _status 0, tagmsg($prog => __("base_url must begin with a slash"));
 		}
 		unless ($site_url->path eq '' or $base_url eq $site_url->path) {
 			# This is probably one of the more grave cases;
 			# so report it thoroughly to the console.
-			die tagmsg($prog => diag(__(
+			die _status 0, tagmsg($prog => diag(__(
 				# HEY!  the first %q is the path of site_url, and the
 				# second is base_url
 				"site_url has a nonempty path (%q), and\n"
@@ -339,7 +341,7 @@ sub parse_base
 		$base_url = $site_url->path;
 		if ($base_url eq '') {
 			defined $D->{base_url} and $D->{base_url} eq '/'
-				or die tagmsg($prog => __(
+				or die _status 0, tagmsg($prog => __(
 					"base_url cannot be inferred from site_url,\n"
 					. "as the latter has an empty path"));
 			$base_url = '/';

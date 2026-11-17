@@ -41,6 +41,8 @@ use RdKw::I18N::CodeSets::Functions qw( diag );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+sub _status { $! = 0; $? = shift; @_; }
+
 sub _emit
 {
 	my ($class, $plan) = @_;
@@ -72,7 +74,7 @@ NINJA
 		my $node = $plan->{node}{$file};
 		my $command = _command($node->{recipe});
 		defined $command and length $command
-			or die "E: " . diag(__("%q: no recipe to make it (and ninja has no"
+			or die _status 0, "E: " . diag(__("%q: no recipe to make it (and ninja has no"
 				. " way to make nothing)"), $file) . "\n";
 		my $rule = 'rule' . ++$n;
 		$out .= "rule $rule\n  command = $command\n";
@@ -107,7 +109,7 @@ sub _path
 	my ($s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}|])/
 		# HEY!  the %s is a character, as `|' or U+000A
-		and die "E: " . diag(__("ninja cannot name %q (with inescapable %s)"),
+		and die _status 0, "E: " . diag(__("ninja cannot name %q (with inescapable %s)"),
 			$s, $1 eq '|' ? "`|'" : sprintf('U+%04X', ord $1)) . "\n";
 	$s =~ s/([ :\$])/\$$1/g;
 	$s;

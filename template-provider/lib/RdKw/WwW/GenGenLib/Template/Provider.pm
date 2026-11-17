@@ -154,6 +154,8 @@ use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
 # Use the same gettext domain as our (distant) parent GenGenLib.pm.
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+sub _status { $! = 0; $? = shift; @_; }
+
 # A name as the file system spells it, and back; or an error from us
 sub _to_fs { to_fs($_[0], { prog => __PACKAGE__ }) }
 sub _un_fs { un_fs($_[0], { prog => __PACKAGE__ }) }
@@ -185,10 +187,10 @@ sub new
 	for my $k (qw( COMPILE_DIR COMPILE_EXT )) {
 		# HEY!  the first %s is the class name (in every message
 		# that starts so), and the second is an option name
-		defined $args->{$k} and die diag(__("%s: %s is not supported"), $class, $k) . "\n";
+		defined $args->{$k} and die _status 0, diag(__("%s: %s is not supported"), $class, $k) . "\n";
 	}
 	defined $args->{SOURCE}
-		or die diag(__("%s: SOURCE (the template to process) is required"), $class) . "\n";
+		or die _status 0, diag(__("%s: SOURCE (the template to process) is required"), $class) . "\n";
 	# We give Template::Provider whole paths, once we have said yes;
 	# its own ABSOLUTE and RELATIVE are ours to say.
 	my $self = $class->SUPER::new({ %$args, ABSOLUTE => 1, RELATIVE => 1 }) or return;
@@ -202,7 +204,7 @@ sub new
 		for (@{ $args->{ALLOW_PREFIXES} }) {
 			my ($root, $rest) = split_dep($_);
 			$rest =~ m{\A/*\z}
-				or die diag(__("%s: ALLOW_PREFIXES: %q is not a symbolic root"), $class, $_) . "\n";
+				or die _status 0, diag(__("%s: ALLOW_PREFIXES: %q is not a symbolic root"), $class, $_) . "\n";
 			$self->{ALLOW_PREFIXES}{$root} = 1;
 		}
 	}
@@ -213,12 +215,12 @@ sub new
 		or return $self;
 
 	my $source = $self->_entry;
-	defined $source or die diag(__("%s: source %q not found"), $class, $args->{SOURCE}) . "\n";
+	defined $source or die _status 0, diag(__("%s: source %q not found"), $class, $args->{SOURCE}) . "\n";
 	my %I = read_deps($source);
 	if ($self->{CHECK_HAVE}) {
-		defined $I{HAVE} or die diag(__("%s: %q: no HAVE"), $class, $source) . "\n";
+		defined $I{HAVE} or die _status 0, diag(__("%s: %q: no HAVE"), $class, $source) . "\n";
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
-			or die diag(__("%s: %q: You HAVE %q, but it is actually %s"),
+			or die _status 0, diag(__("%s: %q: You HAVE %q, but it is actually %s"),
 				$class, $source, $I{HAVE}, $self->_named($source)) . "\n";
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;
@@ -255,7 +257,7 @@ sub _vars
 	for my $x (norm_dep($spec) =~ /\$\{([^}]+)\}/g) {
 		$x eq '$' || $x =~ /\AU\+/ || defined $self->{DEFINITION}{$x}
 			# HEY!  the last %s is the variable, as ${name}
-			or die diag(__("%s: %q: no such variable %s"), __PACKAGE__, $spec, "\${$x}") . "\n";
+			or die _status 0, diag(__("%s: %q: no such variable %s"), __PACKAGE__, $spec, "\${$x}") . "\n";
 	}
 	1;
 }

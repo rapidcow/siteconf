@@ -35,17 +35,19 @@ use RdKw::I18N::CodeSets::Functions qw( diag );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+sub _status { $! = 0; $? = shift; @_; }
+
 # A name, as GNU make reads it
 sub _name
 {
 	my ($class, $s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029};=]|\\\z)/
 		# HEY!  the %s is a character, as `;' or U+000A
-		and die "E: " . diag(__("GNU Make cannot name %q (with inescapable %s)"),
+		and die _status 0, "E: " . diag(__("GNU Make cannot name %q (with inescapable %s)"),
 			$s, $class->_char($1)) . "\n";
 	$s =~ /\(.*\)\z/s
 		# HEY!  lib(member.o) is how make names a member of an archive
-		and die "E: " . diag(__("GNU Make cannot name %q (reserved for archive members)"),
+		and die _status 0, "E: " . diag(__("GNU Make cannot name %q (reserved for archive members)"),
 			$s) . "\n";
 	$s =~ s/\$/\$\$/g;
 	$s =~ s/(\\*)([\t #:|])/$1$1\\$2/g;

@@ -83,6 +83,8 @@ use Encode ();
 use Encode::Locale ();
 use PerlIO::encoding ();
 
+sub _status { $! = 0; $? = shift; @_; }
+
 # category => the Encode::Locale alias that `locale' means for it
 my %LOCALE = (
 	stdin   => 'console_in',
@@ -186,31 +188,31 @@ sub parse
 	push @spec, @last;
 	my @pairs;
 	for my $spec (map { defined $_ && !ref $_ ? split(/,/, $_) : $_ } @spec) {
-		defined $spec or die "${prog}undefined codeset\n";
+		defined $spec or die _status 0, "${prog}undefined codeset\n";
 		if (ref $spec) {
-			ref $spec eq 'HASH' or die "${prog}not a codeset: $spec\n";
+			ref $spec eq 'HASH' or die _status 0, "${prog}not a codeset: $spec\n";
 			my %all = %$spec;
 			# (diag last: setting stderr to ASCII would reset it)
 			for my $name (@CATEGORIES, 'diag') {
 				push @pairs, $name, delete $all{$name} if exists $all{$name};
 			}
 			for (sort keys %all) {
-				die "${prog}unknown category @{[ _qq_ascii($_) ]}\n";
+				die _status 0, "${prog}unknown category @{[ _qq_ascii($_) ]}\n";
 			}
 			next;
 		}
 		my ($name, $enc) = $spec =~ /\A([^:]*)(?::(.*))?\z/s;
-		length $name or die "${prog}no category in codeset @{[ _qq_ascii($spec) ]}\n";
+		length $name or die _status 0, "${prog}no category in codeset @{[ _qq_ascii($spec) ]}\n";
 		if (!defined $enc && !_is_category($name)) {
 			_is_encoding($name)
-				or die "${prog}unknown category or encoding @{[ _qq_ascii($name) ]}\n";
+				or die _status 0, "${prog}unknown category or encoding @{[ _qq_ascii($name) ]}\n";
 			($name, $enc) = (all => $name);
 		}
 		$enc = $name eq 'diag' ? 'unicode' : 'UTF-8' unless defined $enc;
 		push @pairs, $name, $enc;
 	}
 	# (to a copy first, so that we are as we were if one is bad)
-	my $new = eval { $self->new(@pairs) } or die "$prog$@";
+	my $new = eval { $self->new(@pairs) } or die _status 0, "$prog$@";
 	%$self = %$new;
 	$self;
 }
@@ -254,7 +256,7 @@ sub parse_from_env
 	my $prog = _prog_opt(parse_from_env => $self, \@opt);
 	Carp::croak('parse_from_env: undefined environment variable name') unless defined $name;
 	return $self unless exists $ENV{$name};
-	eval { $self->parse($ENV{$name}); 1 } or die "$prog$name: $@";
+	eval { $self->parse($ENV{$name}); 1 } or die _status 0, "$prog$name: $@";
 	$self;
 }
 
@@ -268,10 +270,10 @@ sub parse_from_argv
 	while ($n < @$argv && defined $argv->[$n] && $argv->[$n] =~ /\A-C(.*)\z/s) {
 		my $spec = $1;
 		unless (length $spec) {
-			++$n < @$argv or die "$prog-C (argv $n): no codeset after it\n";
+			++$n < @$argv or die _status 0, "$prog-C (argv $n): no codeset after it\n";
 			$spec = $argv->[$n];
 		}
-		eval { $new->parse($spec); 1 } or die "$prog-C (argv @{[ $n + 1 ]}): $@";
+		eval { $new->parse($spec); 1 } or die _status 0, "$prog-C (argv @{[ $n + 1 ]}): $@";
 		$n++;
 	}
 	splice @$argv, 0, $n;
@@ -314,7 +316,7 @@ sub _is_encoding
 sub _set
 {
 	my ($self, $name, $enc) = @_;
-	defined $name or die "undefined category\n";
+	defined $name or die _status 0, "undefined category\n";
 	if ($name eq 'diag') {
 		$enc = $DIAG_NUMBER{$enc} if defined $enc && exists $DIAG_NUMBER{$enc};
 		$self->diag_mode($enc);
@@ -333,7 +335,7 @@ sub _set
 		$self->diag_mode(undef) if $name eq 'stderr' && _is_ascii($self->{stderr});
 	}
 	else {
-		die "unknown category @{[ _qq_ascii($name) ]}\n";
+		die _status 0, "unknown category @{[ _qq_ascii($name) ]}\n";
 	}
 }
 
@@ -412,7 +414,7 @@ for my $name (@CATEGORIES) {
 			my ($enc) = @_;
 			if (defined $enc && $enc ne 'locale') {
 				my $obj = Encode::find_encoding($enc)
-					or die "unknown encoding @{[ _qq_ascii($enc) ]}"
+					or die _status 0, "unknown encoding @{[ _qq_ascii($enc) ]}"
 						. " for $name\n";
 				$self->{$name} = $obj->name;
 			}
@@ -516,7 +518,7 @@ sub diag_mode
 		my ($mode) = @_;
 		if (defined $mode) {
 			$mode eq 'unicode' || $mode eq 'ascii'
-				or die "unknown diag mode @{[ _qq_ascii($mode) ]}"
+				or die _status 0, "unknown diag mode @{[ _qq_ascii($mode) ]}"
 					. " (unicode or ascii)\n";
 			$self->{diag} = $mode;
 		}
@@ -624,7 +626,7 @@ sub _fs
 	my @new;
 	for my $name (@names) {
 		my ($new) = _code($code, $enc, $name, $opt->{check});
-		defined $new or die _who($opt)
+		defined $new or die _status 0, _who($opt)
 			. "cannot $what @{[ _qq_ascii($name) ]}"
 			. " in @{[ $self->_say_encoding('filesys') ]}\n";
 		push @new, $new;
@@ -687,7 +689,7 @@ sub _argv
 	my @new;
 	for my $i (0 .. $#args) {
 		my ($new, $err) = _code($code, $enc, $args[$i], $opt->{check});
-		defined $new or die _who($opt)
+		defined $new or die _status 0, _who($opt)
 			. "cannot $what argv @{[ $start + $i ]}: $err\n";
 		push @new, $new;
 	}
@@ -761,7 +763,7 @@ sub getenv
 		my $value = $ENV{ $self->_env_key($enc, $name, $opt) };
 		if (defined $value) {
 			($value) = _code(\&Encode::decode, $enc, $value, $opt->{check});
-			defined $value or die _who($opt) . "cannot decode environment variable"
+			defined $value or die _status 0, _who($opt) . "cannot decode environment variable"
 				. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}\n";
 		}
 		push @values, $value;
@@ -780,7 +782,7 @@ sub setenv
 		my $key = $self->_env_key($enc, $name, $opt);
 		if (defined $value) {
 			my ($bytes) = _code(\&Encode::encode, $enc, $value, $opt->{check});
-			defined $bytes or die _who($opt) . "cannot encode the value of"
+			defined $bytes or die _status 0, _who($opt) . "cannot encode the value of"
 				. " environment variable @{[ _qq_ascii($name) ]}"
 				. " in @{[ $self->_say_encoding('env') ]}\n";
 			$value = $bytes;
@@ -808,7 +810,7 @@ sub _env_key
 	my ($self, $enc, $name, $opt) = @_;
 	Carp::croak('undefined environment variable name') unless defined $name;
 	my ($key) = _code(\&Encode::encode, $enc, $name);
-	defined $key or die _who($opt) . "cannot encode environment variable name"
+	defined $key or die _status 0, _who($opt) . "cannot encode environment variable name"
 		. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}\n";
 	$key;
 }

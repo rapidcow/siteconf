@@ -58,6 +58,8 @@ use RdKw::I18N::CodeSets ();
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+sub _status { $! = 0; $? = shift; @_; }
+
 our @EXPORT_OK = qw(
 	read_make write_make update_file load_state
 	read_deps norm_deps norm_dep subs_deps subs_dep
@@ -131,7 +133,7 @@ sub read_make
 	while (<$fh>) {
 		next if /^\s*#/ or /^\s*$/;
 		my ($k, $v) = split /=/, $_, 2;
-		defined $v or die tagmsg($prog => diag(__(
+		defined $v or die _status 0, tagmsg($prog => diag(__(
 			"%#q line %d: missing `='"), $file, $.));
 		$k =~ s/^[$SP]+|[$SP]+$//g;
 		$v =~ s/^[$SP]+|[$SP]+$//g;
@@ -167,7 +169,7 @@ sub write_make
 		: "";
 	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
 		my $v = defined $H->{$k} ? $H->{$k} : '';
-		$k =~ /\A[^\s=#]+\z/ or die tagmsg(
+		$k =~ /\A[^\s=#]+\z/ or die _status 0, tagmsg(
 			# HEY!  by bad we mean the make variable name contains
 			# metacharacters which should not exist in a legal name.
 			# (Not your "legal name", of course, i mean a name that
@@ -337,7 +339,7 @@ sub load_state
 		my $file = File::Spec->catfile($Bdir, "MY/$_.mk");
 		$file = File::Spec->canonpath($file);
 		unless (-f to_fs($file, { prog => $prog })) {
-			die tagmsg($prog => diag(__(
+			die _status 0, tagmsg($prog => diag(__(
 			# HEY!  Keep a winky face in the translation ;)
 			# This message is likely to get seen by newbies,
 			# so we want to keep it fun.
@@ -543,7 +545,7 @@ sub read_deps
 				# in... "you HAVE too many.  The hell are
 				# you tryin' to be, the whole universe?"
 				# Like that.
-				die tagmsg($prog => diag(__("%#q line %d: You HAVE too many."), $file, $.))
+				die _status 0, tagmsg($prog => diag(__("%#q line %d: You HAVE too many."), $file, $.))
 					if @list > 1 or exists $I{$type};
 				$I{HAVE} = $list[0];
 			} else {
@@ -712,7 +714,7 @@ sub norm_deps
 				if (defined $n) {
 					$out .= sprintf '${U+%04X}', $n;
 				} else {
-					$kwds->{strict} and die tagmsg($prog => diag(__(
+					$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
 						"cannot normalize %q: bad Unicode code point %s"),
 						$_, "\${$name}"));
 					$out .= ($keep ? '$' : '${$}') . "{$name}";
@@ -725,13 +727,13 @@ sub norm_deps
 			} elsif (/\G\$/gc) {
 				# Anything else is not a variable we recognize
 				if ($kwds->{strict}) {
-					die tagmsg($prog => diag(__(
+					die _status 0, tagmsg($prog => diag(__(
 						"cannot normalize %q: trailing \$"), $_))
 						if /\G\z/gc;
-					die tagmsg($prog => diag(__(
+					die _status 0, tagmsg($prog => diag(__(
 						"cannot normalize %q: unterminated or empty \${"), $_))
 						if /\G\{/gc;
-					die tagmsg($prog => diag(__("stray \$ in %q"), $_));
+					die _status 0, tagmsg($prog => diag(__("stray \$ in %q"), $_));
 				}
 				$out .= ($keep ? '$' : '${$}');
 			} else {
@@ -813,7 +815,7 @@ sub _bad_subs
 		# pure decode operation... in which case a named
 		# substitution that is not an escape at all as "bad"
 		# as in, "wait.... that's illegal."
-		die tagmsg($prog, diag(__("bad substitution: %s"), "\${$_[0]}"));
+		die _status 0, tagmsg($prog, diag(__("bad substitution: %s"), "\${$_[0]}"));
 	};
 }
 

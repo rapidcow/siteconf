@@ -30,6 +30,10 @@ use File::Spec;
 # and whatever catalogs are installed (here, and in what it runs).
 $ENV{LANGUAGE} = 'C';
 
+# Command-line tests start with the locale's code sets. Tests of an
+# override set SITECONF_CODESETS explicitly for their child processes.
+delete $ENV{SITECONF_CODESETS};
+
 # Resolve while loading, before a test changes to its temporary directory.
 my $root = abs_path(File::Spec->catdir(dirname(__FILE__), '..', '..'));
 

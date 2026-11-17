@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 23:59-0600\n"
+"POT-Creation-Date: 2026-11-17 00:12-0600\n"
 "PO-Revision-Date: 2026-11-13 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -276,9 +276,7 @@ msgstr "%1$s：%2$q：${%3$s} 是相对于 ${B} 的；请写 ${B}/${%3$s}。"
 msgid "%s: %q: %s is no code point"
 msgstr "%s：%#q：%s 不是码位"
 
-#. HEY!  the last %s is the variable, as ${name}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:534
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:260
 msgid "%s: %q: no such variable %s"
 msgstr "%s：%#q：没有变量 %s"
 
@@ -948,67 +946,68 @@ msgstr "%s：应为 MAKE、NEED 或 WANT，而不是 %q"
 msgid "%#q: no goal"
 msgstr "%#q：没有目标"
 
-#. HEY!  the first %s is the class name (in every message
-#. that starts so), and the second is an option name
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:190
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:192
 #, perl-format
-msgid "%s: %s is not supported"
-msgstr "%s：不支持 %s"
+msgid "%s is not supported"
+msgstr "不支持 %s"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:193
-#, perl-format
-msgid "%s: SOURCE (the template to process) is required"
-msgstr "%s：必须给出 SOURCE（要处理的模板）"
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:196
+msgid "SOURCE (the template to process) is required"
+msgstr "必须给出 SOURCE（要处理的模板）"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:207
-msgid "%s: ALLOW_PREFIXES: %q is not a symbolic root"
-msgstr "%s：ALLOW_PREFIXES：%q 不是符号根"
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:211
+msgid "ALLOW_PREFIXES: %q is not a symbolic root"
+msgstr "ALLOW_PREFIXES：%q 不是符号根"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:218
-msgid "%s: source %q not found"
-msgstr "%s：找不到源文件 %q"
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:225
+msgid "source %q not found"
+msgstr "找不到源文件 %q"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:221
-msgid "%s: %#q: missing HAVE"
-msgstr "%s：%#q：缺少 HAVE"
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:230
+msgid "%#q: missing HAVE"
+msgstr "%#q：缺少 HAVE"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:223
-msgid "%s: %#q: You HAVE %q, but it is actually %s"
-msgstr "%s：%#q：你 HAVE %q，但它其实是 %s"
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:234
+msgid "%#q: You HAVE %q, but it is actually %s"
+msgstr "%#q：你 HAVE %q，但它其实是 %s"
+
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:273
+msgid "%q: no such variable %s"
+msgstr "%q：没有变量 %s"
 
 #. HEY!  a path, and how a header would name it (${a}/x)
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:310
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:324
 msgid "%q (aka %q)"
 msgstr "%q（又名 %q）"
 
 #. HEY!  the first (or only) %s is a name, as "%q (aka %q)"
 #. says it, and a second is an option name, as it is
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:406
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:420
 #, perl-format
 msgid "undeclared dependency: %s"
 msgstr "未声明的依赖：%s"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:408
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:422
 #, perl-format
 msgid "%s is declared, but forbidden because %s does not permit its root"
 msgstr "%s 已声明，但 %s 不允许它的根，所以被禁止"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:410
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:424
 #, perl-format
 msgid "%s is declared, but forbidden because %s is unset"
 msgstr "%s 已声明，但没有设置 %s，所以被禁止"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:415
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:429
 msgid "absolute paths are not allowed (ABSOLUTE is unset)"
 msgstr "不允许绝对路径（没有设置 ABSOLUTE）"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:416
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:430
 msgid "relative paths are not allowed (RELATIVE is unset)"
 msgstr "不允许相对路径（没有设置 RELATIVE）"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:475
-msgid "%q: not a file"
-msgstr "%q：不是文件"
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:489
+msgid "%#q: not a file"
+msgstr "%#q：不是文件"
 
 #~ msgid "%q: no goal %q"
 #~ msgstr "%q：不存在目标 %q"

@@ -62,9 +62,9 @@ e7df7b164875b27bf55fb5d1e3c5cbc869affeea refs/tags/codesets/v0.00_00
 40b94f42fff01ca7be107091042d2fed3a2f5106 refs/tags/gengenlib/v0.01_00
 3edeb29bbca9c6053f1517befa5fe053274286e3 refs/tags/genlib/v0.03_00
 233749f5c02d72d8e9f61aba186a322e4a235d77 refs/tags/siteconf-l10n/v0.00_00
-1b6577f4dddae716fcd9361cff0b205555828281 refs/tags/siteconf/v0.03_00
+85d23de60cdd5086b8a09b9cb859d50cd8555fc4 refs/tags/siteconf/v0.03_00
 6f4fc6ac0ada73a08517954446cb279adce580de refs/tags/template-provider/v0.00_00
-d647071753bfdcbda3af985f6bd5d59b34cc9ca3 refs/tags/textdomain/v0.00_00
+037f65bc797888491fdf936c7c60e60ca522451e refs/tags/textdomain/v0.00_00
 MAP
 # Annotated tags are their own object (tagger/message/etc.) pointing
 # at a commit via an "object" header, unlike branches and lightweight

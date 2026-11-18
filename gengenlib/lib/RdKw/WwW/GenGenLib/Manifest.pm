@@ -175,7 +175,9 @@ sub read
 	close $fh or die tagmsg($prog => diag(__("cannot read file %q: %m"), $file));
 	# HEY!  It's singular because "no mind to think,
 	# no will to break, no voice to cry suffering..."
-	@goal or die _status 0, tagmsg($prog => diag(__("%#q: no goal"), $file));
+	# (actually, with a verb now, it is substantially
+	# more clear.)
+	@goal or die _status 0, tagmsg($prog => diag(__("%#q: no goal to make"), $file));
 	bless { file => $file, goals => \@goal, goal => \%goal, prog => $prog }, $class;
 }
 

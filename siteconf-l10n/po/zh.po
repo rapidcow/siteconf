@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 23:22-0600\n"
+"POT-Creation-Date: 2026-11-18 06:54-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -239,7 +239,7 @@ msgstr "%q：缺少 %q。请尝试重新配置。"
 #. what we make goes (the target tree, and the cache)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:392
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:397 ../siteconf/share/configure.in:295
-#: ../siteconf/share/configure.in:307
+#: ../siteconf/share/configure.in:306
 msgid "%q prefix must be a relative path."
 msgstr "%q 前缀必须是相对路径。"
 
@@ -515,7 +515,7 @@ msgid "%q: expected a goal name"
 msgstr "%q：应为目标名"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1378
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:224
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:226
 msgid "%#q: missing goal %q"
 msgstr "%#q：缺少目标 %q"
 
@@ -537,7 +537,7 @@ msgstr "输出名 %q 有误：请留在构建目录里"
 msgid "Removing %q"
 msgstr "正在删除 %q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1530 ../siteconf/share/configure.in:328
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1530 ../siteconf/share/configure.in:327
 msgid "Done!"
 msgstr "完成！"
 
@@ -554,11 +554,11 @@ msgstr "要构建，请运行：%s"
 #. is considered to be our files, so it is
 #. assumed that the state prior to updating is
 #. consistent with the state now.)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1550 ../siteconf/share/configure.in:317
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1550 ../siteconf/share/configure.in:316
 msgid "Writing %#q"
 msgstr "正在写入 %#q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1551 ../siteconf/share/configure.in:317
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1551 ../siteconf/share/configure.in:316
 msgid "Updating %#q"
 msgstr "正在更新 %#q"
 
@@ -743,7 +743,7 @@ msgstr "无法创建 %q：%s"
 msgid "cannot mkdir %q: %m (missing non-leaf components?)"
 msgstr "无法创建目录 %q：%m（缺少上层目录？）"
 
-#: ../siteconf/share/configure.in:243 ../siteconf/share/configure.in:312
+#: ../siteconf/share/configure.in:243 ../siteconf/share/configure.in:311
 msgid "cannot mkdir %q: %m"
 msgstr "无法创建目录 %q：%m"
 
@@ -751,21 +751,21 @@ msgstr "无法创建目录 %q：%m"
 msgid "cannot chdir to $B (aka %q): %m"
 msgstr "无法进入 $B（又名 %q）：%m"
 
-#: ../siteconf/share/configure.in:288 ../siteconf/share/configure.in:303
+#: ../siteconf/share/configure.in:288 ../siteconf/share/configure.in:302
 msgid "%q may not be empty."
 msgstr "%q 不能为空。"
 
-#: ../siteconf/share/configure.in:309
+#: ../siteconf/share/configure.in:308
 msgid "%q may not contain a slash."
 msgstr "%q 不能含有斜杠。"
 
 #. HEY!  %s is a command.
-#: ../siteconf/share/configure.in:331
+#: ../siteconf/share/configure.in:330
 #, perl-format
 msgid "To generate build script, run: %s"
 msgstr "要生成构建脚本，请运行：%s"
 
-#: ../siteconf/share/presets/web.config:24
+#: ../siteconf/share/presets/web.config:25
 msgid "missing %q option"
 msgstr "缺少 %q 选项"
 
@@ -941,70 +941,72 @@ msgstr "%s：应为 MAKE、NEED 或 WANT，而不是 %q"
 
 #. HEY!  It's singular because "no mind to think,
 #. no will to break, no voice to cry suffering..."
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:178
-msgid "%#q: no goal"
-msgstr "%#q：没有目标"
+#. (actually, with a verb now, it is substantially
+#. more clear.)
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:180
+msgid "%#q: no goal to make"
+msgstr "%#q：没有可制造的目标"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:192
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:191
 #, perl-format
 msgid "%s is not supported"
 msgstr "不支持 %s"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:196
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:195
 msgid "SOURCE (the template to process) is required"
 msgstr "必须给出 SOURCE（要处理的模板）"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:211
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:210
 msgid "ALLOW_PREFIXES: %q is not a symbolic root"
 msgstr "ALLOW_PREFIXES：%q 不是符号根"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:225
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:224
 msgid "source %q not found"
 msgstr "找不到源文件 %q"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:231
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:230
 msgid "%#q: missing HAVE"
 msgstr "%#q：缺少 HAVE"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:235
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:234
 msgid "%#q: You HAVE %q, but it is actually %s"
 msgstr "%#q：你 HAVE %q，但它其实是 %s"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:274
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:273
 msgid "%q: no such variable %s"
 msgstr "%q：没有变量 %s"
 
 #. HEY!  a path, and how a header would name it (${a}/x)
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:325
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:324
 msgid "%q (aka %q)"
 msgstr "%q（又名 %q）"
 
 #. HEY!  the first (or only) %s is a name, as "%q (aka %q)"
 #. says it, and a second is an option name, as it is
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:421
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:420
 #, perl-format
 msgid "undeclared dependency: %s"
 msgstr "未声明的依赖：%s"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:423
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:422
 #, perl-format
 msgid "%s is declared, but forbidden because %s does not permit its root"
 msgstr "%s 已声明，但 %s 不允许它的根，所以被禁止"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:425
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:424
 #, perl-format
 msgid "%s is declared, but forbidden because %s is unset"
 msgstr "%s 已声明，但没有设置 %s，所以被禁止"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:430
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:429
 msgid "absolute paths are not allowed (ABSOLUTE is unset)"
 msgstr "不允许绝对路径（没有设置 ABSOLUTE）"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:431
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:430
 msgid "relative paths are not allowed (RELATIVE is unset)"
 msgstr "不允许相对路径（没有设置 RELATIVE）"
 
-#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:490
+#: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:489
 msgid "%#q: not a file"
 msgstr "%#q：不是文件"
 

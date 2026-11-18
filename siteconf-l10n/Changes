@@ -2,6 +2,11 @@ Revision history of WwW-SiteConf-L10N
 
 
 0.00_00  2026-11-13  RC
+    (I want to say this version is mostly LLM generated, but
+     most of the code isn't even in the module but rather the
+     Makefile.PL and mkintl.pl, so... @v@ (but yes, those too
+     are generated.))
+
     + RdKw::WwW::SiteConf::L10N: $LOCALEDIR, where the catalogs of
       the siteconf text domain are (bytes, as the system spells
       it): by default, share/locale under INSTALL_BASE or PREFIX;

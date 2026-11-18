@@ -2,6 +2,8 @@ Revision history of I18N-CodeSets
 
 
 0.00_00  2026-11-17  RC
+    (This version is mostly LLM generated.)
+
     + RdKw::I18N::CodeSets: the code sets of stdin, stdout, stderr,
       argv, env and filesys (by default, as Encode::Locale says),
       and the diag mode (unicode or ascii), from new or from -C

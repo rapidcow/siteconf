@@ -290,15 +290,15 @@ foreach my $f ([ config => \%D ], [ option => \%O ]) {
 # Compute $B for `siteconf -g', as seen from the starting directory
 # (not from the source tree, which is where $D{B} is seen from);
 # an absolute one is spelled as it was given, like in config.mk.
-my $Bhere = File::Spec->file_name_is_absolute($B) ? $B
+my $Brel = File::Spec->file_name_is_absolute($B) ? $B
 	: File::Spec->abs2rel($Bdir, $start);
-my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);
+my $Bcmd = $Brel eq '.' ? '' : " -B " . shell_quote($Brel);
 unless ($shutup) {
 	print STDERR __("Done!"), "\n";
 	print STDERR $cs->diag(__(
 		# HEY!  %s is a command.
 		"To generate build script, run: %s"),
-		"@PROG@ -g$where"), "\n";
+		"@PROG@ -g$Bcmd"), "\n";
 }
 
 exit 0;

@@ -332,7 +332,7 @@ sub file2uri
 	defined $uri ? return $uri : die tagmsg($prog => "$@");
 }
 
-=item B<uri2file> I<uri>[, os => 'Unix', prog => 'file2uri' ]
+=item B<uri2file> I<uri>[, os => 'Unix', prog => 'uri2file' ]
 
 Reverse operation of B<file2uri>: the file name, as a Unicode
 string, that I<uri> names on I<os> (default C<'Unix'> like

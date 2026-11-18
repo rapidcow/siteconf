@@ -270,7 +270,7 @@ isnull($D{c}) and $D{c} = !isnull($Dd{c}) && $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
 length $D{c} or die $cs->tagmsg(E => $cs->diag(__(
 	'${%s} may not be empty.'), 'c'));
-# We also create rules under `c', so it must be relative too.
+# We also create rules under ${c}, so it must be relative too.
 File::Spec->file_name_is_absolute($D{c})
 	and die $cs->tagmsg(E => $cs->diag(__(
 	'${%s} prefix must be a relative path.'), 'c'));

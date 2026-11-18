@@ -161,6 +161,7 @@ Revision history of WwW-SiteConf
         It used to be UTF-8, so a name that is not ASCII was found
         by make only where the file system spells it so.  A name
         the file system cannot spell is an error.
+    *** ./configure will no longer mkdir any path except ${B}/MY.
 
 
 0.02_03  2026-11-09  RC

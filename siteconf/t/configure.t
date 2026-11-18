@@ -11,7 +11,7 @@ use TestPaths qw( script_path perl5lib fs_surprise );
 my $script = script_path();
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
-plan tests => 38 + 12;
+plan tests => 44;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -35,12 +35,12 @@ is($status, 0, 'no -DB') or diag $out;
 ok(-d 'MY', 'in the source tree');
 
 ($status, $out) = run('configure', '-q', '-DB=out');
-is($status, 0, 'a leaf is made') or diag $out;
-ok(-d 'out/MY', 'configured there');
+isnt($status, 0, 'a leaf is NOT made') or diag $out;
+ok(!-d 'out/MY', 'NOT configured there');
 
 ($status, $out) = run('configure', '-q', '-DB=a/b/c');
-isnt($status, 0, 'no intermediates by default');
-like($out, qr/^E: cannot mkdir `a\/b\/c': .*non-leaf/, 'says why');
+isnt($status, 0, 'no mkdir at all');
+like($out, qr/^E: cannot chdir .*/, 'says why');
 ok(!-e 'a', 'and made nothing');
 
 # What configure says of a name, it says as CodeSets says it: under
@@ -51,22 +51,9 @@ SKIP: {
 	my $why = fs_surprise("r\xc3\xa9");
 	skip "file system: $why", 2 if defined $why;
 	($status, $out) = run('configure', '-Cargv:UTF-8,stderr:UTF-8,diag:ascii,filesys:UTF-8', '-q', "-DB=r\xc3\xa9/x");
-	isnt($status, 0, 'no intermediates, by any name');
-	like($out, qr/^E: cannot mkdir "r\\x\{e9\}\/x": .*non-leaf/, '... said in ASCII under diag ascii');
+	isnt($status, 0, 'no intermediates mkdir, even if it is not encodeable');
+	like($out, qr/^E: cannot chdir .*/, '... said in ASCII under diag ascii');
 }
-
-($status, $out) = run('configure', '-q', '--mkpath', '-DB=a/b/c');
-is($status, 0, '--mkpath') or diag $out;
-ok(-d 'a/b/c/MY', 'made the whole chain');
-
-($status, $out) = run('configure', '-q', '--mkpath', '-DB=a/b/c');
-is($status, 0, '--mkpath where it all exists');
-
-open my $fh, '>', 'f' or die; close $fh;
-($status, $out) = run('configure', '-q', '--mkpath', '-DB=f/x/y');
-isnt($status, 0, '--mkpath below a file');
-like($out, qr/^E: cannot create `f': /, 'names the culprit');
-unlike($out, qr/ at \S+ line \d+/, 'and has no position');
 
 ($status, $out) = run('configure', '-q', '-DB=');
 is($status, 0, 'an empty -DB is the default') or diag $out;
@@ -78,8 +65,8 @@ like($out, qr/^To generate build script, run: \S+ -g -B \Q$tmp\E\/abs$/m,
 	'... is told to the user as it was given');
 
 ($status, $out) = run('configure', '-h');
-like($out, qr/\[--mkpath\]/, 'usage mentions it');
-like($out, qr/^  --mkpath /m, 'help does');
+unlike($out, qr/\[--mkpath\]/, 'usage does not mention it');
+unlike($out, qr/^  --mkpath /m, 'help does not');
 unlike($out, qr/Use of uninit/, 'no warnings');
 
 SKIP: {
@@ -87,9 +74,9 @@ SKIP: {
 	mkdir 'ro' or die; chmod 0555, 'ro';
 	($status, $out) = run('configure', '-q', '--mkpath', '-DB=ro/x/y');
 	isnt($status, 0, '--mkpath where we may not');
-	like($out, qr/^E: cannot create `ro\/x': .*denied/i, 'says so');
+	like($out, qr/^E: cannot chdir to \$\{B\}/, 'says so');
 	($status, $out) = run('configure', '-q', '-DB=ro/x');
-	like($out, qr/^E: cannot mkdir `ro\/x': .*denied/i, 'a leaf too');
+	like($out, qr/^E: cannot chdir to \$\{B\}/, 'a leaf too');
 	chmod 0755, 'ro';
 }
 
@@ -117,7 +104,7 @@ sub cof {
 	is(cof('.'), 'cache', 'a c of its own stays');
 	($status, $out) = run('configure', '-q', '-Dc=/abs');
 	isnt($status, 0, 'c is relative');
-	like($out, qr/`c' prefix must be a relative path/, '... and says so');
+	like($out, qr/\$\{c\} prefix must be a relative path/, '... and says so');
 
 	chdir $here or die; mkdir 'cs' or die; chdir 'cs' or die;
 	($status, $out) = run($script, 'init', '-Sc=scache');

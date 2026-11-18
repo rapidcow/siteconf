@@ -149,7 +149,6 @@ use RdKw::WwW::GenGenLib 0.0100 qw(
 	norm_dep subs_dep split_dep
 	escape_dep uproot );
 
-
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
 # Use the same gettext domain as our (distant) parent GenGenLib.pm.
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';

@@ -107,7 +107,7 @@ sub slurp_fs { unfs(slurp_raw(fs($_[0]))) }
 # --- a project in a directory not named in ASCII, built somewhere else
 # that is not either: what configure finds (A) and what it is told (B)
 # go into MY/config.mk as they are, once.
-mkdir fs($_) or die "$_: $!" for $P, "$P/html", "$utmp/外";
+mkdir fs($_) or die "$_: $!" for $P, "$P/html", "$utmp/外", $Bdir;
 spew("$P/html/résumé.html", "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n");
 spew("$P/html/no\x{a0}break.html", "# NEED: \${A}/\${a}/résumé.html\n");
 # (a no-break space is not white space: not to make, nor to us)
@@ -141,6 +141,7 @@ SKIP: {
 }
 
 # Exercise a relative B even where Latin-1 file names are unavailable.
+mkdir fs("$P/build-rel") or die $!;
 ($status, $out) = run($P, {}, 'configure', '-q', '-DB=build-rel');
 is($status, 0, 'configure with relative B') or diag $out;
 ($status, $out) = run($P, {}, $script, '-g', '-q', '-B', 'build-rel');
@@ -170,6 +171,7 @@ SKIP: {
 		. 'cd ${A:Q} && cp ${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}' . "\n");
 	spew("$L/MANIFEST", "MAKE all\n\tNEED résumé.html\n");
 	run($L, {}, $script, 'init', '-q');
+	mkdir fs("$L/build") or die $!;
 	run($L, {}, 'configure', '-q', '-DB=build');
 	($status, $out) = run($L, {%L1}, $script, '-g', '-q', '-B', 'build');
 	is($status, 0, 'siteconf -g, filesys:ISO-8859-1') or diag $out;
@@ -263,6 +265,7 @@ mkdir fs($C) or die $!;
 spew("$C/Makefile.in", "ないもの.html:\n");
 spew("$C/MANIFEST", "MAKE all\n\tNEED ないもの.html\n");
 run($C, {}, $script, 'init', '-q');
+mkdir fs("$C/build") or die $!;
 run($C, {}, 'configure', '-q', '-DB=build', '-Da=.');
 ($status, $out) = run($C, {%ASCII}, $script, '-g', '-B', 'build');
 isnt($status, 0, 'a missing source is still missing');
@@ -296,6 +299,7 @@ like($out, qr/\Asiteconf: too late to -C now\./, '-C after anything else: too la
 like($out, qr/\Asiteconf: too late to -C now\./, '... even glued to it');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-q', '-C', 'argv:UTF-8');
 like($out, qr/\Aconfigure: too late to -C now\./, 'configure: too late, too');
+mkdir fs("$C/build") or die $! unless -d fs("$C/build");
 ($status, $out) = run($C, {%ASCII}, 'configure', '-q', '-DB=build', '-Dx=é');
 like($out, qr/: cannot decode argv 3: /, 'configure: unreadable arguments are an error');
 ($status, $out) = run($C, { LC_ALL => 'C' }, 'configure', '-C', 'argv:UTF-8', '-q', '-DB=build', '-Dx=é');

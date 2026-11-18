@@ -176,14 +176,13 @@ my $usage = do {
 	. "\n" . __("See also WwW::SiteConf::Configure.") . "\n";
 };
 
-my (%D, %O, $reset, $shutup, $mkpath);
+my (%D, %O, $reset, $shutup);
 @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 GetOptions(
 	'h|help|?' => sub { print $usage; exit 0 },
 	'reset'    => sub { %D = (); %O = (); $reset = 1 },
 	'q|quiet'  => \$shutup,
-	'mkpath'   => \$mkpath,
 	'D=s'      => setter(D => \%D),
 	'O=s'      => setter(O => \%O),
 	# Reject misplaced -C arguments

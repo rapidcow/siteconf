@@ -17,6 +17,7 @@ plan tests => 13;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q
 	-MRdKw::WwW::GenLib=0 ));
+mkdir 'build' or die "mkdir: $!";
 run('./configure', $^X, './configure', '-q');
 
 run('siteconf -g -G ninja', $^X, $script, qw( -g -q -G ninja -B build ));

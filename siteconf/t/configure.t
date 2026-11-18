@@ -11,7 +11,7 @@ use TestPaths qw( script_path perl5lib fs_surprise );
 my $script = script_path();
 eval { require File::ShareDir; 1 }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
-plan tests => 44;
+plan tests => 42;
 local $ENV{PERL5LIB} = perl5lib();
 my $tmp = tempdir(CLEANUP => 1);
 chdir $tmp or die $!;
@@ -35,12 +35,13 @@ is($status, 0, 'no -DB') or diag $out;
 ok(-d 'MY', 'in the source tree');
 
 ($status, $out) = run('configure', '-q', '-DB=out');
-isnt($status, 0, 'a leaf is NOT made') or diag $out;
-ok(!-d 'out/MY', 'NOT configured there');
+isnt($status, 0, 'a missing ${B} is an error') or diag $out;
+like($out, qr/^E: cannot chdir to \$\{B\}/, 'says why');
+ok(!-e 'out', 'and made nothing');
 
 ($status, $out) = run('configure', '-q', '-DB=a/b/c');
-isnt($status, 0, 'no mkdir at all');
-like($out, qr/^E: cannot chdir .*/, 'says why');
+isnt($status, 0, 'a missing nested ${B} is an error too');
+like($out, qr/^E: cannot chdir to \$\{B\}/, 'says why');
 ok(!-e 'a', 'and made nothing');
 
 # What configure says of a name, it says as CodeSets says it: under
@@ -51,7 +52,7 @@ SKIP: {
 	my $why = fs_surprise("r\xc3\xa9");
 	skip "file system: $why", 2 if defined $why;
 	($status, $out) = run('configure', '-Cargv:UTF-8,stderr:UTF-8,diag:ascii,filesys:UTF-8', '-q', "-DB=r\xc3\xa9/x");
-	isnt($status, 0, 'no intermediates mkdir, even if it is not encodeable');
+	isnt($status, 0, 'a missing ${B} is an error, even if it is not encodeable');
 	like($out, qr/^E: cannot chdir .*/, '... said in ASCII under diag ascii');
 }
 
@@ -64,21 +65,12 @@ is($status, 0, 'an absolute -DB') or diag $out;
 like($out, qr/^To generate build script, run: \S+ -g -B \Q$tmp\E\/abs$/m,
 	'... is told to the user as it was given');
 
-($status, $out) = run('configure', '-h');
-unlike($out, qr/\[--mkpath\]/, 'usage does not mention it');
-unlike($out, qr/^  --mkpath /m, 'help does not');
-unlike($out, qr/Use of uninit/, 'no warnings');
+($status, $out) = run('configure', '-q', '--mkpath');
+isnt($status, 0, '--mkpath is gone');
+like($out, qr/Unknown option: mkpath/, '... and is said to be unknown');
 
-SKIP: {
-	skip 'root can write anywhere', 3 if $> == 0;
-	mkdir 'ro' or die; chmod 0555, 'ro';
-	($status, $out) = run('configure', '-q', '--mkpath', '-DB=ro/x/y');
-	isnt($status, 0, '--mkpath where we may not');
-	like($out, qr/^E: cannot chdir to \$\{B\}/, 'says so');
-	($status, $out) = run('configure', '-q', '-DB=ro/x');
-	like($out, qr/^E: cannot chdir to \$\{B\}/, 'a leaf too');
-	chmod 0755, 'ro';
-}
+($status, $out) = run('configure', '-h');
+unlike($out, qr/Use of uninit/, 'no warnings');
 
 # --- c, the cache: -Dc, then -Sc, then -Db
 sub cof {

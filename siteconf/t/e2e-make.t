@@ -43,6 +43,7 @@ is($again, $text, 'configure is generated deterministically');
 	like($out, qr/E: missing Template\nE: 1 module missing/, '... and says so');
 }
 
+mkdir 'build' or die "mkdir: $!";
 like(run('./configure', $^X, './configure'), qr/Writing (?:`MY\/config\.mk'|MY\/config\.mk)/, 'configure');
 my $quiet = run('./configure again', $^X, './configure');
 unlike($quiet, qr/Writing|Updating/, 'reconfiguring changes nothing');
@@ -54,6 +55,7 @@ unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
 {
 	my $src = Cwd::getcwd();
 	my $other = tempdir(CLEANUP => 1);
+	mkdir "$src/$_" or die "mkdir $_: $!" for qw( build-da build-cwd build-rel );
 	system('cp', 'configure', "$other/configure") == 0 or die "cp: $?";
 	run('configure -DA', $^X, "$other/configure", '-q', "-DA=$src", '-DB=build-da');
 	like(slurp("$src/build-da/MY/config.mk"), qr/^A=\t\Q$src\E$/m, 'absolute -DA is recorded as is');

@@ -22,6 +22,9 @@ Revision history of WwW-SiteConf
     *** Arguments are decoded as the locale says (decode_argv),
         and an error if they cannot be; they used to be assumed
         to be UTF-8.
+    *** configure no longer creates ${B}, not even its leaf, and
+        --mkpath is removed.  Make it first (mkdir -p) or
+        configure fails with "cannot chdir to ${B}".
 
     * render reads its options with Getopt::Long (-B, -C; still
       -- before the files), not Getopt::Std.

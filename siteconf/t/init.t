@@ -195,6 +195,7 @@ for my $case (
 }
 {
 	# subtest: definition and option defaults use configure syntax
+	mkdir $_ or die "mkdir $_: $!" for qw( defaults-state repeat-state escaped-state );
 	my @args = ('-Dtailwind', '-Dexplicit=', '-Dchain=a=b', '-D', 'separate',
 		'-Otheme', '-Oempty=', '-Omessage=hello world', '-Ochain=a=b', '-O', 'separate');
 	my ($status, $out) = invoke('init', '-o', 'defaults', @args);

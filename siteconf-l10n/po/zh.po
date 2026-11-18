@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-18 07:13-0600\n"
+"POT-Creation-Date: 2026-11-18 11:34-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: ../siteconf/script/siteconf:406 ../siteconf/share/configure.in:181
+#: ../siteconf/script/siteconf:406 ../siteconf/share/configure.in:168
 #: ../siteconf/share/presets/tem.render:60
 #: ../siteconf/share/presets/web.render:70
 #, perl-format
@@ -24,12 +24,12 @@ msgid "usage: %s"
 msgstr "用法：%s"
 
 #. HEY!  %s is the option, -D or -O.
-#: ../siteconf/script/siteconf:443 ../siteconf/share/configure.in:95
+#: ../siteconf/script/siteconf:443 ../siteconf/share/configure.in:79
 #, perl-format
 msgid "%s: empty name."
 msgstr "%s：名字为空。"
 
-#: ../siteconf/script/siteconf:471 ../siteconf/share/configure.in:196
+#: ../siteconf/script/siteconf:471 ../siteconf/share/configure.in:189
 #: ../siteconf/share/presets/tem.render:57
 #: ../siteconf/share/presets/web.render:67
 msgid "too late to -C now."
@@ -40,7 +40,7 @@ msgstr "现在给 -C 已经太晚了。"
 msgid "conflicting modes: %s and %s"
 msgstr "模式冲突：%s 和 %s"
 
-#: ../siteconf/script/siteconf:545 ../siteconf/share/configure.in:198
+#: ../siteconf/script/siteconf:545 ../siteconf/share/configure.in:191
 msgid "too many arguments"
 msgstr "参数太多"
 
@@ -238,8 +238,7 @@ msgstr "%q：缺少 %q。请尝试重新配置。"
 #. HEY!  %q is a variable of config.mk: `b' or `c', which are where
 #. what we make goes (the target tree, and the cache)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:392
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:397 ../siteconf/share/configure.in:295
-#: ../siteconf/share/configure.in:306
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:397
 msgid "%q prefix must be a relative path."
 msgstr "%q 前缀必须是相对路径。"
 
@@ -537,7 +536,7 @@ msgstr "输出名 %q 有误：请留在构建目录里"
 msgid "Removing %q"
 msgstr "正在删除 %q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1530 ../siteconf/share/configure.in:327
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1530 ../siteconf/share/configure.in:296
 msgid "Done!"
 msgstr "完成！"
 
@@ -554,11 +553,11 @@ msgstr "要构建，请运行：%s"
 #. is considered to be our files, so it is
 #. assumed that the state prior to updating is
 #. consistent with the state now.)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1550 ../siteconf/share/configure.in:316
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1550 ../siteconf/share/configure.in:285
 msgid "Writing %#q"
 msgstr "正在写入 %#q"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1551 ../siteconf/share/configure.in:316
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1551 ../siteconf/share/configure.in:285
 msgid "Updating %#q"
 msgstr "正在更新 %#q"
 
@@ -636,86 +635,82 @@ msgid "%d module missing.  Looks like you got some work to do..."
 msgid_plural "%d modules missing.  Looks like you got some work to do..."
 msgstr[0] "缺少 %d 个模块。看来你有活要干了..."
 
-#: ../siteconf/share/configure.in:131
+#: ../siteconf/share/configure.in:119
 msgid "Project root, seen from current directory"
 msgstr "项目根目录，相对于当前目录"
 
-#: ../siteconf/share/configure.in:132
+#: ../siteconf/share/configure.in:120
 msgid "Build directory, seen from the source tree"
 msgstr "构建目录，相对于源代码树"
 
-#: ../siteconf/share/configure.in:133
+#: ../siteconf/share/configure.in:121
 msgid "Source directory, seen from the source tree"
 msgstr "源目录，相对于源代码树"
 
-#: ../siteconf/share/configure.in:134
+#: ../siteconf/share/configure.in:122
 msgid "Target directory, seen from the build directory"
 msgstr "目标目录，相对于构建目录"
 
-#: ../siteconf/share/configure.in:135
+#: ../siteconf/share/configure.in:123
 msgid "Cache directory, seen from the build directory"
 msgstr "缓存目录，相对于构建目录"
 
-#: ../siteconf/share/configure.in:137
+#: ../siteconf/share/configure.in:125
 msgid "Transformation rules, from current directory"
 msgstr "转换规则，相对于当前目录"
 
-#: ../siteconf/share/configure.in:138
+#: ../siteconf/share/configure.in:126
 msgid "Manifest, from current directory"
 msgstr "清单，相对于当前目录"
 
-#: ../siteconf/share/configure.in:139
+#: ../siteconf/share/configure.in:127
 msgid "Directory marker"
 msgstr "目录标记"
 
-#: ../siteconf/share/configure.in:140
+#: ../siteconf/share/configure.in:128
 msgid "Clean rule template"
 msgstr "清理规则模板"
 
-#: ../siteconf/share/configure.in:145
+#: ../siteconf/share/configure.in:133
 msgid "Code sets overrides (see I18N::CodeSets)"
 msgstr "字符集覆盖（见 I18N::CodeSets）"
 
-#: ../siteconf/share/configure.in:146
+#: ../siteconf/share/configure.in:134
 msgid "This help message"
 msgstr "本帮助信息"
 
-#: ../siteconf/share/configure.in:147
+#: ../siteconf/share/configure.in:135
 msgid "Clear all configuration at this point"
 msgstr "在此处清除所有配置"
 
-#: ../siteconf/share/configure.in:148
+#: ../siteconf/share/configure.in:136
 msgid "Disable tips"
 msgstr "关闭提示"
 
-#: ../siteconf/share/configure.in:149
-msgid "Create non-leaf build directory components"
-msgstr "创建构建目录的上层目录"
-
-#: ../siteconf/share/configure.in:163
+#: ../siteconf/share/configure.in:150
 #, perl-format
 msgid "%s (default: %s)"
 msgstr "%s（默认：%s）"
 
-#: ../siteconf/share/configure.in:164
+#: ../siteconf/share/configure.in:151
 #, perl-format
 msgid "(default: %s)"
 msgstr "（默认：%s）"
 
-#: ../siteconf/share/configure.in:168
+#: ../siteconf/share/configure.in:155
 #, perl-format
 msgid "%s (alias: %s)"
 msgstr "%s（别名：%s）"
 
-#: ../siteconf/share/configure.in:183
+#: ../siteconf/share/configure.in:170
 msgid "The following variables may be defined:"
 msgstr "可以定义以下变量："
 
-#: ../siteconf/share/configure.in:185
+#: ../siteconf/share/configure.in:172
 msgid "Options with defaults:"
 msgstr "有默认值的选项："
 
-#: ../siteconf/share/configure.in:186
+#: ../siteconf/share/configure.in:173
 msgid ""
 "Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
 "respectively, for the rulebook or for the files being transformed."
@@ -723,44 +718,46 @@ msgstr ""
 "其他用 -D 或 -O 给出的内容分别写入 MY/config.mk 或 MY/option.mk，\n"
 "供规则手册或被转换的文件使用。"
 
-#: ../siteconf/share/configure.in:189
+#: ../siteconf/share/configure.in:176
 msgid "See also WwW::SiteConf::Configure."
 msgstr "另见 WwW::SiteConf::Configure。"
 
-#: ../siteconf/share/configure.in:210
-msgid "cannot find $A (aka %q): %m"
+#: ../siteconf/share/configure.in:203
+#, fuzzy, perl-brace-format
+msgid "cannot find ${A} (aka %q): %m"
 msgstr "找不到 $A（又名 %q）：%m"
 
-#: ../siteconf/share/configure.in:213
-msgid "cannot chdir to $A (aka %q): %m"
+#: ../siteconf/share/configure.in:206
+#, fuzzy, perl-brace-format
+msgid "cannot chdir to ${A} (aka %q): %m"
 msgstr "无法进入 $A（又名 %q）：%m"
 
-#: ../siteconf/share/configure.in:233
-msgid "cannot create %q: %s"
-msgstr "无法创建 %q：%s"
+#: ../siteconf/share/configure.in:214
+#, fuzzy, perl-brace-format
+msgid "cannot chdir to ${B} (aka %q): %m"
+msgstr "无法进入 $B（又名 %q）：%m"
 
-#: ../siteconf/share/configure.in:242
-msgid "cannot mkdir %q: %m (missing non-leaf components?)"
-msgstr "无法创建目录 %q：%m（缺少上层目录？）"
+#: ../siteconf/share/configure.in:257 ../siteconf/share/configure.in:271
+#, fuzzy, perl-format
+msgid "${%s} may not be empty."
+msgstr "%s 不能为空。"
 
-#: ../siteconf/share/configure.in:243 ../siteconf/share/configure.in:311
+#: ../siteconf/share/configure.in:264 ../siteconf/share/configure.in:275
+#, fuzzy, perl-format
+msgid "${%s} prefix must be a relative path."
+msgstr "%q 前缀必须是相对路径。"
+
+#: ../siteconf/share/configure.in:277
+#, fuzzy, perl-format
+msgid "${%s} may not contain a slash."
+msgstr "%q 不能含有斜杠。"
+
+#: ../siteconf/share/configure.in:280
 msgid "cannot mkdir %q: %m"
 msgstr "无法创建目录 %q：%m"
 
-#: ../siteconf/share/configure.in:247
-msgid "cannot chdir to $B (aka %q): %m"
-msgstr "无法进入 $B（又名 %q）：%m"
-
-#: ../siteconf/share/configure.in:288 ../siteconf/share/configure.in:302
-msgid "%q may not be empty."
-msgstr "%q 不能为空。"
-
-#: ../siteconf/share/configure.in:308
-msgid "%q may not contain a slash."
-msgstr "%q 不能含有斜杠。"
-
 #. HEY!  %s is a command.
-#: ../siteconf/share/configure.in:330
+#: ../siteconf/share/configure.in:299
 #, perl-format
 msgid "To generate build script, run: %s"
 msgstr "要生成构建脚本，请运行：%s"
@@ -1009,6 +1006,18 @@ msgstr "不允许相对路径（没有设置 RELATIVE）"
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:489
 msgid "%#q: not a file"
 msgstr "%#q：不是文件"
+
+#~ msgid "Create non-leaf build directory components"
+#~ msgstr "创建构建目录的上层目录"
+
+#~ msgid "cannot create %q: %s"
+#~ msgstr "无法创建 %q：%s"
+
+#~ msgid "cannot mkdir %q: %m (missing non-leaf components?)"
+#~ msgstr "无法创建目录 %q：%m（缺少上层目录？）"
+
+#~ msgid "%q may not be empty."
+#~ msgstr "%q 不能为空。"
 
 #, perl-format
 #~ msgid "bad escape %s"

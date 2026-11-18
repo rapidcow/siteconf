@@ -84,6 +84,7 @@ like($out, qr/-M-Template=2: no version for what is dropped/, '... nor with a ve
 ($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null', '-M-');
 like($out, qr/-M-: bad module name/, '... nor nothing');
 
+mkdir 'build' or die "mkdir: $!";
 ($status, $out) = run('configure', '-q', '-DB=build', '-Ogreeting=hello');
 is($status, 0, 'configure, with no site_url') or diag $out;
 
@@ -98,6 +99,7 @@ is($status ? $out : slurp('out.txt'), "included\n", '... and what it INCLUDEs, d
 
 # Out of the tree: what is made is named absolutely, which Template
 # would not have (ABSOLUTE)
+mkdir "$tmp/out" or die "mkdir: $!";
 ($status, $out) = run('configure', '-q', "-DB=$tmp/out");
 is($status, 0, 'configure, out of the tree') or diag $out;
 spew("$tmp/out/gen.txt", "made\n");

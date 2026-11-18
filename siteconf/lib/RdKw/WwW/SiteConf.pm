@@ -615,9 +615,9 @@ needless.
 sub shell_quote
 {
 	my ($s) = @_;
-	# Nothing in it for the shell to mangle?  Then leave it be.
+	# Nothing to mangle for the shell?  Then leave it be.
 	return $s if $s =~ m!\A[A-Za-z0-9_./:@%+=,-]+\z!;
-	# otherwise: single quotes, and ' itself as '\''
+	# Otherwise: single quotes, and ' itself as '\''
 	$s =~ s!'!'\\''!g;
 	"'$s'";
 }

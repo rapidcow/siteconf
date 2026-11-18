@@ -68,19 +68,6 @@ BEGIN {
 
 my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 
-# -Dname=val, -Oname=val (a lone -Dname is -Dname=)
-sub setter
-{
-	my ($S, $H) = @_;
-	sub {
-		my ($k, $v) = split(/=/, $_[1], 2);
-		length $k or die $cs->tagmsg($prog =>
-			# HEY!  %s is the option, -D or -O.
-			$cs->diag(__("%s: empty name."), "-$S"));
-		$H->{$k} = $v;
-	};
-}
-
 sub to_fs { $cs->to_fs(@_, { prog => $prog }) }
 sub un_fs { $cs->un_fs(@_, { prog => $prog }) }
 
@@ -89,9 +76,9 @@ sub un_fs { $cs->un_fs(@_, { prog => $prog }) }
 sub shell_quote
 {
 	my ($s) = @_;
-	# Nothing in it for the shell to mangle?  Then leave it be.
+	# Nothing to mangle for the shell?  Then leave it be.
 	return $s if $s =~ m!\A[A-Za-z0-9_./:@%+=,-]+\z!;
-	# otherwise: single quotes, and ' itself as '\''
+	# Otherwise: single quotes, and ' itself as '\''
 	$s =~ s!'!'\\''!g;
 	"'$s'";
 }
@@ -175,6 +162,20 @@ my $usage = do {
 	. "\n" . section($w, @FLAGHELP)
 	. "\n" . __("See also WwW::SiteConf::Configure.") . "\n";
 };
+
+# Parse key-value options (-Dname=val, -Oname=val).
+# Lone -Dname / -Oname is parsed as { name => undef }.
+sub setter
+{
+	my ($S, $H) = @_;
+	sub {
+		my ($k, $v) = split(/=/, $_[1], 2);
+		length $k or die $cs->tagmsg($prog =>
+			# HEY!  %s is the option, -D or -O.
+			$cs->diag(__("%s: empty name."), "-$S"));
+		$H->{$k} = $v;
+	};
+}
 
 my (%D, %O, $reset, $shutup);
 @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });

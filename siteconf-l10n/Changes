@@ -27,5 +27,3 @@ Revision history of WwW-SiteConf-L10N
       ../genlib), and of GenGenLib (in ../gengenlib and
       ../template-provider), and the catalogs merged with it, for
       the maintainer.
-    * Fuzzy and missing translations of the new tagmsg messages
-      are fixed; they no longer repeat what tagmsg prefixes.

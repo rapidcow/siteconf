@@ -56,7 +56,8 @@ foreach my $this (`git rev-list --all`) {
 }
 
 my %refs = map { chomp; split } split /^/, <<MAP;
-46253009ee9970805989db8c54919e9483f38a7e refs/heads/master
+5c48cc49ef19e5dc3e1ffdb4f1b29e5d7abf5739 refs/heads/claude
+62c48ebfc7fa01064eaf4fbfed5f874a0bfe4065 refs/heads/master
 MAP
 # A commit that mentions another commit by its full hash has to be
 # rewritten after it, or the mention would keep the old hash (this
@@ -186,17 +187,15 @@ my $i = 1; foreach (@walk) {
 		}
 	}
 
-	if ($this eq '8f52fcfe9466ad7b06ac932d3c16eba7b0087ea6') {
+	if ($this eq 'd94132744858543211e67fbba6650afd12f94ba4') {
 		replace_content($tempfh, \$mem,
 			# make this read more clearly
 			<<EOM
-actually make -DR -DS not resolve weirdly
+let undef through
 
-it's a direct path!!!  yeah don't put it through
-some weird fs resolution.... >:[
-
-i thought 1c2cd6ae83b8d32a7ac5a36150b6996ca5296304
-already did it, but apparently not....
+GIGO.... it helps under the warnings pragma
+anyway >n> way less so if it just passed as
+"undef" the string.
 EOM
 		);
 	}
@@ -325,3 +324,4 @@ sub get_committer_date
 	}
 	die "no committer date???";
 }
+

@@ -46,7 +46,7 @@ my ($status, $out) = run($script, 'init', '-q', '-P', 'tem');
 is($status, 0, 'init -P tem') or diag $out;
 my $configure = slurp('configure');
 unlike($configure, qr/"RdKw::WwW::GenLib"/, 'configure needs no GenLib');
-like($configure, qr/\[ "RdKw::WwW::GenGenLib", "0\.0100" \]/, '... but GenGenLib 0.0100');
+like($configure, qr/use RdKw::WwW::GenGenLib 0\.0100|\[ "RdKw::WwW::GenGenLib", "0\.0100" \]/, '... but GenGenLib 0.0100');
 my $render = slurp('render');
 unlike($render, qr/\$target|locate|location/, 'render has no location to speak of');
 like($render, qr/^use RdKw::WwW::GenGenLib 0\.0100 /m, '... and uses the GenGenLib it needs');

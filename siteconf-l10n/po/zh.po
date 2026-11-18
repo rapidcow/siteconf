@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-18 06:54-0600\n"
+"POT-Creation-Date: 2026-11-18 07:13-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -135,53 +135,53 @@ msgstr "预设名有误：%q"
 msgid "no such preset: %q"
 msgstr "没有这个预设：%q"
 
-#: ../siteconf/script/siteconf:819
+#: ../siteconf/script/siteconf:816
 #, perl-format
 msgid "%s: bad module name"
 msgstr "%s：模块名有误"
 
-#: ../siteconf/script/siteconf:822
+#: ../siteconf/script/siteconf:819
 #, perl-format
 msgid "%s: no version for what is dropped"
 msgstr "%s：去掉的模块不能带版本"
 
-#: ../siteconf/script/siteconf:826
+#: ../siteconf/script/siteconf:823
 #, perl-format
 msgid "%s: bad version"
 msgstr "%s：版本有误"
 
-#: ../siteconf/script/siteconf:830
+#: ../siteconf/script/siteconf:827
 #, perl-format
 msgid "%s: configure always needs it"
 msgstr "%s：configure 总是需要它"
 
-#: ../siteconf/script/siteconf:835
+#: ../siteconf/script/siteconf:832
 #, perl-format
 msgid "%s: version %s or later is required"
 msgstr "%s：需要版本 %s 或更高版本"
 
-#: ../siteconf/script/siteconf:852
+#: ../siteconf/script/siteconf:849
 msgid "preset does not supply a render output"
 msgstr "该预设不提供 render 输出"
 
-#: ../siteconf/script/siteconf:895
+#: ../siteconf/script/siteconf:892
 msgid "Not changing %#q"
 msgstr "不更改 %#q"
 
-#: ../siteconf/script/siteconf:901
+#: ../siteconf/script/siteconf:898
 msgid "cannot remove %q: %m"
 msgstr "无法删除 %q：%m"
 
-#: ../siteconf/script/siteconf:914 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:305
+#: ../siteconf/script/siteconf:911 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:305
 msgid "cannot create file %q: %m"
 msgstr "无法创建文件 %q：%m"
 
-#: ../siteconf/script/siteconf:917 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:308
+#: ../siteconf/script/siteconf:914 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:308
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:311
 msgid "cannot write file %q: %m"
 msgstr "无法写入文件 %q：%m"
 
-#: ../siteconf/script/siteconf:920
+#: ../siteconf/script/siteconf:917
 msgid "cannot chmod %q: %m"
 msgstr "无法修改 %q 的权限：%m"
 
@@ -190,23 +190,23 @@ msgstr "无法修改 %q 的权限：%m"
 #. the file is simply created.  I don't know why
 #. Claude felt the need to clarify this; this
 #. seems pretty clear to me. :/
-#: ../siteconf/script/siteconf:930
+#: ../siteconf/script/siteconf:927
 msgid "Overwrote %#q"
 msgstr "已覆盖 %#q"
 
-#: ../siteconf/script/siteconf:930
+#: ../siteconf/script/siteconf:927
 msgid "Wrote %#q"
 msgstr "已写入 %#q"
 
-#: ../siteconf/script/siteconf:935
+#: ../siteconf/script/siteconf:932
 msgid "You already have configure."
 msgstr "你已经有 configure 了。"
 
-#: ../siteconf/script/siteconf:936
+#: ../siteconf/script/siteconf:933
 msgid "You already have configure at %q."
 msgstr "你已经在 %q 有 configure 了。"
 
-#: ../siteconf/script/siteconf:938
+#: ../siteconf/script/siteconf:935
 msgid ""
 "Pass -o /dev/null if you did mean to not generate configure,\n"
 "or -f to overwrite the existing one."

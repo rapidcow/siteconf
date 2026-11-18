@@ -804,10 +804,7 @@ sub do_init
 	# module[=version]' lines), then -Mmodule or -Mmodule=version.  Keyed
 	# by module, so that a later one replaces the earlier.  -M-module
 	# (or -Mmodule=, with nothing after the =) drops it.
-	my %mods = (
-		'RdKw::I18N::CodeSets' => 0,
-		'RdKw::WwW::GenGenLib' => $GENGENLIB_MIN,
-	);
+	my %mods = ();
 	my @spec = ($preset =~ /^# USE: (\S+)$/mg, @{ $opt->{M} });
 	my %user;
 	for my $m (@spec) {

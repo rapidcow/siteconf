@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-18 06:54-0600\n"
+"POT-Creation-Date: 2026-11-18 07:13-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -135,53 +135,53 @@ msgstr "bad preset name: %q"
 msgid "no such preset: %q"
 msgstr "no such preset: %q"
 
-#: ../siteconf/script/siteconf:819
+#: ../siteconf/script/siteconf:816
 #, perl-format
 msgid "%s: bad module name"
 msgstr "%s: bad module name"
 
-#: ../siteconf/script/siteconf:822
+#: ../siteconf/script/siteconf:819
 #, perl-format
 msgid "%s: no version for what is dropped"
 msgstr "%s: no version for what is dropped"
 
-#: ../siteconf/script/siteconf:826
+#: ../siteconf/script/siteconf:823
 #, perl-format
 msgid "%s: bad version"
 msgstr "%s: bad version"
 
-#: ../siteconf/script/siteconf:830
+#: ../siteconf/script/siteconf:827
 #, perl-format
 msgid "%s: configure always needs it"
 msgstr "%s: configure always needs it"
 
-#: ../siteconf/script/siteconf:835
+#: ../siteconf/script/siteconf:832
 #, perl-format
 msgid "%s: version %s or later is required"
 msgstr "%s: version %s or later is required"
 
-#: ../siteconf/script/siteconf:852
+#: ../siteconf/script/siteconf:849
 msgid "preset does not supply a render output"
 msgstr "preset does not supply a render output"
 
-#: ../siteconf/script/siteconf:895
+#: ../siteconf/script/siteconf:892
 msgid "Not changing %#q"
 msgstr "Not changing %#q"
 
-#: ../siteconf/script/siteconf:901
+#: ../siteconf/script/siteconf:898
 msgid "cannot remove %q: %m"
 msgstr "cannot remove %q: %m"
 
-#: ../siteconf/script/siteconf:914 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:305
+#: ../siteconf/script/siteconf:911 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:305
 msgid "cannot create file %q: %m"
 msgstr "cannot create file %q: %m"
 
-#: ../siteconf/script/siteconf:917 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:308
+#: ../siteconf/script/siteconf:914 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:308
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:311
 msgid "cannot write file %q: %m"
 msgstr "cannot write file %q: %m"
 
-#: ../siteconf/script/siteconf:920
+#: ../siteconf/script/siteconf:917
 msgid "cannot chmod %q: %m"
 msgstr "cannot chmod %q: %m"
 
@@ -190,23 +190,23 @@ msgstr "cannot chmod %q: %m"
 #. the file is simply created.  I don't know why
 #. Claude felt the need to clarify this; this
 #. seems pretty clear to me. :/
-#: ../siteconf/script/siteconf:930
+#: ../siteconf/script/siteconf:927
 msgid "Overwrote %#q"
 msgstr "Overwrote %#q"
 
-#: ../siteconf/script/siteconf:930
+#: ../siteconf/script/siteconf:927
 msgid "Wrote %#q"
 msgstr "Wrote %#q"
 
-#: ../siteconf/script/siteconf:935
+#: ../siteconf/script/siteconf:932
 msgid "You already have configure."
 msgstr "You already have configure."
 
-#: ../siteconf/script/siteconf:936
+#: ../siteconf/script/siteconf:933
 msgid "You already have configure at %q."
 msgstr "You already have configure at %q."
 
-#: ../siteconf/script/siteconf:938
+#: ../siteconf/script/siteconf:935
 msgid ""
 "Pass -o /dev/null if you did mean to not generate configure,\n"
 "or -f to overwrite the existing one."

@@ -15,9 +15,9 @@ use File::Spec;
 use FindBin;
 use Getopt::Long qw( GetOptions );
 
-# Pin GenGenLib 0.01 and its Unicode
-# dependency modules transitively.
-use RdKw::WwW::GenGenLib 0.01 qw( read_make write_make );
+# siteconf 0.03 does not support Unicode-less
+# GenGenLib.pm, so this is a hard requirement.
+use RdKw::WwW::GenGenLib 0.0100 qw( read_make write_make );
 
 # Initialize locale and gettext.
 use RdKw::I18N::CodeSets ();

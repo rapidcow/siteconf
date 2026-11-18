@@ -40,7 +40,7 @@ my $bad = "x\x{D800}";
 {
 	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->new(filesys => 'ascii');
 	ok(!eval { read_make("$udir/ß.mk"); 1 }, 'read_make: filesys of CodeSets');
-	like($@, qr/\Aread_make: cannot encode "[^"]*\\x\{df\}\.mk" in US-ASCII\n\z/,
+	like($@, qr/\Aread_make: cannot encode file name "[^"]*\\x\{df\}\.mk" in US-ASCII: .+\n\z/,
 		'... and says who could not');
 }
 ok(!eval { read_make("$udir/$bad"); 1 }, 'read_make: no surrogates');

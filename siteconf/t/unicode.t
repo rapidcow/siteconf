@@ -183,7 +183,7 @@ SKIP: {
 		'... and so does build.ninja');
 	($status, $out) = run($L, { SITECONF_CODESETS => 'filesys:ascii' }, $script, '-g', '-q', '-B', 'build');
 	isnt($status, 0, 'a name the file system cannot spell is an error');
-	like($out, qr/^E: cannot encode "[^"]*r\\x\{e9\}sum\\x\{e9\}\.html" in US-ASCII/m, '... and says so');
+	like($out, qr/^E: cannot encode file name "[^"]*r\\x\{e9\}sum\\x\{e9\}\.html" in US-ASCII/m, '... and says so');
 	SKIP: {
 		my $make = $ENV{MAKE} || 'make';
 		system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0

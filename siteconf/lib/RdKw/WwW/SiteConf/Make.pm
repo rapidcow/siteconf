@@ -70,7 +70,7 @@ sub _emit
 	}
 	for my $rule (@{ $plan->{clean} }) {
 		$out .= $fs->($rule->{name}) . ":\n";
-		$out .= "\trm -f " . join(' ', map { $fs->(_quote($_)) } @{ $rule->{files} }) . "\n"
+		$out .= "\trm -f -- " . join(' ', map { $fs->(_quote($_)) } @{ $rule->{files} }) . "\n"
 			if @{ $rule->{files} };
 	}
 

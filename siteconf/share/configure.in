@@ -199,12 +199,12 @@ my $start = un_fs(getcwd());
 # observed from the starting directory (not necessarily
 # relative to the base directory of this script).
 my $A = isnull($D{A}) ? $Dd{A} : $D{A};
-my $srcdir = abs_path(to_fs(File::Spec->rel2abs($A, $start)));
-defined $srcdir or die $cs->tagmsg(E => $cs->diag(__(
+my $Adir = abs_path(to_fs(File::Spec->rel2abs($A, $start)));
+defined $Adir or die $cs->tagmsg(E => $cs->diag(__(
 	'cannot find ${A} (aka %q): %m'), $A));
-$srcdir = un_fs($srcdir);
-chdir to_fs($srcdir) or die $cs->tagmsg(E => $cs->diag(__(
-	'cannot chdir to ${A} (aka %q): %m'), $srcdir));
+$Adir = un_fs($Adir);
+chdir to_fs($Adir) or die $cs->tagmsg(E => $cs->diag(__(
+	'cannot chdir to ${A} (aka %q): %m'), $Adir));
 
 # ${B} is the build directory, seen from the source tree,
 # like `cmake -B'.  Determine it now from the command-line
@@ -213,7 +213,7 @@ chdir to_fs($srcdir) or die $cs->tagmsg(E => $cs->diag(__(
 my $B = isnull($D{B}) ? $Dd{B} : $D{B};
 chdir to_fs($B) or die $cs->tagmsg(E => $cs->diag(__(
 	'cannot chdir to ${B} (aka %q): %m'), $B));
-my $Babs = un_fs(getcwd());
+my $Bdir = un_fs(getcwd());
 
 # Configs and options inherit from ${B}/MY/*.mk UNLESS
 # they have been --reset at least once, in which case
@@ -238,7 +238,7 @@ unless ($reset) {
 # An absolute ${A} or ${B} is spelled as it was given.
 $D{B} = $B;
 $D{A} = File::Spec->file_name_is_absolute($A) ? $A
-	: File::Spec->abs2rel($srcdir, $Babs);
+	: File::Spec->abs2rel($Adir, $Bdir);
 
 # Set other paths and other variables.
 foreach my $k (keys %Dd) {
@@ -291,7 +291,7 @@ foreach my $f ([ config => \%D ], [ option => \%O ]) {
 # (not from the source tree, which is where $D{B} is seen from);
 # an absolute one is spelled as it was given, like in config.mk.
 my $Bhere = File::Spec->file_name_is_absolute($B) ? $B
-	: File::Spec->abs2rel($Babs, $start);
+	: File::Spec->abs2rel($Bdir, $start);
 my $where = $Bhere eq '.' ? '' : " -B " . shell_quote($Bhere);
 unless ($shutup) {
 	print STDERR __("Done!"), "\n";

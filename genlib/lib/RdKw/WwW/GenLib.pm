@@ -321,7 +321,7 @@ sub file2uri
 	# as one Latin-1 octet or as UTF-8, depending on the
 	# internal utf8 flag (see URI::Escape::escape_char).
 	# We have control over what we accept.  Encode it to
-	# ASCII so it is safe for URI::file->new to consume.
+	# UTF-8 so it is safe for URI::file->new to consume.
 	# (Notably, this does not obey the filesys codeset,
 	# since this is a URI and URIs are always UTF-8. ;)
 	my $uri = eval {

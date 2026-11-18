@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 23:11-0600\n"
+"POT-Creation-Date: 2026-11-17 23:22-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -776,7 +776,7 @@ msgstr ""
 msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr ""
 
-#. HEY! %s is the operating system.
+#. HEY! %#q is the operating system.
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:356
 msgid "%q: URI not representable in %#q"
 msgstr ""

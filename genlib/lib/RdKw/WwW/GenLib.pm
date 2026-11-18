@@ -352,7 +352,7 @@ sub uri2file
 	my $prog = exists $kwds{prog} ? $kwds{prog} : 'uri2file';
 	my $octets = URI->new($uri, 'file')->file($os);
 	defined $octets or die _status 0, tagmsg($prog => diag(__(
-		# HEY! %s is the operating system.
+		# HEY! %#q is the operating system.
 		"%q: URI not representable in %#q"),
 		$uri, $os));
 	_cs_utf8()->un_fs($octets, { prog => $prog });

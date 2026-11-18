@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 23:11-0600\n"
+"POT-Creation-Date: 2026-11-17 23:22-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -791,7 +791,7 @@ msgstr "%#q：你的 HAVE %q（又名 %q）不在 ${a}（又名 %q）之下"
 msgid "%#q: Your HAVE %q is not under ${a} (aka %q)"
 msgstr "%#q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
 
-#. HEY! %s is the operating system.
+#. HEY! %#q is the operating system.
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:356
 msgid "%q: URI not representable in %#q"
 msgstr "%q：此 URI 无法表示为 %#q 的文件名"

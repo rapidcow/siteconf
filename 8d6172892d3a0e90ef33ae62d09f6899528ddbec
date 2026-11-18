@@ -1,0 +1,367 @@
+$ ~/tree/utils/diff-range claude 102 3b9c9006eab60d5592f56572e456bc3de36a65d3
+ORIG = 5c48cc49ef19e5dc3e1ffdb4f1b29e5d7abf5739 (claude)
+HEAD = 3b9c9006eab60d5592f56572e456bc3de36a65d3
+  0:  5c48cc4 =   0:  3b9c900 [PULL] codesets: better error message
+  1:  9496dce =   1:  2f5c6bd codesets: take perl's ' at FILE line N.' off Encode's errors
+  2:  77db214 =   2:  d199df9 codesets: say what cannot be spelled, and why
+  3:  cdb7252 =   3:  80f13ab Claude critque: comment correctness
+  4:  9f62ab3 =   4:  d11e64a Claude critique: genlib typos
+  5:  84537fc =   5:  db6b4a7 POD coverage test
+  6:  f88d274 =   6:  a1f9306 Bump genlib and siteconf dates & typo change
+  7:  fe36cfd =   7:  5eb8645 Call these fellas Unicode strings
+  8:  f22c0ec =   8:  db7a332 Make file2uri/uri2file use Unix path by default
+  9:  afde72d =   9:  00bfe35 genlib: add file2uri and uri2file; web.render: location is a URI path
+ 10:  ab9b33a =  10:  1b7f069 genlib: relapath: compare segments to choose '.'
+ 11:  377ab4e =  11:  cd9a875 make plans for all
+ 12:  77da835 =  12:  6727bc4 Add test count
+ 13:  fe2ef7b =  13:  bde9748 Merge into macmini:my/project/siteconf
+ 14:  0e5acbe =  14:  2a8a20e update po
+ 15:  1fb5f0c !  15:  6f68647 do not interpret configure's -D/-O either
+--- a/1fb5f0cc8bfccfe8b9fcc4b1c9d7bdad81951682	2026-11-17 11:09:46.000000000 +0000
++++ b/6f68647584568527f43fa9831a59d072ccd278cb	2026-11-17 11:09:46.000000000 +0000
+@@ -4,10 +4,10 @@
+ committer Ethan Meng <rapidcow@RCs-T480s.local> 1794913786 -0600
+ 
+ do not interpret configure's -D/-O either
+ 
+-when i reverted 2ca8d97c18388b922d54bb9efbb2d6e92b6f1055
+-in f76f5968cdd759c097c98dfcd9bb43cf330613b9 apparently
++when i reverted b13fbde31a8f521ecc8b3d72a9950d08dfb2b24f
++in 3d73fe9d0fbf5f47501de4703dca0775c146cf9f apparently
+ that was only half the trouble... :,)
+ 
+ (i know, i kept seeing this; i just thought
+ i always had a stale install... until i tried
+ 16:  37c9feb =  16:  7cab79b Update remark for genlib/t/relapath.t
+ 17:  54871e7 =  17:  a99b519 Narrower inverse definition
+ 18:  3b137c2 =  18:  82a87a7 pin the weird tests
+ 19:  4495de9 =  19:  71d1bb0 update po offsets
+ 20:  386b0cf =  20:  7085c8c Merge branch `master' of rpi-4b:pub/project/siteconf
+ 21:  5f11e98 =  21:  19441b9 chomp
+ 22:  d55862b =  22:  0d1667c correct phrasing
+ 23:  3ff2881 =  23:  c0cf0ac embrace context; use the vector form
+ 24:  ce97601 =  24:  332b481 update po
+ 25:  0b89d8c =  25:  c4500e7 genlib bug fix: special-case the empty file name
+ 26:  294bc03 =  26:  8642c4f Unset environment SITECONF_CODESETS
+ 27:  bf7f45e =  27:  42f767a siteconf/t/unicode.t: Compare Unicode to Unicode
+ 28:  3375f85 =  28:  254a5d3 Merge us into macmini:my/project/siteconf
+ 29:  9f91e2c =  29:  1877e2b Specify what are in the share directory
+ 30:  5fd2379 =  30:  1e54e85 Merge us into macmini:my/project/siteconf
+ 31:  4626a9b =  31:  f5fa549 NO UNICODE ELIIPSIS
+ 32:  f46c4a6 =  32:  e1a2520 siteconf/t/unicode.t: cd ${A} before cp
+ 33:  aa21354 =  33:  5d6ec82 LLM guide correction: only ShareDir is really at risk
+ 34:  0500048 =  34:  68b699d LLM guide: test instructions
+ 35:  89903f2 =  35:  441ec25 Accept a flat hash for fixed-arity functions
+ 36:  9efd521 =  36:  df35db9 Marin's guide
+ 37:  d082522 =  37:  501689a Get the history right
+ 38:  5e5d9b3 =  38:  8867dfa Write Makefile with filesys encoding
+ 39:  4de41eb =  39:  f883c86 Prefer mutating the CodeSets::LOCALE singleton
+ 40:  ede04ac =  40:  83a5328 Fix my terrible substitutions in TT Provider.pm
+ 41:  9c6239c =  41:  0fc594a Merge branch `master' of T480:my/project/siteconf
+ 42:  9d09de8 =  42:  838f470 Turn you into a note
+ 43:  ab868e3 =  43:  593e7ce Check just the basename
+ 44:  df18ee4 =  44:  e2b0525 Show me what names are wrong, fs_surprise...
+ 45:  e9f1f41 =  45:  b5e7e7e Fix translation & soft-quote more file names
+ 46:  ae1e16d =  46:  05d2bb8 Merge us into macmini:my/project/siteconf
+ 47:  5114874 =  47:  63b309a provider: isolate translation text from class prefix
+ 48:  d70281e =  48:  af73e77 Skip tests on C locale
+ 49:  0aa15a1 =  49:  7e573ed Say "is empty" instead of "no name"
+ 50:  63a5ff2 =  50:  fd25eb3 soft-quote all bare file names
+ 51:  c7b7b21 =  51:  fa583a6 Update translation
+ 52:  c976b4f =  52:  ae48f29 siteconf/t/render.t: check that dangerous paths are quoted
+ 53:  4e6895d =  53:  8633080 Use tagmsg for siteconf -g backends
+ 54:  48f16ad =  54:  35bf4db Do not use errno for non-syscall non-wait errors
+ 55:  aec30e7 =  55:  f097b92 Do not prefix soft-dep failures with E:
+ 56:  e7bd821 =  56:  1f0b5b7 have read_manifest respect prog & use tagmsg everywhere
+ 57:  9a37b52 =  57:  0b5bd70 REALLY don't call tagmsg as a function
+ 58:  c6026de =  58:  16233e1 Call tagmsg as a method in ./render too
+ 59:  b6c1c45 =  59:  d8afe63 suppress once warning on SiteConf/L10N.pm vars
+ 60:  857dd54 =  60:  e71d3be Add a third -V to help text
+ 61:  3ca199b =  61:  b93f727 Merge us into rpi-4b:pub/project/siteconf
+ 62:  c14f9e5 =  62:  cd2751b update po
+ 63:  35ba63e =  63:  3fac5ad siteconf/t/unicode.t: force ASCII on Android
+ 64:  09fd2dc =  64:  adcc925 termux siteconf/t/unicode.t issue: revised fix
+ 65:  2a1c7ef =  65:  75087a7 Revert fix
+ 66:  3605f85 =  66:  ade425e termux siteconf/t/unicode.t issue: Claude's fix
+ 67:  8f7503c =  67:  f8a2622 termux siteconf/t/unicode.t issue: GPT's fix
+ 68:  e53371b =  68:  36c3a79 clarify what is actually new
+ 69:  a141e51 =  69:  68ced16 Document versions in which these guys were added
+ 70:  50bd18f =  70:  1336601 idea: siteconf -gA
+ 71:  b03cbc6 =  71:  f3725f5 Sort imports
+ 72:  5049348 =  72:  76ff629 Call $cs->tagmsg consistently in ./configure
+ 73:  aaf556c =  73:  0f92d73 revert web preset check branching code
+ 74:  2e4ae57 =  74:  8e21777 Document siteconf -VVV
+ 75:  f6824ee =  75:  fc04c48 update POT line numbers
+ 76:  8180584 =  76:  cc578c6 show paths everywhere
+ 77:  365c537 =  77:  ef7bd64 different names
+ 78:  5060220 =  78:  83cd6c8 more robust version checks debugs
+ 79:  632ddec =  79:  16d553d update changelog dates for WIP modules
+ 80:  e5449b2 =  80:  69290f1 Fix HEY! remarks; move tagmsg to codesets
+ 81:  13c07e0 =  81:  c80428a conditionally upgrade parse_base; and use tagmsg
+ 82:  dd566e3 =  82:  b1a5a1b Use tagmsg uniformly for configure script too
+ 83:  a873400 =  83:  9e14b09 have GenLib.pm use tagmsg too
+ 84:  fc66406 =  84:  2005224 call read/write_make with a hash
+ 85:  386c988 =  85:  80a0b71 Fix tests
+ 86:  3dd08c6 =  86:  3a4bee3 upgrade to new gengenlib subs
+ 87:  03ffed4 =  87:  6eb2dbc Consistency
+ 88:  c161cfb =  88:  7ca5ef8 use utf8 at the top + explain why quote
+ 89:  b6c736a =  89:  72b642e Fit error checks with my new message
+ 90:  641556d =  90:  d635dd6 WIP: accept trailing hash as option
+ 91:  f76f596 !  91:  3d73fe9 NO PARSE -D
+--- a/f76f5968cdd759c097c98dfcd9bb43cf330613b9	2026-11-14 21:06:44.000000000 +0000
++++ b/3d73fe9d0fbf5f47501de4703dca0775c146cf9f	2026-11-14 21:06:44.000000000 +0000
+@@ -20,9 +20,9 @@
+ trying be as obnoxious as JSON having every-
+ one fit their paths through an escape mecha-
+ nism when NOBODY ASKED.)
+ 
+-this reverts 2ca8d97c18388b922d54bb9efbb2d6e92b6f1055,
++this reverts b13fbde31a8f521ecc8b3d72a9950d08dfb2b24f,
+ though git doesn't have revert on a single
+ file, so i just ran checkout <rev>^ -- <path>.
+ 
+ (and to those of you who think i am accepting
+ 92:  1ab0a61 !  92:  0ea80eb rename make to vars
+--- a/1ab0a613fc71ab2380115d213a452a28659541ec	2026-11-14 20:48:17.000000000 +0000
++++ b/0ea80ebc1ae721c49c8d479fcccba9c4eecf283a	2026-11-14 20:48:17.000000000 +0000
+@@ -15,9 +15,9 @@
+ i even EXPLICITLY removed it from un_fs and
+ to_fs simply because it was very unclear without
+ context what the second argument even means.)
+ 
+-commit b4c5618745dbe2be1e76045094276703625c23d9
++commit 9bcbf9c2e06a7d499344b1eb5475f81eca7ba40a
+ Author: Claude Sonnet 5.5 (Cloud) <claude@anthropic.com>
+ Date:   Sat Nov 14 02:43:32 2026 -0000
+ 
+     gengenlib: read_make/write_make hold any value
+ 93:  2f1927b =  93:  7507f8a Keep unescape dumb
+ 94:  d4af2ac =  94:  a5100c8 ${U+...} was NEVER a variable name
+ 95:  80f30d9 =  95:  1e02f1e Extend read_make and drop `include MY/config.mk'
+ 96:  2ca8d97 =  96:  b13fbde siteconf: no include of MY/config.mk; -D and -O say escapes
+ 97:  b4c5618 =  97:  9bcbf9c gengenlib: read_make/write_make hold any value
+ 98:  c8e27e4 =  98:  545f642 Scalar everything
+ 99:  569bea1 =  99:  f1bf4fe siteconf: modifiers take a value as one name
+100:  8916533 = 100:  0a84cb5 siteconf: expansions never split names
+101:  6119aa7 = 101:  0972c48 just make @NEED global again
+102:  03c36f7 = 102:  4a13f0a Merge macmini:my/project/siteconf
+103:  39bda3e = 103:  39a2af1 actually remove the subtest
+104:  617bc57 = 104:  5805c07 [AUTO] Accept bare definition and option defaults during init
+105:  f9c6a32 = 105:  b467d38 [AUTO] Allow selecting optional build goals with -g -t
+106:  8307191 = 106:  9f7e131 Update translation text
+107:  1692d48 = 107:  93e439d tell ai to not copy my emoji
+108:  6058ef2 = 108:  549473b error messages + Spell "GNU Make" with a capital M
+109:  631f315 = 109:  1246bcc wishlist: build with spaced targets and deps
+110:  b3b4b25 = 110:  316a440 more things that broke
+111:  fd1023e = 111:  3456284 update line numbers
+112:  0aeecad = 112:  10f0bfe put Template initializer options on multiple lines
+113:  8df2bf9 = 113:  51ea62c soft-quote Writing/Updating
+114:  d31ee8f = 114:  b8770e9 Merge Cloud Claude's branch `ccr-fe77eb55-11f2ui' on GitHub
+115:  472c211 = 115:  c96d89c t: move fs_surprise to TestPaths, and ask it in graph.t too
+116:  5eb7836 = 116:  48d651f Merge macmini:my/project/siteconf
+117:  0a9199f = 117:  e968746 t/{graph,list}.t: pretend filesys:UTF-8
+118:  7518b17 = 118:  eef1310 Merge Cloud Claude's branch `ccr-fe77eb55-11f2ui' on GitHub
+119:  b397de9 = 119:  2aa2835 configure.t: ask the file system, not the locale
+120:  fd0d3d9 = 120:  3632a72 Skip unicode name test on C-locale file systems
+121:  d7cd85e = 121:  9a22a3d Merge macmini:my/project/siteconf
+122:  0c4f350 = 122:  0dad607 Add all pseudo-category; and make sense of return values
+123:  8a7ae93 = 123:  67d6c1d Add reinitstd to changelog and Functions
+124:  fa80cac = 124:  b1f785e Test reinitstd
+125:  70583d9 = 125:  c8f1d8d caveat: locale should unset value
+126:  cf5ee13 = 126:  ecedd04 we don't actually use `E:' for this any more
+127:  d85cdf9 = 127:  e132546 tentative re^?-tag for CI
+128:  d7865b4 = 128:  99e0caa request no translation in non-E2E tests
+129:  8b5e13b = 129:  d004b89 update po
+130:  28c5b04 = 130:  e26ee19 Unquote file updates by siteconf -g too
+131:  dfa73c1 = 131:  d151a36 Drop the three asterisks
+132:  fd1999a = 132:  46f7196 stray change?
+133:  c0b3ab5 = 133:  92a7ef5 additional justification
+134:  19db7f0 = 134:  2cf70a3 not enough space
+135:  d941327 ! 135:  ff1d227 let undef through
+--- a/d94132744858543211e67fbba6650afd12f94ba4	2026-11-13 14:52:01.000000000 +0000
++++ b/ff1d227059c1cbf32473e294bebf2e7d2e79dd82	2026-11-13 14:52:01.000000000 +0000
+@@ -7,5 +7,4 @@
+ 
+ GIGO.... it helps under the warnings pragma
+ anyway >n> way less so if it just passed as
+ "undef" the string.
+- with '#' will be ignored, and an empty message aborts the commit.
+
+$ ~/tree/utils/diff-range master 94 6d6af7ed0bcbaa4c925dd52ad555f7967601ed57
+ORIG = 62c48ebfc7fa01064eaf4fbfed5f874a0bfe4065 (master)
+HEAD = 6d6af7ed0bcbaa4c925dd52ad555f7967601ed57
+  0:  62c48eb =   0:  6d6af7e Let GenLib.pm synopsis use the new format
+  1:  377ab4e =   1:  cd9a875 make plans for all
+  2:  77da835 =   2:  6727bc4 Add test count
+  3:  fe2ef7b =   3:  bde9748 Merge into macmini:my/project/siteconf
+  4:  0e5acbe =   4:  2a8a20e update po
+  5:  1fb5f0c !   5:  6f68647 do not interpret configure's -D/-O either
+--- a/1fb5f0cc8bfccfe8b9fcc4b1c9d7bdad81951682	2026-11-17 11:09:46.000000000 +0000
++++ b/6f68647584568527f43fa9831a59d072ccd278cb	2026-11-17 11:09:46.000000000 +0000
+@@ -4,10 +4,10 @@
+ committer Ethan Meng <rapidcow@RCs-T480s.local> 1794913786 -0600
+ 
+ do not interpret configure's -D/-O either
+ 
+-when i reverted 2ca8d97c18388b922d54bb9efbb2d6e92b6f1055
+-in f76f5968cdd759c097c98dfcd9bb43cf330613b9 apparently
++when i reverted b13fbde31a8f521ecc8b3d72a9950d08dfb2b24f
++in 3d73fe9d0fbf5f47501de4703dca0775c146cf9f apparently
+ that was only half the trouble... :,)
+ 
+ (i know, i kept seeing this; i just thought
+ i always had a stale install... until i tried
+  6:  37c9feb =   6:  7cab79b Update remark for genlib/t/relapath.t
+  7:  54871e7 =   7:  a99b519 Narrower inverse definition
+  8:  3b137c2 =   8:  82a87a7 pin the weird tests
+  9:  4495de9 =   9:  71d1bb0 update po offsets
+ 10:  386b0cf =  10:  7085c8c Merge branch `master' of rpi-4b:pub/project/siteconf
+ 11:  5f11e98 =  11:  19441b9 chomp
+ 12:  d55862b =  12:  0d1667c correct phrasing
+ 13:  3ff2881 =  13:  c0cf0ac embrace context; use the vector form
+ 14:  ce97601 =  14:  332b481 update po
+ 15:  0b89d8c =  15:  c4500e7 genlib bug fix: special-case the empty file name
+ 16:  294bc03 =  16:  8642c4f Unset environment SITECONF_CODESETS
+ 17:  bf7f45e =  17:  42f767a siteconf/t/unicode.t: Compare Unicode to Unicode
+ 18:  3375f85 =  18:  254a5d3 Merge us into macmini:my/project/siteconf
+ 19:  9f91e2c =  19:  1877e2b Specify what are in the share directory
+ 20:  5fd2379 =  20:  1e54e85 Merge us into macmini:my/project/siteconf
+ 21:  4626a9b =  21:  f5fa549 NO UNICODE ELIIPSIS
+ 22:  f46c4a6 =  22:  e1a2520 siteconf/t/unicode.t: cd ${A} before cp
+ 23:  aa21354 =  23:  5d6ec82 LLM guide correction: only ShareDir is really at risk
+ 24:  0500048 =  24:  68b699d LLM guide: test instructions
+ 25:  89903f2 =  25:  441ec25 Accept a flat hash for fixed-arity functions
+ 26:  9efd521 =  26:  df35db9 Marin's guide
+ 27:  d082522 =  27:  501689a Get the history right
+ 28:  5e5d9b3 =  28:  8867dfa Write Makefile with filesys encoding
+ 29:  4de41eb =  29:  f883c86 Prefer mutating the CodeSets::LOCALE singleton
+ 30:  ede04ac =  30:  83a5328 Fix my terrible substitutions in TT Provider.pm
+ 31:  9c6239c =  31:  0fc594a Merge branch `master' of T480:my/project/siteconf
+ 32:  9d09de8 =  32:  838f470 Turn you into a note
+ 33:  ab868e3 =  33:  593e7ce Check just the basename
+ 34:  df18ee4 =  34:  e2b0525 Show me what names are wrong, fs_surprise...
+ 35:  e9f1f41 =  35:  b5e7e7e Fix translation & soft-quote more file names
+ 36:  ae1e16d =  36:  05d2bb8 Merge us into macmini:my/project/siteconf
+ 37:  5114874 =  37:  63b309a provider: isolate translation text from class prefix
+ 38:  d70281e =  38:  af73e77 Skip tests on C locale
+ 39:  0aa15a1 =  39:  7e573ed Say "is empty" instead of "no name"
+ 40:  63a5ff2 =  40:  fd25eb3 soft-quote all bare file names
+ 41:  c7b7b21 =  41:  fa583a6 Update translation
+ 42:  c976b4f =  42:  ae48f29 siteconf/t/render.t: check that dangerous paths are quoted
+ 43:  4e6895d =  43:  8633080 Use tagmsg for siteconf -g backends
+ 44:  48f16ad =  44:  35bf4db Do not use errno for non-syscall non-wait errors
+ 45:  aec30e7 =  45:  f097b92 Do not prefix soft-dep failures with E:
+ 46:  e7bd821 =  46:  1f0b5b7 have read_manifest respect prog & use tagmsg everywhere
+ 47:  9a37b52 =  47:  0b5bd70 REALLY don't call tagmsg as a function
+ 48:  c6026de =  48:  16233e1 Call tagmsg as a method in ./render too
+ 49:  b6c1c45 =  49:  d8afe63 suppress once warning on SiteConf/L10N.pm vars
+ 50:  857dd54 =  50:  e71d3be Add a third -V to help text
+ 51:  3ca199b =  51:  b93f727 Merge us into rpi-4b:pub/project/siteconf
+ 52:  c14f9e5 =  52:  cd2751b update po
+ 53:  35ba63e =  53:  3fac5ad siteconf/t/unicode.t: force ASCII on Android
+ 54:  09fd2dc =  54:  adcc925 termux siteconf/t/unicode.t issue: revised fix
+ 55:  2a1c7ef =  55:  75087a7 Revert fix
+ 56:  3605f85 =  56:  ade425e termux siteconf/t/unicode.t issue: Claude's fix
+ 57:  8f7503c =  57:  f8a2622 termux siteconf/t/unicode.t issue: GPT's fix
+ 58:  e53371b =  58:  36c3a79 clarify what is actually new
+ 59:  a141e51 =  59:  68ced16 Document versions in which these guys were added
+ 60:  50bd18f =  60:  1336601 idea: siteconf -gA
+ 61:  b03cbc6 =  61:  f3725f5 Sort imports
+ 62:  5049348 =  62:  76ff629 Call $cs->tagmsg consistently in ./configure
+ 63:  aaf556c =  63:  0f92d73 revert web preset check branching code
+ 64:  2e4ae57 =  64:  8e21777 Document siteconf -VVV
+ 65:  f6824ee =  65:  fc04c48 update POT line numbers
+ 66:  8180584 =  66:  cc578c6 show paths everywhere
+ 67:  365c537 =  67:  ef7bd64 different names
+ 68:  5060220 =  68:  83cd6c8 more robust version checks debugs
+ 69:  632ddec =  69:  16d553d update changelog dates for WIP modules
+ 70:  e5449b2 =  70:  69290f1 Fix HEY! remarks; move tagmsg to codesets
+ 71:  13c07e0 =  71:  c80428a conditionally upgrade parse_base; and use tagmsg
+ 72:  dd566e3 =  72:  b1a5a1b Use tagmsg uniformly for configure script too
+ 73:  a873400 =  73:  9e14b09 have GenLib.pm use tagmsg too
+ 74:  fc66406 =  74:  2005224 call read/write_make with a hash
+ 75:  386c988 =  75:  80a0b71 Fix tests
+ 76:  3dd08c6 =  76:  3a4bee3 upgrade to new gengenlib subs
+ 77:  03ffed4 =  77:  6eb2dbc Consistency
+ 78:  c161cfb =  78:  7ca5ef8 use utf8 at the top + explain why quote
+ 79:  b6c736a =  79:  72b642e Fit error checks with my new message
+ 80:  641556d =  80:  d635dd6 WIP: accept trailing hash as option
+ 81:  f76f596 !  81:  3d73fe9 NO PARSE -D
+--- a/f76f5968cdd759c097c98dfcd9bb43cf330613b9	2026-11-14 21:06:44.000000000 +0000
++++ b/3d73fe9d0fbf5f47501de4703dca0775c146cf9f	2026-11-14 21:06:44.000000000 +0000
+@@ -20,9 +20,9 @@
+ trying be as obnoxious as JSON having every-
+ one fit their paths through an escape mecha-
+ nism when NOBODY ASKED.)
+ 
+-this reverts 2ca8d97c18388b922d54bb9efbb2d6e92b6f1055,
++this reverts b13fbde31a8f521ecc8b3d72a9950d08dfb2b24f,
+ though git doesn't have revert on a single
+ file, so i just ran checkout <rev>^ -- <path>.
+ 
+ (and to those of you who think i am accepting
+ 82:  1ab0a61 !  82:  0ea80eb rename make to vars
+--- a/1ab0a613fc71ab2380115d213a452a28659541ec	2026-11-14 20:48:17.000000000 +0000
++++ b/0ea80ebc1ae721c49c8d479fcccba9c4eecf283a	2026-11-14 20:48:17.000000000 +0000
+@@ -15,9 +15,9 @@
+ i even EXPLICITLY removed it from un_fs and
+ to_fs simply because it was very unclear without
+ context what the second argument even means.)
+ 
+-commit b4c5618745dbe2be1e76045094276703625c23d9
++commit 9bcbf9c2e06a7d499344b1eb5475f81eca7ba40a
+ Author: Claude Sonnet 5.5 (Cloud) <claude@anthropic.com>
+ Date:   Sat Nov 14 02:43:32 2026 -0000
+ 
+     gengenlib: read_make/write_make hold any value
+ 83:  2f1927b =  83:  7507f8a Keep unescape dumb
+ 84:  d4af2ac =  84:  a5100c8 ${U+...} was NEVER a variable name
+ 85:  80f30d9 =  85:  1e02f1e Extend read_make and drop `include MY/config.mk'
+ 86:  2ca8d97 =  86:  b13fbde siteconf: no include of MY/config.mk; -D and -O say escapes
+ 87:  b4c5618 =  87:  9bcbf9c gengenlib: read_make/write_make hold any value
+ 88:  c8e27e4 =  88:  545f642 Scalar everything
+ 89:  569bea1 =  89:  f1bf4fe siteconf: modifiers take a value as one name
+ 90:  8916533 =  90:  0a84cb5 siteconf: expansions never split names
+ 91:  6119aa7 =  91:  0972c48 just make @NEED global again
+ 92:  03c36f7 =  92:  4a13f0a Merge macmini:my/project/siteconf
+ 93:  39bda3e =  93:  39a2af1 actually remove the subtest
+ 94:  617bc57 =  94:  5805c07 [AUTO] Accept bare definition and option defaults during init
+ 95:  f9c6a32 =  95:  b467d38 [AUTO] Allow selecting optional build goals with -g -t
+ 96:  8307191 =  96:  9f7e131 Update translation text
+ 97:  1692d48 =  97:  93e439d tell ai to not copy my emoji
+ 98:  6058ef2 =  98:  549473b error messages + Spell "GNU Make" with a capital M
+ 99:  631f315 =  99:  1246bcc wishlist: build with spaced targets and deps
+100:  b3b4b25 = 100:  316a440 more things that broke
+101:  fd1023e = 101:  3456284 update line numbers
+102:  0aeecad = 102:  10f0bfe put Template initializer options on multiple lines
+103:  8df2bf9 = 103:  51ea62c soft-quote Writing/Updating
+104:  d31ee8f = 104:  b8770e9 Merge Cloud Claude's branch `ccr-fe77eb55-11f2ui' on GitHub
+105:  472c211 = 105:  c96d89c t: move fs_surprise to TestPaths, and ask it in graph.t too
+106:  5eb7836 = 106:  48d651f Merge macmini:my/project/siteconf
+107:  0a9199f = 107:  e968746 t/{graph,list}.t: pretend filesys:UTF-8
+108:  7518b17 = 108:  eef1310 Merge Cloud Claude's branch `ccr-fe77eb55-11f2ui' on GitHub
+109:  b397de9 = 109:  2aa2835 configure.t: ask the file system, not the locale
+110:  fd0d3d9 = 110:  3632a72 Skip unicode name test on C-locale file systems
+111:  d7cd85e = 111:  9a22a3d Merge macmini:my/project/siteconf
+112:  0c4f350 = 112:  0dad607 Add all pseudo-category; and make sense of return values
+113:  8a7ae93 = 113:  67d6c1d Add reinitstd to changelog and Functions
+114:  fa80cac = 114:  b1f785e Test reinitstd
+115:  70583d9 = 115:  c8f1d8d caveat: locale should unset value
+116:  cf5ee13 = 116:  ecedd04 we don't actually use `E:' for this any more
+117:  d85cdf9 = 117:  e132546 tentative re^?-tag for CI
+118:  d7865b4 = 118:  99e0caa request no translation in non-E2E tests
+119:  8b5e13b = 119:  d004b89 update po
+120:  28c5b04 = 120:  e26ee19 Unquote file updates by siteconf -g too
+121:  dfa73c1 = 121:  d151a36 Drop the three asterisks
+122:  fd1999a = 122:  46f7196 stray change?
+123:  c0b3ab5 = 123:  92a7ef5 additional justification
+124:  19db7f0 = 124:  2cf70a3 not enough space
+125:  d941327 ! 125:  ff1d227 let undef through
+--- a/d94132744858543211e67fbba6650afd12f94ba4	2026-11-13 14:52:01.000000000 +0000
++++ b/ff1d227059c1cbf32473e294bebf2e7d2e79dd82	2026-11-13 14:52:01.000000000 +0000
+@@ -7,5 +7,4 @@
+ 
+ GIGO.... it helps under the warnings pragma
+ anyway >n> way less so if it just passed as
+ "undef" the string.
+- with '#' will be ignored, and an empty message aborts the commit.

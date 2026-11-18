@@ -6,9 +6,6 @@ Revision history of WwW-GenLib
         RdKw::I18N::CodeSets, RdKw::L10N::TextDomain,
         and the version pragmatic module.
 
-    *** Encode is required (though it should be core if
-        you have Perl v5.7.3 or later.)
-
     + file2uri and uri2file convert between file names
       (character-based Unicode strings) and URI paths, with
       UTF-8 escapes.

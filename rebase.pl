@@ -66,6 +66,26 @@ e7df7b164875b27bf55fb5d1e3c5cbc869affeea refs/tags/codesets/v0.00_00
 6f4fc6ac0ada73a08517954446cb279adce580de refs/tags/template-provider/v0.00_00
 d647071753bfdcbda3af985f6bd5d59b34cc9ca3 refs/tags/textdomain/v0.00_00
 MAP
+# Annotated tags are their own object (tagger/message/etc.) pointing
+# at a commit via an "object" header, unlike branches and lightweight
+# tags where the ref sha IS the commit sha.  `git cat-file commit`
+# auto-dereferences tag objects, so if we naively ran the rewrite walk
+# on a tag's own sha it would silently peel it down to the commit it
+# points to and the tag object would just vanish.  Record which shas
+# are tag objects, and which commit the walk should actually rewrite
+# on their behalf, so we can reconstruct a proper tag object after
+# (see rewrite_tag).
+my (%is_tag, %peel);
+foreach my $sha (keys %refs) {
+	chomp(my $type = `git cat-file -t $sha`);
+	if ($type eq 'tag') {
+		$is_tag{$sha} = 1;
+		chomp($peel{$sha} = `git rev-parse $sha^{commit}`);
+	}
+	else {
+		$peel{$sha} = $sha;
+	}
+}
 # A commit that mentions another commit by its full hash has to be
 # rewritten after it, or the mention would keep the old hash (this
 # can happen across branches, where neither is the other's ancestor).
@@ -90,7 +110,7 @@ my %deps = map { $_ => [ @{$parents{$_}} ] } keys %parents;
 	}
 }
 # Reverse topological sort
-my @walk = reachable(\%deps, keys %refs);
+my @walk = reachable(\%deps, values %peel);
 
 #
 # Non-recursive version of:
@@ -230,6 +250,13 @@ EOM
 }
 print STDERR "\n" if -t STDERR;
 
+# Now that every commit has been rewritten, rebuild the annotated tag
+# objects so they keep pointing at a tag (with their original tagger
+# and message intact) instead of getting peeled down to a bare commit.
+foreach my $sha (keys %refs) {
+	rewrite_tag($sha) if $is_tag{$sha};
+}
+
 foreach (sort keys %REPLACE) {
 	my ($this, $that) = ($_, $REPLACE{$_});
 	if ($this ne $that) {
@@ -314,6 +341,25 @@ sub get_all_content
 	my $morecontent = <$tempfh>;
 	$content .= $morecontent if defined $morecontent;
 	return $content;
+}
+
+sub rewrite_tag
+{
+	my ($sha) = @_;
+	return $REPLACE{$sha} if exists $REPLACE{$sha};
+	my @lines = `git cat-file tag $sha`;
+	$lines[0] =~ /^object ([0-9a-f]{40})\n\z/
+		or die "tag $sha: malformed object header: $lines[0]";
+	my $old = $1;
+	my $new = $REPLACE{$old};
+	unless (defined $new) {
+		# The tag points at another tag (or at something that
+		# never showed up in the commit walk); recurse/fall back.
+		chomp(my $type = `git cat-file -t $old`);
+		$new = $type eq 'tag' ? rewrite_tag($old) : $old;
+	}
+	$lines[0] = "object $new\n";
+	return $REPLACE{$sha} = hash tag => @lines;
 }
 
 sub get_committer_date

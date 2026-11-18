@@ -24,8 +24,8 @@
 # (and, since GenLib 0.0300, for writing the location as a
 # URI path with file2uri).  If you prefer not to use it,
 # simply remove the module import line and exclude it from
-# %v (and set location to $target).  The script works
-# fine without it. ;)
+# %v (and set location to $target).  The script works fine
+# without it. ;)
 #
 # More information about Template Toolkit here:
 # https://template-toolkit.org/

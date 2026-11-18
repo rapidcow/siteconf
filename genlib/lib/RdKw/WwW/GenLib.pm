@@ -83,9 +83,11 @@ use File::Basename qw( dirname basename );
 use File::Compare ();
 use File::Spec ();
 use URI ();
+use URI::file ();
 use URI::Escape qw( uri_unescape );
 
 # Import locale and set up gettext.
+use RdKw::I18N::CodeSets ();
 use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
@@ -94,6 +96,7 @@ sub _status { $! = 0; $? = shift; @_; }
 our @EXPORT_OK = qw(
 	locate
 	relapath joinpath
+	file2uri uri2file
 	parse_base
 );
 
@@ -168,8 +171,9 @@ is always I<path>.
 sub relapath
 {
 	my ($path, $base) = @_;
-	my @path = split('/', $path, -1);
-	my @base = split('/', $base, -1);
+	# split gives () for an empty string; that is one empty segment.
+	my @path = length $path ? split('/', $path, -1) : ('');
+	my @base = length $base ? split('/', $base, -1) : ('');
 
 	my $comm = 0;
 COMM:	while () {
@@ -222,15 +226,13 @@ COMM:	while () {
 	# is the trailing slash that `..' does not need.
 	#
 	pop @rest if $upupup && @rest && !grep { length } @rest;
-	my $rela = join '/', ('..') x $upupup, @rest;
 	#
-	# Empty means "this very document", which is only right
-	# when the two paths are the same.  If $path is merely
-	# the directory $base is in, say so with a dot.
+	# Empty means "this very document": every segment matched,
+	# and @rest is ().  With no `..', a lone empty segment means
+	# $path is the directory $base is in, so say so with a dot.
 	#
-	$rela = '.' if $rela eq ''
-		&& uri_unescape ($path) ne uri_unescape ($base);
-	$rela;
+	@rest = ('.') if !$upupup && @rest == 1 && $rest[0] eq '';
+	join '/', ('..') x $upupup, @rest;
 }
 
 =item B<joinpath> I<base>, I<spec>...
@@ -285,6 +287,75 @@ COMP:		while (@path) {
 		push @base, ('') if $dot && @base;
 	}
 	join '/', @base;
+}
+
+=item B<file2uri> I<file>[, os => 'Unix', prog => 'file2uri' ]
+
+Write the file name I<file> as a URI.  A relative name gives a
+relative URI path; an absolute one gives a C<file:> URI.  I<file>
+is a Unicode string (not the octets the file system uses), and
+its characters are written as UTF-8 escapes: C<r\x{e9}> gives
+C<r%C3%A9>.  It dies if I<file> cannot be encoded as UTF-8
+(e.g. a lone surrogate).
+
+I<os> is the system whose file names I<file> follows, as
+in L<URI::file>; it defaults to C<'Unix'>; pass C<$^O>
+or C<undef> if you explicitly want it in your operating system's
+representation (though this may break various parts of GenGenLib).
+For example, C<a\b> on C<MSWin32> gives C<a/b>.
+
+Added in 0.03_00.
+
+=cut
+
+# The code sets of URIs (file names in UTF-8, whatever the file system
+# says), for file2uri and uri2file only; made when first needed
+my $cs_utf8;
+sub _cs_utf8 { $cs_utf8 ||= RdKw::I18N::CodeSets->new(filesys => 'UTF-8') }
+
+sub file2uri
+{
+	my ($file, %kwds) = @_;
+	my $os = !exists $kwds{os} ? 'Unix' :
+		defined $kwds{os} ? $kwds{os} : $^O;
+	my $prog = exists $kwds{prog} ? $kwds{prog} : 'file2uri';
+	# URI::file->new alone escapes Latin-1 characters
+	# as one Latin-1 octet or as UTF-8, depending on the
+	# internal utf8 flag (see URI::Escape::escape_char).
+	# We have control over what we accept.  Encode it to
+	# UTF-8 so it is safe for URI::file->new to consume.
+	# (Notably, this does not obey the filesys codeset,
+	# since this is a URI and URIs are always UTF-8. ;)
+	my $octets = _cs_utf8()->to_fs($file, { prog => $prog });
+	URI::file->new($octets, $os)->as_string;
+}
+
+=item B<uri2file> I<uri>[, os => 'Unix', prog => 'uri2file' ]
+
+Reverse operation of B<file2uri>: the file name, as a Unicode
+string, that I<uri> names on I<os> (default C<'Unix'> like
+B<file2uri>.  Pass C<$^O> or C<undef> if you explicitly want it
+in your operating system's representation.)
+Escapes are decoded as UTF-8, in either case of hex digits.
+Die if I<uri> names no file on I<os> (e.g. C<a%2Fb>, a name
+with a slash in it), or if the escapes are not UTF-8 (e.g. C<r%E9>).
+
+Added in 0.03_00.
+
+=cut
+
+sub uri2file
+{
+	my ($uri, %kwds) = @_;
+	my $os = !exists $kwds{os} ? 'Unix' :
+		defined $kwds{os} ? $kwds{os} : $^O;
+	my $prog = exists $kwds{prog} ? $kwds{prog} : 'uri2file';
+	my $octets = URI->new($uri, 'file')->file($os);
+	defined $octets or die _status 0, tagmsg($prog => diag(__(
+		# HEY! %s is the operating system.
+		"%q: URI not representable in %#q"),
+		$uri, $os));
+	_cs_utf8()->un_fs($octets, { prog => $prog });
 }
 
 =item B<parse_base> \%O[, prog => 'parse_base' ]

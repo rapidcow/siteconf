@@ -18,7 +18,7 @@ for my $m (qw( Template RdKw::WwW::GenLib )) {
 	eval "require $m; 1" or plan skip_all => "$m is not installed";
 }
 my $script = script_path();
-plan tests => 29;
+plan tests => 30;
 # The preset comes from the built share (not from an installed one, which
 # is what File::ShareDir would find if the build is not in front)
 local $ENV{PERL5LIB} = join ':', project_root() . '/blib/lib', perl5lib();
@@ -57,14 +57,16 @@ sub spew {
 spew('B/MY/option.mk', '');
 
 # Render project/$file, whose header HAVEs $have, with ${a} set to $a
-# (and whatever else in %D).  Returns (exit status, output or error).
+# (and whatever else in %D).  The page says $body.
+# Returns (exit status, output or error).
+our $body = "[% location %]|[% locate('y.html') %]\n";
 sub render {
 	my ($a, $have, $file, %D) = @_;
 	write_make('B/MY/config.mk', {
 		A => '.', B => '../B', a => $a, b => 'public', c => 'public',
 		R => 'Makefile.in', F => 'MANIFEST', e => '.ok', %D }, prog => 'test');
 	my $header = defined $have ? "[%\n# HAVE: $have\n-%]\n" : '';
-	spew("project/$file", $header . "[% location %]|[% locate('y.html') %]\n");
+	spew("project/$file", $header . $body);
 	unlink 'project/out.html';
 	open my $fh, '-|' or do {
 		chdir 'project' or die $!;
@@ -130,6 +132,15 @@ for my $case (
 {
 	my ($status, $got) = render('src', '${a}/art/deep/x.html', 'src/art/deep/x.html');
 	is($got, "art/deep/x.html|../../y.html\n", 'location is relative to the page, however deep');
+}
+
+# location is the URI path of the page; target is its file name
+{
+	local $body = "[% location %]|[% target %]|[% locate('y.html') %]"
+		. "|[% file2uri('c d%') %]|[% uri2file('c%20d%25') %]\n";
+	my ($status, $got) = render('src', '${a}/a${U+0020}b/x%.html', 'src/a b/x%.html');
+	is($got, "a%20b/x%25.html|a b/x%.html|../y.html|c%20d%25|c d%\n",
+		'location, target, locate, file2uri and uri2file') or diag "(exit $status)";
 }
 
 # the renderer is stateless between runs of different ${a}

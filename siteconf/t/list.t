@@ -101,13 +101,13 @@ bad(qr/-B is not permitted in mode -l \(list\)/, '-B', '-l', '-B', '.');
 bad(qr/\Asiteconf: cannot open file `nope': /, 'no manifest', '-l', '-F', 'nope');
 bad_late(qr/x:y' conflicts with record separator -072/, 'a name with the separator',
 	'index.html:', '-l', '-072', '-t', 'small');
-bad_late(qr/\Asiteconf: MANIFEST: cannot encode "r\\x\{e9\}sum\\x\{e9\}\.html" in US-ASCII$/,
+bad_late(qr/\Asiteconf: MANIFEST: cannot encode file name "r\\x\{e9\}sum\\x\{e9\}\.html" in US-ASCII: /,
 	'ASCII cannot spell résumé', "index.html\n", '-C', 'filesys:ascii', '-l');
 ($out, $err, $ok) = list('-C', 'filesys:ISO-8859-1', '-l');
 ok($ok && $err eq '', 'Latin-1 can spell résumé') or diag $err;
 is($out, Encode::encode('ISO-8859-1', "index.html\nrésumé.html\nextra/a b.html\n"),
 	'... in the requested filesystem encoding');
 put('BAD', "MAKE all\n\tNEED a\n\tNEED x\${U+D800}y\n");
-bad_late(qr/\Asiteconf: BAD: cannot encode "x\\x\{d800\}y"/,
+bad_late(qr/\Asiteconf: BAD: cannot encode file name "x\\x\{d800\}y"/,
 	'a name the file system cannot spell (not even with \x{...})',
 	"a\n", '-l', '-F', 'BAD');

@@ -1,10 +1,14 @@
 Revision history of WwW-GenLib
 
 
-0.03_00  2026-11-16  RC
-    *** Perl 5.8 is required, and so are
+0.03_00  2026-11-17  RC
+    *** Perl 5.008 is required, and so are
         RdKw::I18N::CodeSets, RdKw::L10N::TextDomain,
         and the version pragmatic module.
+
+    + file2uri and uri2file convert between file names
+      (character-based Unicode strings) and URI paths, with
+      UTF-8 escapes.
 
     + parse_base takes prog => NAME, the prefix of its error
       messages (which was always `parse_base').  Prefixes are

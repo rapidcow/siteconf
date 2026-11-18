@@ -5,7 +5,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 47;
+use Test::More tests => 57;
 
 use RdKw::WwW::GenLib qw( locate relapath joinpath );
 
@@ -33,6 +33,24 @@ is (relapath('a/index.html', 'a/index.html'), '', 'same file is empty');
 is (relapath('a/', 'a/'), '', 'same directory is empty');
 is (relapath('a/', 'a/index.html'), '.', 'directory of base is dot');
 is (relapath('', 'index.html'), '.', 'root from a file in root');
+# An escaped slash is part of one segment name.
+is (relapath('a%2Fb/', 'a%2Fb/c'), '.', 'escaped slash: directory of base is dot');
+is (relapath('a%2Fb/c', 'a%2Fb/c'), '', 'escaped slash: same file is empty');
+is (relapath('a%2fb/', 'a%2Fb/c'), '.', 'escape case does not matter');
+is (relapath('a%2Fb/', 'a/b/c'), '../../a%2Fb/', 'escaped slash is not a separator');
+# Escaped UTF-8 (r\x{e9}sum\x{e9}.html) compares by its octets.
+is (relapath('a/r%C3%A9sum%C3%A9.html', 'a/r%c3%a9sum%c3%a9.html'), '',
+	'UTF-8 escape case does not matter');
+is (relapath("a/r\xC3\xA9sum\xC3\xA9.html", 'a/r%C3%A9sum%C3%A9.html'), '',
+	'UTF-8 octets and their escapes are the same');
+is (relapath('r%C3%A9sum%C3%A9/', 'r%c3%a9sum%c3%a9/index.html'), '.',
+	'UTF-8 directory of base is dot');
+is (relapath('r%C3%A9sum%C3%A9.html', 'doc/index.html'), '../r%C3%A9sum%C3%A9.html',
+	'UTF-8 escapes are kept as written');
+is (relapath('%E4%B8%AD/a.html', '%e4%b8%ad/b/c.html'), '../a.html',
+	'CJK escapes compare by octets');
+is (relapath('r%E9sum%E9.html', 'r%C3%A9sum%C3%A9.html'), 'r%E9sum%E9.html',
+	'Latin-1 escapes are other octets');
 is (joinpath('a/b/c', relapath('a/b/', 'a/b/c')), 'a/b/',
 	'joinpath reverses relapath');
 

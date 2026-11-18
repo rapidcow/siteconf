@@ -493,12 +493,31 @@ sub _say_encoding
 	$obj->mime_name || $obj->name;
 }
 
-# What Encode said went wrong, without where
+# What Encode said went wrong, on one line (_code has taken off where,
+# if it could tell)
 sub _encode_error
 {
 	my ($err) = @_;
-	$err =~ s/ at \S+ line \d+\.?\n\z//;
+	chomp $err;
 	$err;
+}
+
+# A $SIG{__DIE__} that takes off the ` at FILE line N.' that perl puts
+# after a message with no newline (and `, <FH> line N' if there was a
+# read): caller says which FILE and N, so a FILE with spaces is no
+# guess.  Anything else (an object, or a message that ends otherwise)
+# dies as it is.
+sub _die_plain
+{
+	my ($mesg) = @_;
+	ref $mesg and die $mesg;
+	my (undef, $file, $line) = caller(0);
+	my $where = " at $file line $line";
+	my $at = rindex($mesg, $where);
+	$at >= 0 && substr($mesg, $at + length $where)
+		=~ /\A(?:, <.*> (?:line|chunk) \d+)?\.\n\z/s
+		and die substr($mesg, 0, $at) . "\n";
+	die $mesg;
 }
 
 =item I<cs>->B<diag_mode>([ I<mode> ])
@@ -592,7 +611,10 @@ unless told to.  The options are:
 
 =item B<prog> => I<prog>
 
-Who could not, said before the error (C<prog: cannot encode ...>).
+Who could not, said before the error (C<prog: cannot encode file
+name ...>): the method's name (C<to_fs> or C<un_fs>) unless given;
+undef or empty says no one.  The error ends with what L<Encode> said,
+but for where perl says it said it.
 
 =item B<check> => I<check>
 
@@ -622,13 +644,14 @@ sub _fs
 {
 	my ($self, $code, $what, $sub, @names) = @_;
 	my $opt = _opt($sub => \@names, qw( prog check ));
+	my $who = _who($opt, $sub);
 	my $enc = $self->encoding('filesys');
 	my @new;
 	for my $name (@names) {
-		my ($new) = _code($code, $enc, $name, $opt->{check});
-		defined $new or die _status 0, _who($opt)
-			. "cannot $what @{[ _qq_ascii($name) ]}"
-			. " in @{[ $self->_say_encoding('filesys') ]}\n";
+		my ($new, $err) = _code($code, $enc, $name, $opt->{check});
+		defined $new or die _status 0, $who
+			. "cannot $what file name @{[ _qq_ascii($name) ]}"
+			. " in @{[ $self->_say_encoding('filesys') ]}: $err\n";
 		push @new, $new;
 	}
 	wantarray ? @new : $new[0];
@@ -652,7 +675,8 @@ What the first argument is called (C<0>).
 =item B<prog> => I<prog>
 
 Who could not, said before the error (C<prog: cannot decode argv 1:
-...>).
+...>): the method's name (C<un_argv> or C<to_argv>) unless given;
+undef or empty says no one.
 
 =item B<check> => I<check>
 
@@ -689,7 +713,7 @@ sub _argv
 	my @new;
 	for my $i (0 .. $#args) {
 		my ($new, $err) = _code($code, $enc, $args[$i], $opt->{check});
-		defined $new or die _status 0, _who($opt)
+		defined $new or die _status 0, _who($opt, $sub)
 			. "cannot $what argv @{[ $start + $i ]}: $err\n";
 		push @new, $new;
 	}
@@ -707,7 +731,8 @@ sub _argv
 Decodes C<@ARGV> (as B<argv>), or encodes it, as B<un_argv> and
 B<to_argv> would from B<argv> C<1>; or dies, leaving it as it was, if
 one argument cannot be.  (As L<Encode::Locale/decode_argv>.)  The
-options are theirs, but for B<start>: B<prog> and B<check>.
+options are theirs, but for B<start>: B<prog> (here C<decode_argv> or
+C<encode_argv> unless given) and B<check>.
 
 =cut
 
@@ -729,17 +754,21 @@ sub encode_argv
 sub _argv_opt
 {
 	my ($who, @arg) = @_;
-	return (check => $arg[0]) unless ref $arg[0] eq 'HASH';
-	%{ _opt($who => \@arg, qw( prog check )) };
+	return (check => $arg[0], prog => $who) unless ref $arg[0] eq 'HASH';
+	my %opt = %{ _opt($who => \@arg, qw( prog check )) };
+	exists $opt{prog} or $opt{prog} = $who;
+	%opt;
 }
 
 =item I<cs>->B<getenv>( I<name>, ...[, { I<option> => I<value>, ... }] )
 
 The values of the environment variables (B<env>) by those names,
 undef for each that is not set; the first one, in scalar context.
-Dies if a name or a value cannot be spelled.  The options are
-B<prog>, who could not (said before the error), and B<check>, which
-is for the values; a name is always spelled as it is, or not at all.
+Dies if a name or a value cannot be spelled, saying which, and what
+L<Encode> said.  The options are B<prog>, who could not (said before
+the error: the method's name unless given; undef or empty says no
+one), and B<check>, which is for the values; a name is always spelled
+as it is, or not at all.
 
 =item I<cs>->B<setenv>( I<name> => I<value>, ...[, { I<option> => I<value>, ... }] )
 
@@ -757,14 +786,16 @@ sub getenv
 {
 	my ($self, @names) = @_;
 	my $opt = _opt(getenv => \@names, qw( prog check ));
+	my $who = _who($opt, 'getenv');
 	my $enc = $self->encoding('env');
 	my @values;
 	for my $name (@names) {
-		my $value = $ENV{ $self->_env_key($enc, $name, $opt) };
+		my $value = $ENV{ $self->_env_key($enc, $name, $who) };
 		if (defined $value) {
-			($value) = _code(\&Encode::decode, $enc, $value, $opt->{check});
-			defined $value or die _status 0, _who($opt) . "cannot decode environment variable"
-				. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}\n";
+			(my $new, my $err) = _code(\&Encode::decode, $enc, $value, $opt->{check});
+			defined $new or die _status 0, $who . "cannot decode environment variable"
+				. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}: $err\n";
+			$value = $new;
 		}
 		push @values, $value;
 	}
@@ -776,15 +807,16 @@ sub setenv
 	my ($self, @pairs) = @_;
 	my $opt = _opt(setenv => \@pairs, qw( prog check ));
 	Carp::croak('setenv: odd number of arguments') if @pairs % 2;
+	my $who = _who($opt, 'setenv');
 	my $enc = $self->encoding('env');
 	my %set;
 	while (my ($name, $value) = splice @pairs, 0, 2) {
-		my $key = $self->_env_key($enc, $name, $opt);
+		my $key = $self->_env_key($enc, $name, $who);
 		if (defined $value) {
-			my ($bytes) = _code(\&Encode::encode, $enc, $value, $opt->{check});
-			defined $bytes or die _status 0, _who($opt) . "cannot encode the value of"
+			my ($bytes, $err) = _code(\&Encode::encode, $enc, $value, $opt->{check});
+			defined $bytes or die _status 0, $who . "cannot encode the value of"
 				. " environment variable @{[ _qq_ascii($name) ]}"
-				. " in @{[ $self->_say_encoding('env') ]}\n";
+				. " in @{[ $self->_say_encoding('env') ]}: $err\n";
 			$value = $bytes;
 		}
 		$set{$key} = $value;
@@ -801,17 +833,18 @@ sub unsetenv
 {
 	my ($self, @names) = @_;
 	my $opt = _opt(unsetenv => \@names, 'prog');
-	$self->setenv((map { $_ => undef } @names), $opt);
+	$self->setenv((map { $_ => undef } @names),
+		{ prog => exists $opt->{prog} ? $opt->{prog} : 'unsetenv' });
 	return;
 }
 
 sub _env_key
 {
-	my ($self, $enc, $name, $opt) = @_;
+	my ($self, $enc, $name, $who) = @_;
 	Carp::croak('undefined environment variable name') unless defined $name;
-	my ($key) = _code(\&Encode::encode, $enc, $name);
-	defined $key or die _status 0, _who($opt) . "cannot encode environment variable name"
-		. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}\n";
+	my ($key, $err) = _code(\&Encode::encode, $enc, $name);
+	defined $key or die _status 0, $who . "cannot encode environment variable name"
+		. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}: $err\n";
 	$key;
 }
 
@@ -828,11 +861,13 @@ sub _opt
 	$opt;
 }
 
-# prog => ..., of those options: "prog: ", or ''
+# prog => ..., of those options: "prog: ", or ''; if there is no
+# prog => at all, the $default (a method's own name), if given
 sub _who
 {
-	my ($opt) = @_;
-	defined $opt->{prog} ? "$opt->{prog}: " : '';
+	my ($opt, $default) = @_;
+	my $prog = exists $opt->{prog} ? $opt->{prog} : $default;
+	defined $prog && length $prog ? "$prog: " : '';
 }
 
 # What Encode makes of the source (which it is not given to modify),
@@ -842,7 +877,10 @@ sub _code
 	my ($code, $enc, $src, $check) = @_;
 	$check = $CHECK unless defined $check;
 	my $copy = $src;
-	my $res = eval { $code->($enc, $copy, $check) };
+	my $res = eval {
+		local $SIG{__DIE__} = \&_die_plain;
+		$code->($enc, $copy, $check);
+	};
 	return ($res) if defined $res;
 	(undef, $@ ne '' ? _encode_error($@) : 'undefined');
 }

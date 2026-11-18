@@ -12,6 +12,10 @@ Revision history of I18N-CodeSets
       unsetenv: in and out of the process, or an error (FB_CROAK,
       unless { check => ... } says otherwise; decode_argv and
       encode_argv take it as Encode::Locale's do).
+    + Their errors say what could not be spelled (file name, argv
+      N, environment variable), end with what Encode said, and
+      are said by the method's name unless { prog => ... } says
+      otherwise (undef or empty says no one).
     + diag_name, diag: names for people, quoted to show what would
       not (according to the diag mode).
     + $RdKw::I18N::CodeSets::LOCALE is what locale says, and may be

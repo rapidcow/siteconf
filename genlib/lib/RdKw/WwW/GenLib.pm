@@ -85,12 +85,12 @@ that have moved.
 use File::Basename qw( dirname basename );
 use File::Compare ();
 use File::Spec ();
-use Encode ();
 use URI ();
 use URI::file ();
 use URI::Escape qw( uri_unescape );
 
 # Import locale and set up gettext.
+use RdKw::I18N::CodeSets ();
 use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
@@ -311,6 +311,11 @@ Added in 0.03_00.
 
 =cut
 
+# The code sets of URIs (file names in UTF-8, whatever the file system
+# says), for file2uri and uri2file only; made when first needed
+my $cs_utf8;
+sub _cs_utf8 { $cs_utf8 ||= RdKw::I18N::CodeSets->new(filesys => 'UTF-8') }
+
 sub file2uri
 {
 	my ($file, %kwds) = @_;
@@ -324,12 +329,8 @@ sub file2uri
 	# UTF-8 so it is safe for URI::file->new to consume.
 	# (Notably, this does not obey the filesys codeset,
 	# since this is a URI and URIs are always UTF-8. ;)
-	my $uri = eval {
-		my $octets = Encode::encode('UTF-8', $file,
-			Encode::FB_CROAK() | Encode::LEAVE_SRC());
-		URI::file->new($octets, $os)->as_string;
-	};
-	defined $uri ? return $uri : die tagmsg($prog => "$@");
+	my $octets = _cs_utf8()->to_fs($file, { prog => $prog });
+	URI::file->new($octets, $os)->as_string;
 }
 
 =item B<uri2file> I<uri>[, os => 'Unix', prog => 'uri2file' ]
@@ -339,9 +340,8 @@ string, that I<uri> names on I<os> (default C<'Unix'> like
 B<file2uri>.  Pass C<$^O> or C<undef> if you explicitly want it
 in your operating system's representation.)
 Escapes are decoded as UTF-8, in either case of hex digits.
-Return undef if I<uri> names no file on I<os> (e.g. C<a%2Fb>,
-a name with a slash in it), and die if the escapes are not UTF-8
-(e.g. C<r%E9>).
+Die if I<uri> names no file on I<os> (e.g. C<a%2Fb>, a name
+with a slash in it), or if the escapes are not UTF-8 (e.g. C<r%E9>).
 
 Added in 0.03_00.
 
@@ -353,15 +353,12 @@ sub uri2file
 	my $os = !exists $kwds{os} ? 'Unix' :
 		defined $kwds{os} ? $kwds{os} : $^O;
 	my $prog = exists $kwds{prog} ? $kwds{prog} : 'uri2file';
-	my $name = eval {
-		my $octets = URI->new($uri, 'file')->file($os);
-		defined $octets or die diag(__(
-			# HEY! %s is the operating system.
-			"%q: URI not representable in %#q"),
-			$uri, $os);
-		Encode::decode('UTF-8', $octets, Encode::FB_CROAK());
-	};
-	defined $name ? return $name : die tagmsg($prog => "$@");
+	my $octets = URI->new($uri, 'file')->file($os);
+	defined $octets or die _status 0, tagmsg($prog => diag(__(
+		# HEY! %s is the operating system.
+		"%q: URI not representable in %#q"),
+		$uri, $os));
+	_cs_utf8()->un_fs($octets, { prog => $prog });
 }
 
 =item B<parse_base> \%O[, prog => 'parse_base' ]

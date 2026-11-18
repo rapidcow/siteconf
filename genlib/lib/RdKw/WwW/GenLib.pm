@@ -304,7 +304,7 @@ C<r%C3%A9>.  It dies if I<file> cannot be encoded as UTF-8
 I<os> is the system whose file names I<file> follows, as
 in L<URI::file>; it defaults to C<'Unix'>; pass C<$^O>
 or C<undef> if you explicitly want it in your operating system's
-representation, though this may break various parts of GenGenLib.)
+representation (though this may break various parts of GenGenLib).
 For example, C<a\b> on C<MSWin32> gives C<a/b>.
 
 Added in 0.03_00.
@@ -332,7 +332,7 @@ sub file2uri
 	defined $uri ? return $uri : die tagmsg($prog => "$@");
 }
 
-=item B<uri2file> I<uri>[, I<os>]
+=item B<uri2file> I<uri>[, os => 'Unix', prog => 'file2uri' ]
 
 Reverse operation of B<file2uri>: the file name, as a Unicode
 string, that I<uri> names on I<os> (default C<'Unix'> like

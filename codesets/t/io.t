@@ -6,7 +6,7 @@ use utf8;
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 95;
+use Test::More tests => 98;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -26,6 +26,13 @@ my $bad = 'résumé';
 ok(!eval { $asc->to_fs($bad, { prog => 'here' }); 1 }, 'to_fs: cannot spell it');
 like($@, qr/\Ahere: cannot encode file name "r\\x\{e9\}sum\\x\{e9\}" in US-ASCII: .*\bascii\b.*\n\z/,
 	'... and says who could not, and what Encode said');
+like($@, qr/"\\x\{00e9\}" does not map to ascii\n\z/, '... without where Encode said it');
+{
+	open my $fh, '<', $0 or die "$0: $!";
+	my $line = <$fh>;
+	ok(!eval { $asc->to_fs($bad); 1 }, 'to_fs: after a read');
+	like($@, qr/does not map to ascii\n\z/, '... nor the line of the read');
+}
 ok(!eval { $asc->to_fs($bad, { prog => '' }); 1 }, 'to_fs: prog empty');
 like($@, qr/\Acannot encode file name /, '... says no one');
 ok(!eval { $asc->to_fs($bad, { prog => undef }); 1 }, 'to_fs: prog undef');

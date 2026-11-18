@@ -493,13 +493,31 @@ sub _say_encoding
 	$obj->mime_name || $obj->name;
 }
 
-# What Encode said went wrong, as it said it (where too: a file name
-# may have spaces, so there is no telling where it starts), on one line
+# What Encode said went wrong, on one line (_code has taken off where,
+# if it could tell)
 sub _encode_error
 {
 	my ($err) = @_;
 	chomp $err;
 	$err;
+}
+
+# A $SIG{__DIE__} that takes off the ` at FILE line N.' that perl puts
+# after a message with no newline (and `, <FH> line N' if there was a
+# read): caller says which FILE and N, so a FILE with spaces is no
+# guess.  Anything else (an object, or a message that ends otherwise)
+# dies as it is.
+sub _die_plain
+{
+	my ($mesg) = @_;
+	ref $mesg and die $mesg;
+	my (undef, $file, $line) = caller(0);
+	my $where = " at $file line $line";
+	my $at = rindex($mesg, $where);
+	$at >= 0 && substr($mesg, $at + length $where)
+		=~ /\A(?:, <.*> (?:line|chunk) \d+)?\.\n\z/s
+		and die substr($mesg, 0, $at) . "\n";
+	die $mesg;
 }
 
 =item I<cs>->B<diag_mode>([ I<mode> ])
@@ -596,7 +614,7 @@ unless told to.  The options are:
 Who could not, said before the error (C<prog: cannot encode file
 name ...>): the method's name (C<to_fs> or C<un_fs>) unless given;
 undef or empty says no one.  The error ends with what L<Encode> said,
-as it said it.
+but for where perl says it said it.
 
 =item B<check> => I<check>
 
@@ -859,7 +877,10 @@ sub _code
 	my ($code, $enc, $src, $check) = @_;
 	$check = $CHECK unless defined $check;
 	my $copy = $src;
-	my $res = eval { $code->($enc, $copy, $check) };
+	my $res = eval {
+		local $SIG{__DIE__} = \&_die_plain;
+		$code->($enc, $copy, $check);
+	};
 	return ($res) if defined $res;
 	(undef, $@ ne '' ? _encode_error($@) : 'undefined');
 }

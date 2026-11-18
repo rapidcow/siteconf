@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-17 23:11-0600\n"
-"PO-Revision-Date: 2026-11-13 12:00-0600\n"
+"PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
 "Language: zh\n"
@@ -67,11 +67,11 @@ msgstr "缺少软依赖，而且指定了 -A。"
 
 #: ../siteconf/script/siteconf:644
 msgid "%#q: not a valid ASCII octal code point"
-msgstr "%s：%s 不是有效的 ASCII 八进制码位"
+msgstr "%#q：不是有效的 ASCII 八进制码位"
 
 #: ../siteconf/script/siteconf:659 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1375
 msgid "%q: expected NEED or WANT, not %q"
-msgstr "%s：应为 NEED 或 WANT，而不是 %q"
+msgstr "%q：应为 NEED 或 WANT，而不是 %q"
 
 #. HEY!  the %s is the separator, as the option that
 #. says it: -0 for a NUL, -012 for a newline
@@ -794,7 +794,7 @@ msgstr "%#q：你的 HAVE %q 不在 ${a}（又名 %q）之下"
 #. HEY! %s is the operating system.
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:356
 msgid "%q: URI not representable in %#q"
-msgstr ""
+msgstr "%q：此 URI 无法表示为 %#q 的文件名"
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:380
 msgid "missing site_url"

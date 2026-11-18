@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-17 23:11-0600\n"
-"PO-Revision-Date: 2026-11-13 12:00-0600\n"
+"PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
 "Language: en\n"
@@ -412,7 +412,7 @@ msgid ""
 "but I need %q?"
 msgstr ""
 "%#q: You HAVE %q (aka %q),\n"
-"but I need %q?but I need %q?"
+"but I need %q?"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1052
 msgid ""
@@ -420,7 +420,7 @@ msgid ""
 "but I need %q?"
 msgstr ""
 "%#q: You HAVE %q,\n"
-"but I need %q?but I need %q?"
+"but I need %q?"
 
 #. HEY!  This and the next three are where a NEED (or a WANT)
 #. was said, and are said in parentheses after what is needed
@@ -482,8 +482,7 @@ msgid ""
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
 "%#q: You HAVE %q (aka %q),\n"
-"but I need %q for the rule for %q (%s)?but I need %q for the rule for %q "
-"(%s)?"
+"but I need %q for the rule for %q (%s)?"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1236
 msgid ""
@@ -491,8 +490,7 @@ msgid ""
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
 "%#q: You HAVE %q,\n"
-"but I need %q for the rule for %q (%s)?but I need %q for the rule for %q "
-"(%s)?"
+"but I need %q for the rule for %q (%s)?"
 
 #. HEY!  the %s is where (`file' line 3); what
 #. follows the colon is why, a line each
@@ -799,7 +797,7 @@ msgstr "%#q: Your HAVE %q is not under ${a} (aka %q)"
 #. HEY! %s is the operating system.
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:356
 msgid "%q: URI not representable in %#q"
-msgstr ""
+msgstr "%q: URI not representable in %#q"
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:380
 msgid "missing site_url"

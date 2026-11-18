@@ -726,34 +726,34 @@ msgid "See also WwW::SiteConf::Configure."
 msgstr "See also WwW::SiteConf::Configure."
 
 #: ../siteconf/share/configure.in:204
-#, fuzzy, perl-brace-format
+#, perl-brace-format
 msgid "cannot find ${A} (aka %q): %m"
-msgstr "cannot find $A (aka %q): %m"
+msgstr "cannot find ${A} (aka %q): %m"
 
 #: ../siteconf/share/configure.in:207
-#, fuzzy, perl-brace-format
+#, perl-brace-format
 msgid "cannot chdir to ${A} (aka %q): %m"
-msgstr "cannot chdir to $A (aka %q): %m"
+msgstr "cannot chdir to ${A} (aka %q): %m"
 
 #: ../siteconf/share/configure.in:215
-#, fuzzy, perl-brace-format
+#, perl-brace-format
 msgid "cannot chdir to ${B} (aka %q): %m"
-msgstr "cannot chdir to $B (aka %q): %m"
+msgstr "cannot chdir to ${B} (aka %q): %m"
 
 #: ../siteconf/share/configure.in:258 ../siteconf/share/configure.in:272
-#, fuzzy, perl-format
+#, perl-format
 msgid "${%s} may not be empty."
-msgstr "%s may not be empty."
+msgstr "${%s} may not be empty."
 
 #: ../siteconf/share/configure.in:265 ../siteconf/share/configure.in:276
-#, fuzzy, perl-format
+#, perl-format
 msgid "${%s} prefix must be a relative path."
-msgstr "%q prefix must be a relative path."
+msgstr "${%s} prefix must be a relative path."
 
 #: ../siteconf/share/configure.in:278
-#, fuzzy, perl-format
+#, perl-format
 msgid "${%s} may not contain a slash."
-msgstr "%q may not contain a slash."
+msgstr "${%s} may not contain a slash."
 
 #: ../siteconf/share/configure.in:281
 msgid "cannot mkdir %q: %m"

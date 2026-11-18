@@ -149,7 +149,7 @@ our @FLAGHELP = (
 	[ '--mkpath', N__('Create non-leaf build directory components') ],
 );
 
-sub _section
+sub section
 {
 	my ($w, @row) = @_;
 	my $text = '';
@@ -181,11 +181,11 @@ $usage = do {
 	$cs->diag(__("usage: %s"), $cs->diag("%#q %s", $prog =>
 		  '[-C codeset ...] [-Dvar=val ...] [-Ovar=val ...] [--reset] [--mkpath] [-hq]'))
 	. "\n\n" . __("The following variables may be defined:") . "\n\n"
-	. _section($w, @VARHELP)
-	. (@OPTHELP ? "\n" . __("Options with defaults:") . "\n\n" . _section($w, @OPTHELP) : '')
+	. section($w, @VARHELP)
+	. (@OPTHELP ? "\n" . __("Options with defaults:") . "\n\n" . section($w, @OPTHELP) : '')
 	. "\n" . __("Anything else you may -D or -O goes into MY/config.mk or MY/option.mk\n"
 		. "respectively, for the rulebook or for the files being transformed.") . "\n"
-	. "\n" . _section($w, @FLAGHELP)
+	. "\n" . section($w, @FLAGHELP)
 	. "\n" . __("See also WwW::SiteConf::Configure.") . "\n";
 };
 

@@ -23,16 +23,18 @@ use RdKw::WwW::GenGenLib 0.0100 qw( read_make write_make );
 use RdKw::I18N::CodeSets ();
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
-my ($cs, $me, $offset);
+my ($cs, $me, $offset, $prog);
+
 BEGIN {
 	$cs = RdKw::I18N::CodeSets->locale;
 	$me = basename($0);
+
 	$cs->parse_from_env('SITECONF_CODESETS', prog => $me);
 	$offset = $cs->parse_from_argv(\@ARGV, prog => $me);
 	$cs->initstd( stderr => Encode::FB_PERLQQ() );
 }
 
-my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
+$prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 
 # Module requirements: [ module, minimum version ]
 our @NEED;

@@ -44,7 +44,6 @@ BEGIN {
 	);
 }
 @PRESET@
-
 BEGIN {
 	my @bad;
 	foreach my $need (@NEED) {

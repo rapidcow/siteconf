@@ -1020,7 +1020,8 @@ my $tt = Template->new({
 	or die "[TT] ", $Template::ERROR, "\n";
 OLD
 		USE_GENLIB => $can_uri
-			? "use RdKw::WwW::GenLib $GENLIB_URI qw( locate file2uri uri2file );"
+			? "use RdKw::WwW::GenLib $GENLIB_URI qw(
+	locate file2uri uri2file );"
 			: $can_valoc
 			? "use RdKw::WwW::GenLib $GENLIB_NEW qw( locate );"
 			: 'use RdKw::WwW::GenLib qw( locate );',

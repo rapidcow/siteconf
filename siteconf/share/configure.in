@@ -32,6 +32,8 @@ BEGIN {
 	$cs->initstd( stderr => Encode::FB_PERLQQ() );
 }
 
+my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
+
 # Module requirements: [ module, minimum version ]
 our @NEED;
 BEGIN {
@@ -65,8 +67,6 @@ BEGIN {
 			$count), $count));
 	}
 }
-
-my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 
 sub to_fs { $cs->to_fs(@_, { prog => $prog }) }
 sub un_fs { $cs->un_fs(@_, { prog => $prog }) }

@@ -885,18 +885,18 @@ sub _code
 	(undef, $@ ne '' ? _encode_error($@) : 'undefined');
 }
 
-=item I<cs>->B<diag_name>( I<name>, inner => 0 )
+=item I<cs>->B<diag_name>( I<name>, soft => 0 )
 
-I<name>, for people: C<`name'> if it is all printable ASCII but for
-C<`> and C<'> (which would confuse the quotes), and
+I<name>, for diagnostics C<`name'> if it is all printable ASCII
+but for C<`> and C<'> (which would confuse the quotes), and
 quoted as Perl would otherwise, with escapes (C<\n>, C<\x{a0}>) for
 what would not show.  Under C<diag_mode> C<ascii>, that is all but
 printable ASCII; under C<unicode>, it is only controls, separators
 and the like (C<\p{C}> and C<\p{Z}>, but for the ASCII space), and
 what B<stderr> cannot spell.
 
-If C<inner> is true, whole words are interpolated verbatim without
-quoting..
+If C<soft> is true, whole words are interpolated verbatim without
+quoting.
 
 =cut
 
@@ -904,7 +904,7 @@ sub diag_name
 {
 	my ($self, $name, %opt) = @_;
 	return undef unless defined $name;
-	if ($opt{inner}) {
+	if ($opt{soft}) {
 		# colons are usually separators and are
 		# therefore "too dangerous" to be included
 		# here :c
@@ -975,7 +975,7 @@ sub diag
 			$i < @args or Carp::croak("diag: missing argument for $spec");
 			my $arg = $args[$i];
 			if ($conv eq 'q') {
-				my $name = $self->diag_name($arg, inner => 0 + ($flags =~ /#/));
+				my $name = $self->diag_name($arg, soft => 0 + ($flags =~ /#/));
 				($arg, $conv) = ($name, 's');
 			}
 			elsif ($conv eq 's') {

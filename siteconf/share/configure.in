@@ -90,9 +90,9 @@ sub isnull
 	!(defined $_[0]) || !(length $_[0]);
 }
 
-# Defaults set by `@PROG@ -i':
-#   %D   definitions, mostly of filesystem routing
-#   %O   options, which alter the state of the build
+# Defaults set by `@PROG@ -i' for:
+#   %D  definitions, mostly of filesystem routing
+#   %O  options, which alter the state of the build
 our %Dd = (
 @DDEF@
 );

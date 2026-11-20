@@ -380,14 +380,12 @@ sub parse_base
 		or die _status 0, tagmsg($prog => __("missing site_url"));
 	$site_url = URI->new($D->{site_url});
 
-	{
-		my $proto = $site_url->scheme;
-		unless (defined $proto and grep { lc($proto) eq $_ } qw( file http https )) {
-			die _status 0, tagmsg($prog => diag(__(
-				"site_url has no file or www URI scheme: %q"),
-				$D->{site_url}));
-		}
-	}
+	# Any scheme will do (http, file, gemini, ...),
+	# but there must be one.
+	defined $site_url->scheme
+		or die _status 0, tagmsg($prog => diag(__(
+		"site_url has no URI scheme: %q"),
+		$D->{site_url}));
 
 	# There is basically no way to see an empty base_url
 	# (given how `configure' usually provides a default),

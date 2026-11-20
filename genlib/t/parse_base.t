@@ -6,7 +6,7 @@ use utf8;
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 11;
 
 use File::Temp qw( tempdir );
 
@@ -22,8 +22,11 @@ use RdKw::WwW::GenLib qw( parse_base );
 
 	%O = (site_url => 'https://example.test/x/', base_url => '/y/');
 	ok(!eval { parse_base(\%O); 1 }, 'path in site_url vs. base_url');
-	%O = (site_url => 'ftp://example.test');
-	ok(!eval { parse_base(\%O); 1 }, 'scheme');
+	%O = (site_url => 'example.test', base_url => '/');
+	ok(!eval { parse_base(\%O); 1 }, 'no scheme');
+	%O = (site_url => 'gemini://example.test', base_url => '/');
+	ok(eval { parse_base(\%O); 1 }, 'non-www scheme') or diag $@;
+	is($O{site_url}, 'gemini://example.test', 'non-www site_url');
 	%O = (base_url => '/');
 	ok(!eval { parse_base(\%O); 1 }, 'missing site_url');
 	like($@, qr/\Aparse_base: /, 'default prog');

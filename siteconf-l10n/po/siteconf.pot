@@ -783,7 +783,7 @@ msgid "missing site_url"
 msgstr ""
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:387
-msgid "site_url has no file or www URI scheme: %q"
+msgid "site_url has no URI scheme: %q"
 msgstr ""
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:404

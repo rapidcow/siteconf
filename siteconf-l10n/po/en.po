@@ -801,8 +801,8 @@ msgid "missing site_url"
 msgstr "missing site_url"
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:387
-msgid "site_url has no file or www URI scheme: %q"
-msgstr "site_url has no file or www URI scheme: %q"
+msgid "site_url has no URI scheme: %q"
+msgstr "site_url has no URI scheme: %q"
 
 #: ../genlib/lib/RdKw/WwW/GenLib.pm:404
 msgid "base_url must begin with a slash"

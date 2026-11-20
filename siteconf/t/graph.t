@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 224;
+use Test::More tests => 228;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -155,6 +155,22 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		my $plan = eval { plan_of($dir, "$dir/build") };
 		ok($plan && $plan->{order} && "@{ $plan->{order} }" eq 'b.css a.html',
 			"B = $B: its own files are made first") or diag $@;
+	}
+}
+
+# --- a tool is a path from the project root, whatever B is
+{
+	for my $tool ('render', '${A}/render') {
+		my $dir = project({
+			MANIFEST => $manifest,
+			'Makefile.in' => "a.html: $tool\n\tcp \${a}/\${\@} \${B}/\${b}/\${\@}\n",
+			'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]] ),
+			render => '',
+		}, B => 'build', A => '..');
+		my $plan = eval { plan_of($dir, "$dir/build") };
+		ok($plan, "tool `$tool', B = build") or diag $@;
+		like($plan ? "@{ $plan->{node}{'a.html'}{deps} }" : '', qr!\A\.\./html/a\.html \.\./render\b!,
+			'... is seen from the build dir');
 	}
 }
 

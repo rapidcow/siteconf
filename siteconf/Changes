@@ -165,6 +165,12 @@ Revision history of WwW-SiteConf
         by make only where the file system spells it so.  A name
         the file system cannot spell is an error.
     *** ./configure will no longer mkdir any path except ${B}/MY.
+
+    ! BUG ! Prerequisites in Makefile.in are paths from the project
+      root, as in a header, and ${A} in one is `.'.  They were taken
+      as seen from the build dir, so a bare `render' was not found
+      when ${B} is not ${A}.
+
     *** The clean rules put at most 16 KiB of file names on each
         `rm -f --' line, and use more lines for more files.
 

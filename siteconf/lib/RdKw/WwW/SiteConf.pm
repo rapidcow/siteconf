@@ -52,7 +52,9 @@ it makes is for the shell, and is written C<$$>, while one from C<$$>
 or a variable is make's), C<:E>, C<:H>, C<:R>, C<:T>
 and C<:S/old/new/> to take names apart (C<${@:R}>); see
 L<RdKw::WwW::SiteConf::Modifiers>.  Targets are named
-relative to C<${b}>, or to C<${c}> if they say so (below).  A prerequisite of a rule (a tool, such as the
+relative to C<${b}>, or to C<${c}> if they say so (below).  Prerequisites are
+paths from the project root, like those in a header (C<${A}> is C<.> there).
+A prerequisite of a rule (a tool, such as the
 renderer) may have a header too: if it does, its C<NEED>s and C<WANT>s
 are the rule's as well, and its C<HAVE>, if any, must be its name as the
 rule spells it.  It needs no header, though.  (This is how the renderer
@@ -948,8 +950,14 @@ sub _read_rules
 						length $word or die _status 0, tagmsg(E => diag(__("%s: %q something?"),
 							$where, "$1:"));
 					}
-					push @{ $rule->{$kind} },
+					# A prerequisite is a path from the project root, as in a
+					# header, where ${A} is `.'.  The graph keeps it as the
+					# build dir sees it.
+					my $dep = do {
+						local $self->{D} = { %{ $self->{D} }, A => '.' };
 						$self->_subst_name($word, $name, $where);
+					};
+					push @{ $rule->{$kind} }, $self->_to_build($dep);
 				}
 			}
 			$recipe->($cmd) if defined $cmd;

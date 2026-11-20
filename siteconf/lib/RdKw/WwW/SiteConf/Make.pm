@@ -45,6 +45,10 @@ use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
+# Bytes of file names per `rm' line.  The least ARG_MAX we know of is
+# 128 KiB for all arguments and the environment (Linux); this is an eighth.
+use constant RM_MAX => 16384;
+
 sub _status { $! = 0; $? = shift; @_; }
 
 # A string as the file system spells it, so that make finds the file;
@@ -70,8 +74,15 @@ sub _emit
 	}
 	for my $rule (@{ $plan->{clean} }) {
 		$out .= $fs->($rule->{name}) . ":\n";
-		$out .= "\trm -f -- " . join(' ', map { $fs->(_quote($_)) } @{ $rule->{files} }) . "\n"
-			if @{ $rule->{files} };
+		# make hands each recipe line to `sh -c' as one argument, which
+		# Linux caps at 128 KiB.  So many files go on several lines.
+		my @file = map { $fs->(_quote($_)) } @{ $rule->{files} };
+		while (@file) {
+			my $line = shift @file;
+			$line .= ' ' . shift @file
+				while @file and length($line) + 1 + length($file[0]) <= RM_MAX;
+			$out .= "\trm -f -- $line\n";
+		}
 	}
 
 	for my $dir (@{ $plan->{dirs} }) {

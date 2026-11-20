@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 24;
+use Test::More tests => 28;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -93,4 +93,18 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make->_emit($_[0]) }
 		&& $@ =~ /letters, digits/, 'a bad name');
 	ok(!eval { plan_of(project($manifest, clean => 'x/&')); 1 }
 		&& $@ =~ /letters, digits/, 'a slash');
+}
+
+# --- many files: several rm lines, none too long, each file once
+{
+	my @file = map { sprintf 'site/%s/%04d.html', 'x' x 100, $_ } 1 .. 500;
+	my $mk = makefile({ D => {}, goals => [], dirs => [], order => [], node => {},
+		clean => [ { name => 'clean', files => [@file] } ] });
+	my @rm = $mk =~ /^\trm -f -- (.*)$/mg;
+	cmp_ok(@rm, '>', 1, 'split over several lines');
+	is(scalar(grep { length > 16384 } @rm), 0, 'every line within the budget');
+	is_deeply([ map { split ' ' } @rm ], \@file, 'each file once, in order');
+	$mk = makefile({ D => {}, goals => [], dirs => [], order => [], node => {},
+		clean => [ { name => 'clean', files => [ 'x' x 20000, 'y' ] } ] });
+	is(scalar(() = $mk =~ /^\trm -f -- /mg), 2, 'a name over the budget has its own line');
 }

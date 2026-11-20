@@ -62,19 +62,19 @@ spew('include/secret', 'secret');
 my ($ok, $out, $err) = render('', '[% INCLUDE secret %]');
 is($out, 'secret', 'by default, what is not declared is loaded') or diag $err;
 spew("$top/out/public/gen.html", 'made');
-($ok, $out, $err) = render('', "[% INCLUDE $top/out/public/gen.html %]");
+($ok, $out, $err) = render('', '[% INCLUDE "$top/out/public/gen.html" %]', { top => $top });
 like("$err", qr/absolute paths are not allowed \(ABSOLUTE is unset\)/,
 	'... as Template::Provider would (ABSOLUTE)');
-($ok, $out, $err) = render('', "[% INCLUDE $top/out/public/gen.html %]", {}, ABSOLUTE => 1);
+($ok, $out, $err) = render('', '[% INCLUDE "$top/out/public/gen.html" %]', { top => $top }, ABSOLUTE => 1);
 is($out, 'made', '... and does, with ABSOLUTE') or diag $err;
 {
 	local $D{B} = "$top/out";
 	($ok, $out, $err) = render("# NEED: \${B}/\${b}/gen.html\n",
-		"[% INCLUDE $top/out/public/gen.html %]");
+		'[% INCLUDE "$top/out/public/gen.html" %]', { top => $top });
 	is($out, 'made', 'a declared dependency is loaded by its absolute name (ALLOW_DEPS)')
 		or diag $err;
 	($ok, $out, $err) = render("# NEED: \${B}/\${b}/gen.html\n",
-		"[% INCLUDE $top/out/public/gen.html %]", {}, ALLOW_DEPS => 0);
+		'[% INCLUDE "$top/out/public/gen.html" %]', { top => $top }, ALLOW_DEPS => 0);
 	like("$err", qr/absolute paths are not allowed/, '... but not without ALLOW_DEPS');
 }
 spew('../up/secret', 'up');

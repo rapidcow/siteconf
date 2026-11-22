@@ -584,6 +584,20 @@ sub _to_build
 	File::Spec->abs2rel(File::Spec->rel2abs($path, $self->{Rabs}), $self->{Babs});
 }
 
+# The characters of a string literal, `"..."'.  (With no prog, what
+# scan_string says has no prefix, and ends in a newline.)
+sub _string
+{
+	my ($self, $lit, $where) = @_;
+	my ($s) = eval { RdKw::WwW::GenGenLib::scan_string($lit, prog => undef) };
+	defined $s or do {
+		# Prefix what scan_string says with a blame line.
+		(my $why = $@) =~ s/^/$where: /gm;
+		die _status 0, tagmsg(E => $why);
+	};
+	$s;
+}
+
 # A path in a header, as one from the project root.  It is relative to
 # the root unless it says otherwise, and may say so with these:
 #
@@ -595,18 +609,6 @@ sub _to_build
 #
 # as well as anything else configured (${c}, ${inc}, ...),
 # and a single letter spelled as $a is as good as ${a}.
-# The characters of a string literal, `"..."', as it is in a header
-sub _string
-{
-	my ($self, $lit, $where) = @_;
-	my ($s) = eval { RdKw::WwW::GenGenLib::scan_string($lit, prog => undef) };
-	defined $s or do {
-		(my $why = $@) =~ s/\A(?:E: )?(?:scan_string: )?//;
-		die _status 0, "E: $where: $why";
-	};
-	$s;
-}
-
 sub _expand
 {
 	my ($self, $spec, $where) = @_;
@@ -967,7 +969,10 @@ sub _subst
 		my $end = eval { RdKw::WwW::SiteConf::Modifiers::_expr_end($line, $i) };
 		defined $end or do {
 			# a `$' at the very end, or before a newline, is a `$'
-			$@ and die _status 0, "E: $where: $@";   # (as Modifiers says it)
+			if ($@) {   # (as Modifiers says it)
+				(my $why = $@) =~ s/^/$where: /gm;
+				die _status 0, tagmsg(E => $why);
+			}
 			$put->('text', '$');
 			$pos = $i + 1;
 			next;
@@ -985,8 +990,8 @@ sub _subst
 				my $rest;
 				($lit, $rest) = eval { RdKw::WwW::GenGenLib::scan_string($body, prog => undef) };
 				defined $lit or do {
-					(my $why = $@) =~ s/\A(?:E: )?(?:scan_string: )?//;
-					die _status 0, "E: $where: $why";
+					(my $why = $@) =~ s/^/$where: /gm;
+					die _status 0, tagmsg(E => $why);
 				};
 				$rest =~ /\A(?::(.*))?\z/s or die _status 0, tagmsg(E => diag(__(
 					# HEY!  the second %s is a string literal, as ${"..."}

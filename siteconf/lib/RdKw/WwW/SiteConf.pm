@@ -151,10 +151,10 @@ too, so quote the name in a recipe with C<:Q>.
 C<:Q> quotes bytes.  A name or a value is spelled as the file system spells it
 first, and C<:Q> (as the last modifier) quotes that.  So a character that the
 encoding spells with an ASCII byte (Shift_JIS spells 表 as C<95 5C>, and a
-C<\> is that byte for a shell) is safe in C<:Q>.  Anywhere else it is an
-error, as no escape could tell make or the shell what it is: a name, a
-variable that is not quoted, and a recipe's own text.  A letter, a digit and
-C<_.+,@-> pass.
+C<\> is that byte for a shell) is safe in C<:Q>, as in
+C<${U+8868:Q}>.  In a name it is an error, as no escape could tell make or
+the shell what it is; a letter, a digit and C<_.+,@-> pass.  The text of a
+recipe, and a variable that is not quoted, are as you write them.
 
 Words are told apart where they are written, never by what a variable
 holds: every word of a target or prerequisite list is one name, however
@@ -680,7 +680,9 @@ sub fs_text
 Not a method.  The recipe I<runs> (see C<_subst>) as bytes, in make's
 words: what the file system spells, with a C<word> quoted for the
 shell last of all, so that no byte of it is read as anything but a
-byte, and with a C<$> of what the shell reads doubled.
+byte, and with a C<$> of what the shell reads doubled.  The text and an
+unquoted variable are the author's: they say C<echo "表"> if they mean it.
+(A name in them was checked, as the name of a file, when it was read.)
 
 =cut
 
@@ -695,7 +697,7 @@ sub recipe_bytes
 		} elsif ($kind eq 'shell') {
 			$out .= _dollars(_to_fs($s));
 		} else {
-			$out .= fs_text($s, $where);
+			$out .= _to_fs($s);
 		}
 	}
 	$out;

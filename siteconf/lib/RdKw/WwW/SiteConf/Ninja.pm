@@ -59,7 +59,8 @@ sub _comment
 {
 	my ($s) = @_;
 	my $b = to_fs($s, { prog => 'E' });
-	$b =~ /[\n\r]/ and die _status 0, tagmsg(E => diag(__(
+	# (vertical space, as in a name)
+	$b =~ /[\n\cK\f\r]/ and die _status 0, tagmsg(E => diag(__(
 		"cannot write a command line with a line break in it: %q"), $s));
 	$b;
 }

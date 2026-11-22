@@ -14,7 +14,7 @@ use Cwd qw( getcwd abs_path );
 use File::Temp qw( tempdir );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
-plan tests => 83;
+plan tests => 85;
 require RdKw::WwW::GenGenLib::Template::Provider;
 Template::Constants->import(qw( STATUS_ERROR STATUS_DECLINED ));
 my $P = 'RdKw::WwW::GenGenLib::Template::Provider';
@@ -309,6 +309,14 @@ ok(!defined $path && !defined $error, '... or neither, if there is none');
 spew('include/allowed', "caf\x{e9}");
 ($ok, $out) = render('', '[% INCLUDE allowed %]');
 is($out, "caf\x{e9}", 'decoded as UTF-8');
+
+# --- JUST-NEED and JUST-WANT: declared, and not read
+spew('include/binary', "# NEED: \${inc}/behind\n");
+spew('site/entry', "[%\n # NEED: \${a}/x\n # JUST-NEED: \${inc}/binary\n # JUST-WANT: \${a}/maybe\n-%]\n");
+$p = provider();
+ok($p->{DECLARED}{'include/binary'} && $p->{DECLARED}{'site/maybe'} && $p->{DECLARED}{'site/x'},
+	'JUST-NEED and JUST-WANT are declared');
+ok(!exists $p->{DECLARED}{'include/behind'}, '... and what they say is not followed');
 
 chdir $cwd or die $!;
 done_testing;

@@ -28,6 +28,7 @@ t/goals.t
 t/strict.t
 t/strings.t
 t/graph.t
+t/just.t
 t/init.t
 t/list.t
 t/manifest.t

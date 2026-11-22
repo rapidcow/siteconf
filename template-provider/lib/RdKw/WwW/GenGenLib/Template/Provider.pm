@@ -38,7 +38,8 @@ C<< RdKw::I18N::CodeSets->locale >>): template names are character
 strings, and one that cannot be spelled there is an error, not a guess.
 
 And it knows what the source declares.  The header of I<SOURCE> (see
-L<RdKw::WwW::GenGenLib/read_deps>) names what it C<NEED>s and C<WANT>s,
+L<RdKw::WwW::GenGenLib/read_deps>) names what it C<NEED>s and C<WANT>s (and what it C<JUST-NEED>s and
+C<JUST-WANT>s, which are declared too, but not read),
 and those name theirs, and so on (see L<RdKw::WwW::GenGenLib/walk_deps>):
 those are its I<declared dependencies>, as the build file has them.
 (Which is which does not matter: a C<NEED> is a declaration, and it is
@@ -145,7 +146,7 @@ use File::Spec ();
 use Template::Constants qw(
 	STATUS_ERROR STATUS_DECLINED );
 use RdKw::WwW::GenGenLib 0.0100 qw(
-	read_deps walk_deps follow_ok
+	read_deps walk_deps follow_ok norm_deps
 	norm_dep subs_dep split_dep
 	escape_dep uproot );
 
@@ -249,6 +250,9 @@ sub new
 				$self->_allowed_root($_[1]) && $follow->(@_);
 			},
 		});
+	# A JUST-NEED or JUST-WANT is declared as well, but is not read.
+	push @all, norm_deps(map { $self->_vars($_); $_ }
+		@{ $I{'JUST-NEED'} || [] }, @{ $I{'JUST-WANT'} || [] });
 	$self->{DECLARED}{ File::Spec->canonpath($source) } = 1;
 	for my $spec (@all) {
 		my $path = $self->_norm($spec);

@@ -92,6 +92,15 @@ prerequisite with a prefix is never the source.
     a.html: NEED:${A}/render NEED:${B}/MY/option.mk WANT:${A}/extra.css
             cd -- ${A:Q} && ${^X} render -B ${B:Q} -- ${a}/${<} ${B:Q}/${b}/${@}
 
+A prerequisite may also be C<JUST:x> (the same as C<JUST-NEED:x>) or
+C<JUST-WANT:x>: it is needed, or wanted, as C<NEED:> and C<WANT:> say, but
+its header is not read, and what it declares is not followed.  That
+is for what is not text, or is not to be looked at.  A tool with
+C<JUST:> need not have a header, and does not have one that counts.
+
+    pack.bin: JUST:${A}/tool.pickle
+            ${A:Q}/pack ${B:Q}/${b:Q}/${@:Q}
+
 A C<;> ends the prerequisites, as it does to make, and what follows it
 is the first line of the recipe; a tab line after it is the next.  (A
 C<;> in a C<${...}>, as in C<${@:S/;/,/}>, is part of that.)
@@ -268,6 +277,20 @@ C<:>, C<#>, C<%>, C<$> and C<\>, and it may not begin with C<->.  So it
 may have slashes, and letters of any script.  The backend then decides
 whether it can say it.
 
+C<JUST-NEED> and C<JUST-WANT> are those two, for a name whose header is
+not read (the header of the source that makes it, for a target, which is
+what a goal names).  They are spelled in full, and the same way in a
+header.  The resolved manifest keeps them: a C<JUST-WANT> that was had
+is a C<JUST-NEED>, and one that was not is commented out.
+
+    MAKE christmas
+        WANT      not-a-lot
+        JUST-NEED one-thing
+
+Whether a header is read is for a file to say once.  One that is a
+C<JUST-NEED> in one place and a C<NEED> in another is an error that
+says where both are.
+
 A name that is also the name of a goal stands for what that goal
 needs, as if its names were written where it is: a C<NEED> of it has
 its C<NEED>s and C<WANT>s as they are, a C<WANT> of it wants them all.
@@ -295,6 +318,10 @@ may hide in):
     # NEED: skel/HTML
     # NEED: ${B}/${b}/style.css
     # WANT: ${A}/data/extra.scm
+    # JUST-NEED: ${B}/${b}/pickle.bin
+
+C<JUST-NEED> and C<JUST-WANT> are the same two, for what is only a name:
+the file is a dependency, but its own header is not read.
 
 Every path here is from the project root, spelled in full, and
 nothing is relative to anything else.  These are expanded first:
@@ -401,6 +428,12 @@ my %reserved_goal = map { $_ => 1 } qw( Makefile MY );
 
 # POSIX white space.
 my $SP = '\t\n\cK\f\r ';
+
+# NEED:, WANT: and the others: whether it is in `deps' or `want', and JUST
+my %PREFIX = (
+	NEED => [ deps => 0 ], WANT => [ want => 0 ],
+	JUST => [ deps => 1 ], 'JUST-NEED' => [ deps => 1 ], 'JUST-WANT' => [ want => 1 ],
+);
 
 # A word of Makefile.in as it is written: a ${...} may hold spaces
 # (in :S/ /_/), and it is all one word.
@@ -913,11 +946,15 @@ sub read_manifest
 					join(' -> ', @path[ (grep { $path[$_] eq $sub->{name} } 0 .. $#path)[0] .. $#path ],
 						$sub->{name})));
 				$resolve->($sub, @path);
+				# (what it stands for is JUST if the one that says it is)
+				my $j = $ent->{just};
+				my @sneed = map { +{ %$_, just => $_->{just} || $j ? 1 : 0 } } @{ $sub->{need} };
+				my @swant = map { +{ %$_, just => $_->{just} || $j ? 1 : 0 } } @{ $sub->{want} };
 				if ($kind eq 'need') {
-					push @need, @{ $sub->{need} };
-					push @want, @{ $sub->{want} };
+					push @need, @sneed;
+					push @want, @swant;
 				} else {
-					push @want, @{ $sub->{need} }, @{ $sub->{want} };
+					push @want, @sneed, @swant;
 				}
 			}
 		}
@@ -1288,17 +1325,18 @@ sub _read_rules
 				# before anything is expanded, and of each word it
 				# expands to.  Nothing else may come before a colon.
 				for my $word (_raw_words($dep)) {
-					my $kind = 'deps';
+					my ($kind, $just) = ('deps', 0);
 					if ($word =~ s/\A([^$SP\$\/:]*)://o) {
-						$1 eq 'NEED' or $1 eq 'WANT'
+						my $pre = $1;
+						my $how = $PREFIX{$pre}
 							or die _status 0, tagmsg(E => diag(__(
-								"%s: %q: a prerequisite must start with "
-								. "either `NEED:' or `WANT:', not %q"),
-								$where, "$1:$word", "$1:"));
-						$kind = $1 eq 'WANT' ? 'want' : 'deps';
+								"%s: %q: a prerequisite must start with NEED:, WANT:,"
+								. " JUST: (or JUST-NEED:) or JUST-WANT:, not %q"),
+								$where, "$pre:$word", "$pre:"));
+						($kind, $just) = @$how;
 						# HEY!  %q is `NEED:' or `WANT:', literally.
 						length $word or die _status 0, tagmsg(E => diag(__("%s: %q something?"),
-							$where, "$1:"));
+							$where, "$pre:"));
 					}
 					# A prerequisite is a path from the project root, as in a
 					# header, where ${A} is `.'.  The graph keeps it as the
@@ -1307,7 +1345,10 @@ sub _read_rules
 						local $self->{D} = { %{ $self->{D} }, A => '.' };
 						$self->_subst_name($word, $name, $where);
 					};
-					push @{ $rule->{$kind} }, $self->_to_build($dep);
+					my $built = $self->_to_build($dep);
+					push @{ $rule->{$kind} }, $built;
+					# (JUST only if every word that says it is)
+					$rule->{ $just ? 'j' : 'nj' }{$built} = 1;
 				}
 			}
 			$recipe->($cmd) if defined $cmd;
@@ -1339,7 +1380,9 @@ sub _read_rules
 # first); `kids' are those.
 sub _node
 {
-	my ($self, $file) = @_;
+	my ($self, $file, $just, $at) = @_;
+	$just = $just ? 1 : 0;
+	$at = __("somewhere") unless defined $at;
 	my $D = $self->{D};
 	if (my $node = $self->{node}{$file}) {
 		if ($node->{visiting}) {
@@ -1349,6 +1392,15 @@ sub _node
 			die _status 0, tagmsg(E => diag(__("dependency cycle: %s"),
 				join(' -> ', map { diag('%q', $_) } @stack, $file)));
 		}
+		# Whether its source's header is read is for the node to say once, not
+		# for whoever comes by: a node that was made without one cannot be
+		# made again with one (what depends on it was checked against it).
+		$node->{just} == $just or die _status 0, tagmsg(E => diag(__(
+			# HEY!  the first %s is where it is JUST (as `in header of x'),
+			# and the second where it is not
+			"%q is a JUST-NEED or JUST-WANT (%s), but a NEED or WANT (%s):"
+			. " its header cannot be both read and not"),
+			$file, $node->{just} ? $node->{just_at} : $at, $node->{just} ? $at : $node->{just_at}));
 		return $node;
 	}
 
@@ -1376,6 +1428,8 @@ sub _node
 		recipe => [],
 		ok => 1,
 		why => [],
+		just => $just,
+		just_at => $at,
 		visiting => 1,
 	};
 	push @{ $self->{stack} }, $file;
@@ -1395,7 +1449,7 @@ sub _node
 	}
 	$node->{recipe} = $rule->{recipe};
 
-	my %I = $nosrc ? () : read_deps($self->_fs($apath));
+	my %I = $nosrc || $just ? () : read_deps($self->_fs($apath));
 	if (defined $I{HAVE}) {
 		# The source's own name, as a header spells it, is the one
 		# the rule says it is: ${A}/${a}/FILE.
@@ -1415,11 +1469,12 @@ sub _node
 	# HEY!  This and the next three are where a NEED (or a WANT)
 	# was said, and are said in parentheses after what is needed
 	my $from = $nosrc ? __("in header") : diag(__("in header of %q"), $apath);
-	my @hneed = map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] };
-	my @hwant = map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{WANT} || [] };
+	my @hneed = $self->_entries(\%I, 'NEED', $where, $from);
+	my @hwant = $self->_entries(\%I, 'WANT', $where, $from);
 	my $rule_at = _blame($D->{R}, $rule->{line});
-	my @rdep = map { [ $_, $_, diag(__("prerequisite in %s"), $rule_at) ] } @{ $rule->{deps} };
-	my @rwant = map { [ $_, $_, diag(__("WANT: in %s"), $rule_at) ] } @{ $rule->{want} || [] };
+	my $just_dep = sub { $rule->{j}{$_[0]} && !$rule->{nj}{$_[0]} ? 1 : 0 };
+	my @rdep = map { [ $_, $_, diag(__("prerequisite in %s"), $rule_at), $just_dep->($_) ] } @{ $rule->{deps} };
+	my @rwant = map { [ $_, $_, diag(__("WANT: in %s"), $rule_at), $just_dep->($_) ] } @{ $rule->{want} || [] };
 	# What the source files we NEED (or WANT) say they need, and so on:
 	# like gcc -MM, which lists the headers of headers.
 	{
@@ -1433,6 +1488,9 @@ sub _node
 			my ($list, $soft) = @_;
 			my $firm = $soft ? 1 : 2;
 			for my $d (@$list) {
+				# (a JUST- is a name: its header is nothing to us, and it
+				# does not count as having been followed)
+				$d->[3] and next;
 				($seen{$d->[1]} || 0) >= $firm and next;
 				$seen{$d->[1]} = $firm;
 				my ($need, $want) = $self->_inherit($d->[1]);
@@ -1448,19 +1506,24 @@ sub _node
 		push @hwant, @more_want;
 		# The same file may have turned up through several others, and
 		# as both: say it once, and a NEED is not a WANT as well
-		my %said;
+		# (it is a JUST- only if every way it is said is)
+		my (%said, %plain);
+		$_->[3] or $plain{$_->[1]} = 1 for @hneed, @hwant;
 		@hneed = grep { !$said{$_->[1]}++ } @hneed;
 		@hwant = grep { !$said{$_->[1]}++ } @hwant;
+		$_->[3] = $plain{$_->[1]} ? 0 : 1 for @hneed, @hwant;
 	}
 	# What the rule's own prerequisites (the tools) say they need, if
 	# they say anything at all
 	for my $dep (@{ $rule->{deps} }) {
+		$just_dep->($dep) and next;
 		my ($need, $want) = $self->_tool($dep, $file, $rule);
 		push @hneed, @$need;
 		push @hwant, @$want;
 	}
 	# (and what a tool we can do without needs, we can do without too)
 	for my $dep (@{ $rule->{want} || [] }) {
+		$just_dep->($dep) and next;
 		my ($need, $want) = $self->_tool($dep, $file, $rule);
 		push @hwant, @$need, @$want;
 	}
@@ -1468,10 +1531,10 @@ sub _node
 	my @deps = $nosrc ? () : ($apath);
 	my %tree = map { File::Spec->canonpath($D->{$_}) => 1 } qw( b c );
 	my $check = sub {
-		my ($said, $dep, $from, $soft) = @_;
+		my ($said, $dep, $from, $just, $soft) = @_;
 		return 1 if $tree{$dep};
 		if (defined(my $made = $self->_target($dep))) {
-			my $kid = $self->_node($made);
+			my $kid = $self->_node($made, $just, $from);
 			unless ($kid->{ok}) {
 				return 0 if $soft;
 				# (a cause per line, each cause deeper than what it breaks)
@@ -1519,6 +1582,17 @@ sub _node
 	$done->();
 }
 
+# What a header (read_deps' `I') says of a kind, `NEED' or `WANT', as
+# [ said, dep, from, just ]: the names of it and of its JUST- (said last)
+sub _entries
+{
+	my ($self, $I, $kind, $where, $from) = @_;
+	(
+		( map { [ $_, $self->_dep($_, $where), $from, 0 ] } @{ $I->{$kind} || [] } ),
+		( map { [ $_, $self->_dep($_, $where), $from, 1 ] } @{ $I->{"JUST-$kind"} || [] } ),
+	);
+}
+
 # The NEEDs and WANTs in the header of `dep' (seen from the build dir),
 # as in _tool, if `dep' is a source file: something we make is not
 # followed (what it takes to make it is the rule's business, and the
@@ -1533,8 +1607,8 @@ sub _inherit
 		my $where = diag('%#q', $dep);
 		my $from = diag(__("in header of %q"), $dep);
 		[
-			[ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] } ],
-			[ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{WANT} || [] } ],
+			[ $self->_entries(\%I, 'NEED', $where, $from) ],
+			[ $self->_entries(\%I, 'WANT', $where, $from) ],
 		];
 	};
 	@$got;
@@ -1598,8 +1672,8 @@ sub _tool
 		my $where = diag('%#q', $dep);
 		my $from = diag(__("in header of %q"), $dep);
 		{
-			need => [ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{NEED} || [] } ],
-			want => [ map { [ $_, $self->_dep($_, $where), $from ] } @{ $I{WANT} || [] } ],
+			need => [ $self->_entries(\%I, 'NEED', $where, $from) ],
+			want => [ $self->_entries(\%I, 'WANT', $where, $from) ],
 		};
 	};
 	($tool->{need}, $tool->{want});
@@ -1642,13 +1716,15 @@ sub plan
 		push @order, $file;
 	};
 	for my $spec (@spec) {
-		my (@files, %iHaz, @dropped);
+		my (@files, %iHaz, @dropped, %just);
 		for my $kind (qw( need want )) {
 			for my $ent (@{ $spec->{$kind} }) {
 				my $file = $ent->{file};
-				my $node = $self->_node($file);
+				my $node = $self->_node($file, $ent->{just},
+					diag(__("in the manifest, %s"), _blame($D->{F}, $ent->{line})));
 				if ($node->{ok}) {
 					next if $iHaz{$file}++;
+					$just{$file} = 1 if $ent->{just};
 					push @files, $file;
 					$add->($file);
 					next;
@@ -1663,13 +1739,13 @@ sub plan
 						_blame($D->{F}, $ent->{line}), $spec->{name}, $file))
 						. $causes->('E');
 				} else {
-					push @dropped, [ $file, $why ];
+					push @dropped, [ $file, $why, $ent->{just} ? 1 : 0 ];
 					$self->_soft(tagmsg(W => diag(__("goal %q WANTs %q, but cannot be made:"),
 						$spec->{name}, $file)), $causes->('W'));
 				}
 			}
 		}
-		push @goal, { name => $spec->{name}, files => \@files, dropped => \@dropped };
+		push @goal, { name => $spec->{name}, files => \@files, dropped => \@dropped, just => \%just };
 	}
 	if (@err) {
 		my $count = @err;
@@ -1829,9 +1905,14 @@ sub manifest_text
 	my ($self, $goal) = @_;
 	my $text = "";
 	$text .= "MAKE $goal->{name}\n";
-	$text .= "\tNEED " . escape_dep($_, unicode => 1) . "\n" for @{ $goal->{files} };
+	# (a JUST-WANT that was had is a JUST-NEED, and one that was not is
+	# in a comment; the keywords begin at the same column)
+	for my $file (@{ $goal->{files} }) {
+		$text .= ($goal->{just}{$file} ? "\tJUST-NEED " : "\tNEED ")
+			. escape_dep($file, unicode => 1) . "\n";
+	}
 	for my $drop (@{ $goal->{dropped} }) {
-		$text .= "#\tWANT $drop->[0]\t# $drop->[1]\n";
+		$text .= ($drop->[2] ? "#\tJUST-WANT " : "#\tWANT ") . "$drop->[0]\t# $drop->[1]\n";
 	}
 	$text;
 }

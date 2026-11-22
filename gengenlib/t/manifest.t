@@ -50,9 +50,9 @@ like($@, qr/\Aread_manifest: MANIFEST: missing goal `nope'$/, '... says so');
 
 my @g = $mf->goals;
 is_deeply($g[0], { name => 'goal', line => 3,
-	need => [ { file => 'sunshine', line => 4 }, { file => 'rainbow', line => 5 } ],
-	want => [ { file => 'disco_ball', line => 6 } ] }, 'goals: with their lines');
-push @{ $g[0]{need} }, { file => 'x', line => 0 };
+	need => [ { file => 'sunshine', line => 4, just => 0 }, { file => 'rainbow', line => 5, just => 0 } ],
+	want => [ { file => 'disco_ball', line => 6, just => 0 } ] }, 'goals: with their lines');
+push @{ $g[0]{need} }, { file => 'x', line => 0, just => 0 };
 $g[0]{need}[0]{file} = 'y';
 is_deeply([ $mf->needed ], [qw( sunshine rainbow )], '... which are copies');
 
@@ -88,7 +88,7 @@ bad("MAKE a\${U+0020}b\n", qr/bad goal name/, 'goal names are not unescaped');
 for my $g ("a\x{a0}b", "a\x{200d}b", "a:b", "a#b", "a%b", 'a$b', 'a\\b', '-a', "a\x{7f}b") {
 	bad("MAKE $g\n", qr/bad goal name/, "goal name " . join '', map { sprintf '\x{%x}', ord } split //, $g);
 }
-bad("FROB x\n", qr/expected MAKE, NEED or WANT, not `FROB'/, 'unknown keyword');
+bad("FROB x\n", qr/expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not `FROB'/, 'unknown keyword');
 bad("# nothing\n", qr/\Aread_manifest: MANIFEST: no goal/, 'empty');
 bad("MAKE a\nNEED a\$b\n", qr/line 2: bad substitution: \$\{b\}$/, 'a variable');
 bad("MAKE a\nNEED \${a}/x\n", qr/bad substitution: \$\{a\}/, '... even a well-known one');
@@ -122,7 +122,7 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	is_deeply([ $mf->needed('default') ], ['food'], 'NEED: food');
 	is_deeply([ $mf->needed('food') ], [ 'some bread', 'a', 'b' ], 'a string, and a name for each word');
 	is_deeply([ $mf->wanted('food') ], [ 'c', 'd', 'e' ], 'WANT:c, WANT: d e');
-	is_deeply([ $mf->goals ]->[1]{need}, [ map { +{ file => $_, line => 4 } } 'some bread', 'a', 'b' ],
+	is_deeply([ $mf->goals ]->[1]{need}, [ map { +{ file => $_, line => 4, just => 0 } } 'some bread', 'a', 'b' ],
 		'every name is on its line');
 	is_deeply([ parse("MAKE feed/表/x\nNEED a\n")->targets ], ['feed/表/x'], 'a goal with a slash and a letter');
 }

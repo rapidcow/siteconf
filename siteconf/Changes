@@ -188,6 +188,14 @@ Revision history of WwW-SiteConf
       of the name of a goal is what that goal needs; a cycle is an
       error.  The name of a rule (a selected goal, a cleaning rule)
       may not be the name of a file, in characters or in bytes.
+    + JUST-NEED and JUST-WANT: a dependency (hard, or soft) whose
+      header is not read, and what is in it is not followed.  In a
+      header, in MANIFEST (JUST-NEED, JUST-WANT, with or without a
+      colon), and in Makefile.in as JUST: (JUST-NEED:) and
+      JUST-WANT:.  For a built file it is the header of its source
+      that is not read.  A file that is JUST in one place and not
+      in another is an error that says where.  The resolved
+      manifest keeps the distinction.
     *** :Q is only a mark for the backend to quote by bytes (and
         write $ in it as $$).  It must be the last modifier, and
         is an error in a prerequisite, a variable assignment, and

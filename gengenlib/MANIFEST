@@ -7,6 +7,7 @@ t/00-load.t
 t/deps.t
 t/make.t
 t/manifest.t
+t/just.t
 t/path.t
 t/string.t
 t/walk.t

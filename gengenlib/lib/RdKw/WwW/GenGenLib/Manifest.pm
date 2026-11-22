@@ -52,6 +52,14 @@ and at nothing else (a no-break space is part of a name).  Indentation
 is only for the eyes.  A C<#> at the start of a line, or after white
 space, begins a comment.  The file is UTF-8.
 
+C<JUST-NEED> and C<JUST-WANT> are those two, for a file whose header
+is not read, and what is in it is not followed (see
+L<RdKw::WwW::GenGenLib/read_deps>); they are spelled out in full.
+
+    MAKE christmas
+        WANT      not-a-lot
+        JUST-NEED one-thing
+
 A keyword may have a colon after it, with or without a space (C<MAKE: all>,
 C<NEED:index.html>).
 
@@ -145,7 +153,7 @@ sub read
 		defined $kw or next;
 		# MAKE:, NEED: and WANT: are those, with a colon (and then
 		# a name may follow it, without a space)
-		if ($kw =~ s/\A(MAKE|NEED|WANT)://) {
+		if ($kw =~ s/\A(MAKE|NEED|WANT|JUST-NEED|JUST-WANT)://) {
 			my $key = $1;
 			unshift @arg, $kw if length $kw;
 			$kw = $key;
@@ -165,7 +173,7 @@ sub read
 				= { name => $name, need => [], want => [], line => $. };
 			next;
 		}
-		if ($kw eq 'NEED' or $kw eq 'WANT') {
+		if ($kw =~ /\A(?:JUST-)?(?:NEED|WANT)\z/) {
 			# HEY!  the second %s is the string "NEED" or "WANT"
 			$goal or die _status 0, tagmsg($prog => diag(__("%s: %s before any MAKE"),
 				_blame($file, $.), $kw));
@@ -185,11 +193,13 @@ sub read
 					_blame($file, $.), $arg));
 				$name =~ /\0/ and die _status 0, tagmsg($prog => diag(__("%s: %q has a NUL in it"),
 					_blame($file, $.), $arg));
-				push @{ $goal->{lc $kw} }, { file => $name, line => $. };
+				(my $key = lc $kw) =~ s/\Ajust-//;
+				push @{ $goal->{$key} }, { file => $name, line => $.,
+					just => $kw =~ /\AJUST-/ ? 1 : 0 };
 			}
 			next;
 		}
-		die _status 0, tagmsg($prog => diag(__("%s: expected MAKE, NEED or WANT, not %q"),
+		die _status 0, tagmsg($prog => diag(__("%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"),
 			_blame($file, $.), $kw));
 	}
 	close $fh or die tagmsg($prog => diag(__("cannot read file %q: %m"), $file));
@@ -233,7 +243,7 @@ sub targets { map { $_->{name} } @{ $_[0]{goals} } }
 =item B<wanted> [ I<goal> ]
 
 The names that I<goal> (the default one, if not given) C<NEED>s, or
-C<WANT>s, in order, as they were in the manifest -- unescaped.  A
+C<WANT>s (also with C<JUST->), in order, as they were in the manifest -- unescaped.  A
 goal that is not there is an error.
 
 =cut
@@ -254,7 +264,8 @@ sub wanted { map { $_->{file} } @{ $_[0]->_goal($_[1])->{want} } }
 
 All goals, in order, with the lines they were on: a list of
 C<< { name, line, need, want } >> hash references, where the latter two
-are lists of C<< { file, line } >>.  These are copies.
+are lists of C<< { file, line, just } >> (C<just> is 1 for a C<JUST-NEED>
+or C<JUST-WANT>, and 0 if not).  These are copies.
 
 =cut
 

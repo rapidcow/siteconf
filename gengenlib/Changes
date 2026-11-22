@@ -55,6 +55,16 @@ Revision history of WwW-GenGenLib
         white space of any script, controls, format characters
         and `:#%$\', not beginning with a hyphen (it was a letter
         or digit, then [-\w.+]).
+    + read_deps: JUST-NEED and JUST-WANT are fields (HAVE, NEED
+      and WANT were the only ones): a name whose header is not
+      read.  A line that has one begins a header now.
+    + walk_deps: NEED, JUST-NEED, WANT and JUST-WANT are all deps.
+      A JUST- one is listed, but is not opened, followed, or put
+      in the graph.  New options: soft (1; with 0 a WANT is as a
+      JUST-WANT) and terminal (0; with 1 only the names whose
+      headers declare nothing are returned).
+    + read_manifest: JUST-NEED and JUST-WANT, with or without a
+      colon; goals() says which names are JUST ({ just }).
     *** write_make writes no header comment ("configured by").
     *** File names are character strings: read_make, write_make,
         update_file, load_state, read_deps, walk_deps and

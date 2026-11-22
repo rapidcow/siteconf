@@ -451,6 +451,14 @@ practice, soft-dependencies are checked at configuration
 time, and if it is missing, it is removed from the
 dependency list, optionally emitting a warning.
 
+=item *
+
+B<JUST-NEED> and B<JUST-WANT> are the same two, but what they name
+is only a name: its own header is not read, and what it declares
+is not followed.  They are for files that are not text (a pickled
+binary, say), or whose header is none of our business.
+(Added in 0.0100.)
+
 =back
 
 This function returns a hash map.  So:
@@ -596,7 +604,7 @@ sub read_deps
 			# What is not ours (USE:, vim:, NEED-ONLY: for now,
 			# and HAVE in any other case) is skipped: it does not
 			# end the header, nor does it begin one.
-			unless ($type =~ /\A(?:HAVE|WANT|NEED)\z/) {
+			unless ($type =~ /\A(?:HAVE|WANT|NEED|JUST-WANT|JUST-NEED)\z/) {
 				last if !$onit and $. >= 32;
 				next;
 			}
@@ -1068,7 +1076,7 @@ sub split_dep
 	($root, $rest);
 }
 
-=item B<walk_deps> \%D, I<spec>... { graph => \%G, follow => \&ok }
+=item B<walk_deps> \%D, I<spec>... { graph => \%G, follow => \&ok, soft => 1, terminal => 0 }
 
 Enumerate all dependencies of a path specification.
 C<\%D> is a required map of variable definitions.
@@ -1079,7 +1087,7 @@ on its way in, so the list returned and the keys of
 C<\%G> are normalized too, and C<$a/x> and C<${a}/x>
 are the same entry.
 
-Return the dependencies of NEEDs and WANTs of the
+Return the dependencies (NEEDs, JUST-NEEDs, WANTs and JUST-WANTs) of the
 given path specifications pooled, recursively with
 the dependents of all relative non-build dependents,
 and update C<\%G> as a side-effect.  This list is
@@ -1089,6 +1097,16 @@ headers are returned without their dependents.
 
 Note that build dependents are solely identified
 symbolically by the C<${B}> prefix.
+
+A C<JUST-NEED> or C<JUST-WANT> is listed, and that is all: the file
+is not opened (so it is not a key of C<\%G> on its account), and
+what it declares is not followed.  A file that is met so first, and as
+anything else later, is read when it is.  With C<< soft => 0 >> (it is
+1 by default), a C<WANT> is like a C<JUST-WANT>: listed, not followed.
+With C<< terminal => 1 >> (0 by default) only the specifications whose
+header declares nothing are returned, and not those in between.  (A
+header that has only a C<JUST-NEED> does declare it.)  The options
+C<soft> and C<terminal> were added in 0.0100.
 
 Every specification the walk comes to is a key of C<\%G>,
 so the graph is a negative cache too.  Its value is:
@@ -1155,16 +1173,20 @@ sub walk_deps
 	my $D = shift;
 	my $G = $kwds->{graph} || +{};
 	my $ok = $kwds->{follow} || \&follow_ok;
+	my $soft = exists $kwds->{soft} ? $kwds->{soft} : 1;
 
 	# Everything is kept in normalized form, so that $a/x and ${a}/x
-	# are one and the same node, whichever way a header spells it
-	my (@pool, %pool);
-	my @todo = reverse norm_deps(@_);
+	# are one and the same node, whichever way a header spells it.
+	# A spec is listed (in @pool) once, but it is expanded (read, and
+	# its own deps followed) the first time it is met as anything but
+	# a JUST-: it may be met as one first, and as a NEED later.
+	my (@pool, %pool, %expanded, %inner);
+	my @todo = map { [ $_, 0 ] } reverse norm_deps(@_);
 
 	while (@todo) {
-		my $spec = pop @todo;
-		next if $pool{$spec}++;
-		push @pool, $spec;
+		my ($spec, $just) = @{ pop @todo };
+		push @pool, $spec unless $pool{$spec}++;
+		next if $just or $expanded{$spec}++;
 		my $Imap = do {
 			if (exists $G->{$spec}) {
 				$G->{$spec};
@@ -1180,12 +1202,20 @@ sub walk_deps
 			}
 		};
 		if (defined $Imap) {
-			push @todo, reverse norm_deps(@{ $Imap->{WANT} || [] });
-			push @todo, reverse norm_deps(@{ $Imap->{NEED} || [] });
+			# (NEED first, in the order the header says; what is pushed
+			# last is popped first)
+			for my $field (qw( JUST-WANT WANT JUST-NEED NEED )) {
+				my @dep = norm_deps(@{ $Imap->{$field} || [] }) or next;
+				$inner{$spec} = 1;
+				# a WANT is not followed if we are not soft: it is as
+				# a JUST-WANT is
+				my $j = $field =~ /\AJUST-/ || ($field eq 'WANT' && !$soft) ? 1 : 0;
+				push @todo, map { [ $_, $j ] } reverse @dep;
+			}
 		}
 	}
 
-	@pool;
+	$kwds->{terminal} ? grep({ !$inner{$_} } @pool) : @pool;
 }
 
 =item B<read_manifest> I<file>[, prog => 'read_manifest' ]

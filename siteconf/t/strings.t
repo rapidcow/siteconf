@@ -148,11 +148,11 @@ for my $tool (qw( GMake Ninja )) {
 }
 {
 	my $dir = project(MANIFEST => "MAKE a\nNEED b\nMAKE b\nNEED c\nMAKE c\nNEED a\n");
-	like(failure($dir), qr/MANIFEST line 6: goals that need themselves: a -> b -> c -> a/, 'a cycle');
+	like(failure($dir), qr/MANIFEST line 6: cyclic goal: a -> b -> c -> a/, 'a cycle');
 	$dir = project(MANIFEST => "MAKE a\nNEED x\nMAKE b\nNEED c\nMAKE c\nNEED b\n");
-	like(failure($dir), qr/line 6: goals that need themselves: b -> c -> b/, 'a cycle, not through the first');
+	like(failure($dir), qr/line 6: cyclic goal: b -> c -> b/, 'a cycle, not through the first');
 	$dir = project(MANIFEST => "MAKE a\nWANT a\n");
-	like(failure($dir), qr/line 2: goals that need themselves: a -> a/, 'a goal that wants itself');
+	like(failure($dir), qr/line 2: cyclic goal: a -> a/, 'a goal that wants itself');
 }
 {
 	# a rule is a file as well: the goal `site/x' and the target site/x

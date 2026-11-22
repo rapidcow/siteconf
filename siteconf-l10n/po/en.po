@@ -295,7 +295,7 @@ msgstr "%s: empty path"
 msgid ""
 "%s: %s is spelled by the file system as %s, which has a byte of ASCII that "
 "is special"
-msgstr ""
+msgstr "%s: %s is spelled by the file system as %s, which has a byte of ASCII that is special"
 
 #. HEY!  The first %s is always where (a file, or `file' line 3),
 #. in this message and in those that follow it
@@ -319,15 +319,15 @@ msgstr "%s: %q is a reserved goal name"
 #. goals which ends in the beginning
 #. node; e.g. `a -> b -> a'.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:946
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: cyclic goal: %s"
-msgstr "%q: no goal %q"
+msgstr "%s: cyclic goal: %s"
 
 #. HEY!  the second %s is a string literal, as ${"..."}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1037
 #, perl-format
 msgid "%s: junk after the string in %s"
-msgstr ""
+msgstr "%s: junk after the string in %s"
 
 #. HEY!  the second %s is what is in Makefile.in, as ${U+...}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1059
@@ -361,25 +361,23 @@ msgstr "%s: undefined variable: %s"
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1093
 #, perl-format
 msgid ":Q (shell quote) is not valid in %s"
-msgstr ""
+msgstr ":Q (shell quote) is not valid in %s"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1094
-#, fuzzy
 msgid "a name"
-msgstr "bad name: %q"
+msgstr "a name"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1095
 msgid ":Q (shell quote) must be the last modifier"
-msgstr ""
+msgstr ":Q (shell quote) must be the last modifier"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1100
 msgid "a nested expansion"
-msgstr ""
+msgstr "a nested expansion"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1126
-#, fuzzy
 msgid "a prerequisite"
-msgstr "prerequisite in %s"
+msgstr "a prerequisite"
 
 #. HEY!  The first %s is where, the second what is in Makefile.in
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1130
@@ -393,13 +391,13 @@ msgstr "%s: %q: target is not preceded by a legal prefix (${b} or ${c})"
 
 #. HEY!  the second %s is a variable, as ${name}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1197
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: %s is already defined"
-msgstr "%s: goal %q is already made"
+msgstr "%s: %s is already defined"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1213
 msgid "a variable assignment"
-msgstr ""
+msgstr "a variable assignment"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1264
 #, perl-format
@@ -423,12 +421,10 @@ msgid "%s: null target list"
 msgstr "%s: null target list"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1335
-#, fuzzy
 msgid ""
 "%s: %q: a prerequisite must start with NEED:, WANT:, JUST: (or JUST-NEED:) "
 "or JUST-WANT:, not %q"
-msgstr ""
-"%s: %q: a prerequisite must start with either `NEED:' or `WANT:', not %q"
+msgstr "%s: %q: a prerequisite must start with NEED:, WANT:, JUST: (or JUST-NEED:) or JUST-WANT:, not %q"
 
 #. HEY!  %q is `NEED:' or `WANT:', literally.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1340
@@ -441,7 +437,7 @@ msgstr "%s: invalid line: %q"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1387
 msgid "somewhere"
-msgstr ""
+msgstr "somewhere"
 
 #. HEY!  %s is the files, as `a' -> `b' -> `a'
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1394
@@ -455,7 +451,7 @@ msgstr "dependency cycle: %s"
 msgid ""
 "%q is a JUST-NEED or JUST-WANT (%s), but a NEED or WANT (%s): its header "
 "cannot be both read and not"
-msgstr ""
+msgstr "%q is a JUST-NEED or JUST-WANT (%s), but a NEED or WANT (%s): its header cannot be both read and not"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1419
 msgid "%q: %q is reserved for directory markers. (Set -De to change it.)"
@@ -563,9 +559,9 @@ msgstr ""
 "but I need %q for the rule for %q (%s)?"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1726
-#, fuzzy, perl-format
+#, perl-format
 msgid "in the manifest, %s"
-msgstr "read_manifest: %s: %s"
+msgstr "in the manifest, %s"
 
 #. HEY!  the %s is where (`file' line 3); what
 #. follows the colon is why, a line each
@@ -592,7 +588,7 @@ msgstr[1] "%d problems; no Makefile for you."
 #. in other bytes: the file system and the arguments can differ)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1805
 msgid "%q is the name of a rule, and a file (%q) is as well"
-msgstr ""
+msgstr "%q is the name of a rule, and a file (%q) is as well"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1835
 msgid "%q: expected a goal name"
@@ -657,12 +653,12 @@ msgstr "GNU make cannot name %q (reserved for archive members)"
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:66
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Ninja.pm:64
 msgid "cannot write a command line with a line break in it: %q"
-msgstr ""
+msgstr "cannot write a command line with a line break in it: %q"
 
 #. HEY!  the second %s is the value, which has a line break
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:113
 msgid "%s: make cannot spell a line break in %q (it ends a command)"
-msgstr ""
+msgstr "%s: make cannot spell a line break in %q (it ends a command)"
 
 #. HEY!  the %s is a character, as `$' or U+0020.
 #. You don't need to keep the ";)"; it's just
@@ -686,9 +682,8 @@ msgstr "unterminated %q"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Modifiers.pm:162
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Modifiers.pm:166
-#, fuzzy
 msgid "bad escape %q in :S"
-msgstr "bad escape %s"
+msgstr "bad escape %q in :S"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Modifiers.pm:194
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Modifiers.pm:252
@@ -716,7 +711,7 @@ msgstr "unknown modifier %q"
 #. HEY!  the second %s is the value, which has a line break
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Ninja.pm:100
 msgid "%s: ninja cannot spell a line break in %q (it ends a command)"
-msgstr ""
+msgstr "%s: ninja cannot spell a line break in %q (it ends a command)"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Ninja.pm:103
 msgid "%#q: no recipe to make it (and ninja has no way to make nothing)"
@@ -946,13 +941,12 @@ msgid "bad name: %q"
 msgstr "bad name: %q"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:322
-#, fuzzy
 msgid "unterminated string: %q"
-msgstr "unterminated %q"
+msgstr "unterminated string: %q"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:326
 msgid "bad escape or code point in string: %q"
-msgstr ""
+msgstr "bad escape or code point in string: %q"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:380
 msgid "cannot rename %q to %q: %m"
@@ -984,14 +978,12 @@ msgid "cannot normalize %q: bad Unicode code point %s"
 msgstr "cannot normalize %q: bad Unicode code point %s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:807
-#, fuzzy
 msgid "cannot normalize %q: bad escape or code point in string %s"
-msgstr "cannot normalize %q: bad Unicode code point %s"
+msgstr "cannot normalize %q: bad escape or code point in string %s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:814
-#, fuzzy
 msgid "cannot normalize %q: bad string after ${"
-msgstr "cannot normalize %q: trailing $"
+msgstr "cannot normalize %q: bad string after ${"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:825
 msgid "cannot normalize %q: trailing $"
@@ -1047,9 +1039,9 @@ msgstr "%s: %s before any MAKE"
 
 #. HEY!  the second %s is the string "NEED" or "WANT"
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:181
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: %s takes a file (use # for comments)"
-msgstr "%s: %s takes exactly one file (use # for comments)"
+msgstr "%s: %s takes a file (use # for comments)"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:192
 msgid "%s: %q is empty"
@@ -1060,9 +1052,8 @@ msgid "%s: %q has a NUL in it"
 msgstr "%s: %q has a NUL in it"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:202
-#, fuzzy
 msgid "%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"
-msgstr "%s: expected MAKE, NEED or WANT, not %q"
+msgstr "%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"
 
 #. HEY!  It's singular because "no mind to think,
 #. no will to break, no voice to cry suffering..."

@@ -295,7 +295,7 @@ msgstr "%s：路径为空"
 msgid ""
 "%s: %s is spelled by the file system as %s, which has a byte of ASCII that "
 "is special"
-msgstr ""
+msgstr "%s：文件系统将 %s 表示为 %s，其中有一个具有特殊含义的 ASCII 字节"
 
 #. HEY!  The first %s is always where (a file, or `file' line 3),
 #. in this message and in those that follow it
@@ -319,15 +319,15 @@ msgstr "%s：%q 是保留的目标名"
 #. goals which ends in the beginning
 #. node; e.g. `a -> b -> a'.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:946
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: cyclic goal: %s"
-msgstr "%q：不存在目标 %q"
+msgstr "%s：目标循环依赖：%s"
 
 #. HEY!  the second %s is a string literal, as ${"..."}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1037
 #, perl-format
 msgid "%s: junk after the string in %s"
-msgstr ""
+msgstr "%s：%s 中的字符串之后有多余的内容"
 
 #. HEY!  the second %s is what is in Makefile.in, as ${U+...}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1059
@@ -361,25 +361,23 @@ msgstr "%s：未定义的变量：%s"
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1093
 #, perl-format
 msgid ":Q (shell quote) is not valid in %s"
-msgstr ""
+msgstr ":Q（shell 引用）不能用于%s"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1094
-#, fuzzy
 msgid "a name"
-msgstr "名称有误：%q"
+msgstr "名称"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1095
 msgid ":Q (shell quote) must be the last modifier"
-msgstr ""
+msgstr ":Q（shell 引用）必须是最后一个修饰符"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1100
 msgid "a nested expansion"
-msgstr ""
+msgstr "嵌套展开"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1126
-#, fuzzy
 msgid "a prerequisite"
-msgstr "%s 中的先决条件"
+msgstr "先决条件"
 
 #. HEY!  The first %s is where, the second what is in Makefile.in
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1130
@@ -393,13 +391,13 @@ msgstr "%s：%#q：目标前面没有合法的前缀（${b} 或 ${c}）"
 
 #. HEY!  the second %s is a variable, as ${name}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1197
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: %s is already defined"
-msgstr "%s：目标 %q 已经有了"
+msgstr "%s：%s 已经定义过了"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1213
 msgid "a variable assignment"
-msgstr ""
+msgstr "变量赋值"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1264
 #, perl-format
@@ -423,11 +421,10 @@ msgid "%s: null target list"
 msgstr "%s：目标列表为空"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1335
-#, fuzzy
 msgid ""
 "%s: %q: a prerequisite must start with NEED:, WANT:, JUST: (or JUST-NEED:) "
 "or JUST-WANT:, not %q"
-msgstr "%s：%#q：先决条件必须以 `NEED:' 或 `WANT:' 开头，而不是 %q"
+msgstr "%s：%q：先决条件必须以 NEED:、WANT:、JUST:（或 JUST-NEED:）或 JUST-WANT: 开头，而不是 %q"
 
 #. HEY!  %q is `NEED:' or `WANT:', literally.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1340
@@ -440,7 +437,7 @@ msgstr "%s：无效的行：%q"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1387
 msgid "somewhere"
-msgstr ""
+msgstr "某处"
 
 #. HEY!  %s is the files, as `a' -> `b' -> `a'
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1394
@@ -454,7 +451,7 @@ msgstr "依赖循环：%s"
 msgid ""
 "%q is a JUST-NEED or JUST-WANT (%s), but a NEED or WANT (%s): its header "
 "cannot be both read and not"
-msgstr ""
+msgstr "%q 在（%s）中是 JUST-NEED 或 JUST-WANT，在（%s）中却是 NEED 或 WANT：它的头部不能既读取又不读取"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1419
 msgid "%q: %q is reserved for directory markers. (Set -De to change it.)"
@@ -562,9 +559,9 @@ msgstr ""
 "但 %4$q 的规则（%5$s）需要的是 %3$q？"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1726
-#, fuzzy, perl-format
+#, perl-format
 msgid "in the manifest, %s"
-msgstr "read_manifest: %s：%s"
+msgstr "在清单中，%s"
 
 #. HEY!  the %s is where (`file' line 3); what
 #. follows the colon is why, a line each
@@ -590,7 +587,7 @@ msgstr[0] "%d 个问题；不给你 Makefile。"
 #. in other bytes: the file system and the arguments can differ)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1805
 msgid "%q is the name of a rule, and a file (%q) is as well"
-msgstr ""
+msgstr "%q 是一条规则的名称，而文件（%q）也是这个名称"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1835
 msgid "%q: expected a goal name"
@@ -655,12 +652,12 @@ msgstr "GNU make 无法表示 %q（它会被当成归档成员）"
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:66
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Ninja.pm:64
 msgid "cannot write a command line with a line break in it: %q"
-msgstr ""
+msgstr "无法写入含有换行的命令行：%q"
 
 #. HEY!  the second %s is the value, which has a line break
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Make.pm:113
 msgid "%s: make cannot spell a line break in %q (it ends a command)"
-msgstr ""
+msgstr "%s：make 无法表示 %q 中的换行（换行会结束命令）"
 
 #. HEY!  the %s is a character, as `$' or U+0020.
 #. You don't need to keep the ";)"; it's just
@@ -684,9 +681,8 @@ msgstr "%q 没有结束"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Modifiers.pm:162
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Modifiers.pm:166
-#, fuzzy
 msgid "bad escape %q in :S"
-msgstr "转义有误：%s"
+msgstr ":S 中的转义 %q 有误"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Modifiers.pm:194
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Modifiers.pm:252
@@ -714,7 +710,7 @@ msgstr "未知的修饰符 %q"
 #. HEY!  the second %s is the value, which has a line break
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Ninja.pm:100
 msgid "%s: ninja cannot spell a line break in %q (it ends a command)"
-msgstr ""
+msgstr "%s：ninja 无法表示 %q 中的换行（换行会结束命令）"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Ninja.pm:103
 msgid "%#q: no recipe to make it (and ninja has no way to make nothing)"
@@ -943,13 +939,12 @@ msgid "bad name: %q"
 msgstr "名称有误：%q"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:322
-#, fuzzy
 msgid "unterminated string: %q"
-msgstr "%q 没有结束"
+msgstr "字符串 %q 没有结束"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:326
 msgid "bad escape or code point in string: %q"
-msgstr ""
+msgstr "字符串中的转义或码位有误：%q"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:380
 msgid "cannot rename %q to %q: %m"
@@ -981,14 +976,12 @@ msgid "cannot normalize %q: bad Unicode code point %s"
 msgstr "无法规范化 %q：%s 不是有效的 Unicode 码位"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:807
-#, fuzzy
 msgid "cannot normalize %q: bad escape or code point in string %s"
-msgstr "无法规范化 %q：%s 不是有效的 Unicode 码位"
+msgstr "无法规范化 %q：字符串 %s 中的转义或码位有误"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:814
-#, fuzzy
 msgid "cannot normalize %q: bad string after ${"
-msgstr "无法规范化 %q：末尾有 $"
+msgstr "无法规范化 %q：${ 之后的字符串有误"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:825
 msgid "cannot normalize %q: trailing $"
@@ -1044,9 +1037,9 @@ msgstr "%s：%s 出现在任何 MAKE 之前"
 
 #. HEY!  the second %s is the string "NEED" or "WANT"
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:181
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: %s takes a file (use # for comments)"
-msgstr "%s：%s 只接受一个文件（注释请用 #）"
+msgstr "%s：%s 后面要跟文件名（注释请用 #）"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:192
 msgid "%s: %q is empty"
@@ -1057,9 +1050,8 @@ msgid "%s: %q has a NUL in it"
 msgstr "%s：%q 中有 NUL"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:202
-#, fuzzy
 msgid "%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"
-msgstr "%s：应为 MAKE、NEED 或 WANT，而不是 %q"
+msgstr "%s：应为 MAKE、NEED、WANT、JUST-NEED 或 JUST-WANT，而不是 %q"
 
 #. HEY!  It's singular because "no mind to think,
 #. no will to break, no voice to cry suffering..."

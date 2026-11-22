@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 40;
+use Test::More tests => 36;
 
 use File::Temp qw( tempdir );
 # (what is said is said as it is written, whatever the locale)
@@ -39,8 +39,6 @@ sub bad {
 	like($@, $re, "$what: says why");
 }
 bad("NEED x\n", qr/NEED before any MAKE/, 'orphan');
-bad("MAKE a\nNEED x y\n", qr/exactly one file/, 'two files (old format?)');
-bad("MAKE a\nNEED x\tdescription\n", qr/exactly one file/, 'description');
 bad("MAKE a\nNEED /etc/passwd\n", qr/must be relative/, 'absolute');
 bad("MAKE a\nNEED ../x\n", qr/out of tree/, 'dotdot');
 # Accept either quoting style in the error returned by GenGenLib.

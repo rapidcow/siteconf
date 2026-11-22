@@ -33,11 +33,11 @@ MAKE small
     NEED present
     WANT absent
 MAKE other
-    NEED other
+    NEED other.html
 M
-put('Makefile.in', "present other partial: \n\tcp \${a}/\${\@} \${b}/\${\@}\n");
+put('Makefile.in', "present other.html partial: \n\tcp \${a}/\${\@} \${b}/\${\@}\n");
 put('html/present', 'present');
-put('html/other', 'other');
+put('html/other.html', 'other');
 put('html/partial', "# NEED: missing-dependency\n");
 write_make("$dir/MY/config.mk", {
 	A => '.', B => '.', a => 'html', b => 'site', c => 'site', e => '.ok',

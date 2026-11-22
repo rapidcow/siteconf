@@ -110,6 +110,19 @@ sub _expr_end
 			$i++;
 		} elsif ($c eq '{') {
 			$depth++;
+			# ${"...": a string, which may hold braces and is closed
+			# by its own quote
+			if ($i == $pos + 1 && substr($str, $i + 1, 1) eq '"') {
+				my $j = $i + 2;
+				while ($j < $len) {
+					my $d = substr($str, $j, 1);
+					if ($d eq '\\') { $j += 2; next }
+					last if $d eq '"';
+					$j++;
+				}
+				$j < $len or die _status 0, diag(__("unterminated %q"), substr($str, $pos)) . "\n";
+				$i = $j;
+			}
 		} elsif ($c eq '}') {
 			return $i + 1 unless --$depth;
 		}

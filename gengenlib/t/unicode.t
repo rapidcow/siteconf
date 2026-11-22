@@ -52,7 +52,7 @@ is($bad, "x\x{D800}", '... leaving the name be');
 	cmp_ok(write_make($f, { name => 'résumé' }, prog => 'test'), '==', 2, 'write_make: created');
 	ok(-f fs($f), '... under its locale name');
 	is_deeply({ read_make($f) }, { name => 'résumé' }, 'read_make: by character name');
-	cmp_ok(update_file($f, "#\n# configured by `test'\n#\nname=\trésumé\n"), '==', 0,
+	cmp_ok(update_file($f, "name=\trésumé\n"), '==', 0,
 		'update_file: unchanged is unchanged');
 }
 

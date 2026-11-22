@@ -6,7 +6,7 @@ use utf8;
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 60;
+use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -79,11 +79,15 @@ sub bad {
 	like($@, $re, "$what: says why");
 }
 bad("NEED x\n", qr/\Aread_manifest: MANIFEST line 1: NEED before any MAKE$/, 'orphan');
-bad("MAKE a\nNEED x y\n", qr/line 2: NEED takes exactly one file/, 'two files');
-bad("MAKE a\nNEED x\cKy\n", qr/exactly one file/, 'vertical tab is a blank');
+bad("MAKE a\nNEED\n", qr/line 2: NEED takes a file/, 'no file');
+bad("MAKE a\nNEED:\n", qr/line 2: NEED takes a file/, '... with a colon');
+bad("MAKE a b\n", qr/exactly one goal/, 'two goals');
 bad("MAKE a\nMAKE a\n", qr/line 2: goal `a' is already made/, 'duplicate goal');
 bad("MAKE\n", qr/exactly one goal/, 'nameless goal');
 bad("MAKE a\${U+0020}b\n", qr/bad goal name/, 'goal names are not unescaped');
+for my $g ("a\x{a0}b", "a\x{200d}b", "a:b", "a#b", "a%b", 'a$b', 'a\\b', '-a', "a\x{7f}b") {
+	bad("MAKE $g\n", qr/bad goal name/, "goal name " . join '', map { sprintf '\x{%x}', ord } split //, $g);
+}
 bad("FROB x\n", qr/expected MAKE, NEED or WANT, not `FROB'/, 'unknown keyword');
 bad("# nothing\n", qr/\Aread_manifest: MANIFEST: no goal/, 'empty');
 bad("MAKE a\nNEED a\$b\n", qr/line 2: bad substitution: \$\{b\}$/, 'a variable');
@@ -110,3 +114,17 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	ok(!eval { read_manifest("$dir/nope"); 1 }, 'missing: dies');
 	like($@, qr/\Aread_manifest: cannot open file `\Q$dir\E\/nope': /, 'missing: says why');
 }
+
+# --- keywords with colons, many names to a line, goal names, strings
+{
+	my $mf = parse("MAKE: default\n\tNEED: food\nMAKE:food\n  NEED: \${\"some\\sbread\"} a b\n  WANT:c\n  WANT: d e\n");
+	is_deeply([ $mf->targets ], [ 'default', 'food' ], 'MAKE: with a colon, and with none after it');
+	is_deeply([ $mf->needed('default') ], ['food'], 'NEED: food');
+	is_deeply([ $mf->needed('food') ], [ 'some bread', 'a', 'b' ], 'a string, and a name for each word');
+	is_deeply([ $mf->wanted('food') ], [ 'c', 'd', 'e' ], 'WANT:c, WANT: d e');
+	is_deeply([ $mf->goals ]->[1]{need}, [ map { +{ file => $_, line => 4 } } 'some bread', 'a', 'b' ],
+		'every name is on its line');
+	is_deeply([ parse("MAKE feed/表/x\nNEED a\n")->targets ], ['feed/表/x'], 'a goal with a slash and a letter');
+}
+
+done_testing;

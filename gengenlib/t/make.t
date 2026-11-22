@@ -77,7 +77,7 @@ my $dir = tempdir(CLEANUP => 1);
 	is($line{kana}, 'ディレクトリ é', 'letters of any script are letters');
 	is($line{dollar}, 'a$b ${$}{x} $', 'a $ is a $, but for one before a {');
 	is($line{lit}, 'a${$}{U+20}b ${$}{$}', 'an escape that is not one is spelled out');
-	is($text =~ tr/\n//, 3 + keys %v, 'a line for each, and no more');
+	is($text =~ tr/\n//, keys %v, 'a line for each, and no more');
 
 	cmp_ok(write_make($f, \%v, prog => 'test'), '==', 0, 'the same values, the same file');
 

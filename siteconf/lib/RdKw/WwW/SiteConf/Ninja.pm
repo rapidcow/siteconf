@@ -94,7 +94,10 @@ NINJA
 	my $n = 0;
 	for my $file (@{ $plan->{order} }) {
 		my $node = $plan->{node}{$file};
-		my $command = _command(RdKw::WwW::SiteConf::recipe_bytes($node->{recipe}));
+		my $command = _command(RdKw::WwW::SiteConf::recipe_bytes($node->{recipe},
+			line_break => __(
+				# HEY!  the second %s is the value, which has a line break
+				"%s: ninja cannot spell a line break in %q (it ends a command)")));
 		defined $command and length $command
 			or die _status 0, tagmsg(E => diag(__(
 				"%#q: no recipe to make it (and ninja has no"

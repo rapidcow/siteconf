@@ -52,15 +52,21 @@ and at nothing else (a no-break space is part of a name).  Indentation
 is only for the eyes.  A C<#> at the start of a line, or after white
 space, begins a comment.  The file is UTF-8.
 
-C<MAKE> takes the name of a goal: a letter or digit, then letters,
-digits, C<_>, C<->, C<.> and C<+>, and nothing to escape.  A goal is
-only made once.
+A keyword may have a colon after it, with or without a space (C<MAKE: all>,
+C<NEED:index.html>).
 
-C<NEED> and C<WANT> take one name each, which belongs to the last
-C<MAKE> and is unescaped as a spec of B<subs_deps> without definitions
-is (see L<RdKw::WwW::GenGenLib/escape_dep>, which writes one): C<${$}>
+C<MAKE> takes the name of a goal: any characters but white space
+(of any script, a no-break space too), controls, format characters
+(a zero-width joiner, say), and C<:>, C<#>, C<%>, C<$> and C<\>, not
+beginning with a hyphen.  So it may have a slash, and letters of any
+script.  There is nothing to escape.  A goal is only made once.
+
+C<NEED> and C<WANT> take any number of names, which belong to the last
+C<MAKE>; each is split off at white space, and is unescaped as a spec
+of B<subs_deps> without definitions is (see L<RdKw::WwW::GenGenLib/escape_dep>, which writes one): C<${$}>
 or C<$$> is a C<$>, C<${U+>I<hex>C<}> is that character (C<${U+0020}>
-for a space, C<${U+0023}> for a C<#> that is no comment), and a
+for a space, C<${U+0023}> for a C<#> that is no comment, and C<${"...">C<}>
+for a string, as in C<${"some\sbread"}>: see B<scan_string>), and a
 leading C<${A}/> is the root and is dropped, as it is in a header.
 Any other variable, and any malformed C<$>, is an error, and so is a
 name that is nothing, or that has a NUL in it.  What a name I<may> be
@@ -87,6 +93,11 @@ sub _status { $! = 0; $? = shift; @_; }
 # POSIX white space since [[:space:]] is too broad.
 # (This is the same character set used in SiteConf.pm)
 my $SP = '\t\n\cK\f\r ';
+
+# What a goal may be called: anything that is a name to make and ninja
+# alike, that is no white space (of any script), control or format
+# character, and none of `: # % $ \'; and no hyphen to begin with
+my $GOAL = qr/\A(?!-)[^\s\p{Cc}\p{Cf}:#%\$\\]+\z/;
 
 =item B<read> I<file>
 
@@ -132,12 +143,19 @@ sub read
 		s/(?:^|[$SP])#.*//so;
 		my ($kw, @arg) = /([^$SP]+)/go;
 		defined $kw or next;
+		# MAKE:, NEED: and WANT: are those, with a colon (and then
+		# a name may follow it, without a space)
+		if ($kw =~ s/\A(MAKE|NEED|WANT)://) {
+			my $key = $1;
+			unshift @arg, $kw if length $kw;
+			$kw = $key;
+		}
 		if ($kw eq 'MAKE') {
 			@arg == 1 or die _status 0, tagmsg($prog => diag(__(
 				"%s: MAKE takes exactly one goal name"),
 				_blame($file, $.)));
 			my $name = $arg[0];
-			$name =~ /\A[A-Za-z0-9][-\w.+]*\z/
+			$name =~ /$GOAL/
 				or die _status 0, tagmsg($prog => diag(__("%s: bad goal name %q"),
 				_blame($file, $.), $name));
 			$goal{$name} and die _status 0, tagmsg($prog => diag(__(
@@ -152,21 +170,23 @@ sub read
 			$goal or die _status 0, tagmsg($prog => diag(__("%s: %s before any MAKE"),
 				_blame($file, $.), $kw));
 			# HEY!  the second %s is the string "NEED" or "WANT"
-			@arg == 1 or die _status 0, tagmsg($prog => diag(__("%s: %s takes exactly one file"
+			@arg or die _status 0, tagmsg($prog => diag(__("%s: %s takes a file"
 				. " (use # for comments)"), _blame($file, $.), $kw));
-			my $name = eval { subs_deps(undef, $arg[0],
-				{ strict => 1, on_missing => 'croak', prog => undef }) };
-			defined $name or do {
-				# Prefix subs_deps' error message with our name
-				# and a blame line.
-				(my $why = $@) =~ s/^/_blame($file, $.) . ": "/gem;
-				die _status 0, tagmsg($prog => $why);
-			};
-			length $name or die _status 0, tagmsg($prog => diag(__("%s: %q is empty"),
-				_blame($file, $.), $arg[0]));
-			$name =~ /\0/ and die _status 0, tagmsg($prog => diag(__("%s: %q has a NUL in it"),
-				_blame($file, $.), $arg[0]));
-			push @{ $goal->{lc $kw} }, { file => $name, line => $. };
+			for my $arg (@arg) {
+				my $name = eval { subs_deps(undef, $arg,
+					{ strict => 1, on_missing => 'croak', prog => undef }) };
+				defined $name or do {
+					# Prefix subs_deps' error message with our name
+					# and a blame line.
+					(my $why = $@) =~ s/^/_blame($file, $.) . ": "/gem;
+					die _status 0, tagmsg($prog => $why);
+				};
+				length $name or die _status 0, tagmsg($prog => diag(__("%s: %q is empty"),
+					_blame($file, $.), $arg));
+				$name =~ /\0/ and die _status 0, tagmsg($prog => diag(__("%s: %q has a NUL in it"),
+					_blame($file, $.), $arg));
+				push @{ $goal->{lc $kw} }, { file => $name, line => $. };
+			}
 			next;
 		}
 		die _status 0, tagmsg($prog => diag(__("%s: expected MAKE, NEED or WANT, not %q"),

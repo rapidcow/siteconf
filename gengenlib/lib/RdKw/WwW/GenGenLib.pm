@@ -65,7 +65,8 @@ our @EXPORT_OK = qw(
 	read_deps norm_deps norm_dep subs_deps subs_dep
 	escape_vars escape_var
 	escape_deps escape_dep
-	unescape_vars unescape_vars
+	unescape_vars unescape_var
+	scan_string
 	unescape_deps unescape_deps
 	split_dep walk_deps follow_ok
 	enroot uproot
@@ -148,8 +149,8 @@ sub read_make
 =item B<write_make> I<file>, \%vars[, prog => 'write_make']
 
 The reverse of B<read_make>, through B<update_file>.  Keys are
-sorted by length, then alphabetically.  I<prog> is credited in the
-header comment.  Values are escaped by B<escape_var>.
+sorted by length, then alphabetically.  Values are escaped by B<escape_var>.
+There is no header: I<prog> is only for errors.
 
 Errors are prefixed with I<prog>, else C<'write_make'>.
 The I<prog> option and escaped values were added in 0.0100.
@@ -162,10 +163,7 @@ sub write_make
 	my $prog = _getprog(\%opt, 'write_make');
 	# quoting with $cs->diag in case $prog contains
 	# a newline, and breaks the whole file for us.
-	my $text = defined $prog && length $prog
-		? RdKw::I18N::CodeSets->new(diag => 'ascii')
-		->diag("#\n# configured by %q\n#\n", $prog)
-		: "";
+	my $text = "";
 	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
 		my $v = defined $H->{$k} ? $H->{$k} : '';
 		$k =~ /\A[^\s=#]+\z/ or die _status 0, tagmsg(
@@ -261,10 +259,72 @@ sub unescape_vars
 sub unescape_var
 {
 	my ($text) = @_;
-	$text =~ s{\$\{(?:(\$)|[Uu]\+([0-9A-Fa-f]{1,8}))\}}{
-		defined $1 ? '$' : chr hex $2
-	}ge;
+	$text =~ s{\$\{(?:(\$)|[Uu]\+([0-9A-Fa-f]{1,8})|"((?:[^"\\]|\\.)*)")\}}{
+		my $all = $&;
+		defined $1 ? '$'
+		: defined $2 ? chr hex $2
+		: do { my $s = _decode_string($3); defined $s ? $s : $all }
+	}gesx;
 	$text;
+}
+
+=item B<scan_string> I<text>[, prog => 'scan_string']
+
+If I<text> starts with a string literal, return its characters and what
+follows its closing quote; else return nothing.  A string is in double
+quotes, and a backslash begins one of these:
+
+    \a \b \t \n \v \f \r \e   the control characters of C
+    \s                        a space
+    \x{HEX}                   a code point (1 to 8 hex digits)
+    \\ \"                     a backslash, a double quote
+
+Anything else after a backslash, a code point above U+10FFFF, and a
+string that is not closed are errors.  Nothing else is special in
+there, so C<$> and C<}> are as they are.
+
+A string is spelled C<${"...">C<}> in a value or a name, where it is the
+same as C<${U+...}> for each of its characters, or the C<"..."> alone,
+where the caller says it is one.  B<unescape_vars> and B<norm_deps>
+read C<${"...">C<}>; a string that is malformed is left as it is by
+the former.  The code point of C<\x{...}> may be written
+C<\x{3b1}> as well as C<\x{03B1}>.
+
+Added in 0.0100.
+
+=cut
+
+my %ESCAPE = (
+	a => "\a", b => "\b", t => "\t", n => "\n", v => "\cK", f => "\f",
+	r => "\r", e => "\e", s => ' ', '\\' => '\\', '"' => '"',
+);
+
+# The characters of the inside of a string literal, or undef if it
+# has an escape that is not one
+sub _decode_string
+{
+	my ($body) = @_;
+	my $bad;
+	$body =~ s{\\(?:x\{([0-9A-Fa-f]{1,8})\}|(.))}{
+		defined $1 ? (hex($1) <= 0x10FFFF ? chr hex $1 : ($bad = 1, ''))
+		: exists $ESCAPE{$2} ? $ESCAPE{$2}
+		: ($bad = 1, '')
+	}gesx;
+	$bad ? undef : $body;
+}
+
+sub scan_string
+{
+	my ($text, %opt) = @_;
+	my $prog = _getprog(\%opt, 'scan_string');
+	$text =~ /\A"/ or return;
+	$text =~ /\A"((?:[^"\\]|\\.)*)"/s or die _status 0, tagmsg($prog => diag(__(
+		"unterminated string: %q"), $text));
+	my ($body, $end) = ($1, $+[0]);
+	my $s = _decode_string($body);
+	defined $s or die _status 0, tagmsg($prog => diag(__(
+		"bad escape or code point in string: %q"), substr($text, 0, $end)));
+	($s, substr($text, $end));
 }
 
 =item B<update_file> I<file>, I<text>[, prog => I<prog>, raw => 1]
@@ -729,6 +789,23 @@ sub norm_deps
 						$_, "\${$name}"));
 					$out .= ($keep ? '$' : '${$}') . "{$name}";
 				}
+			} elsif (/\G\$\{("(?:[^"\\]|\\.)*")\}/gc) {
+				# A string: each character of it is one
+				my $str = $1;
+				my $s = _decode_string(substr $str, 1, -1);
+				if (defined $s) {
+					$out .= join '', map { sprintf '${U+%04X}', ord } split //, $s;
+				} else {
+					$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
+						"cannot normalize %q: bad escape or code point in string %s"),
+						$_, $str));
+					$out .= ($keep ? '$' : '${$}') . "{$str}";
+				}
+			} elsif (/\G\$\{"/gc) {
+				# (not closed, or something after it)
+				$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
+					"cannot normalize %q: bad string after \${"), $_));
+				$out .= ($keep ? '$' : '${$}') . '{"';
 			} elsif (/\G\$\{([^}]+)\}/gc) {
 				$out .= "\${$1}";
 			} elsif (/\G\$([\w\$])/gc) {

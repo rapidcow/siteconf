@@ -44,6 +44,18 @@ Revision history of WwW-GenGenLib
         Any other ${U+...} is malformed.
     * split_dep: an escaped $ (${$}) or character (${U+...}) is
       no root.
+    + scan_string: a string literal ("..." with \a \b \t \n \v \f \r
+      \e \s \\ \" \x{hex}) at the start of a text, and what follows
+      it.  ${"..."} is each of its characters to norm_deps (so to
+      subs_deps, split_dep and read_deps), unescape_vars and
+      read_make's values, and the manifest's names.
+    *** read_manifest: a keyword may have a colon (MAKE:, NEED:,
+        WANT:); NEED and WANT take any number of names at a time
+        (it was exactly one); a goal name is any characters but
+        white space of any script, controls, format characters
+        and `:#%$\', not beginning with a hyphen (it was a letter
+        or digit, then [-\w.+]).
+    *** write_make writes no header comment ("configured by").
     *** File names are character strings: read_make, write_make,
         update_file, load_state, read_deps, walk_deps and
         read_manifest spell them as RdKw::I18N::CodeSets says

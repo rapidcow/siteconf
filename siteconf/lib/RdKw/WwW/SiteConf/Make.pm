@@ -107,7 +107,10 @@ sub _emit
 
 	for my $file (@{ $plan->{order} }) {
 		my $node = $plan->{node}{$file};
-		my $recipe = RdKw::WwW::SiteConf::recipe_bytes($node->{recipe});
+		my $recipe = RdKw::WwW::SiteConf::recipe_bytes($node->{recipe},
+			line_break => __(
+				# HEY!  the second %s is the value, which has a line break
+				"%s: make cannot spell a line break in %q (it ends a command)"));
 		$recipe .= "\n" if length $recipe and $recipe !~ /\n\z/;
 		my @deps = map { $name->($_) } @{ $node->{deps} };
 		$out .= $name->($node->{bpath}) . ": @deps\n" . $recipe;

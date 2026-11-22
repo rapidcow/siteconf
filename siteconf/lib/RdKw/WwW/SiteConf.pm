@@ -8,6 +8,8 @@ use version;
 our $VERSION = '0.03_00';
 $VERSION = version->parse( $VERSION );
 
+=encoding utf8
+
 =head1 NAME
 
 RdKw::WwW::SiteConf - read the build graph of a configured source tree
@@ -178,6 +180,61 @@ would take the rest of the list with it:
     # why this is spelled out
         ${a}/site/${.TARGET}
 
+=item String literals
+
+Where a character may be said as C<${U+>I<hex>C<}> (in a name, in a
+recipe, in a header, in F<MANIFEST>, in F<MY/config.mk>), a string may
+be as well: C<${"...">C<}> is each of its characters.  Inside a string,
+a backslash begins one of C<\a \b \t \n \v \f \r \e> (the controls of C),
+C<\s> (a space), C<\\>, C<\">, or C<\x{>I<hex>C<}> (a code point, in
+braces, to make clear it is one); anything else is an error.  Nothing
+else is special, so C<$> and C<}> are as they are.  Modifiers go after
+it, in Makefile.in: C<${"表":Q}>.
+
+A string says what is said; it is I<not> quoted.  That is for C<:Q>,
+and what is quoted by bytes, last, is for the backend to say or not: a
+C<${"\n":Q}> is an error to make and to ninja, as a line break ends a
+command to both, and C<${"Icon\r":Q}> is not.
+
+=item F<Makefile.in> variables
+
+A line that begins with a name, C<=>, and a value is a variable.  The
+name is C<\w+> (letters of any script, digits and C<_>), and no other
+character; C<U+...> and the names that begin with a dot are for us.
+
+    dir = feed            # a comment, after a blank
+    from = ${a}/${dir}    # a variable that is there already
+    表 = 表
+    text = h u h
+        a${"\s"}
+         b
+        # not a comment${"\s"}
+    # a comment
+        c
+        ${""}
+
+    ${dir}/index.html: ${from}/index.md
+            echo ${text:Q} ${表:Q}
+
+Only the first C<=> counts.  The value is what follows it, up to a
+C<#> that follows a blank, without the blanks around it.  The lines
+that follow, each beginning with a tab, are more of it: they are joined
+by a line break (one tab is removed from each, and the blanks at its end,
+so a space that is to stay is C<${"\s"}>), and a C<#> in one is just a
+C<#>.  Comment lines and blank lines between them are skipped; a tab and
+nothing else is an empty line, and so is C<${""}> (the example's text
+ends with a line break).  If the first line says nothing, the value
+begins with the next.
+
+The value is expanded where it is: a variable in it is what it is now,
+and it is no more than text after that.  C<:Q> is an error in it, as
+a variable has no shell.  It is an error to define what is defined
+already, in F<config.mk> or above.  A variable is known to what follows
+it (a recipe, as much as a prerequisite or a target; for a target, only
+a variable that is defined here) and to nothing else: a header does not
+see it.  The value of a variable that is not quoted is text in a
+recipe, as it is.
+
 =item F<MANIFEST> (C<F>)
 
 The goals of the build, each a L<make(1)> target:
@@ -187,19 +244,45 @@ The goals of the build, each a L<make(1)> target:
         WANT extra/index.html     # soft: dropped, with a warning
 
     MAKE small
-        NEED index.html
+        NEED index.html about.html
 
 Indentation is only for the eyes.  A C<#> preceded by whitespace
 (or at the start of the line) begins a comment.  File names are
-relative to C<${a}> (and made in C<${b}>).
+relative to C<${a}> (and made in C<${b}>).  Each keyword may have a
+colon after it (C<MAKE: all>, C<NEED: index.html>).  C<NEED> and
+C<WANT> take any number of names, split at white space as everywhere
+else.
 
 A file name is unescaped as a header's is (see
 L<RdKw::WwW::GenGenLib::Manifest>): C<${$}> is a C<$> and
-C<${U+>I<hex>C<}> a character, as in C<r${U+00E9}sum${U+00E9}.html>; and
-there are no variables.  A goal name is not.  What it comes to must
-still be a permitted target name: spaces are allowed with GNU make
-or Ninja, but C<$>, C<#>, C<:> and the like are not; nothing absolute,
-and no C<..>.
+C<${U+>I<hex>C<}> a character, as in C<r${U+00E9}sum${U+00E9}.html>, and
+C<${"...">C<}> is the characters of a string (see below); there are no
+variables.  What it comes to must still be a permitted target name:
+spaces are allowed with GNU make or Ninja, but C<$>, C<#>, C<:> and the
+like are not; nothing absolute, and no C<..>.
+
+A goal name is not unescaped.  It may be anything but white space (of
+any script: a no-break space too), a control or format character, and
+C<:>, C<#>, C<%>, C<$> and C<\>, and it may not begin with C<->.  So it
+may have slashes, and letters of any script.  The backend then decides
+whether it can say it.
+
+A name that is also the name of a goal stands for what that goal
+needs, as if its names were written where it is: a C<NEED> of it has
+its C<NEED>s and C<WANT>s as they are, a C<WANT> of it wants them all.
+
+    MAKE default
+        NEED: food
+
+    MAKE food
+        NEED: ${"some\sbread"} jam
+
+A goal that needs itself, directly or through others, is an error.
+No file may have the name of a rule, which is a goal that is made, or a
+cleaning rule.  That is checked for the characters of both, and for the
+bytes that the file system and the arguments make of them.  So C<MAKE
+site/index.html> clashes with the file F<site/index.html>, unless that
+goal was not asked for (C<-t>).
 
 =item the files themselves
 
@@ -283,7 +366,7 @@ use File::Basename qw( dirname basename );
 use File::Spec ();
 
 # Import locale and set up gettext.
-use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs tagmsg );
+use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs to_argv tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use RdKw::WwW::GenGenLib 0.0100 qw(
@@ -320,11 +403,13 @@ my $SP = '\t\n\cK\f\r ';
 
 # A word of Makefile.in as it is written: a ${...} may hold spaces
 # (in :S/ /_/), and it is all one word.
-my $WORD = qr/(?:[^$SP\$]|\$(?!\{)|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\})+/;
+my $STR = qr/"(?:[^"\\]|\\.)*"/s;
+my $BRACED = qr/\$\{(?:$STR)?(?:[^{}\\]|\\.|\{[^{}]*\})*\}/s;
+my $WORD = qr/(?:[^$SP\$]|\$(?!\{)|$BRACED)+/;
 
 # The prerequisites of a rule: up to a `;', which begins its recipe,
 # as in `a: b ; cp b a' -- but not one in a ${...} (:S/;/,/), nor $;
-my $PREREQ = qr/(?:[^;\$]|\$\{(?:[^{}\\]|\\.|\{[^{}]*\})*\}|\$[^{]|\$\z)*/;
+my $PREREQ = qr/(?:[^;\$]|$BRACED|\$[^{]|\$\z)*/;
 
 # The words of `s' as written (see $WORD).  Whatever is not one (an
 # unfinished ${, say) is the last, for _subst to say what is wrong.
@@ -510,6 +595,18 @@ sub _to_build
 #
 # as well as anything else configured (${c}, ${inc}, ...),
 # and a single letter spelled as $a is as good as ${a}.
+# The characters of a string literal, `"..."', as it is in a header
+sub _string
+{
+	my ($self, $lit, $where) = @_;
+	my ($s) = eval { RdKw::WwW::GenGenLib::scan_string($lit, prog => undef) };
+	defined $s or do {
+		(my $why = $@) =~ s/\A(?:E: )?(?:scan_string: )?//;
+		die _status 0, "E: $where: $why";
+	};
+	$s;
+}
+
 sub _expand
 {
 	my ($self, $spec, $where) = @_;
@@ -535,6 +632,8 @@ sub _expand
 			$out .= $1;
 		} elsif ($spec =~ /\G\$(?:\{\$\}|\$)/gc) {
 			$out .= '$';
+		} elsif ($spec =~ /\G\$\{($STR)\}/gc) {
+			$out .= $self->_string($1, $where);
 		} elsif ($spec =~ /\G\$\{([Uu]\+[^}]*)\}/gc) {
 			my $u = $1;
 			$u =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ and hex($1) <= 0x10FFFF
@@ -688,10 +787,15 @@ unquoted variable are the author's: they say C<echo "表"> if they mean it.
 
 sub recipe_bytes
 {
-	my ($runs) = @_;
+	my ($runs, %opt) = @_;
 	my $out = '';
 	for (@$runs) {
 		my ($kind, $s, $where) = @$_;
+		# A line break in a value is the end of the command to make (and
+		# ninja), whatever quotes the shell would see around it: whether
+		# that can be said at all is for the backend (`line_break').
+		$kind ne 'text' && $s =~ /\n/ && $opt{line_break} and
+			die _status 0, tagmsg(E => diag($opt{line_break}, $where, $s));
 		if ($kind eq 'word') {
 			$out .= _dollars(shell_quote(_to_fs($s)));
 		} elsif ($kind eq 'shell') {
@@ -772,12 +876,57 @@ sub read_manifest
 
 	# (what it reads, it reads; what we cannot have, in the order it is said)
 	my @goal = $mf->goals;
+	my %goal;
 	for my $goal (@goal) {
 		my $name = $goal->{name};
 		$reserved_goal{$name} || $self->_is_clean($name)
 			and die _status 0, tagmsg(E => diag(__(
 				"%s: %q is a reserved goal name"),
 				_blame($file, $goal->{line}), $name));
+		$goal{$name} = $goal;
+	}
+
+	# A name that is the name of a goal is that goal: what it makes is
+	# what the name stands for (a NEED has the NEEDs and WANTs of it as
+	# they are, a WANT wants them all), and that is said wherever it
+	# was, in the order it was said.  A goal that comes back to itself
+	# is an error.
+	my (%done, %busy);
+	my $resolve; $resolve = sub {
+		my ($goal, @path) = @_;
+		return if $done{$goal->{name}};
+		$busy{$goal->{name}} = 1;
+		push @path, $goal->{name};
+		my (@need, @want);
+		for my $kind (qw( need want )) {
+			for my $ent (@{ $goal->{$kind} }) {
+				my $sub = $goal{$ent->{file}};
+				unless ($sub) {
+					push @{ $kind eq 'need' ? \@need : \@want }, $ent;
+					next;
+				}
+				$busy{$sub->{name}} and die _status 0, tagmsg(E => diag(__(
+					# HEY!  the second %s is a chain of goals, as `a -> b -> a'
+					"%s: goals that need themselves: %s"),
+					_blame($file, $ent->{line}),
+					join(' -> ', @path[ (grep { $path[$_] eq $sub->{name} } 0 .. $#path)[0] .. $#path ],
+						$sub->{name})));
+				$resolve->($sub, @path);
+				if ($kind eq 'need') {
+					push @need, @{ $sub->{need} };
+					push @want, @{ $sub->{want} };
+				} else {
+					push @want, @{ $sub->{need} }, @{ $sub->{want} };
+				}
+			}
+		}
+		($goal->{need}, $goal->{want}) = (\@need, \@want);
+		delete $busy{$goal->{name}};
+		$done{$goal->{name}} = 1;
+	};
+	$resolve->($_) for @goal;
+
+	for my $goal (@goal) {
 		_check_file($_->{file}, _blame($file, $_->{line}))
 			for sort { $a->{line} <=> $b->{line} }
 				@{ $goal->{need} }, @{ $goal->{want} };
@@ -829,16 +978,33 @@ sub _subst
 			next;
 		}
 		my $body = substr($line, $i + 1, $end - $i - 1);
-		my ($x, $mods) = ($body, undef);
+		my ($x, $mods, $lit) = ($body, undef, undef);
 		if ($body =~ s!\A\{(.*)\}\z!$1!s) {
-			($x, $mods) = $body =~ /\A([^:]*)(?::(.*))?\z/s;
+			if ($body =~ /\A"/) {
+				# a string literal, and maybe modifiers after it
+				my $rest;
+				($lit, $rest) = eval { RdKw::WwW::GenGenLib::scan_string($body, prog => undef) };
+				defined $lit or do {
+					(my $why = $@) =~ s/\A(?:E: )?(?:scan_string: )?//;
+					die _status 0, "E: $where: $why";
+				};
+				$rest =~ /\A(?::(.*))?\z/s or die _status 0, tagmsg(E => diag(__(
+					# HEY!  the second %s is a string literal, as ${"..."}
+					"%s: junk after the string in %s"), $where, "\${$body}"));
+				$mods = $1;
+				$x = '';
+			} else {
+				($x, $mods) = $body =~ /\A([^:]*)(?::(.*))?\z/s;
+			}
 		}
 		# `${A}/x' with an A of `.' would leave `./x' behind, so
 		# it takes its slash with it.
 		my $slash = substr($line, $end, 1) eq '/' ? '/' : '';
 		$pos = $end + length $slash;
 		my $val;
-		if ($x eq '$') {
+		if (defined $lit) {
+			$val = $lit;
+		} elsif ($x eq '$') {
 			$val = '$';
 		} elsif ($x =~ /\A[Uu]\+/) {
 			# a character, as in a header (see _expand)
@@ -878,6 +1044,8 @@ sub _subst
 				RdKw::WwW::SiteConf::Modifiers::_apply($val, $mods,
 					quote => sub {
 						my ($v, $last) = @_;
+						$self->{noquote} and die diag(__(
+							":Q is for the shell of a recipe, and a variable has none")) . "\n";
 						# the last one is the backend's, by bytes
 						return $word = $v if $runs && $last;
 						$q = 1;
@@ -947,7 +1115,11 @@ sub _read_target
 	}
 	# (as it was written, unless it said a tree)
 	defined $rest or $rest = $spec;
-	$rest =~ s/(\$\{[Uu]\+[^}]*\})/$self->_subst($1, undef, $where)/ge;
+	$rest =~ s/(\$\{(?:[Uu]\+[^}]*|$STR)\})/$self->_subst($1, undef, $where)/ge;
+	# and what Makefile.in assigned (not what is configured: ${a} is not
+	# for a name in ${b})
+	my $assigned = $self->{assigned} || {};
+	$rest =~ s/\$\{(\w+)\}/$assigned->{$1} ? $self->{D}{$1} : "\${$1}"/ge;
 	$rest =~ /\$/ and die _status 0, tagmsg(E => diag(__(
 		'%s: %q: target is not preceded by'
 		. ' a legal prefix (${b} or ${c})'),
@@ -971,6 +1143,44 @@ sub _source_of
 	$rest;
 }
 
+# `name = value' in Makefile.in: its lines after the first, which begin
+# with a tab (and are the rest of the value, one line each), and a
+# comment line or a blank one in between, are read here.  The value is
+# what the first line says after a `#' (that follows a blank) and the
+# blanks around it are cut off, then the lines, each as it is but for
+# the tab in front and the blanks behind it, joined by a line break.
+# It is expanded now, so a variable of it is what it is now.  It cannot
+# be quoted (that is for the shell of a recipe), and what is defined
+# already cannot be again.  The lines are `get'; `pending' (and its
+# number) is where one read too far is put back, `lineno' the number
+# of the one last read.
+sub _assign
+{
+	my ($self, $name, $first, $get, $pending, $pending_no, $lineno, $where) = @_;
+	exists $self->{D}{$name} and die _status 0, tagmsg(E => diag(__(
+		# HEY!  the second %s is a variable, as ${name}
+		"%s: %s is already defined"), $where, "\${$name}"));
+	$first =~ s/\r?\n\z//;
+	$first =~ s/(?:\A|[$SP])#.*//s;
+	$first =~ s/\A[$SP]+|[$SP]+\z//g;
+	my @part = length $first ? ($first) : ();
+	while (defined(my $next = $get->())) {
+		if ($next =~ /\A\t(.*)\z/s) {
+			(my $t = $1) =~ s/[$SP]+\z//;
+			push @part, $t;
+			next;
+		}
+		next if $next =~ /\A[$SP]*#(?:[$SP]|\z)/o or $next =~ /\A[$SP]*\z/o;
+		# (the line we are on, that we got last, is its number)
+		($$pending, $$pending_no) = ($next, $$lineno);
+		last;
+	}
+	local $self->{noquote} = 1;
+	my $val = $self->_subst(join("\n", @part), undef, $where);
+	$self->{D} = { %{ $self->{D} }, $name => $val };
+	$self->{assigned}{$name} = 1;
+}
+
 # Makefile.in => { target => { recipe, deps, src, line } }
 #
 # The first prerequisite of a rule, if it is in ${a} (see _source_of),
@@ -979,24 +1189,41 @@ sub _source_of
 sub _read_rules
 {
 	my ($self) = @_;
+	# (an assignment adds to what we see, here and nowhere else)
+	local $self->{D} = $self->{D};
+	local $self->{assigned} = {};
 	my $D = $self->{D};
 	my $file = File::Spec->canonpath($D->{R});
 	open my $fh, '<:encoding(UTF-8)', _to_fs($file)
 		or die tagmsg(E => diag(__("cannot open file %q: %m"), $file));
 
+	# A line of the file; one that was read too far is given back
+	my ($lineno, $pending, $pending_no) = (0);
+	my $get = sub {
+		if (defined $pending) {
+			$lineno = $pending_no;
+			my $l = $pending;
+			undef $pending;
+			return $l;
+		}
+		my $l = <$fh>;
+		$lineno++ if defined $l;
+		$l;
+	};
+
 	my (%rule, @node, $stanza);
-	while (<$fh>) {
+	while (defined($_ = $get->())) {
 		next if /\A[$SP]*#(?:[$SP]|\z)/o or /\A[$SP]*\z/o;
-		my $line = $.;
+		my $line = $lineno;
 		my $where = _blame($D->{R}, $line);
 		# Fold rule headers before deciding whether an indented line
 		# is a recipe.  Recipe backslashes belong to make/the shell.
 		unless (/^\t/) {
 			while (/(?<!\\)(?:\\\\)*\\\r?\n\z/) {
 				s/[ \t]*\\\r?\n\z/ /;
-				my $next = <$fh>;
+				my $next = $get->();
 				# a comment line does not end the header (nor is it in it)
-				$next = <$fh> while defined $next and
+				$next = $get->() while defined $next and
 					$next =~ /\A[$SP]*#(?:[$SP]|\z)/o;
 				defined $next or die _status 0, tagmsg(E => diag(__(
 					"%s: unfinished line continuation"), $where));
@@ -1016,7 +1243,7 @@ sub _read_rules
 				}
 				$rule->{stanza} = $stanza;
 				# (not yet: ${<} may be said further down)
-				push @{ $rule->{raw} }, [ $text, $where ];
+				push @{ $rule->{raw} }, [ $text, $where, $self->{D} ];
 			}
 		};
 		if (/^\t/) {
@@ -1025,6 +1252,11 @@ sub _read_rules
 				# with no rule above it to be the recipe of
 				"%s: unexpected tabulation"), $where));
 			$recipe->($_);
+			next;
+		}
+		if (/\A(\w+)[ \t]*=(.*)\z/s) {
+			@node = ();
+			$self->_assign($1, $2, $get, \$pending, \$pending_no, \$lineno, $where);
 			next;
 		}
 		if (/:/) {
@@ -1095,6 +1327,8 @@ sub _read_rules
 		# or a variable is make's, but one in what a :Q made is the shell's
 		# (the backend writes it $$).  Quoting is by bytes, so it is theirs.
 		for (@{ $rule->{raw} }) {
+			# (as the variables were when the line was read)
+			local $self->{D} = $_->[2];
 			$self->_subst($_->[0], $rule->{name}, $_->[1], $src, $rule->{recipe});
 		}
 		delete $rule->{raw};
@@ -1478,6 +1712,27 @@ sub plan
 
 	my @clean = $self->_clean_rules(\@goal, \@order, \@dir);
 
+	# A rule (of a goal that we make, or to clean) is not a file
+	{
+		my %rule = map { $_->{name} => 1 } @goal, @clean;
+		my %rule_arg;
+		for (keys %rule) {
+			my $b = eval { to_argv($_, { prog => 'E' }) };
+			$rule_arg{$b} = $_ if defined $b;
+		}
+		for my $file (map({ $_->{bpath} } @{ $self->{node} }{@order}),
+				map { $_->{dir}, $_->{marker} } @dir) {
+			my $b = eval { _to_fs($file) };
+			my $clash = $rule{$file} ? $file : defined $b ? $rule_arg{$b} : undef;
+			defined $clash and die _status 0, tagmsg(E => diag(__(
+				# HEY!  the first %s is a name that is of a goal (or a
+				# cleaning rule), and the second the file (it may be spelled
+				# in other bytes: the file system and the arguments can differ)
+				"%q is the name of a rule, and a file (%q) is as well"),
+				$clash, $file));
+		}
+	}
+
 	+{
 		goals => \@goal,
 		node => { map { $_ => $self->{node}{$_} } @order },
@@ -1576,7 +1831,7 @@ The goal, resolved, in the format of the manifest.
 sub manifest_text
 {
 	my ($self, $goal) = @_;
-	my $text = "#\n# resolved by `$self->{prog} -g'\n#\n";
+	my $text = "";
 	$text .= "MAKE $goal->{name}\n";
 	$text .= "\tNEED " . escape_dep($_, unicode => 1) . "\n" for @{ $goal->{files} };
 	for my $drop (@{ $goal->{dropped} }) {

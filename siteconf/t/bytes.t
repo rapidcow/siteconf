@@ -99,15 +99,13 @@ CODE
 	is(hex_of($got), hex_of($want), 'iso-2022-jp: a word comes back as it was, with its ESC and $');
 }
 
-# Text is not quoted, so it is checked
+# Text is the author's, as is (echo "表" is what they meant); so is a
+# variable that is not quoted
 $out = in_enc('cp932', <<'CODE');
-my @t = ([ text => "\x{3042}", 'a' ], [ text => "\x{8868}", 'Makefile.in line 3' ]);
-for my $r (@t) {
-	my $b = eval { RdKw::WwW::SiteConf::recipe_bytes([ $r ]) };
-	print defined $b ? "ok\n" : "no: $@";
-}
+binmode STDOUT;
+print RdKw::WwW::SiteConf::recipe_bytes([ [ text => "echo \"\x{8868}\"", 'Makefile.in line 3' ] ]);
 CODE
-like($out, qr/\Aok\nno: .*Makefile\.in line 3: U\+8868 is spelled /, 'text is checked, with where it is') or diag $out;
+is(hex_of($out), hex_of("echo \"\x95\x5c\""), 'text is bytes as it is, whatever they are') or diag $out;
 
 # What it does for UTF-8 (every byte of a character is above ASCII)
 $out = in_enc('UTF-8', <<'CODE');

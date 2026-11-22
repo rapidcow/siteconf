@@ -8,6 +8,7 @@ t/deps.t
 t/make.t
 t/manifest.t
 t/path.t
+t/string.t
 t/walk.t
 t/unicode.t
 t/lib/TestConsole.pm

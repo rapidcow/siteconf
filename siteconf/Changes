@@ -168,6 +168,32 @@ Revision history of WwW-SiteConf
         the file system cannot spell is an error.
     *** ./configure will no longer mkdir any path except ${B}/MY.
 
+    + String literals, ${"..."}: the characters of a string, where
+      ${U+hex} may be said (names, recipes, headers, MANIFEST,
+      config.mk).  Escapes: \a \b \t \n \v \f \r \e \s (a space)
+      \\ \" \x{hex}.  In Makefile.in, modifiers may follow it:
+      ${"表":Q}.  A line break in a :Q word is an error to make and
+      ninja (it ends a command); a carriage return is not.
+    + Makefile.in: name = value is a variable.  Names are \w+ (any
+      script); the value is up to a `#' after a blank, trimmed, then
+      the lines that begin with a tab, joined by a line break (one
+      tab and the trailing blanks are removed; \s is a space that
+      stays).  It is expanded where it is, and :Q is an error in it.
+      A name that is defined already (also in config.mk) is an error.
+      Only what follows sees it, and a header does not.
+    + MANIFEST: a keyword may have a colon (MAKE: x, NEED: y); NEED
+      and WANT take many names; a goal name may be anything but white
+      space, controls, format characters and `:#%$\', or a hyphen
+      first (it was a letter or digit, then [-\w.+]).  A NEED or WANT
+      of the name of a goal is what that goal needs; a cycle is an
+      error.  The name of a rule (a selected goal, a cleaning rule)
+      may not be the name of a file, in characters or in bytes.
+    *** The text of a recipe and a variable that is not quoted are not
+        refused where the file system's bytes are ASCII's: that is
+        what the author wrote.  A name still is.
+    * The headers of config.mk ("configured by") and of a resolved
+      MANIFEST ("resolved by") are gone.
+
     ! BUG ! Prerequisites in Makefile.in are paths from the project
       root, as in a header, and ${A} in one is `.'.  They were taken
       as seen from the build dir, so a bare `render' was not found

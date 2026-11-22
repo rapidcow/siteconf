@@ -222,13 +222,17 @@ my $Bdir = un_fs(getcwd());
 unless ($reset) {
 	my %Dc = %D;
 	my %Oc = %O;
-	%D = -f "MY/config.mk" && -r _ ? read_make("MY/config.mk", prog => $prog) : ();
+	%D = -f "MY/config.mk" && -r _
+		? read_make("MY/config.mk", prog => $prog)
+		: ();
 	# A ${c} that is read the same as ${b} is
 	# considered to be ``sticky'' and follows
 	# ${b} unless explicitly overridden via -Dc.
 	$D{c} = $Dc{b} if !exists $Dc{c} && exists $Dc{b}
 		&& !isnull($D{c}) && !isnull($D{b}) && $D{c} eq $D{b};
-	%O = -f "MY/option.mk" && -r _ ? read_make("MY/option.mk", prog => $prog) : ();
+	%O = -f "MY/option.mk" && -r _
+		? read_make("MY/option.mk", prog => $prog)
+		: ();
 	@D{keys %Dc} = values %Dc;
 	@O{keys %Oc} = values %Oc;
 }
@@ -238,8 +242,8 @@ unless ($reset) {
 #   ${B}  the build dir, seen from the source tree (`.' in-tree)
 # An absolute ${A} or ${B} is spelled as it was given.
 $D{B} = $B;
-$D{A} = File::Spec->file_name_is_absolute($A) ? $A
-	: File::Spec->abs2rel($Adir, $Bdir);
+$D{A} = File::Spec->file_name_is_absolute($A)
+	? $A : File::Spec->abs2rel($Adir, $Bdir);
 
 # Set other paths and other variables.
 foreach my $k (keys %Dd) {
@@ -267,7 +271,8 @@ File::Spec->file_name_is_absolute($D{b})
 # ${c}, the cache: defaults to -Dc from the command-line, or
 # else -Sc (but *only* if it differs from -Sb), or else ${b}.
 # It is always defined since 0.02_01, though it is opt-in.
-isnull($D{c}) and $D{c} = !isnull($Dd{c}) && $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
+isnull($D{c}) and $D{c} = !isnull($Dd{c})
+	&& $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
 length $D{c} or die $cs->tagmsg(E => $cs->diag(__(
 	'${%s} may not be empty.'), 'c'));
@@ -291,8 +296,8 @@ foreach my $f ([ config => \%D ], [ option => \%O ]) {
 # Compute $B for `siteconf -g', as seen from the starting directory
 # (not from the source tree, which is where $D{B} is seen from);
 # an absolute one is spelled as it was given, like in config.mk.
-my $Brel = File::Spec->file_name_is_absolute($B) ? $B
-	: File::Spec->abs2rel($Bdir, $start);
+my $Brel = File::Spec->file_name_is_absolute($B)
+	? $B : File::Spec->abs2rel($Bdir, $start);
 my $Bcmd = $Brel eq '.' ? '' : " -B " . shell_quote($Brel);
 unless ($shutup) {
 	print STDERR __("Done!"), "\n";

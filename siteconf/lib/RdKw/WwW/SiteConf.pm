@@ -796,13 +796,16 @@ sub fs_text
 		next if $FS_SAFE{$c};
 		my $b = _to_fs($c);
 		if ($b =~ /([\x00-\x2A\x2F\x3A-\x3F\x5B-\x5E\x60\x7B-\x7F])/) {
+			require RdKw::I18N::CodeSets;
+			my $enc = RdKw::I18N::CodeSets->locale->filesys;
 			my $msg = diag(__(
 				# HEY!  The first %s is where (as in the messages above), %s
 				# the character (U+0041) and %s its spelling in bytes (0x5C).
-				"%s: %s is spelled by the file system as %s,"
-				. " which has a byte of ASCII that is special"),
+				"%s: %s is encoded as %s in file system encoding%s,"
+				. " which contains ASCII metacharacters"),
 				defined $where ? $where : 'name', sprintf('U+%04X', ord $c),
-				join ' ', map { sprintf '0x%02X', ord } split //, $b);
+				join(' ', map { sprintf '0x%02X', ord } split //, $b),
+				defined $enc ? diag(' (%#q)', $enc) : "");
 			die _status 0, tagmsg(E => $msg);
 		}
 		$FS_SAFE{$c} = 1;

@@ -171,8 +171,9 @@ Target and dependency lists may span multiple lines: end each
 continued line with a backslash.  The backslash and newline, along
 with indentation on the next line, are replaced by a space.  Lines
 that are only a comment (a C<#> after any indentation, then whitespace
-or the end of the line: C<#foo> is a word) in between are skipped, and do not end the list -- unlike in L<make(1)>, where one
-would take the rest of the list with it:
+or the end of the line: C<#foo> is a word) in between are skipped,
+and do not end the list -- unlike in L<make(1)>, where one would
+take the rest of the list with it:
 
     ${b}/index.html \
     ${b}/about.html \

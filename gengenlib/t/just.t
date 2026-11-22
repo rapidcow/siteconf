@@ -57,13 +57,13 @@ is_deeply(walk('proj/root', { graph => $G }),
 ok(!exists $G->{'proj/j'} && !exists $G->{'proj/jw'}, '... and are not in the graph');
 ok(exists $G->{'proj/a'} && exists $G->{'proj/w'}, '... but a NEED and a WANT are');
 
-is_deeply(walk('proj/root', { soft => 0 }),
+is_deeply(walk('proj/root', { mandatory => 1 }),
 	[ qw( proj/root proj/a proj/leaf proj/j proj/w proj/jw ) ],
-	'soft => 0: a WANT is listed, and not followed (as a JUST-WANT is)');
+	'mandatory => 0: a WANT is listed, and not followed (as a JUST-WANT is)');
 is_deeply(walk('proj/root', { terminal => 1 }),
 	[ qw( proj/leaf proj/j proj/wleaf proj/jw ) ],
 	'terminal => 1: what has none of its own');
-is_deeply(walk('proj/root', { terminal => 1, soft => 0 }),
+is_deeply(walk('proj/root', { terminal => 1, mandatory => 1 }),
 	[ qw( proj/leaf proj/j proj/w proj/jw ) ],
 	'terminal and not soft');
 

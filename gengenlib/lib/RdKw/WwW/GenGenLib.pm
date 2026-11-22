@@ -1075,7 +1075,7 @@ sub split_dep
 	($root, $rest);
 }
 
-=item B<walk_deps> \%D, I<spec>... { graph => \%G, follow => \&ok, soft => 1, terminal => 0 }
+=item B<walk_deps> \%D, I<spec>... { graph => \%G, follow => \&ok, mandatory => 0, terminal => 0 }
 
 Enumerate all dependencies of a path specification.
 C<\%D> is a required map of variable definitions.
@@ -1099,7 +1099,7 @@ symbolically by the C<${B}> prefix.
 
 A C<JUST-NEED> or C<JUST-WANT> is mere listed: the file
 is not opened, not even negatively cached on C<\%G>.
-With C<< soft => 0 >>, all C<WANT> and C<JUST-WANT>
+With C<< mandatory => 1 >>, C<WANT> and C<JUST-WANT>
 lines are dropped.  With C<< terminal => 1 >>, only
 leaf nodes are returned.  (Leaf nodes include files
 which lack dependencies, as well as JUST-dependency

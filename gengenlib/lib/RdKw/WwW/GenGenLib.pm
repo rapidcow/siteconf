@@ -1182,9 +1182,9 @@ sub walk_deps
 	my @todo = map { [ $_, 0 ] } reverse norm_deps(@_);
 
 	while (@todo) {
-		my ($spec, $just) = @{ pop @todo };
+		my ($spec, $term) = @{ pop @todo };
 		push @pool, $spec unless $pool{$spec}++;
-		next if $just or $expanded{$spec}++;
+		next if $term or $expanded{$spec}++;
 		my $Imap = do {
 			if (exists $G->{$spec}) {
 				$G->{$spec};
@@ -1202,13 +1202,14 @@ sub walk_deps
 		if (defined $Imap) {
 			# (NEED first, in the order the header says; what is pushed
 			# last is popped first)
-			for my $field (qw( JUST-WANT WANT JUST-NEED NEED )) {
+			for my $field (
+				$kwds->{soft} ? qw( JUST-WANT WANT ) : (),
+				qw( JUST-NEED NEED )
+			) {
 				my @dep = norm_deps(@{ $Imap->{$field} || [] }) or next;
 				$inner{$spec} = 1;
-				# a WANT is not followed if we are not soft: it is as
-				# a JUST-WANT is
-				my $j = $field =~ /\AJUST-/ || ($field eq 'WANT' && !$soft) ? 1 : 0;
-				push @todo, map { [ $_, $j ] } reverse @dep;
+				my $just = ($field =~ /\AJUST-/);
+				push @todo, map { [ $_, $just ] } reverse @dep;
 			}
 		}
 	}

@@ -940,8 +940,10 @@ sub read_manifest
 					next;
 				}
 				$busy{$sub->{name}} and die _status 0, tagmsg(E => diag(__(
-					# HEY!  the second %s is a chain of goals, as `a -> b -> a'
-					"%s: goals that need themselves: %s"),
+					# HEY!  the second %s is a chain of
+					# goals which ends in the beginning
+					# node; e.g. `a -> b -> a'.
+					"%s: cyclic goal: %s"),
 					_blame($file, $ent->{line}),
 					join(' -> ', @path[ (grep { $path[$_] eq $sub->{name} } 0 .. $#path)[0] .. $#path ],
 						$sub->{name})));

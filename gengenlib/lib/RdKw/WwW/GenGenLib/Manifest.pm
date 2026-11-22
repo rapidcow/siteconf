@@ -195,7 +195,7 @@ sub read
 					_blame($file, $.), $arg));
 				(my $key = lc $kw) =~ s/\Ajust-//;
 				push @{ $goal->{$key} }, { file => $name, line => $.,
-					just => $kw =~ /\AJUST-/ ? 1 : 0 };
+					just => ($kw =~ /\AJUST-/ ? 1 : 0) };
 			}
 			next;
 		}

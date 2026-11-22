@@ -146,8 +146,8 @@ use File::Spec ();
 use Template::Constants qw(
 	STATUS_ERROR STATUS_DECLINED );
 use RdKw::WwW::GenGenLib 0.0100 qw(
-	read_deps walk_deps follow_ok norm_deps
-	norm_dep subs_dep split_dep
+	read_deps walk_deps follow_ok
+	norm_deps subs_deps split_dep
 	escape_dep uproot );
 
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
@@ -270,11 +270,11 @@ sub new
 sub _vars
 {
 	my ($self, $spec) = @_;
-	for my $x (norm_dep($spec) =~ /\$\{([^}]+)\}/g) {
-		$x eq '$' || $x =~ /\AU\+/ || defined $self->{DEFINITION}{$x}
+	for (norm_deps($spec) =~ /\$\{([^}]+)\}/g) {
+		$_ eq '$' || /\AU\+/ || defined $self->{DEFINITION}{$_}
 			# HEY!  the last %s is the variable, as ${name}.
 			or die _status 0, __PACKAGE__ . ": " . diag(__(
-			"%q: no such variable %s"), $spec, "\${$x}")
+			"%q: no such variable %s"), $spec, "\${$_}")
 			. "\n";
 	}
 	1;
@@ -285,7 +285,7 @@ sub _norm
 {
 	my ($self, $spec) = @_;
 	$self->_vars($spec);
-	File::Spec->canonpath(subs_dep($self->{DEFINITION}, $spec));
+	File::Spec->canonpath(subs_deps($self->{DEFINITION}, $spec));
 }
 
 # Whether `spec' has a symbolic root that ALLOW_PREFIXES allows
@@ -306,7 +306,7 @@ sub _unreasonable
 	my ($self, $spec) = @_;
 	$self->_allowed_root($spec) or return 'ALLOW_PREFIXES';
 	my ($root, $rest) = split_dep($spec);
-	my $name = subs_dep($self->{DEFINITION}, $rest);
+	my $name = subs_deps($self->{DEFINITION}, $rest);
 	if (length $root) {
 		$name =~ s!\A/+!!;
 	} elsif (File::Spec->file_name_is_absolute($name) && !$self->{ABSOLUTE_DEPS}) {

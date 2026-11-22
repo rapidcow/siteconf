@@ -48,7 +48,7 @@ spew('proj/leaf', "plain\n");
 spew('proj/wleaf', "plain\n");
 spew('proj/never', "plain\n");
 my %D = ( A => '.' );
-sub walk { my $g = ref $_[-1] eq 'HASH' && exists $_[-1]{graph} ? $_[-1]{graph} : undef; [ walk_deps(\%D, @_) ] }
+sub walk { [ walk_deps(\%D, @_) ] }
 
 my $G = {};
 is_deeply(walk('proj/root', { graph => $G }),
@@ -57,22 +57,26 @@ is_deeply(walk('proj/root', { graph => $G }),
 ok(!exists $G->{'proj/j'} && !exists $G->{'proj/jw'}, '... and are not in the graph');
 ok(exists $G->{'proj/a'} && exists $G->{'proj/w'}, '... but a NEED and a WANT are');
 
-is_deeply(walk('proj/root', { mandatory => 1 }),
-	[ qw( proj/root proj/a proj/leaf proj/j proj/w proj/jw ) ],
-	'mandatory => 0: a WANT is listed, and not followed (as a JUST-WANT is)');
+my $mandatory_graph = {};
+is_deeply(walk('proj/root', { mandatory => 1, graph => $mandatory_graph }),
+	[ qw( proj/root proj/a proj/leaf proj/j ) ],
+	'mandatory => 1: skip WANT and JUST-WANT');
+ok(!exists $mandatory_graph->{'proj/w'} && !exists $mandatory_graph->{'proj/jw'},
+	'... and neither enters the graph');
 is_deeply(walk('proj/root', { terminal => 1 }),
 	[ qw( proj/leaf proj/j proj/wleaf proj/jw ) ],
 	'terminal => 1: what has none of its own');
-is_deeply(walk('proj/root', { terminal => 1, mandatory => 1 }),
-	[ qw( proj/leaf proj/j proj/w proj/jw ) ],
-	'terminal and not soft');
+is_deeply(walk('proj/root', { terminal => 1, mandatory => 1, graph => $G }),
+	[ qw( proj/leaf proj/j ) ],
+	'terminal and mandatory: only required leaves, even with a cached graph');
 
 # met as a JUST- first, a NEED later: it is read then
-spew('proj/two', "# JUST-NEED: proj/j2\n# NEED: proj/j2\n");
+spew('proj/two', "# NEED: proj/via proj/j2\n");
+spew('proj/via', "# JUST-NEED: proj/j2\n");
 spew('proj/j2', "# NEED: proj/behind\n");
 spew('proj/behind', "x\n");
-is_deeply(walk('proj/two'), [ qw( proj/two proj/j2 proj/behind ) ],
-	'a file that is both is read');
+is_deeply(walk('proj/two'), [ qw( proj/two proj/via proj/j2 proj/behind ) ],
+	'a NEED expands a file already listed through JUST-NEED');
 is_deeply(walk('proj/two', { terminal => 1 }), [ 'proj/behind' ], '... and is no leaf then');
 
 # --- read_manifest

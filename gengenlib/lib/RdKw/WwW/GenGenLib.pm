@@ -1097,15 +1097,16 @@ headers are returned without their dependents.
 Note that build dependents are solely identified
 symbolically by the C<${B}> prefix.
 
-A C<JUST-NEED> or C<JUST-WANT> is mere listed: the file
-is not opened, not even negatively cached on C<\%G>.
+A C<JUST-NEED> or C<JUST-WANT> lists the file without
+opening it or adding it to C<\%G>.  An ordinary dependency
+on the same file can still expand it.
 With C<< mandatory => 1 >>, C<WANT> and C<JUST-WANT>
 lines are dropped.  With C<< terminal => 1 >>, only
-leaf nodes are returned.  (Leaf nodes include files
-which lack dependencies, as well as JUST-dependency
-themselves.)
+leaf nodes are returned.  These are nodes with no outgoing
+edges in the walk, including files reached only through
+C<JUST-NEED> or C<JUST-WANT>.
 
-Every specification the walk comes to is a key of C<\%G>,
+Every specification reached for expansion is a key of C<\%G>,
 so the graph is a negative cache too.  Its value is:
 
 =over
@@ -1134,7 +1135,7 @@ it was read is whether the value is defined.  A graph
 passed to another walk is taken as it is, and what it
 holds is not read or followed again.
 
-Added in 0.0002.  The options C<soft> and C<terminal>
+Added in 0.0002.  The options C<mandatory> and C<terminal>
 were added in 0.0100.
 
 =item B<follow_ok> \%D, I<spec>
@@ -1171,7 +1172,8 @@ sub walk_deps
 	my $D = shift;
 	my $G = $kwds->{graph} || +{};
 	my $ok = $kwds->{follow} || \&follow_ok;
-	my $soft = exists $kwds->{soft} ? $kwds->{soft} : 1;
+	my @fields = qw( JUST-NEED NEED );
+	unshift @fields, qw( JUST-WANT WANT ) unless $kwds->{mandatory};
 
 	# Everything is kept in normalized form, so that $a/x and ${a}/x
 	# are one and the same node, whichever way a header spells it.
@@ -1202,10 +1204,7 @@ sub walk_deps
 		if (defined $Imap) {
 			# (NEED first, in the order the header says; what is pushed
 			# last is popped first)
-			for my $field (
-				$kwds->{soft} ? qw( JUST-WANT WANT ) : (),
-				qw( JUST-NEED NEED )
-			) {
+			for my $field (@fields) {
 				my @dep = norm_deps(@{ $Imap->{$field} || [] }) or next;
 				$inner{$spec} = 1;
 				my $just = ($field =~ /\AJUST-/);

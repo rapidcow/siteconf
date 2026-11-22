@@ -755,7 +755,6 @@ with C<pass_thru> enabled.  Defaults to C<< pass_thru => 0 >>.
 
 Added in 0.0002.  C<pass_thru> added in 0.0003;
 C<${U+hex}> escapes added in 0.0100.
-C<${U+...}> escapes added in 0.0100.
 
 =cut
 
@@ -1105,8 +1104,7 @@ anything else later, is read when it is.  With C<< soft => 0 >> (it is
 1 by default), a C<WANT> is like a C<JUST-WANT>: listed, not followed.
 With C<< terminal => 1 >> (0 by default) only the specifications whose
 header declares nothing are returned, and not those in between.  (A
-header that has only a C<JUST-NEED> does declare it.)  The options
-C<soft> and C<terminal> were added in 0.0100.
+header that has only a C<JUST-NEED> does declare it.)
 
 Every specification the walk comes to is a key of C<\%G>,
 so the graph is a negative cache too.  Its value is:
@@ -1137,7 +1135,8 @@ it was read is whether the value is defined.  A graph
 passed to another walk is taken as it is, and what it
 holds is not read or followed again.
 
-Added in 0.0002.
+Added in 0.0002.  The options C<soft> and C<terminal>
+were added in 0.0100.
 
 =item B<follow_ok> \%D, I<spec>
 

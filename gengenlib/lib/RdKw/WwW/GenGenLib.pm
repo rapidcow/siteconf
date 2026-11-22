@@ -1097,14 +1097,13 @@ headers are returned without their dependents.
 Note that build dependents are solely identified
 symbolically by the C<${B}> prefix.
 
-A C<JUST-NEED> or C<JUST-WANT> is listed, and that is all: the file
-is not opened (so it is not a key of C<\%G> on its account), and
-what it declares is not followed.  A file that is met so first, and as
-anything else later, is read when it is.  With C<< soft => 0 >> (it is
-1 by default), a C<WANT> is like a C<JUST-WANT>: listed, not followed.
-With C<< terminal => 1 >> (0 by default) only the specifications whose
-header declares nothing are returned, and not those in between.  (A
-header that has only a C<JUST-NEED> does declare it.)
+A C<JUST-NEED> or C<JUST-WANT> is mere listed: the file
+is not opened, not even negatively cached on C<\%G>.
+With C<< soft => 0 >>, all C<WANT> and C<JUST-WANT>
+lines are dropped.  With C<< terminal => 1 >>, only
+leaf nodes are returned.  (Leaf nodes include files
+which lack dependencies, as well as JUST-dependency
+themselves.)
 
 Every specification the walk comes to is a key of C<\%G>,
 so the graph is a negative cache too.  Its value is:

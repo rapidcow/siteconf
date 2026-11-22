@@ -20,14 +20,16 @@ RdKw::WwW::SiteConf::GMake - GNU Makefile backend for siteconf
 
 The very Makefile of L<RdKw::WwW::SiteConf::Make>, but for GNU Make
 (newer than 3.81, which cannot escape a C<:>), which can name more
-files: a C<$> is C<$$>; blanks, C<#>, C<:> and C<|> are escaped with
+files: a C<$> is C<$$>; blanks, C<#> and C<:> are escaped with
 a backslash (and so is a backslash before them); a wildcard is in
 brackets (C<a[*]b>), so that it only ever matches itself; and a C<~>
 in front is C<./~>.
 
 What it cannot name is an error still: a vertical space (a line
-break, CR, form feed, ...), a C<;> or C<=>, a C<\> at the end, or a
-name that ends in parentheses, which would be an archive member.
+break, CR, form feed, ...), a C<;>, C<=> or C<|>, a C<\> at the end,
+or a name that ends in parentheses, which would be an archive member.
+(GNU make 4.4.1 reads C<a\|b> as C<a|b> in a prerequisite, and as
+C<a\|b> in a target.)
 The escaped name is then spelled as the file system spells it, as in
 L<RdKw::WwW::SiteConf::Make>.
 
@@ -43,7 +45,7 @@ sub _status { $! = 0; $? = shift; @_; }
 sub _name
 {
 	my ($class, $s) = @_;
-	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029};=]|\\\z)/
+	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029};=|]|\\\z)/
 		# HEY!  the %s is a character, as `;' or U+000A
 		and die _status 0, tagmsg(E => diag(__(
 			"GNU Make cannot name %q (with inescapable %s)"),
@@ -54,7 +56,7 @@ sub _name
 			"GNU Make cannot name %q (reserved for archive members)"),
 			$s));
 	$s =~ s/\$/\$\$/g;
-	$s =~ s/(\\*)([\t #:|])/$1$1\\$2/g;
+	$s =~ s/(\\*)([\t #:])/$1$1\\$2/g;
 	$s =~ s/(\\*)([*?\[])/$1$1\[$2\]/g;
 	$s =~ s/\A~/.\/~/;
 	$class->_fs($s);

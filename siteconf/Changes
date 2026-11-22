@@ -60,10 +60,12 @@ Revision history of WwW-SiteConf
         rather than expanding it (as bmake's :q).  A $ from $$
         or a variable is make's, as ever.
     + -G gmake: a Makefile for GNU make (newer than 3.81),
-      which can name more: a $ is $$; blanks, #, : and | are
+      which can name more: a $ is $$; blanks, # and : are
       escaped with a backslash; wildcards are in brackets
-      (a[*]b), and a ~ in front is ./~.  A line break, ; or =,
-      a \ at the end, or (...) at the end is still an error.
+      (a[*]b), and a ~ in front is ./~.  A line break, ;, = or
+      |, a \ at the end, or (...) at the end is still an error.
+      (GNU make 4.4.1 reads a\|b as a|b in a prerequisite, and
+      as a\|b in a target.)
     *** -G make: a name with white space, a control, a $, any
         of #:;=|(){}[]*?, a \ at the end or a ~ in front is an
         error (saying whether -G gmake could), rather than a

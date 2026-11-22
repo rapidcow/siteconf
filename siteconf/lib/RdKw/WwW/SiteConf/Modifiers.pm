@@ -205,7 +205,8 @@ Private; for L<RdKw::WwW::SiteConf>.
 # _apply VALUE, MODS, expand => CODE, quote => CODE
 # MODS is what is after the first colon: `R:S/x/y/:Q'.  `expand' is
 # given the text of an expression (`${x}') and returns its value,
-# `quote' a string and returns it quoted.  Dies, without a location,
+# `quote' a string (and whether that is the last modifier) and returns
+# it quoted.  Dies, without a location,
 # on what it cannot understand.
 sub _apply
 {
@@ -219,7 +220,8 @@ sub _apply
 		if ($WORD{$c}) {
 			$val = $WORD{$c}->($val) if length $val;
 		} elsif ($c eq 'Q') {
-			$val = $o{quote}->($val);
+			# (and whether it is the last modifier, which a recipe quotes later)
+			$val = $o{quote}->($val, $pos >= $len);
 		} elsif ($c eq 'S') {
 			$pos < $len or die _status 0, __("unterminated :S modifier") . "\n";
 			my $delim = substr($mods, $pos++, 1);

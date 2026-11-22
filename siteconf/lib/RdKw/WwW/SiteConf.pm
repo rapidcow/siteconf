@@ -142,6 +142,20 @@ such names.  Quote the names in recipes with C<:Q>:
     MAKE all
         NEED my${U+0020}page.html
 
+A name may also hold C<*>, C<?>, C<[> and C<]>, as in C<feed/[year]/index.html>.
+C<-G gmake> writes each of the first three in brackets, which GNU make
+reads as that character (C<a[*]b>); C<-G make> and bmake would take them as
+a pattern, so C<-G make> rejects such a name.  The shell takes them as a pattern
+too, so quote the name in a recipe with C<:Q>.
+
+C<:Q> quotes bytes.  A name or a value is spelled as the file system spells it
+first, and C<:Q> (as the last modifier) quotes that.  So a character that the
+encoding spells with an ASCII byte (Shift_JIS spells 表 as C<95 5C>, and a
+C<\> is that byte for a shell) is safe in C<:Q>.  Anywhere else it is an
+error, as no escape could tell make or the shell what it is: a name, a
+variable that is not quoted, and a recipe's own text.  A letter, a digit and
+C<_.+,@-> pass.
+
 Words are told apart where they are written, never by what a variable
 holds: every word of a target or prerequisite list is one name, however
 many blanks its variables expand to, so C<-Dx='my dir'> makes C<${x}/a>
@@ -624,16 +638,85 @@ sub shell_quote
 	"'$s'";
 }
 
+=item B<fs_text> I<string> [, I<where> ]
+
+Not a method.  I<string> as the file system spells it (bytes), or an
+error.  It is an error, too, if a character that is not ASCII is
+spelled with a byte that is: the file system encoding may spell
+a character as a C<\> or a C<`> (Shift_JIS, GBK and Big5 do), and
+a program that reads ASCII would take that byte for itself.  Only
+letters, digits and C<_.+,@-> pass.  A byte of such a character cannot
+be escaped, so nothing here tries.
+
+=cut
+
+my %FS_SAFE;
+sub fs_text
+{
+	my ($s, $where) = @_;
+	my $bytes = _to_fs($s);
+	return $bytes unless $s =~ /[^\x00-\x7F]/;
+	my %seen;
+	for my $c (grep { !$seen{$_}++ } $s =~ /([^\x00-\x7F])/g) {
+		next if $FS_SAFE{$c};
+		my $b = _to_fs($c);
+		if ($b =~ /([\x00-\x2A\x2F\x3A-\x3F\x5B-\x5E\x60\x7B-\x7F])/) {
+			my $msg = diag(__(
+				# HEY!  The first %s is where (as in the messages above), %s
+				# the character (U+0041) and %s its spelling in bytes (0x5C).
+				"%s: %s is spelled by the file system as %s,"
+				. " which has a byte of ASCII that is special"),
+				defined $where ? $where : 'name', sprintf('U+%04X', ord $c),
+				join ' ', map { sprintf '0x%02X', ord } split //, $b);
+			die _status 0, tagmsg(E => $msg);
+		}
+		$FS_SAFE{$c} = 1;
+	}
+	$bytes;
+}
+
+=item B<recipe_bytes> I<runs>
+
+Not a method.  The recipe I<runs> (see C<_subst>) as bytes, in make's
+words: what the file system spells, with a C<word> quoted for the
+shell last of all, so that no byte of it is read as anything but a
+byte, and with a C<$> of what the shell reads doubled.
+
+=cut
+
+sub recipe_bytes
+{
+	my ($runs) = @_;
+	my $out = '';
+	for (@$runs) {
+		my ($kind, $s, $where) = @$_;
+		if ($kind eq 'word') {
+			$out .= _dollars(shell_quote(_to_fs($s)));
+		} elsif ($kind eq 'shell') {
+			$out .= _dollars(_to_fs($s));
+		} else {
+			$out .= fs_text($s, $where);
+		}
+	}
+	$out;
+}
+
+# `$' for make is $$; for what the shell reads, which make must not
+sub _dollars { (my $s = $_[0]) =~ s/\$/\$\$/g; $s }
+
 # Names that cannot escape from the source or the output tree.
-# A space is allowed here; the selected backend must escape or reject it.
+# A space and the wildcards `*?[]' are allowed here; the selected backend
+# must escape or reject them.  A name is also refused if the file system
+# spells a character of it with an ASCII byte that is special (fs_text).
 sub _check_file
 {
 	my ($file, $where) = @_;
-	$file =~ m!\A[^\t\n\cK\f\r\0:\$#%\\|;<>"'`*?\[\](){}&]+\z!
+	$file =~ m!\A[^\t\n\cK\f\r\0:\$#%\\|;<>"'`(){}&]+\z!
 		or die _status 0, tagmsg(E => diag(__(
 			# HEY!  The first %s is always where (a file, or `file' line 3),
 			# in this message and in those that follow it
 			"%s: bad file name %q"), $where, $file));
+	fs_text($file, $where);
 	$file =~ m!\A/!
 		and die _status 0, tagmsg(E => diag(__(
 			"%s: file name %q must be relative"), $where, $file));
@@ -705,26 +788,41 @@ sub read_manifest
 # `node' is the name of the target (relative to its tree), and `src'
 # that of its source (relative to `a'); the latter is only known
 # once all prerequisites have been read, so those may not say it.
-# What a :Q made is for the shell; if `quoted' is given, it is pushed
-# where each one is in what we return, as [ offset, length ].
+# What a :Q made is for the shell.  If `runs' is given (a recipe), we
+# push to it, and return nothing, what is said in runs of
+#   [ text => $text, $where ]    in make's words
+#   [ word => $value, $where ]   a value for the shell, to be quoted
+#                                after it is spelled in bytes
+#   [ shell => $text, $where ]   text that is for the shell already
+# (a `:Q' that is not the last modifier is quoted by the characters,
+# and is shell; that is an error where the bytes would say otherwise).
+# Else we return the line with a :Q quoted by the characters.
 sub _subst
 {
-	my ($self, $line, $node, $where, $src, $quoted) = @_;
+	my ($self, $line, $node, $where, $src, $runs) = @_;
 	my $D = $self->{D};
 	my $out = '';
+	my $put = sub {
+		my ($kind, $s) = @_;
+		return unless length $s;
+		if (!$runs) { $out .= $s }
+		elsif ($kind eq 'text' && @$runs && $runs->[-1][0] eq 'text'
+			&& $runs->[-1][2] eq $where) { $runs->[-1][1] .= $s }
+		else { push @$runs, [ $kind, $s, $where ] }
+	};
 	my $pos = 0;
 	while ((my $i = index($line, '$', $pos)) >= 0) {
-		$out .= substr($line, $pos, $i - $pos);
+		$put->('text', substr($line, $pos, $i - $pos));
 		my $end = eval { RdKw::WwW::SiteConf::Modifiers::_expr_end($line, $i) };
 		defined $end or do {
 			# a `$' at the very end, or before a newline, is a `$'
 			$@ and die _status 0, "E: $where: $@";   # (as Modifiers says it)
-			$out .= '$';
+			$put->('text', '$');
 			$pos = $i + 1;
 			next;
 		};
 		if (substr($line, $i + 1, 1) eq "\n") {
-			$out .= '$';
+			$put->('text', '$');
 			$pos = $i + 1;
 			next;
 		}
@@ -772,11 +870,17 @@ sub _subst
 				$where, "\${$x}"));
 			$val = $D->{$x};
 		}
-		my $q;
+		my ($q, $word);
 		if (defined $mods) {
 			$val = eval {
 				RdKw::WwW::SiteConf::Modifiers::_apply($val, $mods,
-					quote => sub { $q = 1; shell_quote(@_) },
+					quote => sub {
+						my ($v, $last) = @_;
+						# the last one is the backend's, by bytes
+						return $word = $v if $runs && $last;
+						$q = 1;
+						$self->_quote_chars($v, $where);
+					},
 					expand => sub { $self->_subst($_[0], $node, $where, $src) }
 				);
 			};
@@ -786,10 +890,26 @@ sub _subst
 			# `./' is no use to anyone
 			($val, $slash) = ('', '');
 		}
-		push @$quoted, [ length $out, length $val ] if $q && $quoted;
-		$out .= $val . $slash;
+		$put->($word ? 'word' : $q ? 'shell' : 'text', $val);
+		$put->('text', $slash);
 	}
-	$out . substr($line, $pos);
+	$put->('text', substr($line, $pos));
+	$out;
+}
+
+# `shell_quote' by characters, for a :Q that is not the last modifier
+# (or is not in a recipe).  It is an error if that is not what quoting
+# the bytes comes to.
+sub _quote_chars
+{
+	my ($self, $v, $where) = @_;
+	my $q = shell_quote($v);
+	my $same = eval { _to_fs($q) eq shell_quote(_to_fs($v)) };
+	defined $same and !$same and die _status 0, tagmsg(E => diag(__(
+		# HEY!  The first %s is where, the second what is quoted.
+		"%s: cannot quote %q in the file system encoding"
+		. " (its bytes would be quoted otherwise)"), $where, $v));
+	$q;
 }
 
 # A prerequisite (or a source), as it is written in Makefile.in, expanded.
@@ -917,7 +1037,7 @@ sub _read_rules
 			$stanza = $line;
 			for my $node (@node) {
 				my ($key, $name) = @$node;
-				my $rule = ($rule{$key} ||= { recipe => '', raw => [], deps => [],
+				my $rule = ($rule{$key} ||= { recipe => [], raw => [], deps => [],
 					want => [], name => $name, line => $line });
 				my $dep = $dep;
 				if (!$rule->{decided} && $dep =~ /[^$SP]/o) {
@@ -969,13 +1089,11 @@ sub _read_rules
 	close $fh;
 	for my $rule (values %rule) {
 		my $src = defined $rule->{src} ? $rule->{src} : $rule->{name};
-		# The recipe is in make's words: a `$' from $$ or a variable
-		# is make's, but one in what a :Q made is the shell's, $$
+		# The recipe is runs (see _subst) in make's words: a `$' from $$
+		# or a variable is make's, but one in what a :Q made is the shell's
+		# (the backend writes it $$).  Quoting is by bytes, so it is theirs.
 		for (@{ $rule->{raw} }) {
-			my @q;
-			my $line = $self->_subst($_->[0], $rule->{name}, $_->[1], $src, \@q);
-			substr($line, $_->[0], $_->[1]) =~ s/\$/\$\$/g for reverse @q;
-			$rule->{recipe} .= $line;
+			$self->_subst($_->[0], $rule->{name}, $_->[1], $src, $rule->{recipe});
 		}
 		delete $rule->{raw};
 	}
@@ -1023,7 +1141,7 @@ sub _node
 		bpath => $bpath,
 		deps => [],
 		kids => [],
-		recipe => '',
+		recipe => [],
 		ok => 1,
 		why => [],
 		visiting => 1,
@@ -1262,7 +1380,8 @@ as a hash reference.  Dies, listing every one of them, if anything
 that is C<NEED>ed cannot be had.
 
   goals   [ { name, files => [ FILE ... ], dropped => [ [FILE, WHY] ] } ]
-  node    { FILE => { file, apath, nosrc, bpath, deps, recipe } }
+  node    { FILE => { file, apath, nosrc, bpath, deps,
+                      recipe => [ [ KIND, TEXT, WHERE ] ... ] } }
   order   [ FILE ... ]    all files, in order of appearance
   dirs    [ { dir, marker, deps => [ MARKER ] } ]   parents first
   clean   [ { name, files => [ BPATH ] } ]

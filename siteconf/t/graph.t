@@ -18,6 +18,10 @@ use TestPaths qw( fs_surprise );
 use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 use RdKw::WwW::SiteConf;
 
+# A recipe (runs) as bytes, which is all of it for a UTF-8 file system and
+# nothing but ASCII
+sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
+
 # A project in a directory of its own.  %f is name => contents.
 sub project {
 	my ($f, %D) = @_;
@@ -58,7 +62,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	is_deeply([sort keys %$rules], [qw(a.html b.css c.css)], 'continued target list');
 	is_deeply($rules->{'b.css'}{deps}, [qw(x y)], 'continued dependencies and substitution');
 	is($rules->{'c.css'}{line}, 3, 'rule records its first physical line');
-	is($rules->{'a.html'}{recipe}, "\tcp html/a.html \\\n\t  site/a.html\n",
+	is(rb($rules->{'a.html'}{recipe}), "\tcp html/a.html \\\n\t  site/a.html\n",
 		'recipe continuations are preserved');
 	my $plan = $sc->plan;
 	is_deeply($plan->{node}{'a.html'}{deps}, [qw(html/a.html x y site/.ok)],
@@ -95,10 +99,10 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	});
 	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
 	is_deeply($rules->{'a.html'}{deps}, [qw(x .ok)], 'a ; ends the prerequisites (but not in a \${...})');
-	is($rules->{'a.html'}{recipe}, "\tcp html/a.html site/a.html\n\ttouch site/a.html\n",
+	is(rb($rules->{'a.html'}{recipe}), "\tcp html/a.html site/a.html\n\ttouch site/a.html\n",
 		'... and begins the recipe, which a tab line goes on with');
 	is_deeply($rules->{'c.css'}{deps}, ['x'], '... touching or not');
-	is($rules->{'c.css'}{recipe}, "\techo \"a; b\"\n", '... and only the first ;');
+	is(rb($rules->{'c.css'}{recipe}), "\techo \"a; b\"\n", '... and only the first ;');
 
 	# ... and ${U+003B} is a ; that ends nothing, in :S too (where a
 	# lexer that split at the character would split)
@@ -110,7 +114,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	$rules = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->_read_rules;
 	is_deeply([keys %$rules], ['x.y'], '${U+003B} in :S/old/ and :S/new/ ends no prerequisites');
 	is_deeply($rules->{'x.y'}{deps}, ['x;y', ',.y'], '... and is a ;');
-	is($rules->{'x.y'}{recipe}, "\techo x;y ; done\n", '... which is in the recipe as it is');
+	is(rb($rules->{'x.y'}{recipe}), "\techo x;y ; done\n", '... which is in the recipe as it is');
 
 	for my $case (
 		["a.html: x ; true\n\ttrue\na.html: ; false\n", qr/line 3: more than one recipe/],
@@ -399,7 +403,7 @@ SKIP:	{
 		my $plan = plan_of($dir);
 		is_deeply($plan->{node}{'p/x.md.html'}{deps}, [qw(html/p/x.md x site/p/.ok)],
 			"source named first: $form (no html/p/x.md.html needed)");
-		is($plan->{node}{'p/x.md.html'}{recipe}, "\tconv p/x.md p/x.md p/x.md.html\n",
+		is(rb($plan->{node}{'p/x.md.html'}{recipe}), "\tconv p/x.md p/x.md p/x.md.html\n",
 			'${<} is the source, relative to ${a}') if $form eq $form[0];
 	}
 
@@ -566,7 +570,7 @@ SKIP:	{
 	my $c = $plan->{node}{'${c}/x.md.html'};
 	is($c->{bpath}, 'cache/deep/x.md.html', 'cache target is in ${c}');
 	is_deeply($c->{deps}, [qw(html/x.md cache/deep/.ok)], 'no implied html/x.md.html');
-	is($c->{recipe}, "\tpandoc -o cache/deep/x.md.html x.md\n"
+	is(rb($c->{recipe}), "\tpandoc -o cache/deep/x.md.html x.md\n"
 		=> '${@} is the name after ${c}/; ${B}/${c} too');
 	is_deeply($plan->{node}{'x.html'}{kids}, ['${c}/x.md.html'], 'the site depends on the cache');
 	is($plan->{node}{'x.html'}{bpath}, 'site/x.html', 'and is still in ${b}');
@@ -839,7 +843,7 @@ SKIP: {
 	is_deeply($plan && $plan->{node}{'a b.html'}{deps},
 		['html/a b.html', 'd x', 'x y', 'maybe dep', 'site/.ok'],
 		'escaped targets, ${@} as the source, NEEDs and WANTs with spaces; a variable is one name') or diag $@;
-	is($plan && $plan->{node}{'a b.html'}{recipe}, "\tcp html/'a b.html' site/'a b.html'\n",
+	is($plan && rb($plan->{node}{'a b.html'}{recipe}), "\tcp html/'a b.html' site/'a b.html'\n",
 		':Q quotes each whole name');
 	my $sc = bless { D => { X => ' x y ', a => 'source dir' } }, 'RdKw::WwW::SiteConf';
 	for my $case (
@@ -872,7 +876,7 @@ SKIP: {
 	require RdKw::WwW::SiteConf::Ninja;
 	my %gmake = (
 		'a b' => 'a\\ b', "a\tb" => "a\\\tb", 'a#b' => 'a\\#b', 'a:b' => 'a\\:b',
-		'a|b' => 'a\\|b', 'a$b' => 'a$$b', 'a*b' => 'a[*]b', 'a?b' => 'a[?]b',
+		'a$b' => 'a$$b', 'a*b' => 'a[*]b', 'a?b' => 'a[?]b',
 		'a[b]' => 'a[[]b]', '~a' => './~a', 'a\\b' => 'a\\b', 'a\\ b' => 'a\\\\\\ b',
 		'a\\*b' => 'a\\\\[*]b', 'a%b' => 'a%b', 'a(b' => 'a(b', 'a~' => 'a~',
 	);
@@ -880,7 +884,7 @@ SKIP: {
 		is(eval { RdKw::WwW::SiteConf::GMake->_name($name) }, $gmake{$name}, "GNU Make: `" . escape_dep($name) . "'")
 			or diag $@;
 	}
-	for my $name ("a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a;b', 'a=b', 'a\\', 'a(b)') {
+	for my $name ("a|b", "a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a;b', 'a=b', 'a\\', 'a(b)') {
 		ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name($name) }
 			&& $@ =~ /\AE: GNU Make cannot name/, "GNU Make cannot: `" . escape_dep($name) . "'");
 	}

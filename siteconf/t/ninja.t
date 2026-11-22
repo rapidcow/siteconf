@@ -27,12 +27,12 @@ my $plan = {
 	prog => 'test', D => { e => '.ok' },
 	goals => [ { name => 'all', files => ['x'] } ],
 	order => ['x'], dirs => [],
-	node => { x => { bpath => 'site/x', recipe => '', deps => ['in/x'] } },
+	node => { x => { bpath => 'site/x', recipe => [], deps => ['in/x'] } },
 };
 ok(!eval { RdKw::WwW::SiteConf::Ninja->_emit($plan); 1 }, 'no recipe, no build');
 like($@, qr/no recipe/, '... says so');
 
-$plan->{node}{x}{recipe} = "\tcp \$< \$\@\n";
+$plan->{node}{x}{recipe} = [ [ text => "\tcp \$< \$\@\n", 'x' ] ];
 $plan->{node}{x}{deps} = [ 'in/x', 'a b', 'site/.ok' ];
 $plan->{dirs} = [ { dir => 'site', marker => 'site/.ok', deps => [] } ];
 my $text = RdKw::WwW::SiteConf::Ninja->_emit($plan);

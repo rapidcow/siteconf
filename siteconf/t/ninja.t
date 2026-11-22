@@ -1,6 +1,6 @@
 #!perl
 #
-# t/ninja.t - make's recipes, in ninja's words
+# t/ninja.t - Makefile.in recipes in ninja syntax
 
 use strict;
 use warnings;

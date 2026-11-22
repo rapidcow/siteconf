@@ -1,5 +1,8 @@
 #!perl
-# siteconf -g -A: every WANT that cannot be had is an error.
+#
+# t/strict.t - siteconf -g -A: every WANT that
+# cannot be had is an error.
+
 use strict;
 use warnings;
 use Test::More tests => 19;

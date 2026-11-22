@@ -1,6 +1,7 @@
 #!perl
 #
-# t/just.t - JUST-NEED and JUST-WANT: a dependency whose header is not read
+# t/just.t - JUST-NEED and JUST-WANT:
+# shallow no-recurse dependencies
 
 use utf8;
 use strict;

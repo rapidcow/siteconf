@@ -1,7 +1,8 @@
 #!perl
 #
-# t/strings.t - string literals, assignments in Makefile.in, and the
-# MANIFEST that names its goals as it would a file
+# t/strings.t - string literals, assignments in
+# Makefile.in, and the MANIFEST that names its
+# goals as it would a file
 
 use utf8;
 use strict;

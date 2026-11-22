@@ -1,7 +1,10 @@
 #!perl
 #
-# t/unicode.t - names that are not ASCII, from the command line to make,
-# and what we say about them where the locale cannot say them
+# t/unicode.t - names that are not ASCII, from
+# the command line to make, and what we complain
+# about them when the locale cannot encode them
+#
+# Skipped on ASCII-only systems (e.g. C locale).
 
 use utf8;
 use 5.008;

@@ -1,3 +1,7 @@
+#!perl
+#
+# t/init.t - siteconf -i: configure/render generation
+
 use strict;
 use warnings;
 use Test::More;

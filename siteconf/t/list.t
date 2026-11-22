@@ -1,6 +1,6 @@
 #!perl
 #
-# t/list.t - siteconf -l: the names of a manifest, for other programs
+# t/list.t - siteconf -l: naming manifest
 
 use utf8;
 use strict;

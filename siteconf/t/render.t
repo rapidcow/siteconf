@@ -1,7 +1,11 @@
 #!perl
 #
-# t/render.t - the web preset's renderer, as siteconf init writes it:
-# how it finds its own place in the source tree (HAVE vs ${a})
+# t/render.t - the web preset's stock renderer,
+# as siteconf -i writes it; and how it finds
+# its URL in the source tree (HAVE vs ${a})
+#
+# For the even more general-purpose tem preset
+# introduced in siteconf 0.03, see t/general.t.
 
 use strict;
 use warnings;

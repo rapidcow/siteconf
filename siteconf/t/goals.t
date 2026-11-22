@@ -1,5 +1,8 @@
 #!perl
-# Goal selection and optional goals when generating a build file.
+#
+# t/goal.t - Goal selection and optional goals
+# when generating a build file (siteconf -g)
+
 use strict;
 use warnings;
 use Test::More tests => 32;

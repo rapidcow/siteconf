@@ -5,6 +5,7 @@
 # or a :Q value means to make or the shell.  Quoting is by bytes, after
 # the encoding; a name that could be changed is an error.
 
+use utf8;
 use strict;
 use warnings;
 use Test::More;

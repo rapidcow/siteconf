@@ -1,6 +1,6 @@
 #!perl
 #
-# t/general.t - the tem preset: Template Toolkit, and nothing else
+# t/general.t - the tem preset: Template Toolkit
 
 use strict;
 use warnings;

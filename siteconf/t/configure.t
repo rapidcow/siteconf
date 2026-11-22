@@ -1,3 +1,7 @@
+#!perl
+#
+# t/configure.t - configure script test
+
 use strict;
 use warnings;
 use Test::More;

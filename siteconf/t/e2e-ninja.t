@@ -1,6 +1,7 @@
 #!perl
 #
-# t/e2e-ninja.t - siteconf -i, ./configure, siteconf -g -G ninja, ninja; on t/fixture/web
+# t/e2e-ninja.t - siteconf -i, ./configure,
+# siteconf -g -G ninja, ninja; on t/fixture/web
 
 use strict;
 use warnings;

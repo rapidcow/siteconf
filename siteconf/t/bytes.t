@@ -47,10 +47,11 @@ for my \$s ($try, 'plain/name.html') {
 CODE
 my @line = split /\n/, $out;
 is($line[3], 'ok', 'cp932: あ (82 a0) is a name') or diag $out;
-like($out, qr/^no: .*here: U\+8868 is spelled by the file system as 0x95 0x5C,/m, 'cp932: 表 has a \\ in it');
-like($out, qr/^no: .*U\+30FC is spelled by the file system as 0x81 0x5B,/m, 'cp932: ー has a [ in it');
-like($out, qr/^no: .*U\+FF5E is spelled .* 0x81 0x60,/m, 'cp932: ～ has a ` in it');
-like($out, qr/^no: .*U\+00A5 is spelled .* 0x5C,/m, 'cp932: ¥ is spelled as a \\ (one way)');
+my $cp932 = qr/in file system encoding \(cp932\), which contains ASCII metacharacters/;
+like($out, qr/^no: .*here: U\+8868 is encoded as 0x95 0x5C $cp932$/m, 'cp932: 表 has a \\ in it');
+like($out, qr/^no: .*U\+30FC is encoded as 0x81 0x5B $cp932$/m, 'cp932: ー has a [ in it');
+like($out, qr/^no: .*U\+FF5E is encoded as 0x81 0x60 $cp932$/m, 'cp932: ～ has a ` in it');
+like($out, qr/^no: .*U\+00A5 is encoded as 0x5C $cp932$/m, 'cp932: ¥ is encoded as a \\ (one way)');
 is(scalar(() = $out =~ /^ok$/mg), 2, '... and nothing else, nor ASCII, is refused') or diag $out;
 
 # A stateful encoding spells a character with an ESC, among others
@@ -58,7 +59,8 @@ $out = in_enc('iso-2022-jp', <<'CODE');
 my $b = eval { RdKw::WwW::SiteConf::fs_text("\x{3042}", 'here') };
 print defined $b ? "ok\n" : "no: $@";
 CODE
-like($out, qr/^no: .*here: U\+3042 is spelled /, 'iso-2022-jp: no name (it is not an ASCII superset)') or diag $out;
+like($out, qr/^no: .*here: U\+3042 is encoded as 0x1B .* in file system encoding \(iso-2022-jp\), which contains ASCII metacharacters$/,
+	'iso-2022-jp: no name (it is not an ASCII superset)') or diag $out;
 
 # A word (the last :Q) is spelled first, then quoted: the shell hands back
 # the same bytes, and a make `$' is written twice

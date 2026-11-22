@@ -188,6 +188,14 @@ Revision history of WwW-SiteConf
       of the name of a goal is what that goal needs; a cycle is an
       error.  The name of a rule (a selected goal, a cleaning rule)
       may not be the name of a file, in characters or in bytes.
+    *** :Q is only a mark for the backend to quote by bytes (and
+        write $ in it as $$).  It must be the last modifier, and
+        is an error in a prerequisite, a variable assignment, and
+        an argument of another modifier (it used to quote by
+        characters there).  :Q of an empty value is ''.
+    + :S/old/new/: a backslash begins \a \b \t \n \v \f \r \e \s
+      or \x{hex}, as in a string literal.  Any other letter or
+      digit after one is an error (it kept its backslash).
     *** The text of a recipe and a variable that is not quoted are not
         refused where the file system's bytes are ASCII's: that is
         what the author wrote.  A name still is.

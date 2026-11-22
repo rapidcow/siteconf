@@ -104,7 +104,7 @@ M
 	$dir = project('Makefile.in' => "v=\${w}\n");
 	like(failure($dir), qr/line 1: undefined variable: \$\{w\}/, 'a variable has to be there already');
 	$dir = project('Makefile.in' => "v=\${a:Q}\n");
-	like(failure($dir), qr/line 1: :Q is for the shell/, 'no :Q in a value');
+	like(failure($dir), qr/line 1: :Q \(shell quote\) is not valid in a variable assignment/, 'no :Q in a value');
 	$dir = project('Makefile.in' => "x: \${a}/x\n\techo \${v}\nv=1\n");
 	like(failure($dir), qr/line 2: undefined variable: \$\{v\}/, 'a variable is not known before its line');
 	$dir = project('Makefile.in' => "v=\${\"\\q\"}\n");

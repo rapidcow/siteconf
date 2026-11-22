@@ -749,7 +749,7 @@ MSG
 	like($err, qr/`NEED:' something\?/, 'NEED: of nothing');
 	($p, $err) = $rule->('NEED: ${A}/x');
 	like($err, qr/`NEED:' something\?/, '... no space after it');
-	($p, $err) = $rule->('${A}/${a:S/h/h/}/a.html NEED:${A}/${a:Q}/b.css');
+	($p, $err) = $rule->('${A}/${a:S/h/h/}/a.html NEED:${A}/${a:T}/b.css');
 	ok($p, 'a colon in ${...} is no prefix') or diag $err;
 }
 

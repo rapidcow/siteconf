@@ -48,8 +48,11 @@ may have a suffix: C<:R> of F<a.b/c> is F<a.b/c>, not F<a>.
 Replaces the first C<old> in the value with C<new>.  C<^old> only
 matches at the start of the value, and C<old$> only at its end.  C<&> in
 C<new> is C<old>.  The delimiter may be any character; it, C<^>, C<$>,
-C<&> and C<\> are literal after a backslash.  Both parts may have
-C<${...}> in them.  This is I<not> a regular expression.
+C<&> and C<\> are literal after a backslash.  A backslash also begins
+an escape of a string literal: C<\a \b \t \n \v \f \r \e>, C<\s> (a space)
+and C<\x{>I<hex>C<}> (a code point).  Any other letter or digit after
+it is an error; any other character keeps its backslash.  Both parts
+may have C<${...}> in them.  This is I<not> a regular expression.
 
 Dollar signs are read as everywhere else in F<Makefile.in>: C<$$> is a
 C<$>, and C<${x}> or C<$x> is a variable.  The only C<$> that is not
@@ -69,9 +72,10 @@ word), are accepted and mean nothing, since a value is always one word.
 
 =item C<:Q>
 
-Shell-quotes the value as a whole, unless that is needless.  What it
-makes is for the shell, not for make: in a recipe, a C<$> in it is
-written C<$$> (as by bmake's C<:q>), so that make passes it on.
+Marks the value as one word for the shell of a recipe.  It must be the
+last modifier, and is invalid anywhere but a recipe: in a prerequisite,
+a variable assignment, or an argument of another modifier.  The backend
+quotes it, by bytes, and writes a C<$> in it as C<$$>.
 
 =back
 
@@ -151,6 +155,15 @@ sub _part
 			if ($n eq $delim or $n =~ /\A[\\^\$&}]\z/ and length $n) {
 				$lit .= $n;
 				$pos += 2;
+			} elsif (substr($str, $pos) =~ /\A(\\(?:[abtnvfres]|x\{[0-9A-Fa-f]{1,8}\}))/) {
+				# the escapes of a string literal (see scan_string)
+				my $esc = $1;
+				my ($ch) = eval { RdKw::WwW::GenGenLib::scan_string(qq{"$esc"}, prog => undef) };
+				defined $ch or die _status 0, diag(__("bad escape %q in :S"), $esc) . "\n";
+				$lit .= $ch;
+				$pos += length $esc;
+			} elsif ($n =~ /\A[A-Za-z0-9]\z/) {
+				die _status 0, diag(__("bad escape %q in :S"), "\\$n") . "\n";
 			} else {
 				$lit .= $c;
 				$pos++;

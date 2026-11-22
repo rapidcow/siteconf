@@ -17,7 +17,13 @@ use RdKw::WwW::SiteConf;
 
 my %D = ( A => '.', B => '.', a => 'html', b => 'site', c => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Ya => 'xa$', Yb => 'xa$$', Yc => 'xa', md => '.md', html => '.html', F => 'b.md.md', G => 'c.mdx', Sp => 'my dir/sub dir', Empty => '' );
 my $sc = bless { D => \%D }, 'RdKw::WwW::SiteConf';
-sub s_ { $sc->_subst($_[0], $_[1], 'test', $_[2]) }
+# (what a recipe says of it, as bytes: a :Q is quoted last, by the backend)
+sub s_
+{
+	my @runs;
+	$sc->_subst($_[0], $_[1], 'test', $_[2], \@runs);
+	RdKw::WwW::SiteConf::recipe_bytes(\@runs);
+}
 
 my @ok = (
 	# name modifiers: a value is one name, blanks and all
@@ -115,6 +121,10 @@ my %Q = ( sp => 'sp ace', tab => "ta\tb", pipe => 'a|b', colon => 'c:d', quote =
 	lead => '-n', mix => "  'a b'\t| \"c\" ; \\ \$ " );
 @D{ map { "Q_$_" } keys %Q } = values %Q;
 push @ok, (
+	# escapes in :S, as in a string
+	['${W:S/\s/_/}',    'aa_ba'],
+	['${W:S/a/\x{41}/g}', 'AA bA'],
+	['${W:S/ /\t\n/}',  "aa\t\nba"],
 	['${Q_colon:Q}',    'c:d'],                        # (nothing to the shell)
 	['${Q_eq:Q}',       'a=b'],
 	['${Q_pipe:Q}',     "'a|b'"],
@@ -127,7 +137,7 @@ push @ok, (
 	['${<:Q}',          "'s\tc:d.md'", 'x', "s\tc:d.md"],
 	['${A:Q}/${a:Q}',   'html'],                       # (${A} of . takes its slash)
 );
-plan tests => @ok + 12 + 3 + keys(%Q) + 1 + 1 + 1;
+plan tests => @ok + 15 + 1 + 3 + keys(%Q) + 1 + 1 + 1;
 
 for my $c (@ok) {
 	my ($in, $want, $node, $src) = @$c;
@@ -139,6 +149,7 @@ for my $c (@ok) {
 sub sh_args
 {
 	my ($line, @cmd) = @_;
+	$line =~ s/\$\$/\$/g;	# (make reads $$ as $)
 	my $fns = join '', map { "$_() { printf '$_\\0'; printf '%s\\0' \"\$@\"; }; " } @cmd;
 	open my $fh, '-|', '/bin/sh', '-c', $fns . $line or die "sh: $!";
 	my $out = do { local $/; <$fh> };
@@ -159,9 +170,15 @@ for my $k (sort keys %Q) {
 		'a whole recipe, as the shell reads it') or diag $line;
 }
 
+eval { $sc->_subst_name('${W:Q}', undef, 'test') };
+like($@, qr/:Q \(shell quote\) is not valid in a prerequisite/, ':Q in a prerequisite is an error');
+
 for my $c (
 	['${W:Z}',         qr/test: unknown modifier `:Z'/],
 	['${W:R:Z:Q}',     qr/unknown modifier `:Z'/],
+	['${W:Q:R}',       qr/:Q \(shell quote\) must be the last modifier/],
+	['${W:S/a/${X:Q}/}', qr/:Q \(shell quote\) is not valid in a nested expansion/],
+	['${W:S/\q/x/}',   qr/bad escape `\\q' in :S/],
 	['${W:RQ}',        qr/unknown modifier `:RQ'/],
 	['${W:R:}',        qr/empty modifier/],
 	['${W:}',          qr/empty modifier/],
@@ -212,7 +229,7 @@ sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
 	make_path("$dir/html", "$dir/MY");
 	open my $fh, '>', "$dir/html/a" or die; close $fh;
 	open $fh, '>', "$dir/Makefile.in" or die;
-	print $fh "a:\n\tx \${X:Q} \${X} \${W:S/a/\${X:Q}/:Q} \${\@:Q}\n";
+	print $fh "a:\n\tx \${X:Q} \${X} \${W:S/a/\${X}/:Q} \${\@:Q}\n";
 	close $fh or die;
 	open $fh, '>', "$dir/MANIFEST" or die;
 	print $fh "MAKE all\n\tNEED a\n";
@@ -221,13 +238,12 @@ sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
 		X => 'd$l $(x)', W => 'a',
 		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, prog => 'test');
 	my $plan = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->plan;
-	is(rb($plan->{node}{a}{recipe}), "\tx 'd\$\$l \$\$(x)' d\$l \$(x) ''\\''d\$\$l \$\$(x)'\\''' a\n",
+	is(rb($plan->{node}{a}{recipe}), "\tx 'd\$\$l \$\$(x)' d\$l \$(x) 'd\$\$l \$\$(x)' a\n",
 		'what :Q made has $$, and only that (once, however deep)');
-	# The last :Q is not done yet: it is a word, which the backend quotes
-	# once it has spelled it in bytes.  An earlier one, or one in a
-	# modifier, is done by the characters, and is for the shell.
+	# A :Q is not done yet: it is a word, which the backend quotes
+	# once it has spelled it in bytes.
 	is_deeply([ map { [ @$_[0, 1] ] } @{ $plan->{node}{a}{recipe} } ], [
 		[ text => "\tx " ], [ word => 'd$l $(x)' ], [ text => ' d$l $(x) ' ],
-		[ word => "'d\$l \$(x)'" ], [ text => ' ' ], [ word => 'a' ], [ text => "\n" ],
+		[ word => 'd$l $(x)' ], [ text => ' ' ], [ word => 'a' ], [ text => "\n" ],
 	], 'a recipe is runs of text and words');
 }

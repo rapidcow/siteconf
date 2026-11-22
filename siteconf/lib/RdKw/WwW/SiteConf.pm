@@ -49,9 +49,9 @@ like those of L<make(1)>, with C<${A}>, C<${B}>, C<${a}>, C<${b}>
 C<${.TARGET}> for the file being made (in prerequisites too, each
 target of a rule having its own), C<${^X}> for our perl, C<${U+>I<hex>C<}>
 for the character of that code point (as in a header), and the
-modifiers C<:Q> to shell-quote (C<${A:Q}>; in a recipe, a C<$> in what
-it makes is for the shell, and is written C<$$>, while one from C<$$>
-or a variable is make's), C<:E>, C<:H>, C<:R>, C<:T>
+modifiers C<:Q> to shell-quote (C<${A:Q}>; only last, and only in a
+recipe, where a C<$> in what it makes is for the shell, and is written
+C<$$>, while one from C<$$> or a variable is make's), C<:E>, C<:H>, C<:R>, C<:T>
 and C<:S/old/new/> to take names apart (C<${@:R}>); see
 L<RdKw::WwW::SiteConf::Modifiers>.  Targets are named
 relative to C<${b}>, or to C<${c}> if they say so (below).  Prerequisites are
@@ -227,8 +227,8 @@ ends with a line break).  If the first line says nothing, the value
 begins with the next.
 
 The value is expanded where it is: a variable in it is what it is now,
-and it is no more than text after that.  C<:Q> is an error in it, as
-a variable has no shell.  It is an error to define what is defined
+and it is no more than text after that.  C<:Q> is an error in it (it
+is for a recipe).  It is an error to define what is defined
 already, in F<config.mk> or above.  A variable is known to what follows
 it (a recipe, as much as a prerequisite or a target; for a target, only
 a variable that is defined here) and to nothing else: a header does not
@@ -800,8 +800,6 @@ sub recipe_bytes
 			die _status 0, tagmsg(E => diag($opt{line_break}, $where, $s));
 		if ($kind eq 'word') {
 			$out .= _dollars(shell_quote(_to_fs($s)));
-		} elsif ($kind eq 'shell') {
-			$out .= _dollars(_to_fs($s));
 		} else {
 			$out .= _to_fs($s);
 		}
@@ -946,10 +944,10 @@ sub read_manifest
 #   [ text => $text, $where ]    in make's words
 #   [ word => $value, $where ]   a value for the shell, to be quoted
 #                                after it is spelled in bytes
-#   [ shell => $text, $where ]   text that is for the shell already
-# (a `:Q' that is not the last modifier is quoted by the characters,
-# and is shell; that is an error where the bytes would say otherwise).
-# Else we return the line with a :Q quoted by the characters.
+# A :Q is only a mark: it must be the last modifier, in a recipe, and
+# the backend quotes the word (see recipe_bytes).  Elsewhere it is an
+# error, which says where (`noquote' is that, as in `a prerequisite').
+# Without `runs' we return the line.
 sub _subst
 {
 	my ($self, $line, $node, $where, $src, $runs) = @_;
@@ -957,7 +955,8 @@ sub _subst
 	my $out = '';
 	my $put = sub {
 		my ($kind, $s) = @_;
-		return unless length $s;
+		# (a word that is empty is still one: it is quoted to '')
+		return unless length $s or $kind eq 'word';
 		if (!$runs) { $out .= $s }
 		elsif ($kind eq 'text' && @$runs && $runs->[-1][0] eq 'text'
 			&& $runs->[-1][2] eq $where) { $runs->[-1][1] .= $s }
@@ -1043,20 +1042,24 @@ sub _subst
 				$where, "\${$x}"));
 			$val = $D->{$x};
 		}
-		my ($q, $word);
+		my $word;
 		if (defined $mods) {
 			$val = eval {
 				RdKw::WwW::SiteConf::Modifiers::_apply($val, $mods,
 					quote => sub {
 						my ($v, $last) = @_;
-						$self->{noquote} and die diag(__(
-							":Q is for the shell of a recipe, and a variable has none")) . "\n";
-						# the last one is the backend's, by bytes
-						return $word = $v if $runs && $last;
-						$q = 1;
-						$self->_quote_chars($v, $where);
+						$runs or die diag(__(
+							# HEY!  the second %s is where, as `a prerequisite'
+							":Q (shell quote) is not valid in %s"),
+							defined $self->{noquote} ? $self->{noquote} : __("a name")) . "\n";
+						$last or die __(":Q (shell quote) must be the last modifier") . "\n";
+						# the backend's, by bytes
+						return $word = $v;
 					},
-					expand => sub { $self->_subst($_[0], $node, $where, $src) }
+					expand => sub {
+						local $self->{noquote} = __("a nested expansion");
+						$self->_subst($_[0], $node, $where, $src);
+					}
 				);
 			};
 			defined $val or die _status 0, $@ =~ /\AE: / ? $@ : "E: $where: $@";
@@ -1064,27 +1067,13 @@ sub _subst
 		if ($val eq '.' && length $slash) {
 			# `./' is no use to anyone
 			($val, $slash) = ('', '');
+			undef $word;
 		}
-		$put->($word ? 'word' : $q ? 'shell' : 'text', $val);
+		$put->(defined $word ? 'word' : 'text', $val);
 		$put->('text', $slash);
 	}
 	$put->('text', substr($line, $pos));
 	$out;
-}
-
-# `shell_quote' by characters, for a :Q that is not the last modifier
-# (or is not in a recipe).  It is an error if that is not what quoting
-# the bytes comes to.
-sub _quote_chars
-{
-	my ($self, $v, $where) = @_;
-	my $q = shell_quote($v);
-	my $same = eval { _to_fs($q) eq shell_quote(_to_fs($v)) };
-	defined $same and !$same and die _status 0, tagmsg(E => diag(__(
-		# HEY!  The first %s is where, the second what is quoted.
-		"%s: cannot quote %q in the file system encoding"
-		. " (its bytes would be quoted otherwise)"), $where, $v));
-	$q;
 }
 
 # A prerequisite (or a source), as it is written in Makefile.in, expanded.
@@ -1094,6 +1083,7 @@ sub _quote_chars
 sub _subst_name
 {
 	my ($self, $word, $node, $where) = @_;
+	local $self->{noquote} = __("a prerequisite");
 	my $name = $self->_subst($word, $node, $where);
 	length $name or die _status 0, tagmsg(E => diag(__(
 		# HEY!  The first %s is where, the second what is in Makefile.in
@@ -1180,7 +1170,7 @@ sub _assign
 		($$pending, $$pending_no) = ($next, $$lineno);
 		last;
 	}
-	local $self->{noquote} = 1;
+	local $self->{noquote} = __("a variable assignment");
 	my $val = $self->_subst(join("\n", @part), undef, $where);
 	$self->{D} = { %{ $self->{D} }, $name => $val };
 	$self->{assigned}{$name} = 1;

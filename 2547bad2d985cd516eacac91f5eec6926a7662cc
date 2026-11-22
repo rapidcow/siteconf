@@ -1,0 +1,112 @@
+i think a STRING LITERAL might be better in most cases. for instance:
+
+```
+rule:
+     echo ${"表":Q}
+```
+
+for this string literal we expect "\a\b\t\n\v\f\r\e\s\x{...}" escapes (\s is space; from java 15); namely we require braces, since we do want to emphasize that this is a code point.
+
+this expansion may or may not work in prerequisites; i don't mind either way.... but it is a bit redundant considering that we have ${U+hex} escapes there, so it'd be silly.
+
+you can extend gengenlib for this (no need to bump version for that either); this is general and narrow enough, but don't imply `:Q`, since this should be valid outside of parameter expansion.
+
+we can still have variables though.
+the specs are as follows:
+
+they are basically as follows:
+
+```
+var=h u h  # this is a comment
+      a${"\s"}
+       b
+      # not a comment${"\s"}
+# comment
+      c
+      ${""}
+```
+
+this gives:
+
+```
+var="h u h\na \n b\n# not a comment \nc\n"
+```
+
+the trailing newline is preserved by the empty string on the last line (it could have also been a lone tab, but it may not look as obvious so i did this.) (also, tab indentation is required)
+
+one thing is that for readability:
+
+```
+var=          # this is a comment
+      h u h
+      a\s
+       b
+      # not a comment\s
+# comment
+      c
+      ${""}
+```
+
+though the line at "h u h" would actually be interpreted literally even if there is "#" in the middle.
+
+variable expansion should also work, but immediately evaluated (no recursive references!) and excluding the :Q parameter expansion.
+
+also: note that `${"\n":Q}` is not really escapable (not to the shell, but to Make: so have the backend check if this would be misinterpreted as a new command!) but `${"\r":Q}` is (e.g. `${"Icon\r":Q}` in the infamous macOS's case.)
+
+for the manifest i was also thinking:
+
+```
+MAKE: default
+    NEED: food
+
+MAKE: food
+    NEED: ${"some\sbread"}
+```
+
+this didn't really have a valid interpretation before;
+make couldn't handle phony rules sharing the same name
+as a file; so let's just expand it anyways >:3
+
+do this:
+
+*   keep the original names, on first pass.
+*   for each file name that also happens to be a rule name,
+    walk the graph and have it resolved.  die if cycle
++   on top of that, if we haven't been doing it for siteconf -g
+    already, files should never share the same name as any
+    of the rules!  (this is checking that the expanded path
+    though (it's deeper than that, since fs encoding and
+    argv encoding can differ, we are in fact checking the
+    fs-encoded file name against the argv-encoded rule name
+    (yes this is pretty insane, but i'm not stopping XD).)
+    +  actually, check both: once for unicode and once for encoded.
+    +  but if siteconf -g was EXPLICITLY told what goals to
+       generate rules for (or if any rule was a soft-requirement,
+       but got dropped due to unfulfilled dependencies), that
+       goal (and any of its dependents) as well as any goal
+       that was not specified should not be checked.
+*   a goal name should allow slashes and unicode characters.
+    (it should in fact be a BLACKLIST, like how GNU make
+    and everyone already does it, as a strict superset of
+    what make/ninja like in common; and anything that isn't
+    ambiguous like nonbreak space.  so something like:
+    `/\A[^\s\p{Cc}\p{Cf}:#%$\\]+\z/`   would be nice?
+
+also MAKE / NEED / WANT in manifest may have a colon attached to them; in case anyone wants to keep it consistent... (i feel like they look nicer this way too; so maybe siteconf -g should start doing that as well.)
+
+also drop the "configured by" and "resolved by" strings in MY/*; it's too stinky >n>
+
+also NEED and WANT should be variadic: it should still split by space naively though; don't bother accommodating for `${"weird guy"}` like that.
+
+yeah so... this is three features in a trench coat :x
+inline strings, variables, and manifest extension.
+maybe use subagents i guess..... also i interrupted
+you, but i committed the WIP nonetheless.  some tests
+do fail but i guess that's fine....
+
+note that :Q is really a marker now: it is up to the
+backend to decide if it can be emitted!  (namely i
+still don't think "Icon\r" can be spelled literally
+in a command line even after all of this in Make.pm
+or GMake.pm.  but that is the backend's policy, not
+ours to make in the generation interface!)

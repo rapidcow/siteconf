@@ -89,16 +89,16 @@ is_deeply(walk('proj/two', { terminal => 1 }), [ 'proj/behind' ], '... and is no
 # --- read_manifest
 {
 	my $t = Encode::encode('UTF-8', "MAKE christmas\n  WANT not-a-lot\n  JUST-NEED one-thing two\nJUST-WANT: three\nJUST-NEED:four\nNEED five\n");
-	my $mf = read_manifest(\$t);
+	my $mf = read_manifest({}, \$t);
 	is_deeply([ $mf->needed ], [ qw( one-thing two four five ) ], 'needed: JUST-NEED too');
 	is_deeply([ $mf->wanted ], [ qw( not-a-lot three ) ], 'wanted: JUST-WANT too');
 	is_deeply([ map { $_->{just} } @{ ($mf->goals)[0]{need} } ], [ 1, 1, 1, 0 ], 'which are said to be JUST');
 	is_deeply([ map { $_->{just} } @{ ($mf->goals)[0]{want} } ], [ 0, 1 ], '... or not');
 	$t = "MAKE a\nJUST-NEED\n";
-	ok(!eval { read_manifest(\$t); 1 }, 'JUST-NEED of nothing: dies');
+	ok(!eval { read_manifest({}, \$t); 1 }, 'JUST-NEED of nothing: dies');
 	like($@, qr/line 2: JUST-NEED takes a file/, '... says so');
 	$t = "MAKE a\nJUST x\n";
-	ok(!eval { read_manifest(\$t); 1 }, 'JUST alone is not a keyword');
+	ok(!eval { read_manifest({}, \$t); 1 }, 'JUST alone is not a keyword');
 }
 
 chdir '/' or die;

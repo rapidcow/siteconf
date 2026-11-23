@@ -17,7 +17,7 @@ use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( read_manifest escape_dep );
 
 # (the text as it is in a file: UTF-8)
-sub parse { my $t = Encode::encode('UTF-8', shift); read_manifest(\$t) }
+sub parse { my $t = Encode::encode('UTF-8', shift); read_manifest({}, \$t) }
 
 my $mf = parse(<<'M');
 # comment
@@ -49,9 +49,10 @@ ok(!eval { $mf->needed('nope'); 1 }, 'needed: no such goal');
 like($@, qr/\Aread_manifest: MANIFEST: missing goal `nope'$/, '... says so');
 
 my @g = $mf->goals;
-is_deeply($g[0], { name => 'goal', line => 3,
-	need => [ { file => 'sunshine', line => 4, just => 0 }, { file => 'rainbow', line => 5, just => 0 } ],
-	want => [ { file => 'disco_ball', line => 6, just => 0 } ] }, 'goals: with their lines');
+my @at = map { +{ input => 'MANIFEST', line => $_, order => $_ } } 0 .. 6;
+is_deeply($g[0], { name => 'goal', %{ $at[3] },
+	need => [ { file => 'sunshine', %{ $at[4] }, just => 0 }, { file => 'rainbow', %{ $at[5] }, just => 0 } ],
+	want => [ { file => 'disco_ball', %{ $at[6] }, just => 0 } ] }, 'goals: with their lines');
 push @{ $g[0]{need} }, { file => 'x', line => 0, just => 0 };
 $g[0]{need}[0]{file} = 'y';
 is_deeply([ $mf->needed ], [qw( sunshine rainbow )], '... which are copies');
@@ -98,7 +99,7 @@ bad("MAKE a\nNEED \${A}\n", qr/`\$\{A\}' is empty/, 'the root alone');
 bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 {
 	my $t = "MAKE a\nNEED \xff\n";
-	ok(!eval { read_manifest(\$t); 1 }, 'not UTF-8: dies');
+	ok(!eval { read_manifest({}, \$t); 1 }, 'not UTF-8: dies');
 	like($@, qr/line 2: not UTF-8/, 'not UTF-8: says why');
 }
 
@@ -108,10 +109,10 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	open my $fh, '>', "$dir/MANIFEST" or die;
 	print $fh "MAKE all\n\tNEED x\n";
 	close $fh or die;
-	my $mf = read_manifest("$dir/MANIFEST");
+	my $mf = read_manifest({}, "$dir/MANIFEST");
 	is($mf->file, "$dir/MANIFEST", 'file: as it was named');
 	is_deeply([ $mf->needed ], ['x'], 'read from a file');
-	ok(!eval { read_manifest("$dir/nope"); 1 }, 'missing: dies');
+	ok(!eval { read_manifest({}, "$dir/nope"); 1 }, 'missing: dies');
 	like($@, qr/\Aread_manifest: cannot open file `\Q$dir\E\/nope': /, 'missing: says why');
 }
 
@@ -122,9 +123,35 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	is_deeply([ $mf->needed('default') ], ['food'], 'NEED: food');
 	is_deeply([ $mf->needed('food') ], [ 'some bread', 'a', 'b' ], 'a string, and a name for each word');
 	is_deeply([ $mf->wanted('food') ], [ 'c', 'd', 'e' ], 'WANT:c, WANT: d e');
-	is_deeply([ $mf->goals ]->[1]{need}, [ map { +{ file => $_, line => 4, just => 0 } } 'some bread', 'a', 'b' ],
+	is_deeply([ $mf->goals ]->[1]{need}, [ map { +{ file => $_, input => 'MANIFEST', line => 4, order => 4, just => 0 } } 'some bread', 'a', 'b' ],
 		'every name is on its line');
 	is_deeply([ parse("MAKE feed/表/x\nNEED a\n")->targets ], ['feed/表/x'], 'a goal with a slash and a letter');
+}
+
+# --- INCLUDE: from the current directory, with the definitions given
+{
+	my $dir = tempdir(CLEANUP => 1);
+	my $put = sub {
+		open my $fh, '>', "$dir/$_[0]" or die;
+		print $fh $_[1];
+		close $fh or die;
+	};
+	mkdir "$dir/part" or die;
+	$put->('MANIFEST', "MAKE all\n\tNEED a\nINCLUDE \${p}/one\n\tNEED c\n");
+	$put->('part/one', "\tNEED b\nMAKE more\n");
+	chdir $dir or die;
+	my $mf = read_manifest({ A => '.', p => 'part' }, 'MANIFEST');
+	is_deeply([ $mf->targets ], [qw( all more )], 'INCLUDE: its goals are ours');
+	is_deeply([ $mf->needed('all') ], [qw( a b )], '... and it goes on with our MAKE');
+	is_deeply([ $mf->needed('more') ], ['c'], '... and we with its');
+	my ($b) = @{ ($mf->goals)[0]{need} }[1];
+	is_deeply([ @$b{qw( input line order )} ], [ 'part/one', 1, 4 ], '... and says where a line is');
+	ok(!eval { read_manifest({}, 'MANIFEST'); 1 }, 'INCLUDE: an undefined variable dies');
+	like($@, qr/\Aread_manifest: MANIFEST line 3: bad substitution: \$\{p\}$/, '... says where');
+	$put->('part/one', "INCLUDE ./MANIFEST\n");
+	ok(!eval { read_manifest({ p => 'part' }, 'MANIFEST'); 1 }, 'INCLUDE: a cycle dies');
+	like($@, qr/\Aread_manifest: part\/one line 1: include cycle through `\.\/MANIFEST'$/, '... says where');
+	chdir '/' or die;
 }
 
 done_testing;

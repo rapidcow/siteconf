@@ -12,10 +12,11 @@ use lib "$FindBin::Bin/lib";
 use Encode ();
 use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib );
+use RdKw::WwW::GenGenLib qw( write_make );
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
-plan tests => 38;
+plan tests => 44;
 
 my $dir = tempdir(CLEANUP => 1);
 sub put
@@ -97,7 +98,7 @@ bad(qr/`-t all:need': expected NEED or WANT, not `need'/, 'no such type', '-l', 
 bad(qr/-0400: not a valid ASCII octal code point/, 'too big a separator', '-l', '-0400');
 bad(qr/-0 is not permitted in mode -g \(make\)/, '-0 elsewhere', '-g', '-0');
 bad(qr/-t is not permitted in mode -i \(init\)/, '-t elsewhere', '-i', '-t', 'all');
-bad(qr/-B is not permitted in mode -l \(list\)/, '-B', '-l', '-B', '.');
+bad(qr/\Asiteconf: cannot open file `MY\/config\.mk': /, '-B . is not configured', '-l', '-B', '.');
 bad(qr/\Asiteconf: cannot open file `nope': /, 'no manifest', '-l', '-F', 'nope');
 bad_late(qr/x:y' conflicts with record separator -072/, 'a name with the separator',
 	'index.html:', '-l', '-072', '-t', 'small');
@@ -111,3 +112,15 @@ put('BAD', "MAKE all\n\tNEED a\n\tNEED x\${U+D800}y\n");
 bad_late(qr/\Asiteconf: BAD: cannot encode file name "x\\x\{d800\}y"/,
 	'a name the file system cannot spell (not even with \x{...})',
 	"a\n", '-l', '-F', 'BAD');
+
+# -B: an INCLUDE is read from ${A}, with what config.mk defines
+mkdir "$dir/$_" or die for qw( build part );
+mkdir "$dir/build/MY" or die;
+write_make("$dir/build/MY/config.mk", { A => '..', p => 'part' }, prog => 'test');
+put('INC', "MAKE all\n\tNEED a\nINCLUDE \${p}/one\n");
+put('part/one', "\tNEED b\n");
+($out, $err, $ok) = list('-l', '-B', 'build', '-F', 'INC');
+ok($ok, '-B: INCLUDE with a definition') or diag $err;
+is($out, "a\nb\n", '... goes on with the goal');
+bad(qr/\Asiteconf: INC line 3: bad substitution: \$\{p\}$/, 'no -B: nothing is defined', '-l', '-F', 'INC');
+bad(qr/\Asiteconf: INC line 3: bad substitution: \$\{p\}$/, '-B /dev/null: the same', '-l', '-B', '/dev/null', '-F', 'INC');

@@ -43,14 +43,6 @@ Three inputs make up a project, all found from F<MY/config.mk>:
 
 (Found from the current directory, as is F<MANIFEST>.)
 
-C<INCLUDE> reads one or more UTF-8 files using the same syntax.
-C<AUGMENT> reads one or more files of C<target: prerequisites> lines.
-Those targets must have a rule, which may be declared later.
-The prerequisites are added without changing the target's source.
-A relative path for either directive is from C<${A}>. Paths are
-expanded as names, so C<${B}/deps> and C<${data}/deps> can be used.
-Every named file must exist.
-
 Transformation rules from C<${a}/FILE> to C<${b}/FILE>.  Rules look
 like those of L<make(1)>, with C<${A}>, C<${B}>, C<${a}>, C<${b}>
 (and whatever else is in F<config.mk>) substituted, plus C<${@}> or
@@ -253,6 +245,16 @@ a variable that is defined here) and to nothing else: a header does not
 see it.  The value of a variable that is not quoted is text in a
 recipe, as it is.
 
+=item F<Makefile.in> C<INCLUDE> and C<AUGMENT>
+
+C<INCLUDE> reads one or more UTF-8 files of rules where it stands.
+C<AUGMENT> reads one or more files of C<target: prerequisites> lines:
+each target must have a rule (which may come later), and the
+prerequisites are added to it, with its source left as it is.  A path
+of either is expanded as a prerequisite is, and is relative to
+C<${A}>, so C<${B}/deps> and C<${data}/deps> can be used.  Every file
+named must exist, and none may include itself.
+
 =item F<MANIFEST> (C<F>)
 
 The goals of the build, each a L<make(1)> target:
@@ -271,9 +273,10 @@ colon after it (C<MAKE: all>, C<NEED: index.html>).  C<NEED> and
 C<WANT> take any number of names, split at white space as everywhere
 else.
 
-C<INCLUDE> reads one or more files inline, sharing the current
-C<MAKE> goal. Like the F<Makefile.in> directives, it takes paths relative
-to C<${A}> and expands configured variables in them.
+C<INCLUDE> reads one or more manifests where it stands, and the last
+C<MAKE> goes on in them and after them.  Its paths are relative to
+C<${A}>, and are unescaped as a file name is (below), with what is in
+F<config.mk> substituted (C<${A}> is C<.>; no modifiers).
 
 A file name is unescaped as a header's is (see
 L<RdKw::WwW::GenGenLib::Manifest>): C<${$}> is a C<$> and
@@ -402,7 +405,7 @@ as the file system spells it.  The backends say how.
 
 =cut
 
-use Cwd qw( abs_path );
+use Cwd qw( abs_path getcwd );
 use File::Basename qw( dirname basename );
 use File::Spec ();
 
@@ -992,12 +995,27 @@ sub _is_clean
 sub read_manifest
 {
 	my ($self, $file) = @_;
-	my $mf = eval { RdKw::WwW::GenGenLib::read_manifest($file,
-		include_paths => sub { $self->_include_paths(@_) }) } or do {
-		(my $why = $@) =~ s/\Aread_manifest: //;
-		die $why =~ /\AE: / ? $why : "E: $why";
+	# GenGenLib reads an INCLUDE from the current directory, as ${A};
+	# so we go there for it, and come back.  (With no project, as when
+	# a test makes us of nothing, there is nowhere to go.)
+	my $root = $self->{Rabs};
+	my %D = $self->{D} ? (%{ $self->{D} }, A => '.') : ();
+	my $here;
+	if (defined $root) {
+		$here = _un_fs(getcwd());
+		ref $file or File::Spec->file_name_is_absolute($file)
+			or $file = File::Spec->abs2rel(File::Spec->rel2abs($file, $here), $root);
+		chdir _to_fs($root)
+			or die tagmsg(E => diag(__("cannot find the source tree %q: %m"), $root));
+	}
+	my $mf = eval { RdKw::WwW::GenGenLib::read_manifest(\%D, $file) };
+	my $why = $@;
+	defined $here and (chdir _to_fs($here)
+		or die tagmsg(E => diag(__("cannot find the build directory %q: %m"), $here)));
+	$mf or do {
+		$why =~ s/\Aread_manifest: //;
+		die "E: $why";
 	};
-	$file = $mf->file;
 
 	# (what it reads, it reads; what we cannot have, in the order it is said)
 	my @goal = $mf->goals;
@@ -1007,7 +1025,7 @@ sub read_manifest
 		$reserved_goal{$name} || $self->_is_clean($name)
 			and die _status 0, tagmsg(E => diag(__(
 				"%s: %q is a reserved goal name"),
-				_blame($goal->{input} || $file, $goal->{line}), $name));
+				_blame($goal->{input}, $goal->{line}), $name));
 		$goal{$name} = $goal;
 	}
 
@@ -1035,7 +1053,7 @@ sub read_manifest
 					# goals which ends in the beginning
 					# node; e.g. `a -> b -> a'.
 					"%s: cyclic goal: %s"),
-					_blame($ent->{input} || $file, $ent->{line}),
+					_blame($ent->{input}, $ent->{line}),
 					join(' -> ', @path[ (grep { $path[$_] eq $sub->{name} } 0 .. $#path)[0] .. $#path ],
 						$sub->{name})));
 				$resolve->($sub, @path);
@@ -1064,8 +1082,8 @@ sub read_manifest
 	$resolve->($_) for @goal;
 
 	for my $goal (@goal) {
-		_check_file($_->{file}, _blame($_->{input} || $file, $_->{line}))
-			for sort { ($a->{order} || $a->{line}) <=> ($b->{order} || $b->{line}) }
+		_check_file($_->{file}, _blame($_->{input}, $_->{line}))
+			for sort { $a->{order} <=> $b->{order} }
 				@{ $goal->{need} }, @{ $goal->{want} };
 	}
 	@goal;
@@ -1313,7 +1331,8 @@ sub _assign
 	$self->{assigned}{$name} = 1;
 }
 
-# Include paths are written from the project root, just like header paths.
+# The paths of an INCLUDE or AUGMENT line: from the project root, as
+# in a header, so that we can open them from here.
 sub _include_paths
 {
 	my ($self, $args, $where) = @_;
@@ -1323,7 +1342,7 @@ sub _include_paths
 		my $path = $self->_subst($_, undef, $where);
 		length $path && $path !~ /\0/ or die _status 0, tagmsg(E => diag(__(
 			"%s: bad include path %q"), $where, $_));
-		File::Spec->rel2abs($path, $self->{Rabs} || File::Spec->curdir);
+		File::Spec->rel2abs($path, $self->{Rabs});
 	} _raw_words($args);
 }
 
@@ -1338,184 +1357,21 @@ sub _read_rules
 	# (an assignment adds to what we see, here and nowhere else)
 	local $self->{D} = $self->{D};
 	local $self->{assigned} = {};
-	my (%rule, %active, @node, $stanza, $next_stanza, @augmented);
-	my $read = sub {
-		my ($read, $file, $at, $augment) = @_;
-		local $_;
-		my $path = _to_fs($file);
-		open my $fh, '<:encoding(UTF-8)', $path or die tagmsg(E => defined $at
-			? diag(__("%s: cannot open file %q: %m"), $at, $file)
-			: diag(__("cannot open file %q: %m"), $file));
-		my $key = abs_path($path);
-		defined $key or die tagmsg(E => diag(__("cannot find file %q: %m"), $file));
-		$active{$key} and die _status 0, tagmsg(E => diag(__(
-			"%s: include cycle through %q"), $at, $file));
-		local $active{$key} = 1;
-
-		# A line of the file; one that was read too far is given back
-		my ($lineno, $pending, $pending_no) = (0);
-		my $get = sub {
-			if (defined $pending) {
-				$lineno = $pending_no;
-				my $l = $pending;
-				undef $pending;
-				return $l;
-			}
-			my $l = <$fh>;
-			$lineno++ if defined $l;
-			$l;
-		};
-
-		while (defined($_ = $get->())) {
-			next if /\A[$SP]*#(?:[$SP]|\z)/o or /\A[$SP]*\z/o;
-			my $line = $lineno;
-			my $where = _blame($file, $line);
-			# Fold rule headers before deciding whether an indented line
-			# is a recipe.  Recipe backslashes belong to make/the shell.
-			unless (/^\t/) {
-				while (/(?<!\\)(?:\\\\)*\\\r?\n\z/) {
-					s/[ \t]*\\\r?\n\z/ /;
-					my $next = $get->();
-					# a comment line does not end the header (nor is it in it)
-					$next = $get->() while defined $next and
-						$next =~ /\A[$SP]*#(?:[$SP]|\z)/o;
-					defined $next or die _status 0, tagmsg(E => diag(__(
-						"%s: unfinished line continuation"), $where));
-					$next =~ s/^[ \t]+//;
-					$_ .= $next;
-				}
-			}
-			# A line of the recipe of the rule above (or of this one)
-			my $recipe = sub {
-				my ($text) = @_;
-				for my $node (@node) {
-					my $rule = $rule{$node->[0]};
-					if (defined $rule->{stanza} && $rule->{stanza} != $stanza) {
-						die _status 0, tagmsg(E => diag(__(
-							"%s: more than one recipe for %q"),
-							$where, $node->[0]));
-					}
-					$rule->{stanza} = $stanza;
-					# (not yet: ${<} may be said further down)
-					push @{ $rule->{raw} }, [ $text, $where, $self->{D} ];
-				}
-			};
-			my $augment_error = sub {
-				die _status 0, tagmsg(E => diag(__(
-					"%s: AUGMENT accepts only target prerequisites"), $where));
-			};
-			if (/^\t/) {
-				$augment_error->() if $augment;
-				@node or die _status 0, tagmsg(E => diag(__(
-					# HEY!  a recipe line (one that begins with a tab)
-					# with no rule above it to be the recipe of
-					"%s: unexpected tabulation"), $where));
-				$recipe->($_);
-				next;
-			}
-			if (/\A(\w+)[ \t]*=(.*)\z/s) {
-				$augment_error->() if $augment;
-				@node = ();
-				$self->_assign($1, $2, $get, \$pending, \$pending_no, \$lineno, $where);
-				next;
-			}
-			if (/\A[ ]*(INCLUDE|AUGMENT)(?:[$SP]+|\z)(.*)\z/so) {
-				my ($directive, $args) = ($1, $2);
-				$augment_error->() if $augment;
-				$args =~ s/(?:\A|[$SP])#.*//so;
-				my @paths = $self->_include_paths($args, $where);
-				@paths or die _status 0, tagmsg(E => diag(__(
-					"%s: %s takes at least one file"), $where, $directive));
-				$read->($read, $_, $where, $directive eq 'AUGMENT') for @paths;
-				next;
-			}
-			if (/:/) {
-				my ($src, $dep) = split /:/, $_, 2;
-				# After a `;' is the first line of the recipe, and a tab
-				# line after this one is the next
-				my $cmd;
-				$dep =~ /\A($PREREQ);[ \t]*(.*)\z/so
-					and ($dep, $cmd) = ($1, "\t$2");
-				$augment_error->() if $augment && defined $cmd;
-				my @targets = map { [ $self->_read_target($_, $where) ] } _words($src)
-					or die _status 0, tagmsg(E => diag(__("%s: null target list"), $where));
-				unless ($augment) {
-					@node = @targets;
-					$stanza = ++$next_stanza;
-				}
-				for my $node (@targets) {
-					my ($key, $name) = @$node;
-					my $rule = ($rule{$key} ||= { recipe => [], raw => [], deps => [],
-						want => [], name => $name });
-					if ($augment) {
-						push @augmented, [ $rule, $where ];
-					} else {
-						$rule->{at} ||= $where;
-						$rule->{line} ||= $line;
-					}
-					my $dep = $dep;
-					if (!$augment && !$rule->{decided} && $dep =~ /[^$SP]/o) {
-						$rule->{decided} = 1;
-						# the first word (a ${...} may hold spaces, in :S/ /_/)
-						my ($first) = $dep =~ /\A[$SP]*($WORD)/o;
-						if (defined $first and defined(my $from = _source_of($first))) {
-							# ${a} alone says there is none (and ${<} is not known)
-							my $name_of = length $from
-								? $self->_subst_name($from, $name, $where) : '';
-							length $from and _check_file($name_of, $where);
-							$rule->{src} = $name_of;
-							$rule->{source_at} = $where;
-							$dep =~ s/\A[$SP]*\Q$first\E//;
-						}
-					}
-					# NEED:x (or just x) is a prerequisite, and WANT:x
-					# one that can be done without: said as it is written,
-					# before anything is expanded, and of each word it
-					# expands to.  Nothing else may come before a colon.
-					for my $word (_raw_words($dep)) {
-						my ($kind, $just) = ('deps', 0);
-						if ($word =~ s/\A([^$SP\$\/:]*)://o) {
-							my $pre = $1;
-							my $how = $PREFIX{$pre}
-								or die _status 0, tagmsg(E => diag(__(
-									"%s: %q: a prerequisite must start with NEED:, WANT:,"
-									. " JUST: (or JUST-NEED:) or JUST-WANT:, not %q"),
-									$where, "$pre:$word", "$pre:"));
-							($kind, $just) = @$how;
-							# HEY!  %q is `NEED:' or `WANT:', literally.
-							length $word or die _status 0, tagmsg(E => diag(__("%s: %q something?"),
-								$where, "$pre:"));
-						}
-						# A prerequisite is a path from the project root, as in a
-						# header, where ${A} is `.'.  The graph keeps it as the
-						# build dir sees it.
-						my $dep = do {
-							local $self->{D} = { %{ $self->{D} }, A => '.' };
-							$self->_subst_name($word, $name, $where);
-						};
-						my $built = $self->_to_build($dep);
-						push @{ $rule->{$kind} }, $built;
-						$rule->{dependency_at}{$kind}{$built} ||= $where;
-						# (JUST only if every word that says it is)
-						$rule->{ $just ? 'j' : 'nj' }{$built} = 1;
-					}
-				}
-				$recipe->($cmd) if defined $cmd;
-				next;
-			}
-			$augment_error->() if $augment;
-			(my $text = $_) =~ s/\r?\n\z//;
-			die _status 0, tagmsg(E => diag(__("%s: invalid line: %q"), $where, $text));
-		}
-		close $fh or die tagmsg(E => diag(__("cannot read file %q: %m"), $file));
-	};
-	$read->($read, File::Spec->canonpath($self->{D}{R}));
-	for my $entry (@augmented) {
+	# What every file read so far says: the rules, the files that are
+	# open (for an INCLUDE that comes back to one), the targets of the
+	# rule above (`node', which a recipe line is for), the stanza that
+	# is theirs (each rule line begins one), and what AUGMENT added to.
+	local $self->{reading} = { rule => {}, open => {}, node => [],
+		stanza => 0, stanzas => 0, augmented => [] };
+	my $st = $self->{reading};
+	$self->_read_rule_file(File::Spec->canonpath($self->{D}{R}));
+	for my $entry (@{ $st->{augmented} }) {
 		my ($rule, $where) = @$entry;
 		$rule->{at} or die _status 0, tagmsg(E => diag(__(
 			"%s: AUGMENT target %q has no rule"), $where, $rule->{name}));
 	}
-	for my $rule (values %rule) {
+	my $rules = $st->{rule};
+	for my $rule (values %$rules) {
 		my $src = defined $rule->{src} ? $rule->{src} : $rule->{name};
 		# The recipe is runs (see _subst) in make's words: a `$' from $$
 		# or a variable is make's, but one in what a :Q made is the shell's
@@ -1527,7 +1383,200 @@ sub _read_rules
 		}
 		delete $rule->{raw};
 	}
-	\%rule;
+	$rules;
+}
+
+sub _augment_error
+{
+	die _status 0, tagmsg(E => diag(__(
+		"%s: AUGMENT accepts only target prerequisites"), $_[0]));
+}
+
+# One file of rules, `file'; `at' is where the INCLUDE (or AUGMENT)
+# that names it is, and `augment' is true for an AUGMENT.
+sub _read_rule_file
+{
+	my ($self, $file, $at, $augment) = @_;
+	my $st = $self->{reading};
+	local $_;
+	my $path = _to_fs($file);
+	open my $fh, '<:encoding(UTF-8)', $path or die tagmsg(E => defined $at
+		? diag(__("%s: cannot open file %q: %m"), $at, $file)
+		: diag(__("cannot open file %q: %m"), $file));
+	# (a file is the same file whatever path names it)
+	my $key = abs_path($path);
+	defined $key or $key = $path;
+	$st->{open}{$key} and die _status 0, tagmsg(E => diag(__(
+		"%s: include cycle through %q"), $at, $file));
+	local $st->{open}{$key} = 1;
+
+	# A line of the file; one that was read too far is given back
+	my ($lineno, $pending, $pending_no) = (0);
+	my $get = sub {
+		if (defined $pending) {
+			$lineno = $pending_no;
+			my $l = $pending;
+			undef $pending;
+			return $l;
+		}
+		my $l = <$fh>;
+		$lineno++ if defined $l;
+		$l;
+	};
+
+	while (defined($_ = $get->())) {
+		next if /\A[$SP]*#(?:[$SP]|\z)/o or /\A[$SP]*\z/o;
+		my $line = $lineno;
+		my $where = _blame($file, $line);
+		# Fold rule headers before deciding whether an indented line
+		# is a recipe.  Recipe backslashes belong to make/the shell.
+		unless (/^\t/) {
+			while (/(?<!\\)(?:\\\\)*\\\r?\n\z/) {
+				s/[ \t]*\\\r?\n\z/ /;
+				my $next = $get->();
+				# a comment line does not end the header (nor is it in it)
+				$next = $get->() while defined $next and
+					$next =~ /\A[$SP]*#(?:[$SP]|\z)/o;
+				defined $next or die _status 0, tagmsg(E => diag(__(
+					"%s: unfinished line continuation"), $where));
+				$next =~ s/^[ \t]+//;
+				$_ .= $next;
+			}
+		}
+		if (/^\t/) {
+			$augment and _augment_error($where);
+			@{ $st->{node} } or die _status 0, tagmsg(E => diag(__(
+				# HEY!  a recipe line (one that begins with a tab)
+				# with no rule above it to be the recipe of
+				"%s: unexpected tabulation"), $where));
+			$self->_recipe_line($_, $where);
+			next;
+		}
+		if (/\A(\w+)[ \t]*=(.*)\z/s) {
+			$augment and _augment_error($where);
+			$st->{node} = [];
+			$self->_assign($1, $2, $get, \$pending, \$pending_no, \$lineno, $where);
+			next;
+		}
+		if (/\A[ ]*(INCLUDE|AUGMENT)(?:[$SP]+|\z)(.*)\z/so) {
+			my ($directive, $args) = ($1, $2);
+			$augment and _augment_error($where);
+			$args =~ s/(?:\A|[$SP])#.*//so;
+			my @paths = $self->_include_paths($args, $where);
+			@paths or die _status 0, tagmsg(E => diag(__(
+				"%s: %s takes at least one file"), $where, $directive));
+			$self->_read_rule_file($_, $where, $directive eq 'AUGMENT') for @paths;
+			# (a recipe line here is not for the last rule of that file)
+			$st->{node} = [];
+			next;
+		}
+		if (/:/) {
+			$self->_rule_line($_, $where, $line, $augment);
+			next;
+		}
+		$augment and _augment_error($where);
+		(my $text = $_) =~ s/\r?\n\z//;
+		die _status 0, tagmsg(E => diag(__("%s: invalid line: %q"), $where, $text));
+	}
+	close $fh or die tagmsg(E => diag(__("cannot read file %q: %m"), $file));
+}
+
+# A line of the recipe of the rule above (or of the rule on this line)
+sub _recipe_line
+{
+	my ($self, $text, $where) = @_;
+	my $st = $self->{reading};
+	for my $node (@{ $st->{node} }) {
+		my $rule = $st->{rule}{$node->[0]};
+		if (defined $rule->{stanza} && $rule->{stanza} != $st->{stanza}) {
+			die _status 0, tagmsg(E => diag(__(
+				"%s: more than one recipe for %q"),
+				$where, $node->[0]));
+		}
+		$rule->{stanza} = $st->{stanza};
+		# (not yet: ${<} may be said further down)
+		push @{ $rule->{raw} }, [ $text, $where, $self->{D} ];
+	}
+}
+
+# `targets: prerequisites', maybe with `; recipe' after it.  In a file
+# that AUGMENT reads, only the prerequisites are added (no recipe, nor
+# source), and the line begins no stanza.
+sub _rule_line
+{
+	my ($self, $text, $where, $line, $augment) = @_;
+	my $st = $self->{reading};
+	my ($src, $dep) = split /:/, $text, 2;
+	# After a `;' is the first line of the recipe, and a tab
+	# line after this one is the next
+	my $cmd;
+	$dep =~ /\A($PREREQ);[ \t]*(.*)\z/so
+		and ($dep, $cmd) = ($1, "\t$2");
+	$augment && defined $cmd and _augment_error($where);
+	my @targets = map { [ $self->_read_target($_, $where) ] } _words($src)
+		or die _status 0, tagmsg(E => diag(__("%s: null target list"), $where));
+	unless ($augment) {
+		$st->{node} = \@targets;
+		$st->{stanza} = ++$st->{stanzas};
+	}
+	for my $node (@targets) {
+		my ($key, $name) = @$node;
+		my $rule = ($st->{rule}{$key} ||= { recipe => [], raw => [], deps => [],
+			want => [], name => $name });
+		if ($augment) {
+			push @{ $st->{augmented} }, [ $rule, $where ];
+		} else {
+			$rule->{at} ||= $where;
+			$rule->{line} ||= $line;
+		}
+		my $dep = $dep;
+		if (!$augment && !$rule->{decided} && $dep =~ /[^$SP]/o) {
+			$rule->{decided} = 1;
+			# the first word (a ${...} may hold spaces, in :S/ /_/)
+			my ($first) = $dep =~ /\A[$SP]*($WORD)/o;
+			if (defined $first and defined(my $from = _source_of($first))) {
+				# ${a} alone says there is none (and ${<} is not known)
+				my $name_of = length $from
+					? $self->_subst_name($from, $name, $where) : '';
+				length $from and _check_file($name_of, $where);
+				$rule->{src} = $name_of;
+				$rule->{source_at} = $where;
+				$dep =~ s/\A[$SP]*\Q$first\E//;
+			}
+		}
+		# NEED:x (or just x) is a prerequisite, and WANT:x
+		# one that can be done without: said as it is written,
+		# before anything is expanded, and of each word it
+		# expands to.  Nothing else may come before a colon.
+		for my $word (_raw_words($dep)) {
+			my ($kind, $just) = ('deps', 0);
+			if ($word =~ s/\A([^$SP\$\/:]*)://o) {
+				my $pre = $1;
+				my $how = $PREFIX{$pre}
+					or die _status 0, tagmsg(E => diag(__(
+						"%s: %q: a prerequisite must start with NEED:, WANT:,"
+						. " JUST: (or JUST-NEED:) or JUST-WANT:, not %q"),
+						$where, "$pre:$word", "$pre:"));
+				($kind, $just) = @$how;
+				# HEY!  %q is `NEED:' or `WANT:', literally.
+				length $word or die _status 0, tagmsg(E => diag(__("%s: %q something?"),
+					$where, "$pre:"));
+			}
+			# A prerequisite is a path from the project root, as in a
+			# header, where ${A} is `.'.  The graph keeps it as the
+			# build dir sees it.
+			my $dep = do {
+				local $self->{D} = { %{ $self->{D} }, A => '.' };
+				$self->_subst_name($word, $name, $where);
+			};
+			my $built = $self->_to_build($dep);
+			push @{ $rule->{$kind} }, $built;
+			$rule->{dependency_at}{$kind}{$built} ||= $where;
+			# (JUST only if every word that says it is)
+			$rule->{ $just ? 'j' : 'nj' }{$built} = 1;
+		}
+	}
+	$self->_recipe_line($cmd, $where) if defined $cmd;
 }
 
 # A node of the graph: what it takes to make one file in `b' from one
@@ -1927,7 +1976,7 @@ sub _goals
 				# (one line for the manifest, which has one; else a line each)
 				my $why = join ' ', map { (my $l = $_) =~ s/\A\s+//; $l } map { split /\n/ } @{ $node->{why} };
 				my $causes = sub { my $p = shift; join '', map { (my $l = $_) =~ s/^/  /mg; tagmsg($p => $l) } @{ $node->{why} } };
-				my $at = _blame($ent->{input} || $D->{F}, $ent->{line});
+				my $at = _blame($ent->{input}, $ent->{line});
 				# HEY!  These three are where a goal says what it NEEDs (or
 				# WANTs), in parentheses after it: %s is `file' line 3, and
 				# %q the goal that has that line (which this goal includes)
@@ -2061,7 +2110,7 @@ sub _select_goals
 	map {
 		my $goal = $goal{$_};
 		$mode{$_} eq 'WANT'
-			? { %$goal, need => [], want => [ sort { ($a->{order} || $a->{line}) <=> ($b->{order} || $b->{line}) }
+			? { %$goal, need => [], want => [ sort { $a->{order} <=> $b->{order} }
 				@{ $goal->{need} }, @{ $goal->{want} } ] }
 			: $goal;
 	} @order;

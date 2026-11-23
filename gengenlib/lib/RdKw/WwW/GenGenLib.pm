@@ -1230,12 +1230,16 @@ sub walk_deps
 	$kwds->{terminal} ? grep({ !$inner{$_} } @pool) : @pool;
 }
 
-=item B<read_manifest> I<file>[, prog => 'read_manifest' ]
+=item B<read_manifest> \%D, I<file>[, { prog => 'read_manifest' }]
 
 The goals in I<file> (a name, or a reference to the text), as an
 L<RdKw::WwW::GenGenLib::Manifest>, which says what that looks like.
 The names in it are unescaped, as B<subs_dep> does without definitions:
-C<${U+0020}> is a space, and C<${$}> a C<$>.
+C<${U+0020}> is a space, and C<${$}> a C<$>.  C<\%D> is required, as
+for B<walk_deps>, and is substituted in the paths of C<INCLUDE> only;
+those are opened from the current directory, which is taken to be
+C<${A}>.  An empty map reads a manifest that includes nothing that
+needs a definition.
 
 Errors are prefixed with I<prog>, else C<'read_manifest'>.
 

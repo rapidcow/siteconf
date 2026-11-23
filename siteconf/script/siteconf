@@ -62,7 +62,7 @@ siteconf - configurable incremental build script generator
     #                      (a different option: both can be had)
     #   -Sorder=1          (gmake) directory markers after a |
 
-    siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+    siteconf -l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
     siteconf list ...                         # same
     siteconf -l -0 -F ${B}/MY/MANIFEST -t all |
         tar -c -f site.tar -C ${B}/${b} --null -T -
@@ -220,6 +220,14 @@ The build directory, as seen from here.  Everything else is derived
 from F<MY/config.mk> there, so it does not matter from where this is
 run.
 
+With C<-l>, it is for C<INCLUDE> in the manifest: its paths are
+expanded with the definitions in F<MY/config.mk> there, and are read
+from C<${A}>.  Without C<-B>, or with F</dev/null>, nothing is read:
+the paths are from the current directory, and may name no variable.
+C<-l> never takes C<-B> to be C<.>.
+
+Support for C<-l> was added in 0.0300.
+
 =item B<-G> I<generator>
 
 C<make> (default), writing F<Makefile>; C<gmake>, writing one for GNU
@@ -312,7 +320,7 @@ Added in 0.0101.
 =item B<-l>, B<list>
 
 Print the names that the manifest (F<MANIFEST>, or C<-F>; nothing is
-configured for this) gives its default goal, the first: what it
+configured for this but C<INCLUDE>, with C<-B>) gives its default goal, the first: what it
 C<NEED>s, then what it C<WANT>s, as they are written there --
 unescaped, but not resolved (a C<WANT> that would be dropped is still
 listed), and each once.  They are relative to C<${a}>, and to
@@ -389,6 +397,7 @@ Added in 0.0300.
 use version;
 
 use Data::Dumper ();
+use Cwd ();
 use File::Basename qw( basename dirname );
 use File::ShareDir ();
 use File::Spec;
@@ -435,7 +444,7 @@ my $usage = do {
 		. "$pad         [-Sopt=val ...] [-Dvar[=val] ...] [-Ovar[=val] ...]",
 		"-g [-A] [-B builddir] [-G generator] [-F manifest] [-R rulebook]\n"
 		. "$pad         [-o file] [-t [NEED:|WANT:]goal ...] [-Sopt[=val] ...]",
-		"-l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]",
+		"-l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]",
 		"-V [-V [-V]]";
 };
 
@@ -606,7 +615,7 @@ if ($opt{mode} eq 'init') {
 	$opt{written} = \@written;
 	exit do_init(\%opt);
 } elsif ($opt{mode} eq 'list') {
-	foreach (qw( A P f B G R o )) {
+	foreach (qw( A P f G R o )) {
 		defined $opt{$_} and _not_for_us("-$_", '-l (list)');
 	}
 	foreach (qw( M )) {
@@ -678,7 +687,22 @@ sub do_list
 	}
 	my $file = defined $opt->{F} ? $opt->{F} : 'MANIFEST';
 	eval {
-		my $mf = read_manifest($file, prog => undef);
+		# With -B, an INCLUDE is read from ${A}, with what is configured
+		# there; without it, there is nothing to read it with.
+		my %D;
+		my $B = $opt->{B};
+		if (defined $B && $B ne File::Spec->devnull) {
+			%D = RdKw::WwW::GenGenLib::read_make(
+				File::Spec->catfile($B, 'MY', 'config.mk'), prog => undef);
+			# (A is from B, and F from here; we do not come back)
+			my $here = $cs->un_fs(Cwd::getcwd());
+			my $root = File::Spec->rel2abs($D{A}, File::Spec->rel2abs($B, $here));
+			$file = File::Spec->abs2rel(File::Spec->rel2abs($file, $here), $root);
+			chdir $cs->to_fs($root, { prog => $prog }) or die $cs->diag(__(
+				"cannot find the source tree %q: %m"), $D{A}) . "\n";
+			$D{A} = '.';
+		}
+		my $mf = read_manifest(\%D, $file, { prog => undef });
 		my (%seen, @name);
 		for my $t (@{ $opt->{t} } ? @{ $opt->{t} } : ':') {
 			my ($goal, $type) = split /:/, $t, 2;

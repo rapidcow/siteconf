@@ -108,7 +108,7 @@ like($out, qr/goal `broken' WANTs `missing'/, 'demoted NEED is reported as WANT'
 like(slurp('Makefile'), qr/^broken: site\/present$/m, 'selected goal emitted');
 unlike(slurp('Makefile'), qr/^other:/m, 'unselected goal omitted');
 like(slurp('Makefile'), qr/-t WANT:broken -t small/, 'generation header preserves selectors');
-is_deeply([read_manifest("$dir/MY/MANIFEST")->needed('broken')], ['present'],
+is_deeply([read_manifest({}, "$dir/MY/MANIFEST")->needed('broken')], ['present'],
 	'resolved manifest contains only buildable files');
 ($status, $out) = run('-g', '-q', '-G', 'ninja', '-t', 'other', '-t', 'WANT:broken');
 is($status, 0, 'selection works with Ninja too') or diag $out;

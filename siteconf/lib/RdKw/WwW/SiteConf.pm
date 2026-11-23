@@ -1406,7 +1406,7 @@ sub _node
 		# nothing: a node that was read in full is JUST enough.
 		if ($node->{just} && !$just) {
 			$self->{full}{$file} = 1;
-			die bless { file => $file }, 'RdKw::WwW::SiteConf::Again';
+			die bless { file => $file }, 'RdKw::WwW::SiteConf::ABORT';
 		}
 		return $node;
 	}
@@ -1722,8 +1722,8 @@ sub plan
 		$self->{tool} = {};
 		$self->{hold} = [];
 		($goal, $err, $order) = eval { $self->_goals(@spec) };
-		if (my $again = $@) {
-			ref $again && $again->isa('RdKw::WwW::SiteConf::Again') or die $again;
+		if (my $abort = $@) {
+			ref $abort && $abort->isa('RdKw::WwW::SiteConf::ABORT') or die $abort;
 			next;
 		}
 		last;

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 42;
+use Test::More tests => 44;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -124,6 +124,12 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make->_emit($_[0]) }
 	$plan = plan_of($dir, clean => 'clean-&', clean_intermediate => 1);
 	is_deeply($plan->{clean}[0]{files}, ['site/a.css', 'site/big.css'], 'with -Sclean_intermediate=1: and what is on the way');
 	is_deeply(plan_of($dir, clean => 'clean-&', clean_intermediate => 0)->{clean}[0]{files}, ['site/big.css'], '... which 0 does not say');
+}
+
+# --- a rule may be the name of a directory (of what it makes, say)
+{
+	ok(eval { plan_of(project("MAKE site\n\tNEED d/b.css\n"), clean => 'd'); 1 }, 'a rule called d, which is a directory') or diag $@;
+	ok(eval { plan_of(project("MAKE site\n\tNEED a.css\n")); 1 }, 'a goal called site, which is a directory') or diag $@;
 }
 
 # --- many files: several rm lines, none too long, each file once

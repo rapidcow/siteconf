@@ -306,7 +306,8 @@ No file may have the name of a rule, which is a goal that is made, or a
 cleaning rule.  That is checked for the characters of both, and for the
 bytes that the file system and the arguments make of them.  So C<MAKE
 site/index.html> clashes with the file F<site/index.html>, unless that
-goal was not asked for (C<-t>).
+goal was not asked for (C<-t>).  A directory is no file here: C<MAKE
+site> is fine.
 
 =item the files themselves
 
@@ -1866,7 +1867,10 @@ sub _finish
 
 	my @clean = $self->_clean_rules(\@goal, \@order, \@dir);
 
-	# A rule (of a goal that we make, or to clean) is not a file
+	# A rule (of a goal that we make, or to clean) is not a file.  (A
+	# directory is not one of those: nothing in the Makefile is made
+	# by that name, only by the name of its marker, and a rule called
+	# `site' is the usual name of the goal for the directory `site'.)
 	{
 		my %rule = map { $_->{name} => 1 } @goal, @clean;
 		my %rule_arg;
@@ -1875,7 +1879,7 @@ sub _finish
 			$rule_arg{$b} = $_ if defined $b;
 		}
 		for my $file (map({ $_->{bpath} } @{ $self->{node} }{@order}),
-				map { $_->{dir}, $_->{marker} } @dir) {
+				map { $_->{marker} } @dir) {
 			my $b = eval { _to_fs($file) };
 			my $clash = $rule{$file} ? $file : defined $b ? $rule_arg{$b} : undef;
 			defined $clash and die _status 0, tagmsg(E => diag(__(

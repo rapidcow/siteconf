@@ -6,7 +6,7 @@ cd ${B} && make [goal]
 MANIFEST:
     MAKE all
         NEED file1      # relative to ${a}; made as ${B}/${b}/file1
-        WANT file2      # soft: resolved into MY/MANIFEST.all
+        WANT file2      # soft: resolved into MY/MANIFEST
     MAKE small
         NEED file1
 

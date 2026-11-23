@@ -78,13 +78,13 @@ my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build -Sclean -t al
 like($err, qr/WANTs `extra\/index\.html', but cannot be made/, 'WANT with a missing need is dropped');
 like($err, qr/WANTs `ghost\.html', but cannot be made/, 'WANT without a rule is dropped');
 unlike(slurp('build/Makefile'), qr/^include\b/m, 'the Makefile includes nothing: it says all of it itself');
-like(slurp('build/MY/MANIFEST.all'), qr/\A.*^MAKE all\n\tNEED index\.html\n\tNEED sub\/index\.html\n\tNEED robots\.txt\n/ms,
-	'MY/MANIFEST.all');
-like(slurp('build/MY/MANIFEST.basic'), qr/NEED sub\/index\.html/, 'WANT that can be had is kept');
+like(slurp('build/MY/MANIFEST'), qr/\A.*^MAKE all\n\tNEED index\.html\n\tNEED sub\/index\.html\n\tNEED robots\.txt\n/ms,
+	'MY/MANIFEST');
+like(slurp('build/MY/MANIFEST'), qr/^MAKE basic\n(?:.*\n)*?\tNEED sub\/index\.html/m, 'WANT that can be had is kept');
 # (what was dropped is a comment, and so is not listed: only what is made)
 my $listed = run('siteconf -l, of what was resolved', $^X, $script,
-	qw( -l -F build/MY/MANIFEST.all ));
-is($listed, join('', map { "$_\n" } slurp('build/MY/MANIFEST.all') =~ /^\tNEED (\S+)$/mg),
+	qw( -l -F build/MY/MANIFEST -t all ));
+is($listed, join('', map { "$_\n" } (slurp('build/MY/MANIFEST') =~ /^MAKE all\n((?:[#\t].*\n)*)/m)[0] =~ /^\tNEED (\S+)$/mg),
 	'... is what it NEEDs');
 unlike($listed, qr/extra\/index\.html|ghost\.html/, '... and not what was dropped');
 unlike($err = run('siteconf make (alias)', $^X, $script, qw( make -B build -Sclean -t all -t basic )),

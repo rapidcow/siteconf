@@ -206,6 +206,9 @@ Revision history of WwW-SiteConf
         none.  The names of goals and rules are spelled as an argument
         is, not as a file name is.  Without -t, -g generates the first
         goal only, as a bare make makes it; -t takes goal,goal too.
+        -g writes one MY/MANIFEST (a block for each goal), not a
+        MY/MANIFEST.GOAL for each: read a goal back with -l -F
+        MY/MANIFEST -t GOAL.  Old MY/MANIFEST.* are not removed.
         For -G gmake, -Sorder=1 makes the
         directory markers order-only (after a |).  An option the
         generator does not know is said if it has a value.

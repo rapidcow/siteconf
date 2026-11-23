@@ -29,7 +29,7 @@ RdKw::WwW::SiteConf - read the build graph of a configured source tree
         }
     }
 
-    $sc->generate('make');      # MY/MANIFEST.* and the Makefile
+    $sc->generate('make');      # MY/MANIFEST and the Makefile
 
 =head1 DESCRIPTION
 
@@ -373,14 +373,14 @@ seen from the build directory, after the substitutions above.
 A C<WANT>ed file is resolved at configuration time: it is kept if
 there is a rule for it, its source exists, and everything it
 C<NEED>s exists.  The resolved goals are written to
-F<MY/MANIFEST.I<goal>> in the very same format (all C<NEED>, with
-what was dropped left as comments).
+F<MY/MANIFEST> in the very same format, a block for each goal (all
+C<NEED>, with what was dropped left as comments).
 
 File names, here and in what we are given, are character strings:
 they are spelled as L<RdKw::I18N::CodeSets> says (B<filesys> of
 C<< RdKw::I18N::CodeSets->locale >>) on their way out to the system,
 and a name it cannot spell is an error.  F<Makefile.in>, F<MANIFEST>
-and F<MY/MANIFEST.I<goal>> are UTF-8.  The build file is bytes:
+and F<MY/MANIFEST> are UTF-8.  The build file is bytes:
 L<make(1)> and L<ninja(1)> read it so, and every name in it is spelled
 as the file system spells it.  The backends say how.
 
@@ -2016,7 +2016,7 @@ sub manifest_text
 
 =item B<generate> [ I<generator>, [ I<file> ] ]
 
-Writes F<MY/MANIFEST.I<goal>> for each goal, and the build file
+Writes F<MY/MANIFEST> (the goals, resolved), and the build file
 for I<generator> (C<make>, the default, C<gmake> or C<ninja>), named
 I<file> in the build directory if given (else F<Makefile> or
 F<build.ninja>).
@@ -2071,21 +2071,9 @@ sub generate
 	my $plan = $self->plan;
 	$plan->{opt} = \%S;
 	my $My = "$self->{B}/MY";
-	my %have;
-	for my $goal (@{ $plan->{goals} }) {
-		my $name = "MANIFEST.$goal->{name}";
-		$have{$name}++;
-		$self->_report($name, update_file("$My/$name", $self->manifest_text($goal)));
-	}
-	# Goals that are no more
-	for my $old (glob(_to_fs("$My/MANIFEST.*"))) {
-		my $name = basename(_un_fs($old));
-		$name =~ /\AMANIFEST\.[A-Za-z0-9][-\w.+]*\z/ or next;
-		$have{$name} or do {
-			unlink $old;
-			$self->_warn(diag(__("Removing %q"), "MY/$name") . "\n");
-		};
-	}
+	# (one file, so that no goal is a file name; -l -F says which)
+	$self->_report('MANIFEST', update_file("$My/MANIFEST",
+		join("\n", map { $self->manifest_text($_) } @{ $plan->{goals} })));
 
 	$plan->{prog} = "$self->{prog} -g" . ($self->{strict} ? 'A' : '') . " -G $G" . join '', map {
 		" -$_ " . shell_quote($self->{fromhere}{$_})
@@ -2115,7 +2103,7 @@ sub _report
 {
 	my ($self, $name, $what) = @_;
 	return unless $what;
-	$name = "MY/$name" if $name =~ /^MANIFEST\./;
+	$name = "MY/$name" if $name eq 'MANIFEST';
 	$self->_warn(diag($what > 1
 		# HEY!  ``Writing'' creates the file, and
 		# ``Updating'' overwrites it.   (The phrasing

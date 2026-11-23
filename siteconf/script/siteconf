@@ -64,7 +64,7 @@ siteconf - configurable incremental build script generator
 
     siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
     siteconf list ...                         # same
-    siteconf -l -0 -F ${B}/MY/MANIFEST.all |
+    siteconf -l -0 -F ${B}/MY/MANIFEST -t all |
         tar -c -f site.tar -C ${B}/${b} --null -T -
 
 =head1 DESCRIPTION
@@ -77,7 +77,7 @@ state of the build, and which whatever is transformed may depend on).
 C<siteconf -g> reads those, along with the rules (F<Makefile.in>)
 and the F<MANIFEST> they were pointed at (as seen from where you run
 it: they are not part of the source tree), and writes the build file
-in I<${B}>, and F<MY/MANIFEST.I<goal>> for each goal in the manifest.
+in I<${B}>, and F<MY/MANIFEST>, the goals of the manifest as they were resolved.
 See L<RdKw::WwW::SiteConf> for what those look like.
 
 With the C<web> preset (C<-P web>), F<siteconf -i> also writes a plain
@@ -327,7 +327,7 @@ it.
 
 To list what a build made, list what F<siteconf -g> resolved, from
 which every C<WANT> that could not be made is gone:
-C<-F /MY/MANIFEST.>I<goal>.  The manifest itself still has them.
+C<-F MY/MANIFEST -t >I<goal> (in the build directory).  The manifest itself still has them.
 
 Added in 0.0300.
 

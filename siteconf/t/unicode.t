@@ -131,7 +131,7 @@ is($status, 0, 'siteconf -g') or diag $out;
 like(slurp_fs("$Bdir/Makefile"), qr/^site\/résumé\.html: /m, 'the Makefile names it (as the file system does)');
 like(slurp_fs("$Bdir/Makefile"), qr/^site\/no\x{a0}break\.html: [^ ]*html\/no\x{a0}break\.html [^ ]*html\/résumé\.html /m,
 	'... and a no-break space is part of a name, in headers too');
-ok(-f fs("$Bdir/MY/MANIFEST.all"), '... and its manifest');
+ok(-f fs("$Bdir/MY/MANIFEST"), '... and its manifest');
 
 SKIP: {
 	my $make = $ENV{MAKE} || 'make';

@@ -96,7 +96,7 @@ sub spaced_builds
 	is(contents("$dir/site/dir name/page name.html"), "explicit\n", 'explicit source and spaced directory');
 	is(contents("$dir/site/other name.html"), "generated\n", 'a generated dependency with a space');
 	ok($up_to_date->($dir), 'spaced targets are up to date');
-	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', '-F', 'MY/MANIFEST.all');
+	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', '-F', 'MY/MANIFEST', '-t', 'all');
 	is($status, 0, 'the resolved manifest can be read back') or diag $out;
 	for my $dep ('header dep', 'rule dep', 'optional dep', 'html/source name.txt', 'site/other name.html') {
 		# Put just this dependency after all outputs, without waiting

@@ -74,7 +74,7 @@ unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
 	like(slurp("$abs/MY/config.mk"), qr/^A=\t\Q$src\E$/m, '... and so is absolute -DA');
 }
 
-my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build -Sclean ));
+my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build -Sclean -t all -t basic ));
 like($err, qr/WANTs `extra\/index\.html', but cannot be made/, 'WANT with a missing need is dropped');
 like($err, qr/WANTs `ghost\.html', but cannot be made/, 'WANT without a rule is dropped');
 unlike(slurp('build/Makefile'), qr/^include\b/m, 'the Makefile includes nothing: it says all of it itself');
@@ -87,7 +87,7 @@ my $listed = run('siteconf -l, of what was resolved', $^X, $script,
 is($listed, join('', map { "$_\n" } slurp('build/MY/MANIFEST.all') =~ /^\tNEED (\S+)$/mg),
 	'... is what it NEEDs');
 unlike($listed, qr/extra\/index\.html|ghost\.html/, '... and not what was dropped');
-unlike($err = run('siteconf make (alias)', $^X, $script, qw( make -B build -Sclean )),
+unlike($err = run('siteconf make (alias)', $^X, $script, qw( make -B build -Sclean -t all -t basic )),
 	qr/Writing|Updating/, 'regenerating changes nothing');
 
 run('make basic', $make, '-C', 'build', 'basic');
@@ -117,7 +117,7 @@ ok(!-e 'build/site/index.html', 'clean');
 open my $fh, '>>', 'MANIFEST' or die;
 print $fh "MAKE broken\n\tNEED ghost.html\n\tNEED extra/index.html\n";
 close $fh;
-my $bad = `$^X $script -g -q -B build 2>&1`;
+my $bad = `$^X $script -g -q -B build -t broken 2>&1`;
 isnt($?, 0, 'NEED of the missing is fatal');
 like($bad, qr/goal `broken' NEEDs `ghost\.html'.*\n(?:.*\n)*?.*goal `broken' NEEDs `extra\/index\.html'.*\n(?:.*\n)*?.*2 problems/,
 	'all problems are reported at once');

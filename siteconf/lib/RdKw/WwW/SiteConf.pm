@@ -485,7 +485,8 @@ undef.  They are not kept anywhere.
 C<goals =E<gt> [ ... ]> selects manifest goals, in the order given,
 as C<goal>, C<NEED:goal> (both keep NEED and WANT as declared), or
 C<WANT:goal> (all files are wanted).  A repeated goal keeps its first
-position and its last mode.  An empty list, or none, selects all goals.
+position and its last mode.  Each may be a comma-separated list.  An
+empty list, or none, selects the first goal of the manifest.
 
 =cut
 
@@ -909,29 +910,29 @@ escapes spaces, or rejects them in the case of POSIX make.
 # What a goal may be called (as in GenGenLib::Manifest), and so a rule
 my $RULE_NAME = qr/\A(?!-)[^\s\p{Cc}\p{Cf}:#%\$\\]+\z/;
 
-# What -Sclean says the cleaning rules are called: a comma-separated list
-# of names, in each of which `&' is the name of a goal (and then there is
-# a rule for each), and `clean' if it says no name.  Empty if there is no
-# -Sclean, and so no rule; a lone `&' (a rule that would be named like
-# the goal itself) is how to say there are none.  A name is one a goal
-# may have.
+# What -Sclean (or -Spurge: `key') says the cleaning rules are called:
+# a comma-separated list of names, in each of which `&' is the name of a
+# goal (and then there is a rule for each), and `key' itself if it says no
+# name.  Empty if there is no such option, and so no rule; a lone `&' (a
+# rule that would be named like the goal itself) is how to say there are
+# none.  A name is one a goal may have.
 sub _clean_pattern
 {
-	my ($self) = @_;
+	my ($self, $key) = @_;
 	my $S = $self->{S};
-	$S && exists $S->{clean} or return ();
-	my $c = $S->{clean};
-	$c = 'clean' unless defined $c && length $c;
+	$S && exists $S->{$key} or return ();
+	my $c = $S->{$key};
+	$c = $key unless defined $c && length $c;
 	my @pat;
 	for my $name (split /,/, $c, -1) {
 		length $name
 			# HEY!  %s is the option, as -Sclean=a,,b
 			or die _status 0, tagmsg(E => diag(__(
-				"%s: a name of a rule may not be empty"), "-Sclean=$c"));
+				"%s: a name of a rule may not be empty"), "-S$key=$c"));
 		$name =~ $RULE_NAME
 			or die _status 0, tagmsg(E => diag(__(
 				# HEY!  the second %s is the name, as in -Sclean=a:b
-				"%s: %q cannot be the name of a rule"), "-Sclean=$c", $name));
+				"%s: %q cannot be the name of a rule"), "-S$key=$c", $name));
 		push @pat, $name unless $name eq '&';
 	}
 	@pat;
@@ -941,7 +942,7 @@ sub _clean_pattern
 sub _is_clean
 {
 	my ($self, $name) = @_;
-	scalar grep { !/&/ && $_ eq $name } $self->_clean_pattern;
+	scalar grep { !/&/ && $_ eq $name } map { $self->_clean_pattern($_) } qw( clean purge );
 }
 
 sub read_manifest
@@ -1906,8 +1907,11 @@ sub _finish
 sub _select_goals
 {
 	my ($self, @spec) = @_;
-	my @select = @{ $self->{goals} || [] };
-	return @spec unless @select;
+	# -t goal,goal is -t goal -t goal
+	my @select = map { length $_ ? split(/,/, $_, -1) : $_ } @{ $self->{goals} || [] };
+	# Without -t, what a bare `make' makes: the first goal.  (The rest
+	# are for -t, or for a goal at the top that NEEDs them.)
+	return $spec[0] || () unless @select;
 	my %goal = map { $_->{name} => $_ } @spec;
 	my (%mode, @order);
 	for my $select (@select) {
@@ -1930,47 +1934,48 @@ sub _select_goals
 	} @order;
 }
 
-# The cleaning rules, as { name, files => [ BPATH ] }
-# (see _clean_pattern): the opposite of making a goal.
-# The rule that is not for a goal is that of the first
-# (what a bare `make' makes); one that is takes what
-# its goal names, in the manifest and the goals it
-# includes.  Not what is made on the way, unless
-# -Sclean_all says so.  Directory markers are kept.
+# The cleaning rules, as { name, files => [ BPATH ] } (see
+# _clean_pattern): the opposite of making a goal.  The rule that is not
+# for a goal is that of the first (what a bare `make' makes); one that is
+# takes what its goal names, in the manifest and the goals it includes.
+# Those of -Sclean do not take what is made on the way; those of
+# -Spurge do.  Directory markers are kept either way.
 sub _clean_rules
 {
 	my ($self, $goal, $order, $dir) = @_;
-	my @pat = $self->_clean_pattern or return;
 	my $node = $self->{node};
 	my %pos; @pos{@$order} = 0 .. $#$order;
-	my $deep = $self->{S}{clean_all};
-	my $files = sub {
-		my %have;
-		my $walk; $walk = sub {
-			$have{$_[0]}++ and return;
-			$deep and $walk->($_) for @{ $node->{$_[0]}{kids} };
-		};
-		$walk->($_) for map { @{ $_->{files} } } @_;
-		[ map { $node->{$_}{bpath} } sort { $pos{$a} <=> $pos{$b} } keys %have ];
-	};
 	my @rule;
-	for my $pat (@pat) {
-		if ($pat =~ /&/) {
-			for my $g (@$goal) {
-				(my $name = $pat) =~ s/&/$g->{name}/g;
-				push @rule, { name => $name, files => $files->($g) };
+	for my $key (qw( clean purge )) {
+		my $deep = $key eq 'purge';
+		my $files = sub {
+			my %have;
+			my $walk; $walk = sub {
+				$have{$_[0]}++ and return;
+				$deep and $walk->($_) for @{ $node->{$_[0]}{kids} };
+			};
+			$walk->($_) for map { @{ $_->{files} } } @_;
+			[ map { $node->{$_}{bpath} } sort { $pos{$a} <=> $pos{$b} } keys %have ];
+		};
+		for my $pat ($self->_clean_pattern($key)) {
+			if ($pat =~ /&/) {
+				for my $g (@$goal) {
+					(my $name = $pat) =~ s/&/$g->{name}/g;
+					push @rule, { name => $name, files => $files->($g), opt => $key };
+				}
+			} else {
+				push @rule, { name => $pat, files => $files->(@$goal ? $goal->[0] : ()), opt => $key };
 			}
-		} else {
-			push @rule, { name => $pat, files => $files->(@$goal ? $goal->[0] : ()) };
 		}
 	}
 	my %taken = (%reserved_goal, map { $_->{name} => 1 } @$goal);
 	for my $rule (@rule) {
 		my $name = $rule->{name};
+		my $key = delete $rule->{opt};
 		# HEY!  %s is the option, as in -Sclean=clean-& (or -Sclean)
 		$taken{$name}++ and die _status 0, tagmsg(E => diag(__("%s: %q is"
 			. " also the name of a goal or another rule"),
-			defined $self->{S}{clean} ? "-Sclean=$self->{S}{clean}" : '-Sclean', $name));
+			defined $self->{S}{$key} ? "-S$key=$self->{S}{$key}" : "-S$key", $name));
 	}
 	@rule;
 }

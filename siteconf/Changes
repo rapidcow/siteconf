@@ -199,11 +199,14 @@ Revision history of WwW-SiteConf
     *** -Dclean is gone, and so is the clean rule unless asked for.
         -g takes -S, the options of the generator.  -Sclean makes the
         opposite of `make': the rule `clean' removes the files that the
-        first goal names (not what is made on the way, nor the cache,
-        unless -Sclean_all=1 is given).  -Sclean=NAME,NAME... names the
+        first goal names, and not what is made on the way, nor the
+        cache); -Spurge is the same and takes those too (and the two
+        may be had together).  -Sclean=NAME,NAME... names the
         rules; & in a name is a goal (a rule for each), and a lone & is
         none.  The names of goals and rules are spelled as an argument
-        is, not as a file name is.  For -G gmake, -Sorder=1 makes the
+        is, not as a file name is.  Without -t, -g generates the first
+        goal only, as a bare make makes it; -t takes goal,goal too.
+        For -G gmake, -Sorder=1 makes the
         directory markers order-only (after a |).  An option the
         generator does not know is said if it has a value.
     *** :Q is only a mark for the backend to quote by bytes (and

@@ -141,7 +141,8 @@ for my $tool (qw( GMake Ninja )) {
 	);
 	my $p = plan_of($dir);
 	is_deeply($p->{goals}[0]{files}, [ 'some bread', 'jam' ], 'NEED: a goal is what it stands for') or diag explain $p->{goals};
-	is_deeply([ map { $_->{name} } @{ $p->{goals} } ], [ 'default', 'food' ], '... and food is still a goal');
+	is_deeply([ map { $_->{name} } @{ $p->{goals} } ], [ 'default' ], '... and only the first goal is made without -t');
+	is_deeply([ map { $_->{name} } @{ plan_of($dir, 'default,food')->{goals} } ], [ 'default', 'food' ], '... -t takes a list');
 	is_deeply([ map { $_->[0] } @{ $p->{goals}[0]{dropped} } ], [ 'nothing' ], 'its WANT is the WANT of the goal');
 
 	$p = plan_of($dir, 'WANT:default');

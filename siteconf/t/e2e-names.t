@@ -87,7 +87,7 @@ sub spaced_builds
 {
 	my ($G, $tool, $up_to_date) = @_;
 	my $dir = spaced_project();
-	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Sclean', '-Sclean_all=1');
+	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge');
 	is($status, 0, "$G: generate spaced targets and sources") or diag $out;
 	($status, $out) = run($dir, $tool, '-j2');
 	is($status, 0, "$G: build them in parallel") or diag $out;
@@ -96,7 +96,7 @@ sub spaced_builds
 	is(contents("$dir/site/dir name/page name.html"), "explicit\n", 'explicit source and spaced directory');
 	is(contents("$dir/site/other name.html"), "generated\n", 'a generated dependency with a space');
 	ok($up_to_date->($dir), 'spaced targets are up to date');
-	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Sclean', '-Sclean_all=1', '-F', 'MY/MANIFEST.all');
+	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', '-F', 'MY/MANIFEST.all');
 	is($status, 0, 'the resolved manifest can be read back') or diag $out;
 	for my $dep ('header dep', 'rule dep', 'optional dep', 'html/source name.txt', 'site/other name.html') {
 		# Put just this dependency after all outputs, without waiting
@@ -107,7 +107,7 @@ sub spaced_builds
 		ok(!$up_to_date->($dir), "rebuild after $dep changes");
 		utime $st[8], $st[9], "$dir/$dep" or die "$dep: $!";
 	}
-	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('clean'));
+	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
 	is($status, 0, "$G: clean spaced names") or diag $out;
 	ok(!-e "$dir/site/implicit name.html" && !-e "$dir/site/dir name/page name.html"
 		&& !-e "$dir/site/other name.html", 'clean removed the complete names');

@@ -58,7 +58,8 @@ siteconf - configurable incremental build script generator
     #   -Sclean            (make, gmake) a rule `clean': the opposite of `make'
     #   -Sclean='clean-&'  a rule for each goal: clean-all, clean-small
     #   -Sclean='clean,clean-&'   both
-    #   -Sclean_intermediate=1    ... and remove what is made on the way
+    #   -Spurge            (make, gmake) like clean, and what is made on the way too
+    #                      (a different option: both can be had)
     #   -Sorder=1          (gmake) directory markers after a |
 
     siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
@@ -348,10 +349,13 @@ C<WANT> declarations.  C<-t WANT:goal> treats every file in that goal
 as C<WANT>ed, so files that cannot be built are warned about and dropped.
 The prefix goes before the goal, unlike the filter used with C<-l>.
 
-May be repeated; a repeated goal appears once, at its first position,
+May be repeated, or be a comma-separated list (C<-t a,b> is
+C<-t a -t b>); a repeated goal appears once, at its first position,
 with the last prefix given for it.  The first selected goal is the
-default build goal.  Without C<-t>, all manifest goals are generated
-as declared, as before.
+default build goal.  Without C<-t>, only the first goal of the manifest
+is generated, as a bare L<make(1)> makes it; the others are named by
+C<-t>, or are needed by a goal at the top (C<MAKE all> that C<NEED>s
+them).
 
 Added in 0.0300.
 

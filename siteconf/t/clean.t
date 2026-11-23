@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 44;
+use Test::More tests => 47;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -34,7 +34,14 @@ sub project {
 }
 my $manifest = "MAKE all\n\tNEED a.css\n\tNEED d/b.css\nMAKE small\n\tNEED a.css\n";
 # (the options of the generator, if any, follow the project)
-sub plan_of { my $dir = shift; RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, S => { @_ })->plan }
+# (every goal of the manifest: without -t, only the first is)
+sub plan_of
+{
+	my $dir = shift;
+	open my $fh, '<', "$dir/MANIFEST" or die;
+	my @goal = do { local $/; <$fh> } =~ /^MAKE (\S+)/mg;
+	RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => \@goal, S => { @_ })->plan;
+}
 sub names { join ' ', map { $_->{name} } @{ $_[0]{clean} } }
 sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make->_emit($_[0]) }
 
@@ -121,9 +128,12 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make->_emit($_[0]) }
 	is_deeply($plan->{clean}[1]{files}, ['site/a.css'], 'small: what it names');
 	is_deeply($plan->{clean}[2]{files}, ['site/a.css', 'site/big.css'], 'both: what the goals it includes name');
 	is_deeply(plan_of($dir, clean => 'clean')->{clean}[0]{files}, ['site/big.css'], 'clean: the opposite of make, which is all');
-	$plan = plan_of($dir, clean => 'clean-&', clean_all => 1);
-	is_deeply($plan->{clean}[0]{files}, ['site/a.css', 'site/big.css'], 'with -Sclean_all=1: and what is on the way');
-	is_deeply(plan_of($dir, clean => 'clean-&', clean_all => 0)->{clean}[0]{files}, ['site/big.css'], '... which 0 does not say');
+	$plan = plan_of($dir, purge => 'clean-&');
+	is_deeply($plan->{clean}[0]{files}, ['site/a.css', 'site/big.css'], '-Spurge=: and what is on the way');
+	is_deeply(plan_of($dir, clean => 'clean-&', purge => 'purge-&')->{clean}[0]{files}, ['site/big.css'], 'and -Sclean is as shallow as before');
+	is(join(' ', map { $_->{name} } @{ plan_of($dir, clean => 'clean-&', purge => 'purge-&')->{clean} }), 'clean-all clean-small clean-both purge-all purge-small purge-both', 'both at once');
+	ok(!eval { plan_of($dir, clean => 'x', purge => 'x'); 1 } && $@ =~ /-Spurge=x: `x' is also the name of a goal or another rule/, 'they cannot share a name');
+	is(join(' ', map { $_->{name} } @{ plan_of($dir, purge => undef)->{clean} }), 'purge', 'a name alone is purge')
 }
 
 # --- a rule may be the name of a directory (of what it makes, say)

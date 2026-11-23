@@ -21,7 +21,7 @@ run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -
 mkdir 'build' or die "mkdir: $!";
 run('./configure', $^X, './configure', '-q');
 
-run('siteconf -g -G ninja', $^X, $script, qw( -g -q -G ninja -B build ));
+run('siteconf -g -G ninja', $^X, $script, qw( -g -q -G ninja -B build -t all -t basic ));
 run('ninja basic', $ninja, '-C', 'build', 'basic');
 ok(-f 'build/site/sub/index.html', 'ninja basic: sub built');
 ok(!-e 'build/site/robots.txt', 'ninja basic: only the subset');

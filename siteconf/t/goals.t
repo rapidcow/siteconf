@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 32;
+use Test::More tests => 35;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -61,7 +61,14 @@ sub run {
 }
 
 eval { plan_of() };
-like($@, qr/goal `broken' NEEDs `missing'/, 'without -t all goals retain their requirements');
+like($@, qr/goal `broken' NEEDs `missing'/, 'without -t the first goal retains its requirements');
+is_deeply(names(plan_of('small', 'other')), ['small', 'other'], 'without -t, the others are not made; with it they are');
+{
+	my $p = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => ['small,other'])->plan;
+	is_deeply(names($p), ['small', 'other'], '-t goal,goal');
+	$p = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => ['WANT:broken,small'])->plan;
+	is_deeply(names($p), ['broken', 'small'], '... with a prefix for each');
+}
 my $p = plan_of('small');
 is_deeply(names($p), ['small'], 'only the requested goal');
 is_deeply($p->{goals}[0]{files}, ['present'], 'NEED stays needed; unavailable WANT is dropped');

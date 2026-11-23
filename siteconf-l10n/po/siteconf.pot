@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 09:19-0600\n"
+"POT-Creation-Date: 2026-11-23 09:34-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -421,7 +421,7 @@ msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1392
 #, perl-format
-msgid "%s: AUGMENT accepts only target prerequisites"
+msgid "%s: AUGMENT may only amend dependencies"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1404

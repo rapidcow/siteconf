@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 09:19-0600\n"
+"POT-Creation-Date: 2026-11-23 09:34-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -423,8 +423,8 @@ msgstr "%s：AUGMENT 的目标 %q 没有规则"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1392
 #, perl-format
-msgid "%s: AUGMENT accepts only target prerequisites"
-msgstr "%s：AUGMENT 只接受目标的先决条件"
+msgid "%s: AUGMENT may only amend dependencies"
+msgstr "%s：AUGMENT 只能修改依赖"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1404
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:176

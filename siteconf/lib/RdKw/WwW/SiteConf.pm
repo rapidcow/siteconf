@@ -1389,7 +1389,7 @@ sub _read_rules
 sub _augment_error
 {
 	die _status 0, tagmsg(E => diag(__(
-		"%s: AUGMENT accepts only target prerequisites"), $_[0]));
+		"%s: AUGMENT may only amend dependencies"), $_[0]));
 }
 
 # One file of rules, `file'; `at' is where the INCLUDE (or AUGMENT)

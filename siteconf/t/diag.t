@@ -160,7 +160,7 @@ like($out, qr/in .*fragments\/goals.* line 1/, 'diagnostic names the manifest fr
 put('project/fragments/more', "first.html: ; echo forbidden\n");
 ($status, $out) = run('-g');
 isnt($status, 0, 'AUGMENT rejects recipes');
-like($out, qr/fragments\/more.* line 1: AUGMENT accepts only target prerequisites/,
+like($out, qr/fragments\/more.* line 1: AUGMENT may only amend dependencies/,
 	'augmentation error gives the fragment location');
 
 put('project/fragments/more', "unruled.html: another\n");

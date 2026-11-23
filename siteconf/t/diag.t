@@ -4,11 +4,13 @@
 # what order; and what the header of the build file says made it
 
 use strict;
+use utf8;
 use warnings;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
+use Encode qw( encode_utf8 );
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib );
@@ -22,7 +24,7 @@ my $dir = tempdir(CLEANUP => 1);
 make_path("$dir/MY", "$dir/html");
 sub put {
 	my ($name, $text) = @_;
-	open my $fh, '>', "$dir/$name" or die $!;
+	open my $fh, '>:encoding(UTF-8)', "$dir/$name" or die $!;
 	print $fh $text;
 	close $fh or die $!;
 }
@@ -104,5 +106,89 @@ put('MANIFEST', "MAKE site\n\tNEED media\nMAKE media\n\tNEED art.gif\n");
 isnt($status, 0, 'a NEEDed goal that cannot be had is a failure');
 like($out, qr/^E: goal `site' NEEDs `art\.gif'\nE:  \(in MANIFEST line 4, via NEEDed goal `media'\),\n/m,
 	'... and says the line, and the goal it is in');
+
+# The top-level inputs have been moved away from the project root.
+local $ENV{SITECONF_CODESETS} = "filesys:UTF-8";
+make_path("$dir/project/html", "$dir/project/fragments", "$dir/patched");
+write_make("$dir/MY/config.mk", {
+	A => 'project', B => '..', a => 'html', b => 'site', c => 'site', e => '.ok',
+	F => 'patched/MANIFEST', R => 'patched/Makefile.in', data => 'fragments',
+}, prog => 'test');
+put('patched/MANIFEST', <<'M');
+MAKE site
+INCLUDE ${data}/goals ${B}/patched/éxtra
+	NEED third.html
+M
+put('project/fragments/goals', <<'M');
+NEED first.html
+MAKE docs
+M
+put(encode_utf8('patched/éxtra'), "NEED second.html\n");
+put('patched/Makefile.in', <<'R');
+AUGMENT ${data}/deps ${data}/more
+INCLUDE ${data}/rules ${data}/${"more rules"}
+R
+put('project/fragments/deps', "first.html: \${a}/dependency\n");
+put('project/fragments/more', "first.html: \${A}/another\n");
+put('project/html/dependency', '');
+put('project/another', '');
+put('project/html/original', '');
+put('project/fragments/rules', <<'R');
+fragment = ./fragments
+INCLUDE ${fragment}/表
+first.html: ${a}/original ; cp ${<} ${b}/${@}
+R
+put(encode_utf8('project/fragments/表'), "second.html: \${a} ; touch \${b}/\${@}\n");
+put('project/fragments/more rules', "third.html: \${a} ; touch \${b}/\${@}\n");
+
+($status, $out) = run('-g', '-t', 'site,docs');
+is($status, 0, 'variadic directives resolve from A, including nested Unicode paths') or diag $out;
+my $make = slurp('Makefile');
+like($make, qr/^site\/first\.html:.* project\/html\/original\b/m,
+	'AUGMENT before the rule preserves its source');
+like($make, qr/^site\/first\.html:.* project\/html\/dependency\b/m, 'first AUGMENT adds a prerequisite');
+like($make, qr/^site\/first\.html:.* project\/another\b/m, 'second AUGMENT adds a prerequisite');
+like(slurp('MY/MANIFEST'), qr/MAKE docs\s+NEED second\.html\s+NEED third\.html/,
+	'current goal follows the fragment back into the parent');
+
+put('project/fragments/more', "first.html: absent\n");
+($status, $out) = run('-g');
+isnt($status, 0, 'a missing augmented prerequisite fails');
+like($out, qr/prerequisite in .*fragments\/more.* line 1/, 'diagnostic names the prerequisite fragment');
+like($out, qr/in .*fragments\/goals.* line 1/, 'diagnostic names the manifest fragment');
+
+put('project/fragments/more', "first.html: ; echo forbidden\n");
+($status, $out) = run('-g');
+isnt($status, 0, 'AUGMENT rejects recipes');
+like($out, qr/fragments\/more.* line 1: AUGMENT accepts only target prerequisites/,
+	'augmentation error gives the fragment location');
+
+put('project/fragments/more', "unruled.html: another\n");
+($status, $out) = run('-g');
+isnt($status, 0, 'AUGMENT cannot define targets');
+like($out, qr/AUGMENT target .*unruled\.html.* has no rule/, 'undefined target is reported');
+
+put('project/fragments/more', '');
+put('project/fragments/more rules', "\n\nfirst.html: ; echo duplicate\n");
+($status, $out) = run('-g');
+isnt($status, 0, 'recipes on the same physical line in different files conflict');
+like($out, qr/more rules.* line 3: more than one recipe/, 'the second recipe is reported');
+
+put('project/fragments/rules', 'INCLUDE fragments/../fragments/rules' . "\n");
+($status, $out) = run('-g');
+isnt($status, 0, 'a rule include cycle fails');
+like($out, qr/fragments\/rules.* line 1: include cycle/, 'cycle uses canonical paths');
+
+put('project/fragments/rules', 'first.html: ${a}/original ; cp ${<} ${b}/${@}' . "\n");
+put('project/fragments/more rules', '');
+put('project/fragments/goals', "INCLUDE ../patched/MANIFEST\n");
+($status, $out) = run('-g');
+isnt($status, 0, 'a manifest include cycle fails');
+like($out, qr/fragments\/goals.* line 1: include cycle/, 'manifest detects the relocated root by canonical path');
+
+put('project/fragments/goals', "INCLUDE missing-fragment\n");
+($status, $out) = run('-g');
+isnt($status, 0, 'an include is mandatory');
+like($out, qr/fragments\/goals.* line 1: cannot open file .*missing-fragment/, 'missing include points to the directive');
 
 done_testing;

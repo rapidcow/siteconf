@@ -63,6 +63,11 @@ L<RdKw::WwW::GenGenLib/read_deps>); they are spelled out in full.
 A keyword may have a colon after it, with or without a space (C<MAKE: all>,
 C<NEED:index.html>).
 
+C<INCLUDE> reads one or more UTF-8 manifest files inline. A relative
+path is from the project root (the current directory when reading
+directly through this module). The current goal and the goal names
+are shared with the included files.
+
 C<MAKE> takes the name of a goal: any characters but white space
 (of any script, a no-break space too), controls, format characters
 (a zero-width joiner, say), and C<:>, C<#>, C<%>, C<$> and C<\>, not
@@ -89,6 +94,7 @@ Errors say C<read_manifest: >I<file>C< line >I<n>C<: ...>.
 
 =cut
 
+use Cwd qw( abs_path );
 use Encode ();
 use RdKw::WwW::GenGenLib qw( subs_deps );
 
@@ -111,7 +117,9 @@ my $GOAL = qr/\A(?!-)[^\s\p{Cc}\p{Cf}:#%\$\\]+\z/;
 
 Reads I<file> (a name, which is spelled as L<RdKw::I18N::CodeSets>
 says, or a reference to the text itself, which is then called
-F<MANIFEST>).  B<RdKw::WwW::GenGenLib::read_manifest> is the same.
+F<MANIFEST>).  B<RdKw::WwW::GenGenLib::read_manifest> is the same. An optional
+C<include_paths> callback takes the text after C<INCLUDE> and its
+diagnostic location, and returns paths to open.
 
 =cut
 
@@ -131,78 +139,113 @@ sub read
 	my ($class, $file, %kwds) = @_;
 	my $prog = RdKw::WwW::GenGenLib::_getprog(\%kwds, 'read_manifest');
 	my $kwds = { prog => $prog };
-	my $fh;
-	if (ref $file) {
-		open $fh, '<', $file
-			or die tagmsg($prog => diag(__("cannot open string: %m")));
-		$file = 'MANIFEST';
-	} else {
-		open $fh, '<', to_fs($file, { prog => $prog })
-			or die tagmsg($prog => diag(__("cannot open file %q: %m"), $file));
-	}
-
-	my (@goal, %goal, $goal);
-	while (<$fh>) {
-		# HEY!  %#q is the file name of the faulty
-		# MANIFEST and %d is its lineno.
-		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
-			or die _status 0, tagmsg($prog => diag(__("%s: not UTF-8"),
-				_blame($file, $.)));
-		s/(?:^|[$SP])#.*//so;
-		my ($kw, @arg) = /([^$SP]+)/go;
-		defined $kw or next;
-		# MAKE:, NEED: and WANT: are those, with a colon (and then
-		# a name may follow it, without a space)
-		if ($kw =~ s/\A(MAKE|NEED|WANT|JUST-NEED|JUST-WANT)://) {
-			my $key = $1;
-			unshift @arg, $kw if length $kw;
-			$kw = $key;
+	my (@goal, %goal, $goal, %active, $order);
+	my $root = ref $file ? 'MANIFEST' : $file;
+	my $read = sub {
+		my ($read, $input, $at) = @_;
+		local ($_, $.);
+		my ($file, $fh, $key);
+		if (ref $input) {
+			$file = $root;
+			open $fh, '<', $input
+				or die tagmsg($prog => diag(__("cannot open string: %m")));
+		} else {
+			$file = $input;
+			my $path = to_fs($file, $kwds);
+			open $fh, '<', $path or die tagmsg($prog => defined $at
+				? diag(__("%s: cannot open file %q: %m"), $at, $file)
+				: diag(__("cannot open file %q: %m"), $file));
+			$key = abs_path($path);
+			defined $key or die tagmsg($prog => diag(__("cannot find file %q: %m"), $file));
+			$active{$key} and die _status 0, tagmsg($prog => diag(__(
+				"%s: include cycle through %q"), $at, $file));
 		}
-		if ($kw eq 'MAKE') {
-			@arg == 1 or die _status 0, tagmsg($prog => diag(__(
-				"%s: MAKE takes exactly one goal name"),
-				_blame($file, $.)));
-			my $name = $arg[0];
-			$name =~ /$GOAL/
-				or die _status 0, tagmsg($prog => diag(__("%s: bad goal name %q"),
-				_blame($file, $.), $name));
-			$goal{$name} and die _status 0, tagmsg($prog => diag(__(
-				"%s: goal %q is already made"),
-				_blame($file, $.), $name));
-			push @goal, $goal = $goal{$name}
-				= { name => $name, need => [], want => [], line => $. };
-			next;
-		}
-		if ($kw =~ /\A(?:JUST-)?(?:NEED|WANT)\z/) {
-			# HEY!  the second %s is the string "NEED" or "WANT"
-			$goal or die _status 0, tagmsg($prog => diag(__("%s: %s before any MAKE"),
-				_blame($file, $.), $kw));
-			# HEY!  the second %s is the string "NEED" or "WANT"
-			@arg or die _status 0, tagmsg($prog => diag(__("%s: %s takes a file"
-				. " (use # for comments)"), _blame($file, $.), $kw));
-			for my $arg (@arg) {
-				my $name = eval { subs_deps(undef, $arg,
-					{ strict => 1, on_missing => 'croak', prog => undef }) };
-				defined $name or do {
-					# Prefix subs_deps' error message with our name
-					# and a blame line.
-					(my $why = $@) =~ s/^/_blame($file, $.) . ": "/gem;
-					die _status 0, tagmsg($prog => $why);
-				};
-				length $name or die _status 0, tagmsg($prog => diag(__("%s: %q is empty"),
-					_blame($file, $.), $arg));
-				$name =~ /\0/ and die _status 0, tagmsg($prog => diag(__("%s: %q has a NUL in it"),
-					_blame($file, $.), $arg));
-				(my $key = lc $kw) =~ s/\Ajust-//;
-				push @{ $goal->{$key} }, { file => $name, line => $.,
-					just => ($kw =~ /\AJUST-/ ? 1 : 0) };
+		local $active{$key} = 1 if defined $key;
+		while (<$fh>) {
+			# HEY!  %#q is the file name of the faulty
+			# MANIFEST and %d is its lineno.
+			eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
+				or die _status 0, tagmsg($prog => diag(__("%s: not UTF-8"),
+					_blame($file, $.)));
+			my $line = $.;
+			++$order;
+			my @origin = ($file ne $root ? (input => $file) : (),
+				$order != $line ? (order => $order) : ());
+			s/(?:^|[$SP])#.*//so;
+			if (/\A[$SP]*INCLUDE(?:[$SP]+|:|\z)(.*)\z/so) {
+				my $args = $1;
+				my $where = _blame($file, $line);
+				my @paths = $kwds{include_paths}
+					? $kwds{include_paths}->($args, $where)
+					: map { subs_deps(undef, $_,
+						{ strict => 1, on_missing => 'croak', prog => $prog }) }
+						$args =~ /([^$SP]+)/go;
+				@paths or die _status 0, tagmsg($prog => diag(__(
+					"%s: INCLUDE takes at least one file"), $where));
+				for my $path (@paths) {
+					length $path && $path !~ /\0/ or die _status 0, tagmsg($prog => diag(__(
+						"%s: bad include path %q"), $where, $path));
+					$read->($read, $path, $where);
+				}
+				next;
 			}
-			next;
+			my ($kw, @arg) = /([^$SP]+)/go;
+			defined $kw or next;
+			# MAKE:, NEED: and WANT: are those, with a colon (and then
+			# a name may follow it, without a space)
+			if ($kw =~ s/\A(MAKE|NEED|WANT|JUST-NEED|JUST-WANT)://) {
+				my $key = $1;
+				unshift @arg, $kw if length $kw;
+				$kw = $key;
+			}
+			if ($kw eq 'MAKE') {
+				@arg == 1 or die _status 0, tagmsg($prog => diag(__(
+					"%s: MAKE takes exactly one goal name"),
+					_blame($file, $.)));
+				my $name = $arg[0];
+				$name =~ /$GOAL/
+					or die _status 0, tagmsg($prog => diag(__("%s: bad goal name %q"),
+					_blame($file, $.), $name));
+				$goal{$name} and die _status 0, tagmsg($prog => diag(__(
+					"%s: goal %q is already made"),
+					_blame($file, $.), $name));
+				push @goal, $goal = $goal{$name}
+					= { name => $name, need => [], want => [], line => $line, @origin };
+				next;
+			}
+			if ($kw =~ /\A(?:JUST-)?(?:NEED|WANT)\z/) {
+				# HEY!  the second %s is the string "NEED" or "WANT"
+				$goal or die _status 0, tagmsg($prog => diag(__("%s: %s before any MAKE"),
+					_blame($file, $.), $kw));
+				# HEY!  the second %s is the string "NEED" or "WANT"
+				@arg or die _status 0, tagmsg($prog => diag(__("%s: %s takes a file"
+					. " (use # for comments)"), _blame($file, $.), $kw));
+				for my $arg (@arg) {
+					my $name = eval { subs_deps(undef, $arg,
+						{ strict => 1, on_missing => 'croak', prog => undef }) };
+					defined $name or do {
+						# Prefix subs_deps' error message with our name
+						# and a blame line.
+						(my $why = $@) =~ s/^/_blame($file, $.) . ": "/gem;
+						die _status 0, tagmsg($prog => $why);
+					};
+					length $name or die _status 0, tagmsg($prog => diag(__("%s: %q is empty"),
+						_blame($file, $.), $arg));
+					$name =~ /\0/ and die _status 0, tagmsg($prog => diag(__("%s: %q has a NUL in it"),
+						_blame($file, $.), $arg));
+					(my $key = lc $kw) =~ s/\Ajust-//;
+					push @{ $goal->{$key} }, { file => $name, line => $line, @origin,
+						just => ($kw =~ /\AJUST-/ ? 1 : 0) };
+				}
+				next;
+			}
+			die _status 0, tagmsg($prog => diag(__("%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"),
+				_blame($file, $.), $kw));
 		}
-		die _status 0, tagmsg($prog => diag(__("%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"),
-			_blame($file, $.), $kw));
-	}
-	close $fh or die tagmsg($prog => diag(__("cannot read file %q: %m"), $file));
+		close $fh or die tagmsg($prog => diag(__("cannot read file %q: %m"), $file));
+	};
+	$read->($read, $file);
+	$file = $root;
 	# HEY!  It's singular because "no mind to think,
 	# no will to break, no voice to cry suffering..."
 	# (actually, with a verb now, it is substantially

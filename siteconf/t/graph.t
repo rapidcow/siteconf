@@ -580,9 +580,9 @@ SKIP:	{
 	is_deeply($plan->{clean}[0]{files}, ['site/x.html'],
 		'clean leaves the cache alone');
 	$plan = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1,
-		S => { clean => undef, clean_intermediate => 1 })->plan;
+		S => { clean => undef, clean_all => 1 })->plan;
 	is_deeply($plan->{clean}[0]{files}, ['cache/deep/x.md.html', 'site/x.html'],
-		'... unless -Sclean_intermediate=1');
+		'... unless -Sclean_all=1');
 
 	# c defaults to b: then ${c}/x is x, the same node
 	$dir = project({%f});

@@ -1930,19 +1930,20 @@ sub _select_goals
 	} @order;
 }
 
-# The cleaning rules, as { name, files => [ BPATH ] } (see
-# _clean_pattern): the opposite of making a goal.  The rule that is not
-# for a goal is that of the first (what a bare `make' makes); one that is
-# takes what its goal names, in the manifest and the goals it includes.
-# Not what is made on the way, unless -Sclean_intermediate says so; and
-# not the directory markers.
+# The cleaning rules, as { name, files => [ BPATH ] }
+# (see _clean_pattern): the opposite of making a goal.
+# The rule that is not for a goal is that of the first
+# (what a bare `make' makes); one that is takes what
+# its goal names, in the manifest and the goals it
+# includes.  Not what is made on the way, unless
+# -Sclean_all says so.  Directory markers are kept.
 sub _clean_rules
 {
 	my ($self, $goal, $order, $dir) = @_;
 	my @pat = $self->_clean_pattern or return;
 	my $node = $self->{node};
 	my %pos; @pos{@$order} = 0 .. $#$order;
-	my $deep = $self->{S}{clean_intermediate};
+	my $deep = $self->{S}{clean_all};
 	my $files = sub {
 		my %have;
 		my $walk; $walk = sub {

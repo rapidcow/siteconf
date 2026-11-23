@@ -196,11 +196,11 @@ Revision history of WwW-SiteConf
       that is not read.  A file that is JUST in one place and not
       in another is read in full (as in walk_deps).  The resolved
       manifest keeps the distinction.
-    *** -Dclean is gone, and so is the clean rule unless asked for.  -g
-        takes -S, the options of the generator.  -Sclean makes the
+    *** -Dclean is gone, and so is the clean rule unless asked for.
+        -g takes -S, the options of the generator.  -Sclean makes the
         opposite of `make': the rule `clean' removes the files that the
         first goal names (not what is made on the way, nor the cache,
-        unless -Sclean_intermediate=1).  -Sclean=NAME,NAME... names the
+        unless -Sclean_all=1 is given).  -Sclean=NAME,NAME... names the
         rules; & in a name is a goal (a rule for each), and a lone & is
         none.  The names of goals and rules are spelled as an argument
         is, not as a file name is.  For -G gmake, -Sorder=1 makes the

@@ -121,9 +121,9 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make->_emit($_[0]) }
 	is_deeply($plan->{clean}[1]{files}, ['site/a.css'], 'small: what it names');
 	is_deeply($plan->{clean}[2]{files}, ['site/a.css', 'site/big.css'], 'both: what the goals it includes name');
 	is_deeply(plan_of($dir, clean => 'clean')->{clean}[0]{files}, ['site/big.css'], 'clean: the opposite of make, which is all');
-	$plan = plan_of($dir, clean => 'clean-&', clean_intermediate => 1);
-	is_deeply($plan->{clean}[0]{files}, ['site/a.css', 'site/big.css'], 'with -Sclean_intermediate=1: and what is on the way');
-	is_deeply(plan_of($dir, clean => 'clean-&', clean_intermediate => 0)->{clean}[0]{files}, ['site/big.css'], '... which 0 does not say');
+	$plan = plan_of($dir, clean => 'clean-&', clean_all => 1);
+	is_deeply($plan->{clean}[0]{files}, ['site/a.css', 'site/big.css'], 'with -Sclean_all=1: and what is on the way');
+	is_deeply(plan_of($dir, clean => 'clean-&', clean_all => 0)->{clean}[0]{files}, ['site/big.css'], '... which 0 does not say');
 }
 
 # --- a rule may be the name of a directory (of what it makes, say)

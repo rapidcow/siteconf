@@ -59,9 +59,9 @@ have the name of a rule.  A lone C<&> (which would name each rule after its
 goal) means no rule, as no C<-Sclean> does.  The names may be of any
 character an argument can spell.
 
-=item C<clean_intermediate>
+=item C<clean_all>
 
-With C<-Sclean_intermediate=1>, a cleaning rule removes, as well, what
+With C<-Sclean_all=1>, a cleaning rule removes, as well, what
 is made on the way to what it names, and so on (a cache file, say).
 C<0>, an empty value or a name alone says no.
 
@@ -167,7 +167,7 @@ sub _emit
 }
 
 # The names of the options (-S) that we know
-sub _options { qw( clean clean_intermediate ) }
+sub _options { qw( clean clean_all ) }
 
 # Whether a directory marker is an order-only prerequisite (after a `|')
 sub _order_only { 0 }

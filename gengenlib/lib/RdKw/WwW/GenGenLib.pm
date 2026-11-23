@@ -419,7 +419,7 @@ sub load_state
 	%S;
 }
 
-=item B<read_deps> I<file>[, forgive_missing => 0, prog => 'read_deps']
+=item B<read_deps> I<file>[, forgive_missing => 0, prog => 'read_deps', lines => \%lines]
 
 This is an ambitious one.  Essentially, we're trying
 to propose a framework for a lean, but robust build
@@ -531,7 +531,14 @@ whether a file that cannot be opened to begin with can
 be forgiven.  Defaults to 0 (false; do not forgive).
 (This option was added in 0.0002.)
 
-The I<prog> option was added in 0.0100.
+C<lines> is an optional reference to a hash, which is filled with
+the line numbers of what is read, in the shape of the result: a
+number for C<HAVE>, and for each other field a list as long as its
+names, the line of each.  For example, a C<NEED> of two names on
+line 3 and one on line 4 gives C<< NEED => [3, 3, 4] >>.  What it
+held before is gone.
+
+The I<prog> and I<lines> options were added in 0.0100.
 
 =cut
 
@@ -585,6 +592,8 @@ sub read_deps
 	my $prog = _getprog(\%opt, 'read_deps');
 	my $onit = 0;
 	my %I = ();
+	my $L = $opt{lines} || {};
+	%$L = ();
 
 	# (A name we cannot even spell is not missing: it is an error.)
 	open (my $fh, '<', to_fs($file, { prog => $prog })) or ($missing_ok
@@ -626,8 +635,10 @@ sub read_deps
 				die _status 0, tagmsg($prog => diag(__("%#q line %d: You HAVE too many."), $file, $.))
 					if @list > 1 or exists $I{$type};
 				$I{HAVE} = $list[0];
+				$L->{HAVE} = $.;
 			} else {
 				push @{$I{$type}}, @list;
+				push @{$L->{$type}}, ($.) x @list;
 			}
 			next;
 		}

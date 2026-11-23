@@ -78,14 +78,14 @@ W:   NEEDs `gone.png'
 W:    (prerequisite in Makefile.in line 3),
 W:     which we don't seem to have.
 W: target `page.html' WANTs `site/art.gif'
-W:  (in header of `html/page.html'),
+W:  (in header of `html/page.html' line 1),
 W:   but it is missing; going on without it. :(
 W
 is(fold($out), <<'W', '... a sentence a line, once folded (as the other tests have it)');
 W: -Sorder=1: unused by generator make
 W: goal `site' WANTs `art.gif' (in MANIFEST line 8, via WANTed goal `media'), but cannot be made:
 W:   NEEDs `gone.png' (prerequisite in Makefile.in line 3), which we don't seem to have.
-W: target `page.html' WANTs `site/art.gif' (in header of `html/page.html'), but it is missing; going on without it.
+W: target `page.html' WANTs `site/art.gif' (in header of `html/page.html' line 1), but it is missing; going on without it.
 W
 
 my $head = (slurp('Other.mk') =~ /\A((?:#.*\n)*)/)[0];

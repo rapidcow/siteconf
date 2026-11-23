@@ -16,6 +16,8 @@ Revision history of WwW-GenGenLib
       WwW-SiteConf-L10N says where they are and Locale::Messages
       (libintl-perl) is there to read them; as it is written, if
       not.  Neither is required.
+    + read_deps(FILE, lines => \%L): the line of each name read, in
+      the shape of what is returned (HAVE => 1, NEED => [2, 2, 5]).
     * read_make, update_file, read_deps, read_manifest: `cannot
       open file NAME: why' (and so on), not `open <NAME: why'.
     *** read_make, write_make, update_file, load_state and

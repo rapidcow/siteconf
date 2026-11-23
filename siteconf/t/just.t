@@ -64,7 +64,7 @@ my $cp = "\tcp \${a}/\${\@:Q} \${b}/\${\@:Q}\n";
 		'Makefile.in' => "page: \n$cp",
 		'html/page' => "# JUST-NEED: \${a}/missing\n",
 	);
-	like(fold(failure($dir)), qr/NEEDs `html\/missing' \(in header of `html\/page'\), which we don't seem to have/,
+	like(fold(failure($dir)), qr/NEEDs `html\/missing' \(in header of `html\/page' line 1\), which we don't seem to have/,
 		'a JUST-NEED that is not there is an error');
 	$dir = project(
 		MANIFEST => "MAKE all\nNEED page\n",

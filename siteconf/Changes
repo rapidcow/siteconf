@@ -221,7 +221,9 @@ Revision history of WwW-SiteConf
     * What cannot be had is said a part per line (what, then where
       in parentheses, then why), with a period at the end.  A goal
       says the manifest line of what it cannot have, and the goal it
-      includes that has the line (`via WANTed goal media').  A file
+      includes that has the line (`via WANTed goal media'); a name
+      from a header, the line it is on (`in header of FILE line
+      3', from the new lines option of read_deps).  A file
       that a goal includes twice is said once (a NEED first).
       Warnings and errors are said in the order of the files they
       are of: what cannot be had before what goes without it.

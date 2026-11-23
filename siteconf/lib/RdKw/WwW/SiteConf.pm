@@ -1534,7 +1534,8 @@ sub _node
 	}
 	$node->{recipe} = $rule->{recipe};
 
-	my %I = $nosrc || $just ? () : read_deps($self->_fs($apath));
+	my %L;
+	my %I = $nosrc || $just ? () : read_deps($self->_fs($apath), lines => \%L);
 	if (defined $I{HAVE}) {
 		# The source's own name, as a header spells it, is the one
 		# the rule says it is: ${A}/${a}/FILE.
@@ -1550,12 +1551,9 @@ sub _node
 	}
 
 	# What the headers say they need, and what the rules do
-	my $where = diag('%#q', $nosrc ? $file : $apath);
-	# HEY!  This and the next three are where a NEED (or a WANT)
-	# was said, and are said in parentheses after what is needed
-	my $from = $nosrc ? __("in header") : diag(__("in header of %q"), $apath);
-	my @hneed = $self->_entries(\%I, 'NEED', $where, $from);
-	my @hwant = $self->_entries(\%I, 'WANT', $where, $from);
+	# (with no source, there is no header: %I is empty)
+	my @hneed = $self->_entries(\%I, \%L, 'NEED', $apath);
+	my @hwant = $self->_entries(\%I, \%L, 'WANT', $apath);
 	my $rule_at = _blame($D->{R}, $rule->{line});
 	my $just_dep = sub { $rule->{j}{$_[0]} && !$rule->{nj}{$_[0]} ? 1 : 0 };
 	my @rdep = map { [ $_, $_, diag(__("prerequisite in %s"), $rule_at), $just_dep->($_) ] } @{ $rule->{deps} };
@@ -1667,15 +1665,26 @@ sub _node
 	$done->();
 }
 
-# What a header (read_deps' `I') says of a kind, `NEED' or `WANT', as
-# [ said, dep, from, just ]: the names of it and of its JUST- (said last)
+# What the header of `file' (read_deps' `I', and the `lines' of it,
+# `L') says of a kind, `NEED' or `WANT', as [ said, dep, from, just ]:
+# the names of it and of its JUST- (said last).  `from' is where, with
+# the line it is on.
 sub _entries
 {
-	my ($self, $I, $kind, $where, $from) = @_;
-	(
-		( map { [ $_, $self->_dep($_, $where), $from, 0 ] } @{ $I->{$kind} || [] } ),
-		( map { [ $_, $self->_dep($_, $where), $from, 1 ] } @{ $I->{"JUST-$kind"} || [] } ),
-	);
+	my ($self, $I, $L, $kind, $file) = @_;
+	map {
+		my ($key, $just) = @$_;
+		my @name = @{ $I->{$key} || [] };
+		my @line = @{ $L->{$key} || [] };
+		map {
+			my $at = _blame($file, $line[$_]);
+			# HEY!  This is where a NEED (or a WANT) was said, and is
+			# said in parentheses after what is needed: %q is the file,
+			# and %d the line in it
+			[ $name[$_], $self->_dep($name[$_], $at),
+				diag(__("in header of %q line %d"), $file, $line[$_]), $just ];
+		} 0 .. $#name;
+	} [ $kind, 0 ], [ "JUST-$kind", 1 ];
 }
 
 # The NEEDs and WANTs in the header of `dep' (seen from the build dir),
@@ -1687,13 +1696,12 @@ sub _inherit
 	my ($self, $dep) = @_;
 	my $got = $self->{inherit}{$dep} ||= do {
 		my $fs = $self->_fs($dep);
+		my %L;
 		my %I = !defined $self->_target($dep) && -f _to_fs($fs) && -T _
-			? read_deps($fs) : ();
-		my $where = diag('%#q', $dep);
-		my $from = diag(__("in header of %q"), $dep);
+			? read_deps($fs, lines => \%L) : ();
 		[
-			[ $self->_entries(\%I, 'NEED', $where, $from) ],
-			[ $self->_entries(\%I, 'WANT', $where, $from) ],
+			[ $self->_entries(\%I, \%L, 'NEED', $dep) ],
+			[ $self->_entries(\%I, \%L, 'WANT', $dep) ],
 		];
 	};
 	@$got;
@@ -1738,8 +1746,9 @@ sub _tool
 	my ($self, $dep, $file, $rule) = @_;
 	my $tool = $self->{tool}{$dep} ||= do {
 		my $fs = $self->_fs($dep);
+		my %L;
 		my %I = !defined $self->_target($dep) && -f _to_fs($fs) && -T _
-			? read_deps($fs) : ();
+			? read_deps($fs, lines => \%L) : ();
 		if (defined $I{HAVE}) {
 			my $have = $self->_dep($I{HAVE}, diag('%#q: HAVE', $dep));
 			my $at = _blame($self->{D}{R}, $rule->{line});
@@ -1754,11 +1763,9 @@ sub _tool
 						. "but I need %q for the rule for %q (%s)?"),
 						$dep, $I{HAVE}, $dep, $file, $at));
 		}
-		my $where = diag('%#q', $dep);
-		my $from = diag(__("in header of %q"), $dep);
 		{
-			need => [ $self->_entries(\%I, 'NEED', $where, $from) ],
-			want => [ $self->_entries(\%I, 'WANT', $where, $from) ],
+			need => [ $self->_entries(\%I, \%L, 'NEED', $dep) ],
+			want => [ $self->_entries(\%I, \%L, 'WANT', $dep) ],
 		};
 	};
 	($tool->{need}, $tool->{want});

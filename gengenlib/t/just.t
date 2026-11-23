@@ -35,6 +35,13 @@ is_deeply({ read_deps("$top/h") }, {
 }, 'read_deps: JUST-NEED and JUST-WANT are fields (and a field in another case is not)');
 spew("$top/only", "# JUST-WANT: z\nnot a header\n# NEED: late\n");
 is_deeply({ read_deps("$top/only") }, { 'JUST-WANT' => ['z'] }, '... and they begin a header');
+{
+	my %L = (stale => 1);
+	read_deps("$top/h", lines => \%L);
+	is_deeply(\%L, {
+		HAVE => 1, NEED => [ 2, 7 ], 'JUST-NEED' => [ 3, 3 ], WANT => [4], 'JUST-WANT' => [5],
+	}, 'read_deps lines: the line of each name, in the shape of the result');
+}
 
 # --- walk_deps
 chdir $top or die;

@@ -199,7 +199,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		# no html/c.css
 	});
 	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
-	like(fold($@), qr/^E: goal `all' NEEDs `a\.html' \(in \S*MANIFEST'? line 2\), but cannot be made:\nE:   NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE:     source `html\/c\.css' is missing \(rule at \S*Makefile\.in'? line 1\)\.\n/m,
+	like(fold($@), qr/^E: goal `all' NEEDs `a\.html' \(in \S*MANIFEST'? line 2\), but cannot be made:\nE:   NEEDs `site\/c\.css' \(in header of `html\/a\.html' line 2\), but cannot be made:\nE:     source `html\/c\.css' is missing \(rule at \S*Makefile\.in'? line 1\)\.\n/m,
 		'... and why, a cause per line, deeper as it goes');
 
 	$dir = project({
@@ -310,7 +310,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 	delete $g{'gen/lib/Mod.pm'};
 	$dir = project(\%g);
 	eval { plan_of($dir) };
-	like(fold($@), qr/NEEDs `gen\/lib\/Mod\.pm' \(in header of `gen\/tool'\), which we don't seem to have/, 'tools: a missing NEED is fatal');
+	like(fold($@), qr/NEEDs `gen\/lib\/Mod\.pm' \(in header of `gen\/tool' line 3\), which we don't seem to have/, 'tools: a missing NEED is fatal');
 
 	$dir = project({ %f, 'gen/tool' => lines( HAVE => [qw[ gen/other ]] ) });
 	eval { plan_of($dir) };
@@ -641,7 +641,7 @@ SKIP:	{
 		'html/a.html' => lines( WANT => [qw[ ${B}/${b}/c.css ]] ),
 	});
 	is(fold($warn->($dir)), <<MSG, 'a missing WANT in a source header');
-W: target `a.html' WANTs `site/c.css' (in header of `html/a.html'), but it is missing; going on without it.
+W: target `a.html' WANTs `site/c.css' (in header of `html/a.html' line 2), but it is missing; going on without it.
 MSG
 
 	$dir = project({
@@ -651,7 +651,7 @@ MSG
 		'tool' => lines( WANT => [qw[ gen/Mod.pm ]] ),
 	});
 	is(fold($warn->($dir)), <<MSG, '... and in the header of a tool');
-W: target `a.html' WANTs `gen/Mod.pm' (in header of `tool'), but it is missing; going on without it.
+W: target `a.html' WANTs `gen/Mod.pm' (in header of `tool' line 2), but it is missing; going on without it.
 MSG
 		
 }
@@ -689,7 +689,7 @@ MSG
 		'html/t/z' => lines( NEED => [qw[ ${A}/html/t/gone ]] ),
 	});
 	my $plan = eval { plan_of($dir) };
-	like(fold($@), qr/NEEDs `html\/t\/gone' \(in header of `html\/t\/z'\)/,
+	like(fold($@), qr/NEEDs `html\/t\/gone' \(in header of `html\/t\/z' line 2\)/,
 		'what a NEED of a NEED NEEDs is missing: that is a failure');
 	is(scalar(() = $@ =~ /NEEDs `html\/t\/gone'/g), 1, '... said once');
 

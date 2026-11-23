@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 05:22-0600\n"
+"POT-Creation-Date: 2026-11-23 06:23-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,7 +72,7 @@ msgstr ""
 msgid "%#q: not a valid ASCII octal code point"
 msgstr ""
 
-#: ../siteconf/script/siteconf:690 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1972
+#: ../siteconf/script/siteconf:690 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1982
 msgid "%q: expected NEED or WANT, not %q"
 msgstr ""
 
@@ -90,14 +90,14 @@ msgstr ""
 msgid "cannot find %q (is WwW-SiteConf installed?)"
 msgstr ""
 
-#: ../siteconf/script/siteconf:728 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1314
+#: ../siteconf/script/siteconf:728 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1317
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:130
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:592
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:601
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:141
 msgid "cannot open file %q: %m"
 msgstr ""
 
-#: ../siteconf/script/siteconf:730 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:641
+#: ../siteconf/script/siteconf:730 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:652
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:205
 msgid "cannot read file %q: %m"
 msgstr ""
@@ -285,7 +285,7 @@ msgstr ""
 
 #. HEY!  The first %s is where (as in the messages above), %s
 #. the character (U+0041) and %s its spelling in bytes (0x5C).
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:852
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:855
 #, perl-format
 msgid ""
 "%s: %s is encoded as %s in file system encoding%s, which contains ASCII "
@@ -294,217 +294,206 @@ msgstr ""
 
 #. HEY!  The first %s is always where (a file, or `file' line 3),
 #. in this message and in those that follow it
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:915
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:918
 msgid "%s: bad file name %q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:919
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:922
 msgid "%s: file name %q must be relative"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:922
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:925
 msgid "%s: file name %q is out of tree"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:960
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:963
 #, perl-format
 msgid "%s: a name of a rule may not be empty"
 msgstr ""
 
 #. HEY!  the second %s is the name, as in -Sclean=a:b
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:964
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:967
 msgid "%s: %q cannot be the name of a rule"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:993
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:996
 msgid "%s: %q is a reserved goal name"
 msgstr ""
 
 #. HEY!  the second %s is a chain of
 #. goals which ends in the beginning
 #. node; e.g. `a -> b -> a'.
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1021
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1024
 #, perl-format
 msgid "%s: cyclic goal: %s"
 msgstr ""
 
 #. HEY!  the second %s is a string literal, as ${"..."}
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1118
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1121
 #, perl-format
 msgid "%s: junk after the string in %s"
 msgstr ""
 
 #. HEY!  the second %s is what is in Makefile.in, as ${U+...}
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1140
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1143
 #, perl-format
 msgid "%s: %s is not a valid Unicode code point"
 msgstr ""
 
 #. HEY!  the second %s is a variable, as ${@} (or ${.TARGET}),
 #. in this message and in those that follow it
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1147
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1150
 #, perl-format
 msgid "%s: %s outside of a recipe"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1152
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1155
 #, perl-format
 msgid "%s: misplaced %s (not in a recipe)"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1155
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1158
 #, perl-format, perl-brace-format
 msgid "%s: undefined %s (explicitly suppressed by ${a})"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1162
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1165
 #, perl-format
 msgid "%s: undefined variable: %s"
 msgstr ""
 
 #. HEY!  the second %s is where, as `a prerequisite'
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1174
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1177
 #, perl-format
 msgid ":Q (shell quote) is not valid in %s"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1175
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1178
 msgid "a name"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1176
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1179
 msgid ":Q (shell quote) must be the last modifier"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1181
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1184
 msgid "a nested expansion"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1207
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1210
 msgid "a prerequisite"
 msgstr ""
 
 #. HEY!  The first %s is where, the second what is in Makefile.in
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1211
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1214
 msgid "%s: %q expands to nothing"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1240
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1243
 #, perl-brace-format
 msgid "%s: %q: target is not preceded by a legal prefix (${b} or ${c})"
 msgstr ""
 
 #. HEY!  the second %s is a variable, as ${name}
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1278
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1281
 #, perl-format
 msgid "%s: %s is already defined"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1294
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1297
 msgid "a variable assignment"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1345
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1348
 #, perl-format
 msgid "%s: unfinished line continuation"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1357
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1360
 msgid "%s: more than one recipe for %q"
 msgstr ""
 
 #. HEY!  a recipe line (one that begins with a tab)
 #. with no rule above it to be the recipe of
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1369
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1372
 #, perl-format
 msgid "%s: unexpected tabulation"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1386
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1389
 #, perl-format
 msgid "%s: null target list"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1416
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1419
 msgid ""
 "%s: %q: a prerequisite must start with NEED:, WANT:, JUST: (or JUST-NEED:) "
 "or JUST-WANT:, not %q"
 msgstr ""
 
 #. HEY!  %q is `NEED:' or `WANT:', literally.
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1421
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1424
 msgid "%s: %q something?"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1441
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1444
 msgid "%s: invalid line: %q"
 msgstr ""
 
 #. HEY!  %s is the files, as `a' -> `b' -> `a'
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1474
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1477
 #, perl-format
 msgid "dependency cycle: %s"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1500
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1503
 msgid "%q: %q is reserved for directory markers. (Set -De to change it.)"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1522
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1525
 msgid ""
 "no rule to make it\n"
 " (%q)."
 msgstr ""
 
 #. HEY!  the %s is where the rule is (e.g. `file' line 3)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1528
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1531
 msgid ""
 "source %q is missing\n"
 " (rule at %s)."
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1529
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1532
 msgid "source %q is missing."
 msgstr ""
 
 #. HEY!  Keep the question mark: we are as puzzled as
 #. anyone.  The (aka %q) is what the HAVE says, expanded
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1544
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1548
 msgid ""
 "%#q: You HAVE %q (aka %q),\n"
 "but I need %q?"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1546
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1550
 msgid ""
 "%#q: You HAVE %q,\n"
 "but I need %q?"
 msgstr ""
 
-#. HEY!  This and the next three are where a NEED (or a WANT)
-#. was said, and are said in parentheses after what is needed
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1553
-msgid "in header"
-msgstr ""
-
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1553
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1755
-msgid "in header of %q"
-msgstr ""
-
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1558
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1559
 #, perl-format
 msgid "prerequisite in %s"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1559
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1560
 #, perl-format
 msgid "WANT: in %s"
 msgstr ""
 
 #. HEY!  %s is where it was needed (in header of `file').
 #. The same goes for the next two marked strings.
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1625
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1626
 msgid ""
 "NEEDs %q\n"
 " (%s),\n"
@@ -513,14 +502,14 @@ msgstr ""
 
 #. HEY!  The last %q is the name it may have meant: a
 #. header says MY/option.mk, when it is ${B}/MY/option.mk
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1637
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1638
 msgid ""
 "NEEDs %q\n"
 " (%s),\n"
 "  which we don't seem to have (is it %q?)"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1639
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1640
 msgid ""
 "NEEDs %q\n"
 " (%s),\n"
@@ -532,22 +521,26 @@ msgstr ""
 #. is yours to keep; i added it because "W"
 #. felt like a weak indication of a soft dep
 #. failing....
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1655
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1656
 msgid ""
 "target %q WANTs %q\n"
 " (%s),\n"
 "  but it is missing; going on without it. :("
 msgstr ""
 
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1685
+msgid "in header of %q line %d"
+msgstr ""
+
 #. HEY!  As above, for a tool of the rule; the last %s
 #. is where the rule is (`file' line 3)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1747
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1759
 msgid ""
 "%#q: You HAVE %q (aka %q),\n"
 "but I need %q for the rule for %q (%s)?"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1750
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1762
 msgid ""
 "%#q: You HAVE %q,\n"
 "but I need %q for the rule for %q (%s)?"
@@ -556,27 +549,27 @@ msgstr ""
 #. HEY!  These three are where a goal says what it NEEDs (or
 #. WANTs), in parentheses after it: %s is `file' line 3, and
 #. %q the goal that has that line (which this goal includes)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1852
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1862
 #, perl-format
 msgid "in %s"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1853
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1863
 msgid "in %s, via WANTed goal %q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1854
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1864
 msgid "in %s, via NEEDed goal %q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1859
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1869
 msgid ""
 "goal %q NEEDs %q\n"
 " (%s),\n"
 "  but cannot be made:"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1864
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1874
 msgid ""
 "goal %q WANTs %q\n"
 " (%s),\n"
@@ -586,7 +579,7 @@ msgstr ""
 #. HEY!  "no soup for you!" (Seinfeld) but with Makefile
 #. (not my bit, Claude came up with this... but cool
 #. nonetheless o_o)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1894
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1904
 #, perl-format
 msgid "%d problem; no Makefile for you."
 msgid_plural "%d problems; no Makefile for you."
@@ -596,46 +589,46 @@ msgstr[1] ""
 #. HEY!  the first %s is a name that is of a goal (or a
 #. cleaning rule), and the second the file (it may be spelled
 #. in other bytes: the file system and the arguments can differ)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1941
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1951
 msgid "%q is the name of a rule, and a file (%q) is as well"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1974
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1984
 msgid "%q: expected a goal name"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1975
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1985
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:256
 msgid "%#q: missing goal %q"
 msgstr ""
 
 #. HEY!  %s is the option, as in -Sclean=clean-& (or -Sclean)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2027
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2037
 msgid "%s: %q is also the name of a goal or another rule"
 msgstr ""
 
 #. HEY!  %s is the generators (make, gmake, ninja)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2094
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2104
 msgid "unknown generator %q.  Choose one of: %s"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2100
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2110
 msgid "bad output name %q: stay in the build directory please"
 msgstr ""
 
 #. HEY!  the first %s is an option, as -Sclean=x, and the second
 #. the generator (make, gmake, ninja)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2119
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2129
 #, perl-format
 msgid "%s: unused by generator %s"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2152 ../siteconf/share/configure.in:302
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2162 ../siteconf/share/configure.in:302
 msgid "Done!"
 msgstr ""
 
 #. HEY!  %s is a command line, as the shell would read it
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2154
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2164
 #, perl-format
 msgid "To build, run: %s"
 msgstr ""
@@ -647,11 +640,11 @@ msgstr ""
 #. is considered to be our files, so it is
 #. assumed that the state prior to updating is
 #. consistent with the state now.)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2172 ../siteconf/share/configure.in:291
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2182 ../siteconf/share/configure.in:291
 msgid "Writing %#q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2173 ../siteconf/share/configure.in:291
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2183 ../siteconf/share/configure.in:291
 msgid "Updating %#q"
 msgstr ""
 
@@ -963,31 +956,31 @@ msgstr ""
 #. in... "you HAVE too many.  The hell are
 #. you tryin' to be, the whole universe?"
 #. Like that.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:626
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:635
 msgid "%#q line %d: You HAVE too many."
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:795
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:806
 msgid "cannot normalize %q: bad Unicode code point %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:807
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:818
 msgid "cannot normalize %q: bad escape or code point in string %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:814
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:825
 msgid "cannot normalize %q: bad string after ${"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:825
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:836
 msgid "cannot normalize %q: trailing $"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:828
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:839
 msgid "cannot normalize %q: unterminated or empty ${"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:830
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:841
 msgid "stray $ in %q"
 msgstr ""
 
@@ -998,7 +991,7 @@ msgstr ""
 #. pure decode operation... in which case a named
 #. substitution that is not an escape at all as "bad"
 #. as in, "wait.... that's illegal."
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:912
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:923
 #, perl-format
 msgid "bad substitution: %s"
 msgstr ""

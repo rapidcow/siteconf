@@ -1464,6 +1464,7 @@ sub _read_rule_file
 			$args =~ s/(?:\A|[$SP])#.*//so;
 			my @paths = $self->_include_paths($args, $where);
 			@paths or die _status 0, tagmsg(E => diag(__(
+				# HEY!  the second %s is the keyword: INCLUDE or AUGMENT
 				"%s: %s takes at least one file"), $where, $directive));
 			$self->_read_rule_file($_, $where, $directive eq 'AUGMENT') for @paths;
 			# (a recipe line here is not for the last rule of that file)

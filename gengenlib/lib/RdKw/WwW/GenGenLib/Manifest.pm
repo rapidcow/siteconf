@@ -229,7 +229,8 @@ sub _read_line
 	}
 	if ($kw eq 'INCLUDE') {
 		@arg or die _status 0, tagmsg($prog => diag(__(
-			"%s: INCLUDE takes at least one file"), _where($pos)));
+			# HEY!  the second %s is the keyword: INCLUDE or AUGMENT
+			"%s: %s takes at least one file"), _where($pos), 'INCLUDE'));
 		for my $path (map { _name($st, $_, $pos, $st->{D}) } @arg) {
 			_read_file($st, $path, $path, _where($pos));
 		}

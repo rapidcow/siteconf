@@ -212,6 +212,19 @@ Revision history of WwW-SiteConf
         For -G gmake, -Sorder=1 makes the
         directory markers order-only (after a |).  An option the
         generator does not know is said if it has a value.
+    * The header of the build file says the options of -g on a line
+      of their own (`# options: -G make -t core -S clean'), -S
+      included, -o not (the file may be moved).  It is ASCII: an
+      argument that is not printable ASCII is quoted as Perl would
+      quote it ("r\x{e9}sum\x{e9}", "a\nb"), so a line break in one is
+      no longer an error.
+    * What cannot be had is said a part per line (what, then where
+      in parentheses, then why), with a period at the end.  A goal
+      says the manifest line of what it cannot have, and the goal it
+      includes that has the line (`via WANTed goal media').  A file
+      that a goal includes twice is said once (a NEED first).
+      Warnings and errors are said in the order of the files they
+      are of: what cannot be had before what goes without it.
     *** :Q is only a mark for the backend to quote by bytes (and
         write $ in it as $$).  It must be the last modifier, and
         is an error in a prerequisite, a variable assignment, and

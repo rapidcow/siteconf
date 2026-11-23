@@ -20,6 +20,9 @@ Revision history of I18N-CodeSets
       otherwise (undef or empty says no one).
     + diag_name, diag: names for people, quoted to show what would
       not (according to the diag mode).
+    + qq_ascii, qq_unicode (functions, and in ::Functions): a string
+      in double quotes as Perl would quote it, escaped as diag_name
+      escapes it; undef for undef.
     + $RdKw::I18N::CodeSets::LOCALE is what locale says, and may be
       local()ized.
     + new of an object: a copy of it, with what it is told applied;

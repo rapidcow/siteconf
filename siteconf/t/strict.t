@@ -68,7 +68,7 @@ cmp_ok($status, '!=', 0, '-gA: a dropped WANT sets the exit status');
 like($out, qr/^W:.*goal `small' WANTs `absent'/m, '... as an error');
 like($out, qr/^W:/m, '... still a warning');
 like(slurp('Makefile'), qr/^small: site\/present$/m, 'the build file is still written, without it');
-like(slurp('Makefile'), qr/siteconf -gA -G make -t small/, '... saying -A in its header');
+like(slurp('Makefile'), qr/options: -A -G make -t small/, '... saying -A in its header');
 
 ($status, $out) = run('-gAqt', 'small');
 cmp_ok($status, '!=', 0, '-q does not hide the failure') or diag $out;

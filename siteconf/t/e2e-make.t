@@ -11,6 +11,7 @@ use lib "$FindBin::Bin/lib";
 
 use Cwd ();
 use E2E;
+use TestDiag qw( fold );
 use File::Find;
 use File::Path qw( make_path );
 use File::Spec;
@@ -75,8 +76,8 @@ unlike(slurp('build/MY/option.mk'), qr/^[abAB]=/m, 'O has no D');
 }
 
 my $err = run('siteconf -g', $^X, $script, qw( -g -G make -B build -Sclean -t all -t basic ));
-like($err, qr/WANTs `extra\/index\.html', but cannot be made/, 'WANT with a missing need is dropped');
-like($err, qr/WANTs `ghost\.html', but cannot be made/, 'WANT without a rule is dropped');
+like(fold($err), qr/WANTs `extra\/index\.html' \(in MANIFEST line \d+\), but cannot be made/, 'WANT with a missing need is dropped');
+like(fold($err), qr/WANTs `ghost\.html' \(in MANIFEST line \d+\), but cannot be made/, 'WANT without a rule is dropped');
 unlike(slurp('build/Makefile'), qr/^include\b/m, 'the Makefile includes nothing: it says all of it itself');
 like(slurp('build/MY/MANIFEST'), qr/\A.*^MAKE all\n\tNEED index\.html\n\tNEED sub\/index\.html\n\tNEED robots\.txt\n/ms,
 	'MY/MANIFEST');

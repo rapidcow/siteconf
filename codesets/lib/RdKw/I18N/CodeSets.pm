@@ -197,15 +197,15 @@ sub parse
 				push @pairs, $name, delete $all{$name} if exists $all{$name};
 			}
 			for (sort keys %all) {
-				die _status 0, "${prog}unknown category @{[ _qq_ascii($_) ]}\n";
+				die _status 0, "${prog}unknown category @{[ qq_ascii($_) ]}\n";
 			}
 			next;
 		}
 		my ($name, $enc) = $spec =~ /\A([^:]*)(?::(.*))?\z/s;
-		length $name or die _status 0, "${prog}no category in codeset @{[ _qq_ascii($spec) ]}\n";
+		length $name or die _status 0, "${prog}no category in codeset @{[ qq_ascii($spec) ]}\n";
 		if (!defined $enc && !_is_category($name)) {
 			_is_encoding($name)
-				or die _status 0, "${prog}unknown category or encoding @{[ _qq_ascii($name) ]}\n";
+				or die _status 0, "${prog}unknown category or encoding @{[ qq_ascii($name) ]}\n";
 			($name, $enc) = (all => $name);
 		}
 		$enc = $name eq 'diag' ? 'unicode' : 'UTF-8' unless defined $enc;
@@ -335,7 +335,7 @@ sub _set
 		$self->diag_mode(undef) if $name eq 'stderr' && _is_ascii($self->{stderr});
 	}
 	else {
-		die _status 0, "unknown category @{[ _qq_ascii($name) ]}\n";
+		die _status 0, "unknown category @{[ qq_ascii($name) ]}\n";
 	}
 }
 
@@ -414,7 +414,7 @@ for my $name (@CATEGORIES) {
 			my ($enc) = @_;
 			if (defined $enc && $enc ne 'locale') {
 				my $obj = Encode::find_encoding($enc)
-					or die _status 0, "unknown encoding @{[ _qq_ascii($enc) ]}"
+					or die _status 0, "unknown encoding @{[ qq_ascii($enc) ]}"
 						. " for $name\n";
 				$self->{$name} = $obj->name;
 			}
@@ -537,7 +537,7 @@ sub diag_mode
 		my ($mode) = @_;
 		if (defined $mode) {
 			$mode eq 'unicode' || $mode eq 'ascii'
-				or die _status 0, "unknown diag mode @{[ _qq_ascii($mode) ]}"
+				or die _status 0, "unknown diag mode @{[ qq_ascii($mode) ]}"
 					. " (unicode or ascii)\n";
 			$self->{diag} = $mode;
 		}
@@ -650,7 +650,7 @@ sub _fs
 	for my $name (@names) {
 		my ($new, $err) = _code($code, $enc, $name, $opt->{check});
 		defined $new or die _status 0, $who
-			. "cannot $what file name @{[ _qq_ascii($name) ]}"
+			. "cannot $what file name @{[ qq_ascii($name) ]}"
 			. " in @{[ $self->_say_encoding('filesys') ]}: $err\n";
 		push @new, $new;
 	}
@@ -794,7 +794,7 @@ sub getenv
 		if (defined $value) {
 			(my $new, my $err) = _code(\&Encode::decode, $enc, $value, $opt->{check});
 			defined $new or die _status 0, $who . "cannot decode environment variable"
-				. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}: $err\n";
+				. " @{[ qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}: $err\n";
 			$value = $new;
 		}
 		push @values, $value;
@@ -815,7 +815,7 @@ sub setenv
 		if (defined $value) {
 			my ($bytes, $err) = _code(\&Encode::encode, $enc, $value, $opt->{check});
 			defined $bytes or die _status 0, $who . "cannot encode the value of"
-				. " environment variable @{[ _qq_ascii($name) ]}"
+				. " environment variable @{[ qq_ascii($name) ]}"
 				. " in @{[ $self->_say_encoding('env') ]}: $err\n";
 			$value = $bytes;
 		}
@@ -844,7 +844,7 @@ sub _env_key
 	Carp::croak('undefined environment variable name') unless defined $name;
 	my ($key, $err) = _code(\&Encode::encode, $enc, $name);
 	defined $key or die _status 0, $who . "cannot encode environment variable name"
-		. " @{[ _qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}: $err\n";
+		. " @{[ qq_ascii($name) ]} in @{[ $self->_say_encoding('env') ]}: $err\n";
 	$key;
 }
 
@@ -921,8 +921,8 @@ sub diag_name
 		}
 	}
 	return "`$name'" if $name =~ /\A(?:(?![`'])[\x20-\x7e])*\z/;
-	$self->diag_mode eq 'ascii' ? _qq_ascii($name)
-		: _qq_unicode($name, $self->encoding('stderr'));
+	$self->diag_mode eq 'ascii' ? qq_ascii($name)
+		: qq_unicode($name, $self->encoding('stderr'));
 }
 
 =item I<cs>->B<diag>( I<format>, I<arg>, ... )
@@ -1046,10 +1046,7 @@ sub _perlqq
 	$s;
 }
 
-# "..." as Perl would quote it, with what is not printable ASCII
-# escaped.  (Data::Dumper Useqq, but with \x{...} for every code
-# point that is no named escape, rather than octal for some of them:
-# the same string comes out the same, however it is stored.)
+# A character as qq_ascii escapes it: by name if it has one, else \x{...}
 my %NAMED = ("\t" => '\t', "\n" => '\n', "\r" => '\r', "\f" => '\f',
 	"\b" => '\b', "\a" => '\a', "\e" => '\e');
 
@@ -1061,21 +1058,50 @@ sub _qq_char
 	sprintf '\x{%x}', ord $c;
 }
 
-sub _qq_ascii
+=back
+
+=head1 FUNCTIONS
+
+=over
+
+=item B<qq_ascii>( I<string> )
+
+Not a method.  I<string> in double quotes, as Perl would quote it,
+with an escape (C<\n>, C<\x{a0}>, C<\">, C<\$>) for all but printable
+ASCII and for what Perl would take for something else.  The result is
+printable ASCII, and the same for the same characters, however perl
+stores them (L<Data::Dumper> with C<Useqq> says some in octal, and
+only for some strings).  It is undef if I<string> is, so that a
+warning for it is the caller's.
+
+=cut
+
+sub qq_ascii
 {
 	my ($s) = @_;
+	return undef unless defined $s;
 	(my $q = $s) =~ s/([^\x20-\x7e]|["\\\$\@])/_qq_char($1)/ge;
 	qq{"$q"};
 }
 
-# Ditto, but with only what would not show, or could not be spelled
-# in the encoding, escaped
+=item B<qq_unicode>( I<string> [, I<encoding> ] )
+
+Not a method.  Like L</qq_ascii>, but only what would not show is
+escaped (controls, separators and the like: C<\p{C}> and C<\p{Z}>,
+but for the ASCII space), and what I<encoding> (a name that
+L<Encode> knows) cannot spell.  Without an I<encoding>, every other
+character is as it is.  It is undef if I<string> is.
+
+=cut
+
 # (This is inspired by Python str.isprintable())
-sub _qq_unicode
+sub qq_unicode
 {
 	my ($s, $enc) = @_;
+	return undef unless defined $s;
 	(my $q = $s) =~ s{((?! )[\p{C}\p{Z}]|["\\\$\@])|([^\x00-\x7f])}{
-		defined $1 ? _qq_char($1) : _spellable($enc, $2) ? $2 : _qq_char($2)
+		defined $1 ? _qq_char($1)
+			: !defined $enc || _spellable($enc, $2) ? $2 : _qq_char($2)
 	}ge;
 	qq{"$q"};
 }

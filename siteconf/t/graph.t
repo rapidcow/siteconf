@@ -15,6 +15,7 @@ use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::I18N::CodeSets ();
 use TestPaths qw( fs_surprise );
+use TestDiag qw( fold );
 use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 use RdKw::WwW::SiteConf;
 
@@ -198,7 +199,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		# no html/c.css
 	});
 	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
-	like($@, qr/goal `all' NEEDs `a\.html', but cannot be made:\nE: {3}NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE: {5}source `html\/c\.css' is missing \(rule at \S*Makefile\.in'? line 1\)/,
+	like(fold($@), qr/^E: goal `all' NEEDs `a\.html' \(in \S*MANIFEST'? line 2\), but cannot be made:\nE:   NEEDs `site\/c\.css' \(in header of `html\/a\.html'\), but cannot be made:\nE:     source `html\/c\.css' is missing \(rule at \S*Makefile\.in'? line 1\)\.\n/m,
 		'... and why, a cause per line, deeper as it goes');
 
 	$dir = project({
@@ -309,7 +310,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 	delete $g{'gen/lib/Mod.pm'};
 	$dir = project(\%g);
 	eval { plan_of($dir) };
-	like($@, qr/NEEDs `gen\/lib\/Mod\.pm' \(in header of `gen\/tool'\), which we don't seem to have/, 'tools: a missing NEED is fatal');
+	like(fold($@), qr/NEEDs `gen\/lib\/Mod\.pm' \(in header of `gen\/tool'\), which we don't seem to have/, 'tools: a missing NEED is fatal');
 
 	$dir = project({ %f, 'gen/tool' => lines( HAVE => [qw[ gen/other ]] ) });
 	eval { plan_of($dir) };
@@ -606,7 +607,7 @@ SKIP:	{
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED x.md.html\n",
 		'Makefile.in' => $rules, 'html/x.md' => '', 'html/x.html' => '' }, c => 'cache');
 	eval { plan_of($dir) };
-	like($@, qr/NEEDs `x\.md\.html', but cannot be made:\nE: {3}no rule to make it/, 'cache files are not goals');
+	like(fold($@), qr/NEEDs `x\.md\.html' .*, but cannot be made:\nE:   no rule to make it \(/, 'cache files are not goals');
 
 	$dir = project({%f}, c => '/abs');
 	eval { plan_of($dir) };
@@ -639,10 +640,8 @@ SKIP:	{
 		MANIFEST => $manifest,
 		'html/a.html' => lines( WANT => [qw[ ${B}/${b}/c.css ]] ),
 	});
-	is($warn->($dir), <<MSG, 'a missing WANT in a source header');
-W: target `a.html' WANTs `site/c.css'
-W:   (in header of `html/a.html')
-W: ... but it is missing; going on without it :(
+	is(fold($warn->($dir)), <<MSG, 'a missing WANT in a source header');
+W: target `a.html' WANTs `site/c.css' (in header of `html/a.html'), but it is missing; going on without it.
 MSG
 
 	$dir = project({
@@ -651,10 +650,8 @@ MSG
 		'html/a.html' => '',
 		'tool' => lines( WANT => [qw[ gen/Mod.pm ]] ),
 	});
-	is($warn->($dir), <<MSG, '... and in the header of a tool');
-W: target `a.html' WANTs `gen/Mod.pm'
-W:   (in header of `tool')
-W: ... but it is missing; going on without it :(
+	is(fold($warn->($dir)), <<MSG, '... and in the header of a tool');
+W: target `a.html' WANTs `gen/Mod.pm' (in header of `tool'), but it is missing; going on without it.
 MSG
 		
 }
@@ -692,7 +689,7 @@ MSG
 		'html/t/z' => lines( NEED => [qw[ ${A}/html/t/gone ]] ),
 	});
 	my $plan = eval { plan_of($dir) };
-	like($@, qr/NEEDs `html\/t\/gone' \(in header of `html\/t\/z'\)/,
+	like(fold($@), qr/NEEDs `html\/t\/gone' \(in header of `html\/t\/z'\)/,
 		'what a NEED of a NEED NEEDs is missing: that is a failure');
 	is(scalar(() = $@ =~ /NEEDs `html\/t\/gone'/g), 1, '... said once');
 
@@ -730,7 +727,7 @@ MSG
 	is_deeply($p && $p->{node}{'a.html'}{kids}, ['b.css'], '... is an edge when it can be made');
 
 	($p, $err) = $rule->('NEED:${A}/gone');
-	like($err, qr/NEEDs `gone' \(prerequisite in \S*Makefile\.in'? line 1\), which we don't seem to have/,
+	like(fold($err), qr/NEEDs `gone' \(prerequisite in \S*Makefile\.in'? line 1\), which we don't seem to have/,
 		'NEED: is as firm as no prefix at all');
 
 	($p, $err) = $rule->('NEED:NEED:', 'NEED:' => '');

@@ -44,6 +44,15 @@ are not here.
 L<RdKw::I18N::CodeSets/diag>, L<RdKw::I18N::CodeSets/diag_name> and
 L<RdKw::I18N::CodeSets/tagmsg>.
 
+=item B<qq_ascii>( I<string> )
+
+L<RdKw::I18N::CodeSets/qq_ascii>.
+
+=item B<qq_unicode>( I<string> [, I<encoding> ] )
+
+L<RdKw::I18N::CodeSets/qq_unicode>; without an I<encoding>, for the
+B<stderr> of the process, as B<diag_name> is.
+
 =item B<to_fs>( I<name>, ...[, { I<option> => I<value>, ... }] )
 
 =item B<un_fs>( I<bytes>, ...[, { I<option> => I<value>, ... }] )
@@ -91,6 +100,7 @@ use RdKw::I18N::CodeSets;
 
 our @EXPORT_OK = qw(
 	diag diag_name tagmsg
+	qq_ascii qq_unicode
 	to_fs un_fs
 	to_argv un_argv encode_argv decode_argv
 	getenv setenv unsetenv
@@ -107,6 +117,11 @@ our @CARP_NOT = ('RdKw::I18N::CodeSets');
 sub diag        { RdKw::I18N::CodeSets->locale->diag(@_) }
 sub diag_name   { RdKw::I18N::CodeSets->locale->diag_name(@_) }
 sub tagmsg      { RdKw::I18N::CodeSets->locale->tagmsg(@_) }
+sub qq_ascii    { RdKw::I18N::CodeSets::qq_ascii(@_) }
+sub qq_unicode  {
+	@_ > 1 ? RdKw::I18N::CodeSets::qq_unicode(@_)
+		: RdKw::I18N::CodeSets::qq_unicode($_[0], RdKw::I18N::CodeSets->locale->encoding('stderr'))
+}
 sub to_fs       { RdKw::I18N::CodeSets->locale->to_fs(@_) }
 sub un_fs       { RdKw::I18N::CodeSets->locale->un_fs(@_) }
 sub to_argv     { RdKw::I18N::CodeSets->locale->to_argv(@_) }

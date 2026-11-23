@@ -9,6 +9,7 @@ use warnings;
 use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
+use TestDiag qw( fold );
 
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use File::Path qw( make_path );
@@ -63,7 +64,7 @@ my $cp = "\tcp \${a}/\${\@:Q} \${b}/\${\@:Q}\n";
 		'Makefile.in' => "page: \n$cp",
 		'html/page' => "# JUST-NEED: \${a}/missing\n",
 	);
-	like(failure($dir), qr/NEEDs `html\/missing' \(in header of `html\/page'\), which we don't seem to have/,
+	like(fold(failure($dir)), qr/NEEDs `html\/missing' \(in header of `html\/page'\), which we don't seem to have/,
 		'a JUST-NEED that is not there is an error');
 	$dir = project(
 		MANIFEST => "MAKE all\nNEED page\n",
@@ -108,7 +109,7 @@ my $cp = "\tcp \${a}/\${\@:Q} \${b}/\${\@:Q}\n";
 	is_deeply([ map { $_->[0] } @{ $p->{goals}[0]{dropped} } ], [ 'four', ], 'JUST-WANT: one that cannot be had is dropped');
 	is($mf->manifest_text($p->{goals}[0]),
 		"MAKE all\n\tJUST-NEED one\n\tJUST-NEED two\n\tNEED x\n\tJUST-NEED three\n\tNEED five\n"
-		. "#\tJUST-WANT four\t# no rule to make it (`$dir/Makefile.in')\n",
+		. "#\tJUST-WANT four\t# no rule to make it (`$dir/Makefile.in').\n",
 		'the resolved manifest: a JUST-WANT that was had is a JUST-NEED') or diag $mf->manifest_text($p->{goals}[0]);
 }
 

@@ -20,6 +20,7 @@ t/clean.t
 t/configure.t
 t/e2e-dollar.t
 t/e2e-glob.t
+t/diag.t
 t/e2e-make.t
 t/e2e-names.t
 t/e2e-ninja.t
@@ -37,6 +38,7 @@ t/ninja.t
 t/options.t
 t/render.t
 t/lib/E2E.pm
+t/lib/TestDiag.pm
 t/lib/TestPaths.pm
 t/fixture/web/MANIFEST
 t/fixture/web/Makefile.in

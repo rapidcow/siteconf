@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 229;
+use Test::More tests => 233;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -778,6 +778,31 @@ MSG
 		'... but no $ to Make (bmake reads $$ twice)');
 	like($@, qr/^E: make cannot name `t\$ool' \(with inescapable `\$'\).*GNU Make can/s,
 		'... and says so, and who can');
+}
+
+# --- a `:' in a name, as in man/3/File::Spec.html: GNU Make and ninja
+# escape it, and make cannot
+{
+	my $dir = project({
+		MANIFEST => "MAKE all\n\tNEED man/3/\${\"File::Spec\"}.html\n",
+		'Makefile.in' => "\${c}/man/3/\${\"File::Spec\"}.pod: \${a}/lib/File/Spec.pm\n\ttrue\n"
+			. "man/3/\${\"File::Spec\"}.html: \${a}/ \${B}/\${c}/\${\@:R}.pod\n\ttrue\n",
+		'html/lib/File/Spec.pm' => '',
+	});
+	my $plan = eval { plan_of($dir) };
+	is_deeply($plan && $plan->{node}{'man/3/File::Spec.html'}{deps},
+		[ 'site/man/3/File::Spec.pod', 'site/man/3/.ok' ],
+		'a colon in a MANIFEST entry, a target and a prerequisite') or diag $@;
+	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
+	like(eval { RdKw::WwW::SiteConf::GMake->_emit(\%emit) },
+		qr/^site\/man\/3\/File\\:\\:Spec\.html: site\/man\/3\/File\\:\\:Spec\.pod /m,
+		'... is \\: to GNU Make') or diag $@;
+	require RdKw::WwW::SiteConf::Ninja;
+	like(eval { RdKw::WwW::SiteConf::Ninja->_emit(\%emit) },
+		qr/^build site\/man\/3\/File\$:\$:Spec\.html: /m, '... and $: to ninja') or diag $@;
+	ok(!eval { RdKw::WwW::SiteConf::Make->_emit(\%emit) }
+		&& $@ =~ /make cannot name `site\/man\/3\/File::Spec\.(?:html|pod)' \(with inescapable `:'\)/,
+		'... and make cannot') or diag $@;
 }
 
 # --- ${U+hex}: a character, by its code point, in headers too

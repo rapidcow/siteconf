@@ -524,7 +524,7 @@ msgid ""
 msgstr ""
 "NEED %q\n"
 " （%s），\n"
-"  但它无法生成："
+"  但它无法被生成："
 
 #. HEY!  The last %q is the name it may have meant: a
 #. header says MY/option.mk, when it is ${B}/MY/option.mk
@@ -605,7 +605,7 @@ msgid ""
 msgstr ""
 "目标 %q NEED %q\n"
 " （%s），\n"
-"  但它无法生成："
+"  但它无法被生成："
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1864
 msgid ""
@@ -615,7 +615,7 @@ msgid ""
 msgstr ""
 "目标 %q WANT %q\n"
 " （%s），\n"
-"  但它无法生成："
+"  但它无法被生成："
 
 #. HEY!  "no soup for you!" (Seinfeld) but with Makefile
 #. (not my bit, Claude came up with this... but cool

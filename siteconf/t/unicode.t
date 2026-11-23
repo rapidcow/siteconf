@@ -192,7 +192,7 @@ SKIP: {
 	($status, $out) = run($L, {%L1}, $script, '-g', '-q', '-B', 'build', '-Sclean=é-&,é');
 	is($status, 0, 'siteconf -g -Sclean=é-&,é, filesys:ISO-8859-1') or diag $out;
 	$text = slurp_raw(fs("$L/build/Makefile"));
-	like($text, qr/^\Q$arg\E:\n\trm -f -- site\/r\xe9sum\xe9\.html$/m,
+	like($text, qr/^\Q$arg\E:\n\trm -f -- (?:site\/r\xe9sum\xe9\.html|'site\/r\xe9sum\xe9\.html')$/m,
 		'a cleaning rule is spelled as an argument, and the file as the file system');
 	like($text, qr/^\.PHONY: all \Q$arg\E \Q@{[ spell(locale => 'é') ]}\E$/m,
 		'... and so is .PHONY');

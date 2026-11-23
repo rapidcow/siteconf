@@ -1172,14 +1172,19 @@ sub walk_deps
 	my $D = shift;
 	my $G = $kwds->{graph} || +{};
 	my $ok = $kwds->{follow} || \&follow_ok;
-	my @fields = qw( JUST-NEED NEED );
-	unshift @fields, qw( JUST-WANT WANT ) unless $kwds->{mandatory};
+	# Put NEEDs before WANTs.  (The fields are
+	# listed in reverse since @todo is a FIFO.)
+	#
+	# And non-JUST before JUST, since they are
+	# typically non-derivative / binary assets.
+	my @fields = reverse qw( NEED JUST-NEED ),
+		($kwds->{mandatory} ? () : qw( WANT JUST-WANT ));
 
 	# Everything is kept in normalized form, so that $a/x and ${a}/x
 	# are one and the same node, whichever way a header spells it.
 	# A spec is listed (in @pool) once, but it is expanded (read, and
 	# its own deps followed) the first time it is met as anything but
-	# a JUST-: it may be met as one first, and as a NEED later.
+	# a JUST: it may be met as one first, and as a NEED later.
 	my (@pool, %pool, %expanded, %inner);
 	my @todo = map { [ $_, 0 ] } reverse norm_deps(@_);
 
@@ -1202,8 +1207,6 @@ sub walk_deps
 			}
 		};
 		if (defined $Imap) {
-			# (NEED first, in the order the header says; what is pushed
-			# last is popped first)
 			for my $field (@fields) {
 				my @dep = norm_deps(@{ $Imap->{$field} || [] }) or next;
 				$inner{$spec} = 1;

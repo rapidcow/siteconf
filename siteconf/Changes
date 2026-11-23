@@ -194,7 +194,7 @@ Revision history of WwW-SiteConf
       colon), and in Makefile.in as JUST: (JUST-NEED:) and
       JUST-WANT:.  For a built file it is the header of its source
       that is not read.  A file that is JUST in one place and not
-      in another is an error that says where.  The resolved
+      in another is read in full (as in walk_deps).  The resolved
       manifest keeps the distinction.
     *** :Q is only a mark for the backend to quote by bytes (and
         write $ in it as $$).  It must be the last modifier, and

@@ -121,16 +121,17 @@ my $cp = "\tcp \${a}/\${\@:Q} \${b}/\${\@:Q}\n";
 	is_deeply($p->{goals}[0]{just}, { x => 1 }, 'a JUST-NEED of a goal makes its files JUST');
 }
 
-# --- both ways at once is an error that says where
-{
+# --- both ways at once: the header is read, whichever comes first
+for my $order ("NEED x\n\tNEED y\n", "NEED y\n\tNEED x\n") {
 	my $dir = project(
-		MANIFEST => "MAKE all\n\tNEED x\n\tNEED y\n",
+		MANIFEST => "MAKE all\n\t$order",
 		'Makefile.in' => "x: JUST:\${B}/\${b}/y\n$cp" . "y: \n$cp",
-		'html/y' => "y\n",
+		'html/y' => "# NEED: \${a}/z\n",
+		'html/z' => "z\n",
 	);
-	my $err = failure($dir);
-	like($err, qr/`y' is a JUST-NEED or JUST-WANT \(prerequisite in .*Makefile\.in line 1\), but a NEED or WANT \(in the manifest, .*MANIFEST line 3\)/,
-		'a file that is JUST here and not there') or diag $err;
+	my $p = eval { plan_of($dir, 'all') } or diag $@;
+	is_deeply($p->{node}{y}{deps}, [ 'html/y', 'html/z', 'site/.ok' ], 'a file that is JUST here and not there is read in full')
+		or diag explain $p->{node}{y};
 }
 
 done_testing;

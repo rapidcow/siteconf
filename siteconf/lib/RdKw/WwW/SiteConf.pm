@@ -287,9 +287,9 @@ is a C<JUST-NEED>, and one that was not is commented out.
         WANT      not-a-lot
         JUST-NEED one-thing
 
-Whether a header is read is for a file to say once.  One that is a
-C<JUST-NEED> in one place and a C<NEED> in another is an error that
-says where both are.
+A header is read if any place says C<NEED> or C<WANT> of its file, and
+left alone if every place says C<JUST->.  A C<JUST-NEED> only asks
+that its file's header need not be read for it.
 
 A name that is also the name of a goal stands for what that goal
 needs, as if its names were written where it is: a C<NEED> of it has
@@ -568,6 +568,8 @@ sub _warn
 sub _soft
 {
 	my ($self, @mesg) = @_;
+	# (while a plan may yet start over: say it once, at the end)
+	return push @{ $self->{hold} }, \@mesg if $self->{hold};
 	if ($self->{strict}) {
 		$self->{failed} = 1;
 		print STDERR @mesg;
@@ -1385,9 +1387,8 @@ sub _read_rules
 # first); `kids' are those.
 sub _node
 {
-	my ($self, $file, $just, $at) = @_;
-	$just = $just ? 1 : 0;
-	$at = __("somewhere") unless defined $at;
+	my ($self, $file, $just) = @_;
+	$just = $just && !$self->{full}{$file} ? 1 : 0;
 	my $D = $self->{D};
 	if (my $node = $self->{node}{$file}) {
 		if ($node->{visiting}) {
@@ -1397,15 +1398,16 @@ sub _node
 			die _status 0, tagmsg(E => diag(__("dependency cycle: %s"),
 				join(' -> ', map { diag('%q', $_) } @stack, $file)));
 		}
-		# Whether its source's header is read is for the node to say once, not
-		# for whoever comes by: a node that was made without one cannot be
-		# made again with one (what depends on it was checked against it).
-		$node->{just} == $just or die _status 0, tagmsg(E => diag(__(
-			# HEY!  the first %s is where it is JUST (as `in header of x'),
-			# and the second where it is not
-			"%q is a JUST-NEED or JUST-WANT (%s), but a NEED or WANT (%s):"
-			. " its header cannot be both read and not"),
-			$file, $node->{just} ? $node->{just_at} : $at, $node->{just} ? $at : $node->{just_at}));
+		# A node made without its source's header cannot take what the
+		# header says after the fact (what depends on it was checked
+		# against it, and is ordered by it).  So a plain mention of a
+		# file that was met as a JUST starts the plan over, with the
+		# file read in full from the start.  The other way round is
+		# nothing: a node that was read in full is JUST enough.
+		if ($node->{just} && !$just) {
+			$self->{full}{$file} = 1;
+			die bless { file => $file }, 'RdKw::WwW::SiteConf::Again';
+		}
 		return $node;
 	}
 
@@ -1434,7 +1436,6 @@ sub _node
 		ok => 1,
 		why => [],
 		just => $just,
-		just_at => $at,
 		visiting => 1,
 	};
 	push @{ $self->{stack} }, $file;
@@ -1539,7 +1540,7 @@ sub _node
 		my ($said, $dep, $from, $just, $soft) = @_;
 		return 1 if $tree{$dep};
 		if (defined(my $made = $self->_target($dep))) {
-			my $kid = $self->_node($made, $just, $from);
+			my $kid = $self->_node($made, $just);
 			unless ($kid->{ok}) {
 				return 0 if $soft;
 				# (a cause per line, each cause deeper than what it breaks)
@@ -1704,14 +1705,40 @@ sub plan
 {
 	my ($self) = @_;
 	my $D = $self->{D};
-	$self->{node} = {};
-	$self->{stack} = [];
-	$self->{tool} = {};
 	$self->{rules} = $self->_read_rules;
 
 	my @spec = $self->read_manifest(File::Spec->canonpath($D->{F}));
 	@spec = $self->_select_goals(@spec);
 
+	# The graph is made once, unless it finds out that a file it took
+	# for a JUST is a NEED or WANT elsewhere: then once more, with that
+	# file read in full (see _node).  Each time round has one more.
+	my ($goal, $err, $order);
+	$self->{full} = {};
+	local $self->{hold};
+	while (1) {
+		$self->{node} = {};
+		$self->{stack} = [];
+		$self->{tool} = {};
+		$self->{hold} = [];
+		($goal, $err, $order) = eval { $self->_goals(@spec) };
+		if (my $again = $@) {
+			ref $again && $again->isa('RdKw::WwW::SiteConf::Again') or die $again;
+			next;
+		}
+		last;
+	}
+	# (the warnings of the last time round, now that it is the last)
+	my $held = delete $self->{hold};
+	$self->_soft(@$_) for @$held;
+	return $self->_finish($goal, $err, $order);
+}
+
+# The goals, as plan says: [ goals ], [ errors ], [ files in order ]
+sub _goals
+{
+	my ($self, @spec) = @_;
+	my $D = $self->{D};
 	my (@goal, @err, @order, %known);
 	# A file comes after what it takes to make it
 	my $add; $add = sub {
@@ -1725,8 +1752,7 @@ sub plan
 		for my $kind (qw( need want )) {
 			for my $ent (@{ $spec->{$kind} }) {
 				my $file = $ent->{file};
-				my $node = $self->_node($file, $ent->{just},
-					diag(__("in the manifest, %s"), _blame($D->{F}, $ent->{line})));
+				my $node = $self->_node($file, $ent->{just});
 				if ($node->{ok}) {
 					next if $iHaz{$file}++;
 					$just{$file} = 1 if $ent->{just};
@@ -1752,6 +1778,17 @@ sub plan
 		}
 		push @goal, { name => $spec->{name}, files => \@files, dropped => \@dropped, just => \%just };
 	}
+	(\@goal, \@err, \@order);
+}
+
+# What is left of a plan once its graph is made
+sub _finish
+{
+	my ($self, $goal, $err, $order) = @_;
+	my $D = $self->{D};
+	my @goal = @$goal;
+	my @err = @$err;
+	my @order = @$order;
 	if (@err) {
 		my $count = @err;
 		# Weirdly enough, the same message is used even

@@ -53,7 +53,7 @@ bad("MAKE a\nWANT ok\nNEED x\nWANT /y\nNEED ../z\n", qr/line 4: .*must be relati
 bad("MAKE a\nNEED ok\nMAKE Makefile\n", qr/line 3: `Makefile' is a reserved/,
 	'reserved, with its line');
 bad("MAKE a\nMAKE a\n", qr/already made/, 'duplicate goal');
-bad("MAKE clean\n", qr/reserved/, 'reserved goal');
+bad("MAKE Makefile\n", qr/reserved/, 'reserved goal');
 bad("MAKE\n", qr/exactly one goal/, 'nameless goal');
 bad("FROB x\n", qr/expected MAKE/, 'unknown keyword');
 bad("# nothing\n", qr/no goal/, 'empty');

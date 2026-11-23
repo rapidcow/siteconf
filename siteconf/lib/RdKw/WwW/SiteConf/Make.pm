@@ -20,7 +20,7 @@ RdKw::WwW::SiteConf::Make - Makefile backend for siteconf
 I<$plan> is what C<< RdKw::WwW::SiteConf->plan >> returns, with a
 C<prog> to credit in the header.  Each goal becomes a phony target,
 the first of which is what a bare L<make(1)> builds; there is also a
-rule to clean up (C<clean>, or what C<-Dclean> says), or one for each goal.  The one thing asked of L<make(1)> is that a recipe may be
+rule to clean up if C<-Sclean> asks for it (see below).  The one thing asked of L<make(1)> is that a recipe may be
 a tab-indented shell fragment, so any make will do.
 
 Any make will not do with just any name, though: there is no
@@ -32,6 +32,23 @@ escapes most of those.
 
 Names are spelled by C<< $class->_name >>, so that a subclass need
 only say how else to spell them.
+
+=head2 Options
+
+Those of C<-S> of C<siteconf -g>:
+
+=over
+
+=item C<clean>
+
+Without it, there is no rule to clean up.  C<-Sclean> makes one called
+C<clean>, which removes everything we made but the directory markers.
+C<-Sclean=>I<name> calls it I<name> (letters, digits and C<-_.+&> only);
+a C<&> in the name is that of a goal, and then there is a rule for each
+goal, which removes what that goal needs: C<-Sclean='clean-&'> makes
+C<clean-all> and C<clean-small>.  A goal cannot have the name of a rule.
+
+=back
 
 C<_emit> returns bytes.  L<make(1)> reads the Makefile as bytes, in
 no particular encoding.  So every name in a rule, a recipe or the
@@ -97,10 +114,20 @@ sub _emit
 		}
 	}
 
+	# A directory marker has only to be there, so what is made in a
+	# directory need not wait on how new it is: that is, with `|', if
+	# the backend asks for it (-Sorder=1).
+	my $order = $class->_order_only($plan->{opt});
+	my %marker = map { $_->{marker} => 1 } @{ $plan->{dirs} };
+	my $deps = sub {
+		my @dep = $order ? grep({ !$marker{$_} } @_) : @_;
+		my @mark = $order ? grep({ $marker{$_} } @_) : ();
+		join ' ', (map { $name->($_) } @dep), (@mark ? ('|', map { $name->($_) } @mark) : ());
+	};
+
 	for my $dir (@{ $plan->{dirs} }) {
 		my $d = _quote($fs->($dir->{dir}));
-		$out .= $name->($dir->{marker}) . ": "
-			. join(' ', map { $name->($_) } @{ $dir->{deps} }) . "\n";
+		$out .= $name->($dir->{marker}) . ": " . $deps->(@{ $dir->{deps} }) . "\n";
 		$out .= "\t[ -d $d ] || mkdir -- $d\n";
 		$out .= "\t\@> " . _quote($fs->($dir->{marker})) . "\n";
 	}
@@ -112,11 +139,16 @@ sub _emit
 				# HEY!  the second %s is the value, which has a line break
 				"%s: make cannot spell a line break in %q (it ends a command)"));
 		$recipe .= "\n" if length $recipe and $recipe !~ /\n\z/;
-		my @deps = map { $name->($_) } @{ $node->{deps} };
-		$out .= $name->($node->{bpath}) . ": @deps\n" . $recipe;
+		$out .= $name->($node->{bpath}) . ": " . $deps->(@{ $node->{deps} }) . "\n" . $recipe;
 	}
 	$out;
 }
+
+# The names of the options (-S) that we know
+sub _options { qw( clean ) }
+
+# Whether a directory marker is an order-only prerequisite (after a `|')
+sub _order_only { 0 }
 
 # A name, as any make reads it: as it is, or not at all
 sub _name

@@ -113,7 +113,6 @@ our @VARHELP = (
 	[ '-DR', N__('Transformation rules, from current directory'), sub { $Dd{R} } ],
 	[ '-DF', N__('Manifest, from current directory'), sub { $Dd{F} } ],
 	[ '-De', N__('Directory marker'), sub { $Dd{e} } ],
-	[ '-Dclean', N__('Clean rule template'), sub { $Dd{clean} } ],
 @DEFHELP@);
 our @OPTHELP = (
 @OPTHELP@);

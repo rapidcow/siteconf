@@ -47,9 +47,17 @@ siteconf - configurable incremental build script generator
 
     ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
 
-    siteconf -g [-A] [-B outdir] [-G make|gmake|ninja] [-t [NEED:|WANT:]goal ...] [-q]
+    siteconf -g [-A] [-B outdir] [-G make|gmake|ninja] [-t [NEED:|WANT:]goal ...]
+                [-Sopt[=val] ...] [-q]
     siteconf make ...                         # same
     cd ${B} && [make|gmake|ninja] [goal]   # ninja -t clean to clean
+
+    #
+    # -S, with -g: options of the generator (see its page)
+    #
+    #   -Sclean            (make, gmake) a rule `clean'
+    #   -Sclean='clean-&'  a rule for each goal: clean-all, clean-small
+    #   -Sorder=1          (gmake) directory markers after a |
 
     siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
     siteconf list ...                         # same
@@ -117,13 +125,21 @@ The default is no preset.  See L<RdKw::WwW::SiteConf::Configure>.
 
 The C<tem> preset was added in 0.0300.
 
-=item B<-S>I<name>B<=>I<value>
+=item B<-S>I<name>[B<=>I<value>]
 
 With C<-i>, set a default standard definition, such as C<-SB=build>.
 See L<RdKw::WwW::SiteConf::Configure/PATHS> for the names and defaults.
 May be repeated.
 
-C<c> and C<clean> were added in 0.0201.
+With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Make>
+and L<RdKw::WwW::SiteConf::GMake>; C<ninja> has none).  Unlike with C<-i>,
+the value may be left out, and then the generator takes its default:
+C<-Sclean> makes a rule called C<clean> (C<-Sclean=&> makes none),  and C<-Sorder> alone is
+the same as C<-Sorder=0>.  An option the generator does not know is said
+to be unused, unless it has no value or C<-q> was given.
+
+C<c> was added in 0.0201.  C<clean> was too, as a definition; it is
+an option of the generator now.
 
 =item B<-h>, B<--help>
 
@@ -411,7 +427,7 @@ my $usage = do {
 		"-i [-P preset] [-o [name:]path ...] [-f] [-M[-]module[=version] ...]\n"
 		. "$pad         [-Sopt=val ...] [-Dvar[=val] ...] [-Ovar[=val] ...]",
 		"-g [-A] [-B builddir] [-G generator] [-F manifest] [-R rulebook]\n"
-		. "$pad         [-o file] [-t [NEED:|WANT:]goal ...]",
+		. "$pad         [-o file] [-t [NEED:|WANT:]goal ...] [-Sopt[=val] ...]",
 		"-l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]",
 		"-V [-V [-V]]";
 };
@@ -454,7 +470,14 @@ GetOptions(
 	'M=s'      => sub { push @{ $opt{M} }, $_[1]; push @written, "-M$_[1]" },
 	'B=s'      => \$opt{B},
 	'G=s'      => \$opt{G},
-	'S=s%'     => sub { $opt{S}{$_[1]} = $_[2]; push @written, "-S$_[1]=$_[2]" },
+	# (a name alone has no value, as it would with -g; -i takes it as empty)
+	'S=s'      => sub {
+		my ($name, $value) = split(/=/, $_[1], 2);
+		defined $name && length $name
+			or die $cs->tagmsg($prog => $cs->diag(__("%s: empty name."), "-S"));
+		$opt{S}{$name} = $value;
+		push @written, "-S$_[1]";
+	},
 	'D=s'      => default_setter(D => $opt{D}),
 	'O=s'      => default_setter(O => $opt{O}),
 	'F=s'      => \$opt{F},
@@ -596,7 +619,7 @@ if ($opt{mode} eq 'init') {
 	foreach (qw( M )) {
 		@{ $opt{$_} } and _not_for_us("-$_", '-g (make)');
 	}
-	foreach (qw( S D O )) {
+	foreach (qw( D O )) {
 		%{ $opt{$_} } and _not_for_us("-$_", '-g (make)');
 	}
 	my %Doverrides;
@@ -612,6 +635,7 @@ if ($opt{mode} eq 'init') {
 		strict => $opt{A},
 		prog => $prog,
 		goals => $opt{t},
+		S => $opt{S},
 	);
 	$sc->generate($opt{G}, $opt{o});
 
@@ -737,7 +761,7 @@ sub do_init
 	my ($opt) = @_;
 	my %S = %{ $opt->{S} };
 
-	# What -S sets: where we are, and the defaults for A B a b c R F e clean.
+	# What -S sets: where we are, and the defaults for A B a b c R F e.
 	my %Dd = (
 		A => '.',
 		B => '.',
@@ -746,7 +770,6 @@ sub do_init
 		R => 'Makefile.in',
 		F => 'MANIFEST',
 		e => '.ok',
-		clean => 'clean',
 	);
 	# Well-known options
 	my %OD = (
@@ -756,10 +779,10 @@ sub do_init
 	for my $k (keys %S) {
 		# HEY!  %s is the option (-Sx), and then what it may be
 		exists $Dd{$k} || $k eq 'c' or die $cs->tagmsg($prog => $cs->diag(__(
-			"%s: no such thing (valid: %s)"), "-S$k", 'A B a b c R F e clean'));
+			"%s: no such thing (valid: %s)"), "-S$k", 'A B a b c R F e'));
 		$Dd{$k} = $S{$k};
 		# HEY!  %s is an option, as -Sa (and likewise in the next few)
-		length $Dd{$k} or die $cs->tagmsg($prog => $cs->diag(__(
+		defined $Dd{$k} && length $Dd{$k} or die $cs->tagmsg($prog => $cs->diag(__(
 			"%s may not be empty."), "-S$k"));
 	}
 	File::Spec->file_name_is_absolute($Dd{b})
@@ -848,7 +871,7 @@ sub do_init
 	exists $opt->{output}{render} && !defined $render
 		and die $cs->tagmsg($prog => __("preset does not supply a render output"));
 	# The help of configure, as rows of its tables (see there): -D beyond
-	# B a b R F e clean (which configure already describes), and -O, with
+	# B a b R F e (which configure already describes), and -O, with
 	# what we know of them (said with __ there, so N__ here)
 	my @Dextra = grep { !exists $Dd{$_} && $_ ne 'c' } sort keys %Dx;
 	my $dhelp = join '', map {

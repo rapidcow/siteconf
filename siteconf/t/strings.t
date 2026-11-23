@@ -41,13 +41,13 @@ sub project
 		close $fh or die;
 	}
 	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
-		e => '.ok', F => "$dir/MANIFEST", R => "$dir/Makefile.in", clean => 'clean-&' }, prog => 'test');
+		e => '.ok', F => "$dir/MANIFEST", R => "$dir/Makefile.in" }, prog => 'test');
 	$dir;
 }
 sub plan_of
 {
 	my ($dir, @goal) = @_;
-	RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ @goal ])->plan;
+	RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ @goal ], S => { clean => 'clean-&' })->plan;
 }
 sub failure
 {

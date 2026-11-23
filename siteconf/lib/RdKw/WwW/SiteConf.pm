@@ -422,8 +422,8 @@ sub _blame
 }
 
 # Goals of the manifest cannot take these names; `Makefile' because
-# we write it, and `MY' is a directory.  (`clean', or whatever -Dclean
-# makes of it, is reserved too: see _clean_pattern.)
+# we write it, and `MY' is a directory.  (`clean', or whatever -Sclean
+# makes of it, is reserved too if there is such a rule: see _clean_pattern.)
 my %reserved_goal = map { $_ => 1 } qw( Makefile MY );
 
 # POSIX white space.
@@ -468,7 +468,7 @@ sub _words
 	$s =~ /([^$SP]+)/go;
 }
 
-=item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, quiet =E<gt> 1, strict =E<gt> 1 ]
+=item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, S =E<gt> { ... }, quiet =E<gt> 1, strict =E<gt> 1 ]
 
 I<dir> is the build directory, as seen from the current directory.
 C<MY/config.mk> there must exist.  Warnings are not printed when
@@ -477,7 +477,9 @@ had is an error (said even if I<quiet>), as it is for a C<NEED>,
 except that the build is still planned and written without it, and
 L</failed> says so afterwards.  I<D> overrides C<MY/config.mk> parameters.
 (C<F> and C<R>, whether from here or from there, are paths from the
-current directory, not from the project root.)
+current directory, not from the project root.)  I<S> sets the options of
+the generator (C<-S> of C<siteconf -g>): a name, and a value that may be
+undef.  They are not kept anywhere.
 
 C<goals =E<gt> [ ... ]> selects manifest goals, in the order given,
 as C<goal>, C<NEED:goal> (both keep NEED and WANT as declared), or
@@ -495,6 +497,9 @@ sub new
 		strict => $arg{strict},
 		goals => [ @{ $arg{goals} || [] } ],
 		prog => defined $arg{prog} ? $arg{prog} : 'siteconf',
+		# the options of the backend (-S), each a name and a value that may
+		# be undef: they are not in config.mk, and are not kept
+		S => { %{ $arg{S} || {} } },
 	}, $class;
 
 	my $conf = "$self->{B}/MY/config.mk";
@@ -536,10 +541,6 @@ sub new
 	$D{e} =~ m!/!
 		and die _status 0, tagmsg(E => diag(__(
 			"%q (directory marker) may not contain a slash."), 'e'));
-	defined $D{clean} && length $D{clean} and $D{clean} !~ /\A[A-Za-z0-9&][-\w.+&]*\z/
-		and die _status 0, tagmsg(E => diag(__(
-			"%q may be made of letters, digits and -_.+& only: %q"),
-			'clean', $D{clean}));
 	$self->{D} = \%D;
 	# The build directory and the project root, as they really are
 	# (and as characters, like every other name).  Each is said as
@@ -884,16 +885,24 @@ escapes spaces, or rejects them in the case of POSIX make.
 
 =cut
 
-# What -Dclean says the cleaning rules are called: a name, in which `&'
+# What -Sclean says the cleaning rules are called: a name, in which `&'
 # is the name of a goal (and then there is a rule for each), and `clean'
-# if it is not said.  A lone `&' (a rule that would be named like the
-# goal itself) means there are none; then this is undef.
+# if it says no name.  Undef if there is no -Sclean, and so no rule; and
+# if it is a lone `&' (a rule that would be named like the goal itself),
+# which is how to say there are none.
 sub _clean_pattern
 {
 	my ($self) = @_;
-	my $c = $self->{D} ? $self->{D}{clean} : undef;
+	my $S = $self->{S};
+	$S && exists $S->{clean} or return undef;
+	my $c = $S->{clean};
 	$c = 'clean' unless defined $c && length $c;
-	$c eq '&' ? undef : $c;
+	$c eq '&' and return undef;
+	$c =~ /\A[A-Za-z0-9&][-\w.+&]*\z/
+		or die _status 0, tagmsg(E => diag(__(
+			"%q may be made of letters, digits and -_.+& only: %q"),
+			'clean', $c));
+	$c;
 }
 
 # Whether `name' is the one cleaning rule that is not for a goal
@@ -1696,7 +1705,8 @@ that is C<NEED>ed cannot be had.
                       recipe => [ [ KIND, TEXT, WHERE ] ... ] } }
   order   [ FILE ... ]    all files, in order of appearance
   dirs    [ { dir, marker, deps => [ MARKER ] } ]   parents first
-  clean   [ { name, files => [ BPATH ] } ]
+  clean   [ { name, files => [ BPATH ] } ]   (if S says clean, else [])
+  opt     the options of the generator (S), as far as it knows them (generate)
   D       the definitions, as in MY/config.mk
 
 =cut
@@ -1917,10 +1927,10 @@ sub _clean_rules
 	my %taken = (%reserved_goal, map { $_->{name} => 1 } @$goal);
 	for my $rule (@rule) {
 		my $name = $rule->{name};
-		# HEY!  %s is the option, as in -Dclean=clean-&
+		# HEY!  %s is the option, as in -Sclean=clean-& (or -Sclean)
 		$taken{$name}++ and die _status 0, tagmsg(E => diag(__("%s: %q is"
 			. " also the name of a goal or another rule"),
-			"-Dclean=$self->{D}{clean}", $name));
+			defined $self->{S}{clean} ? "-Sclean=$self->{S}{clean}" : '-Sclean', $name));
 	}
 	@rule;
 }
@@ -1967,6 +1977,10 @@ I<file> in the build directory if given (else F<Makefile> or
 F<build.ninja>).
 The files that would not change are left alone, mtime and all.
 
+The options of the generator are those C<S> of L</new> says.  Each
+generator knows some (see its own page); one that it does not know is
+said to be unused, if it has a value.
+
 =cut
 
 my %generator = (
@@ -1995,7 +2009,22 @@ sub generate
 	(my $pm = "$module.pm") =~ s!::!/!g;
 	require $pm;
 
+	# What the backend has no use for is said (if it has a value; a name
+	# alone is for whichever backend knows it), and not planned for
+	my %known = map { $_ => 1 } $module->_options;
+	my %S = %{ $self->{S} };
+	for my $k (sort keys %S) {
+		$known{$k} and next;
+		delete $S{$k};
+		defined $self->{S}{$k} or next;
+		# HEY!  the first %s is an option, as -Sclean=x, and the second
+		# the generator (make, gmake, ninja)
+		$self->_warn(tagmsg(W => diag(__("%s: unused by generator %s"),
+			"-S$k=$self->{S}{$k}", $G)));
+	}
+	local $self->{S} = \%S;
 	my $plan = $self->plan;
+	$plan->{opt} = \%S;
 	my $My = "$self->{B}/MY";
 	my %have;
 	for my $goal (@{ $plan->{goals} }) {

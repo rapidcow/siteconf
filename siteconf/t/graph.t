@@ -45,7 +45,7 @@ sub project {
 }
 sub plan_of {
 	my ($dir, $B) = @_;
-	RdKw::WwW::SiteConf->new(B => $B || $dir, quiet => 1)->plan;
+	RdKw::WwW::SiteConf->new(B => $B || $dir, quiet => 1, S => { clean => undef })->plan;
 }
 my $manifest = "MAKE all\n\tNEED a.html\n";
 

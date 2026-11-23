@@ -67,6 +67,9 @@ sub _comment
 
 # Every string from the plan goes through _fs, so the result is bytes
 # throughout.  Make.pm says why.
+# (-S has nothing for ninja: `ninja -t clean' cleans)
+sub _options { () }
+
 sub _emit
 {
 	my ($class, $plan) = @_;

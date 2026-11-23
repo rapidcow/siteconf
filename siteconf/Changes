@@ -196,6 +196,12 @@ Revision history of WwW-SiteConf
       that is not read.  A file that is JUST in one place and not
       in another is read in full (as in walk_deps).  The resolved
       manifest keeps the distinction.
+    *** -Dclean is gone, and so is the clean rule unless asked for.
+        -g re-uses -S for generator backend options: -Sclean (a rule
+        to clean, named by -Sclean=NAME; & in it is a goal; a lone &
+        is still none) and, for -G gmake, -Sorder=1 (directory markers
+        are order-only, after a |).  One the generator does not know
+        is said if it has a value.
     *** :Q is only a mark for the backend to quote by bytes (and
         write $ in it as $$).  It must be the last modifier, and
         is an error in a prerequisite, a variable assignment, and

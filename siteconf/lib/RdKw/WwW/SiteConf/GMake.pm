@@ -30,6 +30,10 @@ break, CR, form feed, ...), a C<;>, C<=> or C<|>, a C<\> at the end,
 or a name that ends in parentheses, which would be an archive member.
 (GNU make 4.4.1 reads C<a\|b> as C<a|b> in a prerequisite, and as
 C<a\|b> in a target.)
+With C<-Sorder=1>, a directory marker is an order-only prerequisite
+(after a C<|>), so that what is made in a directory does not wait on how
+new its marker is.  Any other value of C<order> (C<0>, empty or none)
+leaves it as in L<RdKw::WwW::SiteConf::Make>.
 The escaped name is then spelled as the file system spells it, as in
 L<RdKw::WwW::SiteConf::Make>.
 
@@ -40,6 +44,12 @@ use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
+
+sub _options { ( $_[0]->SUPER::_options, 'order' ) }
+
+# GNU make: with -Sorder=1, the directory markers are after a `|'
+# (-Sorder=0, -Sorder= and -Sorder alone do not)
+sub _order_only { $_[1] && $_[1]{order} ? 1 : 0 }
 
 # A name, as GNU make reads it
 sub _name

@@ -58,7 +58,7 @@ for (@args) {
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
-plan tests => 44;
+plan tests => 47;
 
 local $ENV{PERL5LIB} = perl5lib();
 
@@ -166,7 +166,7 @@ SKIP: {
 	mkdir fs($L) or die "$L: $!";
 	my $name = "r\xe9sum\xe9.html";  # bytes, as ISO-8859-1 spells résumé.html
 	my $why = fs_surprise($name, fs($L));
-	skip "file system: $why", 8 if defined $why;
+	skip "file system: $why", 11 if defined $why;
 	my %L1 = ( SITECONF_CODESETS => 'filesys:ISO-8859-1' );
 	mkdir fs("$L/html") or die $!;
 	spew_raw(fs("$L/html/") . $name, "# HAVE: \${A}/\${a}/résumé.html\nrésumé\n");
@@ -186,6 +186,16 @@ SKIP: {
 	is($status, 0, 'siteconf -g -G ninja') or diag $out;
 	like(slurp_raw(fs("$L/build/build.ninja")), qr/^build site\/r\xe9sum\xe9\.html: rule1 [^ ]*html\/r\xe9sum\xe9\.html /m,
 		'... and so does build.ninja');
+	# A rule is typed after `make': as an argument is spelled (here, as the
+	# locale says), which is not what a file name is
+	my $arg = spell(locale => 'é-all');
+	($status, $out) = run($L, {%L1}, $script, '-g', '-q', '-B', 'build', '-Sclean=é-&,é');
+	is($status, 0, 'siteconf -g -Sclean=é-&,é, filesys:ISO-8859-1') or diag $out;
+	$text = slurp_raw(fs("$L/build/Makefile"));
+	like($text, qr/^\Q$arg\E:\n\trm -f -- site\/r\xe9sum\xe9\.html$/m,
+		'a cleaning rule is spelled as an argument, and the file as the file system');
+	like($text, qr/^\.PHONY: all \Q$arg\E \Q@{[ spell(locale => 'é') ]}\E$/m,
+		'... and so is .PHONY');
 	($status, $out) = run($L, { SITECONF_CODESETS => 'filesys:ascii' }, $script, '-g', '-q', '-B', 'build');
 	isnt($status, 0, 'a name the file system cannot spell is an error');
 	like($out, qr/^E: cannot encode file name "[^"]*r\\x\{e9\}sum\\x\{e9\}\.html" in US-ASCII/m, '... and says so');

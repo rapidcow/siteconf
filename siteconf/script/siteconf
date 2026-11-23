@@ -55,8 +55,10 @@ siteconf - configurable incremental build script generator
     #
     # -S, with -g: options of the generator (see its page)
     #
-    #   -Sclean            (make, gmake) a rule `clean'
+    #   -Sclean            (make, gmake) a rule `clean': the opposite of `make'
     #   -Sclean='clean-&'  a rule for each goal: clean-all, clean-small
+    #   -Sclean='clean,clean-&'   both
+    #   -Sclean_intermediate=1    ... and remove what is made on the way
     #   -Sorder=1          (gmake) directory markers after a |
 
     siteconf -l [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
@@ -134,7 +136,8 @@ May be repeated.
 With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Make>
 and L<RdKw::WwW::SiteConf::GMake>; C<ninja> has none).  Unlike with C<-i>,
 the value may be left out, and then the generator takes its default:
-C<-Sclean> makes a rule called C<clean> (C<-Sclean=&> makes none),  and C<-Sorder> alone is
+C<-Sclean> makes a rule called C<clean>, which removes the files that
+the first goal names (C<-Sclean=&> makes none), and C<-Sorder> alone is
 the same as C<-Sorder=0>.  An option the generator does not know is said
 to be unused, unless it has no value or C<-q> was given.
 

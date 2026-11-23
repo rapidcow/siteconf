@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 228;
+use Test::More tests => 229;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -577,8 +577,12 @@ SKIP:	{
 	is_deeply([map { $_->{dir} } @{ $plan->{dirs} }], [qw(cache cache/deep site)],
 		'all of ${c} gets a marker, the parents first');
 	is_deeply($plan->{goals}[0]{files}, ['x.html'], 'only the site is a goal');
+	is_deeply($plan->{clean}[0]{files}, ['site/x.html'],
+		'clean leaves the cache alone');
+	$plan = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1,
+		S => { clean => undef, clean_intermediate => 1 })->plan;
 	is_deeply($plan->{clean}[0]{files}, ['cache/deep/x.md.html', 'site/x.html'],
-		'clean takes the cache too');
+		'... unless -Sclean_intermediate=1');
 
 	# c defaults to b: then ${c}/x is x, the same node
 	$dir = project({%f});

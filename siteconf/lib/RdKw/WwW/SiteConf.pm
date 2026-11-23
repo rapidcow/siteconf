@@ -788,19 +788,33 @@ be escaped, so nothing here tries.
 
 =cut
 
-my %FS_SAFE;
-sub fs_text
+# (what has been found safe, for each of the spellings: `filesys', `argv')
+my %SAFE;
+sub fs_text { _spell_text('filesys', @_) }
+
+=item B<argv_text> I<string> [, I<where> ]
+
+Like B<fs_text>, but as an argument is spelled (the encoding of
+C<argv>, which is what a person types after C<make>): the names of
+rules, which one asks of a build tool by name.
+
+=cut
+
+sub argv_text { _spell_text('argv', @_) }
+
+sub _spell_text
 {
-	my ($s, $where) = @_;
-	my $bytes = _to_fs($s);
+	my ($cat, $s, $where) = @_;
+	my $spell = sub { to_fs_or_argv($cat, $_[0]) };
+	my $bytes = $spell->($s);
 	return $bytes unless $s =~ /[^\x00-\x7F]/;
 	my %seen;
 	for my $c (grep { !$seen{$_}++ } $s =~ /([^\x00-\x7F])/g) {
-		next if $FS_SAFE{$c};
-		my $b = _to_fs($c);
+		next if $SAFE{$cat}{$c};
+		my $b = $spell->($c);
 		if ($b =~ /([\x00-\x2A\x2F\x3A-\x3F\x5B-\x5E\x60\x7B-\x7F])/) {
 			require RdKw::I18N::CodeSets;
-			my $enc = RdKw::I18N::CodeSets->locale->filesys;
+			my $enc = RdKw::I18N::CodeSets->locale->$cat;
 			my $msg = diag(__(
 				# HEY!  The first %s is where (as in the messages above), %s
 				# the character (U+0041) and %s its spelling in bytes (0x5C).
@@ -811,9 +825,15 @@ sub fs_text
 				defined $enc ? diag(' (%#q)', $enc) : "");
 			die _status 0, tagmsg(E => $msg);
 		}
-		$FS_SAFE{$c} = 1;
+		$SAFE{$cat}{$c} = 1;
 	}
 	$bytes;
+}
+
+sub to_fs_or_argv
+{
+	my ($cat, $s) = @_;
+	$cat eq 'argv' ? to_argv($s, { prog => 'E' }) : to_fs($s, { prog => 'E' });
 }
 
 =item B<recipe_bytes> I<runs>
@@ -885,32 +905,42 @@ escapes spaces, or rejects them in the case of POSIX make.
 
 =cut
 
-# What -Sclean says the cleaning rules are called: a name, in which `&'
-# is the name of a goal (and then there is a rule for each), and `clean'
-# if it says no name.  Undef if there is no -Sclean, and so no rule; and
-# if it is a lone `&' (a rule that would be named like the goal itself),
-# which is how to say there are none.
+# What a goal may be called (as in GenGenLib::Manifest), and so a rule
+my $RULE_NAME = qr/\A(?!-)[^\s\p{Cc}\p{Cf}:#%\$\\]+\z/;
+
+# What -Sclean says the cleaning rules are called: a comma-separated list
+# of names, in each of which `&' is the name of a goal (and then there is
+# a rule for each), and `clean' if it says no name.  Empty if there is no
+# -Sclean, and so no rule; a lone `&' (a rule that would be named like
+# the goal itself) is how to say there are none.  A name is one a goal
+# may have.
 sub _clean_pattern
 {
 	my ($self) = @_;
 	my $S = $self->{S};
-	$S && exists $S->{clean} or return undef;
+	$S && exists $S->{clean} or return ();
 	my $c = $S->{clean};
 	$c = 'clean' unless defined $c && length $c;
-	$c eq '&' and return undef;
-	$c =~ /\A[A-Za-z0-9&][-\w.+&]*\z/
-		or die _status 0, tagmsg(E => diag(__(
-			"%q may be made of letters, digits and -_.+& only: %q"),
-			'clean', $c));
-	$c;
+	my @pat;
+	for my $name (split /,/, $c, -1) {
+		length $name
+			# HEY!  %s is the option, as -Sclean=a,,b
+			or die _status 0, tagmsg(E => diag(__(
+				"%s: a name of a rule may not be empty"), "-Sclean=$c"));
+		$name =~ $RULE_NAME
+			or die _status 0, tagmsg(E => diag(__(
+				# HEY!  the second %s is the name, as in -Sclean=a:b
+				"%s: %q cannot be the name of a rule"), "-Sclean=$c", $name));
+		push @pat, $name unless $name eq '&';
+	}
+	@pat;
 }
 
-# Whether `name' is the one cleaning rule that is not for a goal
+# Whether `name' is a cleaning rule that is not for a goal
 sub _is_clean
 {
 	my ($self, $name) = @_;
-	my $pat = $self->_clean_pattern;
-	defined $pat && $pat !~ /&/ && $name eq $pat;
+	scalar grep { !/&/ && $_ eq $name } $self->_clean_pattern;
 }
 
 sub read_manifest
@@ -1897,32 +1927,37 @@ sub _select_goals
 }
 
 # The cleaning rules, as { name, files => [ BPATH ] } (see
-# _clean_pattern).  The only rule that is not for a goal removes
-# everything we made; one that is takes what the goal needs.  The
-# directory markers are left in either case.
+# _clean_pattern): the opposite of making a goal.  The rule that is not
+# for a goal is that of the first (what a bare `make' makes); one that is
+# takes what its goal names, in the manifest and the goals it includes.
+# Not what is made on the way, unless -Sclean_intermediate says so; and
+# not the directory markers.
 sub _clean_rules
 {
 	my ($self, $goal, $order, $dir) = @_;
-	my $pat = $self->_clean_pattern;
-	defined $pat or return;
+	my @pat = $self->_clean_pattern or return;
 	my $node = $self->{node};
+	my %pos; @pos{@$order} = 0 .. $#$order;
+	my $deep = $self->{S}{clean_intermediate};
+	my $files = sub {
+		my %have;
+		my $walk; $walk = sub {
+			$have{$_[0]}++ and return;
+			$deep and $walk->($_) for @{ $node->{$_[0]}{kids} };
+		};
+		$walk->($_) for map { @{ $_->{files} } } @_;
+		[ map { $node->{$_}{bpath} } sort { $pos{$a} <=> $pos{$b} } keys %have ];
+	};
 	my @rule;
-	if ($pat =~ /&/) {
-		my %pos; @pos{@$order} = 0 .. $#$order;
-		for my $g (@$goal) {
-			(my $name = $pat) =~ s/&/$g->{name}/g;
-			my %have;
-			my $walk; $walk = sub {
-				$have{$_[0]}++ and return;
-				$walk->($_) for @{ $node->{$_[0]}{kids} };
-			};
-			$walk->($_) for @{ $g->{files} };
-			push @rule, { name => $name,
-				files => [ map { $node->{$_}{bpath} } sort { $pos{$a} <=> $pos{$b} } keys %have ] };
+	for my $pat (@pat) {
+		if ($pat =~ /&/) {
+			for my $g (@$goal) {
+				(my $name = $pat) =~ s/&/$g->{name}/g;
+				push @rule, { name => $name, files => $files->($g) };
+			}
+		} else {
+			push @rule, { name => $pat, files => $files->(@$goal ? $goal->[0] : ()) };
 		}
-	} else {
-		push @rule, { name => $pat,
-			files => [ map { $node->{$_}{bpath} } @$order ] };
 	}
 	my %taken = (%reserved_goal, map { $_->{name} => 1 } @$goal);
 	for my $rule (@rule) {

@@ -40,8 +40,8 @@ like($gmake, qr!^site/x/y: html/y \| site/x/\.ok$!m, 'gmake -Sorder=1: a marker 
 like($gmake, qr!^site/x/\.ok: \| site/\.ok$!m, '... so is the marker of a parent');
 
 # --- what a generator knows
-is_deeply([ RdKw::WwW::SiteConf::Make->_options ], ['clean'], 'make: clean');
-is_deeply([ sort RdKw::WwW::SiteConf::GMake->_options ], [qw( clean order )], 'gmake: clean, order');
+is_deeply([ RdKw::WwW::SiteConf::Make->_options ], [qw( clean clean_intermediate )], 'make: clean, clean_intermediate');
+is_deeply([ sort RdKw::WwW::SiteConf::GMake->_options ], [qw( clean clean_intermediate order )], 'gmake: clean, clean_intermediate, order');
 is_deeply([ RdKw::WwW::SiteConf::Ninja->_options ], [], 'ninja: none');
 
 # --- generate: no rule unless asked for, and what is unused is said

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 30;
+use Test::More tests => 42;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -93,9 +93,37 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Make->_emit($_[0]) }
 	ok(!eval { plan_of(project($manifest), clean => 'MY'); 1 }
 		&& $@ =~ /`MY'/, 'a rule named like MY');
 	ok(!eval { plan_of(project($manifest), clean => 'a b'); 1 }
-		&& $@ =~ /letters, digits/, 'a bad name');
-	ok(!eval { plan_of(project($manifest), clean => 'x/&'); 1 }
-		&& $@ =~ /letters, digits/, 'a slash');
+		&& $@ =~ /`a b' cannot be the name of a rule/, 'a bad name');
+	ok(!eval { plan_of(project($manifest), clean => 'a:b'); 1 }
+		&& $@ =~ /`a:b' cannot be the name/, 'a colon');
+	ok(!eval { plan_of(project($manifest), clean => 'clean,,x'); 1 }
+		&& $@ =~ /may not be empty/, 'an empty entry');
+	ok(!eval { plan_of(project($manifest), clean => 'clean,'); 1 }
+		&& $@ =~ /may not be empty/, 'an empty entry at the end');
+	is(names(plan_of(project($manifest), clean => 'purge,clean-&')), 'purge clean-all clean-small', 'a list');
+	is(names(plan_of(project($manifest), clean => 'clean,&')), 'clean', 'a lone & in a list is none');
+	ok(!eval { plan_of(project($manifest), clean => 'clean,clean'); 1 }
+		&& $@ =~ /also the name of a goal or another rule/, 'a name twice');
+	is(names(plan_of(project($manifest), clean => 'è,表-&')), 'è 表-all 表-small', 'any character') or diag $@;
+}
+
+# --- what is cleaned: what is in the manifest, and not what is made on the way
+{
+	my $m = "MAKE all\n\tNEED big.css\nMAKE small\n\tNEED a.css\nMAKE both\n\tNEED all\n\tNEED small\n";
+	my $dir = project($m);
+	open my $fh, '>', "$dir/Makefile.in" or die;
+	print $fh "a.css d/b.css: \${A}/x\n\tcp \${a}/\${\@} \${B}/\${b}/\${\@}\n"
+		. "big.css: \${B}/\${b}/a.css\n\tcat \${B}/\${b}/a.css > \${B}/\${b}/\${\@}\n";
+	close $fh or die;
+	open $fh, '>', "$dir/html/big.css" or die; close $fh;
+	my $plan = plan_of($dir, clean => 'clean-&');
+	is_deeply($plan->{clean}[0]{files}, ['site/big.css'], 'all: what it names, and not what is on the way');
+	is_deeply($plan->{clean}[1]{files}, ['site/a.css'], 'small: what it names');
+	is_deeply($plan->{clean}[2]{files}, ['site/a.css', 'site/big.css'], 'both: what the goals it includes name');
+	is_deeply(plan_of($dir, clean => 'clean')->{clean}[0]{files}, ['site/big.css'], 'clean: the opposite of make, which is all');
+	$plan = plan_of($dir, clean => 'clean-&', clean_intermediate => 1);
+	is_deeply($plan->{clean}[0]{files}, ['site/a.css', 'site/big.css'], 'with -Sclean_intermediate=1: and what is on the way');
+	is_deeply(plan_of($dir, clean => 'clean-&', clean_intermediate => 0)->{clean}[0]{files}, ['site/big.css'], '... which 0 does not say');
 }
 
 # --- many files: several rm lines, none too long, each file once

@@ -124,10 +124,11 @@ NINJA
 		$out .= "$build\n\n";
 	}
 
-	$out .= "build " . _fs($_->{name}) . ": phony "
+	# (a goal is typed after `ninja': as an argument is spelled)
+	$out .= "build " . RdKw::WwW::SiteConf::argv_text($_->{name}) . ": phony "
 		. join(' ', map { _path($plan->{node}{$_}{bpath}) } @{ $_->{files} })
 		. "\n" for @goal;
-	$out .= "\ndefault " . _fs($goal[0]{name}) . "\n" if @goal;
+	$out .= "\ndefault " . RdKw::WwW::SiteConf::argv_text($goal[0]{name}) . "\n" if @goal;
 	$out;
 }
 

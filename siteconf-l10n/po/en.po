@@ -416,9 +416,8 @@ msgid "an include path"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1344
-#, fuzzy
 msgid "%s: bad include path %q"
-msgstr "%s: bad file name %q"
+msgstr "%s: bad include path %q"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1371
 msgid "%s: AUGMENT target %q has no rule"
@@ -431,9 +430,8 @@ msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1404
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:176
-#, fuzzy
 msgid "%s: cannot open file %q: %m"
-msgstr "cannot open file %q: %m"
+msgstr "%s: cannot open file %q: %m"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1410
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:182
@@ -453,9 +451,9 @@ msgid "%s: unexpected tabulation"
 msgstr "%s: unexpected tabulation"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1467
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: %s takes at least one file"
-msgstr "%s: %s is already defined"
+msgstr "%s: %s takes at least one file"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1479
 msgid "%s: invalid line: %q"
@@ -1105,9 +1103,9 @@ msgid "%s: %q has a NUL in it"
 msgstr "%s: %q has a NUL in it"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:232
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: INCLUDE takes at least one file"
-msgstr "%s: MAKE takes exactly one goal name"
+msgstr "%s: INCLUDE takes at least one file"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:240
 #, perl-format

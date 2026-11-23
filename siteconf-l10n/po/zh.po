@@ -429,9 +429,8 @@ msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1404
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:176
-#, fuzzy
 msgid "%s: cannot open file %q: %m"
-msgstr "无法打开文件 %q：%m"
+msgstr "%s：无法打开文件 %q：%m"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1410
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:182
@@ -451,9 +450,9 @@ msgid "%s: unexpected tabulation"
 msgstr "%s：意外的制表符"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1467
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: %s takes at least one file"
-msgstr "%s：%s 已经定义过了"
+msgstr "%s：%s 只接受至少一个文件名"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1479
 msgid "%s: invalid line: %q"
@@ -1101,9 +1100,9 @@ msgid "%s: %q has a NUL in it"
 msgstr "%s：%q 中有 NUL"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:232
-#, fuzzy, perl-format
+#, perl-format
 msgid "%s: INCLUDE takes at least one file"
-msgstr "%s：MAKE 只接受一个目标名"
+msgstr "%s：INCLUDE 只接受至少一个文件名"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:240
 #, perl-format

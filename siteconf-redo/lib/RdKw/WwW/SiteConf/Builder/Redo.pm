@@ -1,4 +1,4 @@
-package RdKw::WwW::SiteConf::Backend::Redo;
+package RdKw::WwW::SiteConf::Builder::Redo;
 
 use 5.008;
 use strict;
@@ -13,7 +13,7 @@ $VERSION = version->parse( $VERSION );
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Backend::Redo - redo backend for siteconf
+RdKw::WwW::SiteConf::Builder::Redo - redo backend for siteconf
 
 =head1 SYNOPSIS
 
@@ -67,7 +67,7 @@ they see these too.  C<-Sarg_prefix> puts a prefix on both names (see
 L</Options>).
 
 A cleaning rule of C<-Sclean> or C<-Spurge> (named as with
-L<RdKw::WwW::SiteConf::Backend::Make/Options>) is I<name>F<.do> in the
+L<RdKw::WwW::SiteConf::Builder::Make/Options>) is I<name>F<.do> in the
 build directory, which goes to the build directory and removes the
 files with C<rm -f>.  So C<redo clean> removes them, and a later C<redo>
 makes them again.  A cleaning rule is named as a goal is, and may not
@@ -111,13 +111,13 @@ one that the recipes do not use.
 
 =item C<clean>, C<purge>
 
-As with L<RdKw::WwW::SiteConf::Backend::Make/Options>: a F<.do> file for
+As with L<RdKw::WwW::SiteConf::Builder::Make/Options>: a F<.do> file for
 each cleaning rule.
 
 =item C<arg_max>
 
 How many bytes of file names an C<rm> line of a cleaning rule may
-have, as with L<RdKw::WwW::SiteConf::Backend::Make/Options>.  The F<.do>
+have, as with L<RdKw::WwW::SiteConf::Builder::Make/Options>.  The F<.do>
 runs C<rm> with each name an argument of its own, so
 C<-Sarg_max=auto> is an eighth of C<sysconf(_SC_ARG_MAX)>, with no other
 limit.  See L<RdKw::WwW::SiteConf/arg_max>.

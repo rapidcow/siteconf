@@ -118,10 +118,10 @@ pot :
 		$(SITECONF)/script/siteconf \
 		$(SITECONF)/lib/RdKw/WwW/SiteConf.pm \
 		$(SITECONF)/lib/RdKw/WwW/SiteConf/*.pm \
-		$(SITECONF)/lib/RdKw/WwW/SiteConf/Backend/*.pm \
-		$(SITECONF_DOIT)/lib/RdKw/WwW/SiteConf/Backend/Doit.pm \
-		$(SITECONF_NINJA)/lib/RdKw/WwW/SiteConf/Backend/Ninja.pm \
-		$(SITECONF_REDO)/lib/RdKw/WwW/SiteConf/Backend/Redo.pm \
+		$(SITECONF)/lib/RdKw/WwW/SiteConf/Builder/*.pm \
+		$(SITECONF_DOIT)/lib/RdKw/WwW/SiteConf/Builder/Doit.pm \
+		$(SITECONF_NINJA)/lib/RdKw/WwW/SiteConf/Builder/Ninja.pm \
+		$(SITECONF_REDO)/lib/RdKw/WwW/SiteConf/Builder/Redo.pm \
 		$(SITECONF)/share/configure.in \
 		$(SITECONF)/share/presets/*.config \
 		$(SITECONF)/share/presets/*.render \

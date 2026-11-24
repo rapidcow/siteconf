@@ -6,7 +6,7 @@ use ExtUtils::MakeMaker;
 my %WriteMakefileArgs = (
 	NAME             => 'WwW::SiteConf::Ninja',
 	AUTHOR           => q{rapidcow},
-	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf/Backend/Ninja.pm',
+	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf/Builder/Ninja.pm',
 	ABSTRACT         => q{build.ninja generator for siteconf},
 	LICENSE          => 'gpl_3',
 	MIN_PERL_VERSION => '5.008',

@@ -4,8 +4,8 @@ use warnings;
 use Cwd qw(getcwd);
 use File::Temp qw(tempdir);
 use Test::More;
-use RdKw::WwW::SiteConf::Backend::Doit;
-my $backend = 'RdKw::WwW::SiteConf::Backend::Doit';
+use RdKw::WwW::SiteConf::Builder::Doit;
+my $backend = 'RdKw::WwW::SiteConf::Builder::Doit';
 my @recipe = ([text => "cd -- "], [word => '.'], [text => ' && cd sub && cp '],
 	[word => 'source $'], [text => ' '], [word => '../target']);
 my $plan = { prog => 'test', dirs => [], order => ['target'],

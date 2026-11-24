@@ -17,7 +17,7 @@ use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib );
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
-use RdKw::WwW::SiteConf::Backend::Gmake;
+use RdKw::WwW::SiteConf::Builder::Gmake;
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
@@ -115,7 +115,7 @@ M
 
 # --- a line break, or a carriage return, in a :Q word
 for my $tool (qw( Gmake )) {
-	my $class = "RdKw::WwW::SiteConf::Backend::$tool";
+	my $class = "RdKw::WwW::SiteConf::Builder::$tool";
 	my $dir = project('Makefile.in' => "x: \${a}/x\n\techo \${\"a\\nb\":Q}\n");
 	my $p = plan_of($dir);
 	$p->{prog} = 'test';

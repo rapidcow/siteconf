@@ -2374,7 +2374,7 @@ said to be unused, if it has a value.
 
 A generator I<name> is lowercase ASCII letters and digits, in parts
 joined by C<->, each beginning with a letter.  It is the module
-C<RdKw::WwW::SiteConf::Backend::>I<Name>: each part capitalized, and
+C<RdKw::WwW::SiteConf::Builder::>I<Name>: each part capitalized, and
 the C<-> dropped.  So C<gmake> is C<Gmake>, and C<g-make> would be
 C<GMake>.  The module has these class methods.  They are for the
 generators that come with siteconf or are released with it, and change
@@ -2420,21 +2420,21 @@ loads the one module it names.
 
 =cut
 
-# A generator is the module Backend::Name: each part of its name
+# A generator is the module Builder::Name: each part of its name
 # capitalized, without the `-' between them
 my $BACKEND_NAME = qr/\A[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)*\z/;
 
 sub _backend_module
 {
 	my ($name) = @_;
-	q(RdKw::WwW::SiteConf::Backend::) . join q(), map { ucfirst } split /-/, $name;
+	q(RdKw::WwW::SiteConf::Builder::) . join q(), map { ucfirst } split /-/, $name;
 }
 
 sub generators
 {
 	my %found;
 	for my $dir (grep { !ref } @INC) {
-		my $sub = "$dir/RdKw/WwW/SiteConf/Backend";
+		my $sub = "$dir/RdKw/WwW/SiteConf/Builder";
 		opendir my $dh, $sub or next;
 		for my $file (sort readdir $dh) {
 			my ($leaf) = $file =~ /\A((?:[A-Z][a-z0-9]*)+)\.pm\z/ or next;

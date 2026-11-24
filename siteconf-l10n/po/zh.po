@@ -787,24 +787,24 @@ msgid "unknown modifier %q"
 msgstr "未知的修饰符 %q"
 
 #. HEY!  the %s is a character, as `=' or U+000A
-#: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Gmake.pm:93
+#: ../siteconf/lib/RdKw/WwW/SiteConf/Builder/Gmake.pm:93
 msgid "GNU Make cannot name %q (with inescapable %s)"
 msgstr "GNU make 无法表示 %q（其中有 %s）"
 
 #. HEY!  lib(member.o) is how make names a member of an archive
-#: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Gmake.pm:100
+#: ../siteconf/lib/RdKw/WwW/SiteConf/Builder/Gmake.pm:100
 msgid "GNU Make cannot name %q (reserved for archive members)"
 msgstr "GNU make 无法表示 %q（它会被当成归档成员）"
 
 #. HEY!  the second %s is the value, which has a line break
-#: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Make.pm:198
+#: ../siteconf/lib/RdKw/WwW/SiteConf/Builder/Make.pm:198
 msgid "%s: make cannot spell a line break in %q (it ends a command)"
 msgstr "%s：make 无法表示 %q 中的换行（换行会结束命令）"
 
 #. HEY!  the %s is a character, as `$' or U+0020.
 #. You don't need to keep the ";)"; it's just
 #. reflexive for me as a tone indicator... :x
-#: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Make.pm:238
+#: ../siteconf/lib/RdKw/WwW/SiteConf/Builder/Make.pm:238
 msgid ""
 "make cannot name %q (with inescapable %s),\n"
 "... but GNU Make can!  (Pass -G gmake if you want that. ;)"
@@ -812,117 +812,117 @@ msgstr ""
 "make 无法表示 %q（其中有 %s），\n"
 "... 但 GNU make 可以！（想用的话请传 -G gmake。;)"
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Make.pm:240
+#: ../siteconf/lib/RdKw/WwW/SiteConf/Builder/Make.pm:240
 msgid "make cannot name %q (with inescapable %s)"
 msgstr "make 无法表示 %q（其中有 %s）"
 
-#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Backend/Doit.pm:185
+#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Builder/Doit.pm:185
 #, perl-format
 msgid "%s: NUL in shell command"
 msgstr "%s：shell 命令中有 NUL"
 
-#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Backend/Doit.pm:207
+#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Builder/Doit.pm:207
 msgid "%q: doit needs an output name of the form name.py"
 msgstr "%q：doit 需要形如 name.py 的输出名"
 
-#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Backend/Doit.pm:212
+#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Builder/Doit.pm:212
 msgid "unknown recipe mode %q"
 msgstr "未知的配方模式 %q"
 
-#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Backend/Doit.pm:218
+#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Builder/Doit.pm:218
 msgid "-Sarg_prefix needs a shell identifier and -Smode=cmdline"
 msgstr "-Sarg_prefix 需要一个 shell 标识符，以及 -Smode=cmdline"
 
-#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Backend/Doit.pm:255
+#: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Builder/Doit.pm:255
 msgid "%#q: no recipe to make it"
 msgstr "%#q：没有生成它的配方"
 
 #. HEY!  the second %s is the value, which has a line break
-#: ../siteconf-ninja/lib/RdKw/WwW/SiteConf/Backend/Ninja.pm:137
+#: ../siteconf-ninja/lib/RdKw/WwW/SiteConf/Builder/Ninja.pm:137
 msgid "%s: ninja cannot spell a line break in %q (it ends a command)"
 msgstr "%s：ninja 无法表示 %q 中的换行（换行会结束命令）"
 
-#: ../siteconf-ninja/lib/RdKw/WwW/SiteConf/Backend/Ninja.pm:140
+#: ../siteconf-ninja/lib/RdKw/WwW/SiteConf/Builder/Ninja.pm:140
 msgid "%#q: no recipe to make it (and ninja has no way to make nothing)"
 msgstr "%#q：没有生成它的配方（而 ninja 没法从无到有地生成）"
 
 #. HEY!  the %s is a character, as U+000A
-#: ../siteconf-ninja/lib/RdKw/WwW/SiteConf/Backend/Ninja.pm:186
+#: ../siteconf-ninja/lib/RdKw/WwW/SiteConf/Builder/Ninja.pm:186
 msgid "ninja cannot name %q (with inescapable %s)"
 msgstr "ninja 无法表示 %q（其中有 %s）"
 
 #. HEY!  the second %s is the value, which has a line break
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:206
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:206
 msgid "%s: redo cannot spell a line break in %q (it ends a command)"
 msgstr "%s：redo 无法表示 %q 中的换行（换行会结束命令）"
 
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:208
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:208
 msgid "%#q: no recipe to make it (and redo has no way to make nothing)"
 msgstr "%#q：没有生成它的配方（而 redo 没法从无到有地生成）"
 
 #. HEY!  %s is the name given with -o, for the default goal
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:235
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:235
 msgid "redo cannot find %q: the name of a .do file ends in .do"
 msgstr "redo 找不到 %q：.do 文件的名称以 .do 结尾"
 
 #. HEY!  %s is the name given with -o (as default.do)
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:240
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:240
 msgid "redo cannot name the default goal %q: a file has that name"
 msgstr "redo 无法把默认目标命名为 %q：已有文件叫这个名字"
 
 #. HEY!  the second %s is the .do file of the default goal
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:255
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:255
 msgid "redo cannot name goal %q: %s is the default goal's"
 msgstr "redo 无法命名目标 %q：%s 属于默认目标"
 
 #. HEY!  %s is the name of a goal, which a .do file is named after
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:260
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:260
 msgid "redo cannot name goal %q: a file has that name"
 msgstr "redo 无法命名目标 %q：已有文件叫这个名字"
 
 #. HEY!  the second %s is the .do file of the default goal
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:280
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:280
 msgid "redo cannot name cleaning rule %q: %s is the default goal's"
 msgstr "redo 无法命名清理规则 %q：%s 属于默认目标"
 
 #. HEY!  %s is the name of a cleaning rule (-Sclean), which a
 #. .do file is named after
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:286
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:286
 msgid "redo cannot name cleaning rule %q: a file has that name"
 msgstr "redo 无法命名清理规则 %q：已有文件叫这个名字"
 
 #. HEY!  %s is the name of a cleaning rule; default.do is what
 #. redo runs for a name that has no .do of its own
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:293
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:293
 msgid ""
 "redo cannot name cleaning rule %q: redo would run its .do for other names"
 msgstr "redo 无法命名清理规则 %q：redo 会为别的名称运行它的 .do"
 
 #. HEY!  %s is the name of a .do file to be written
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:314
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:314
 msgid "redo cannot write %q: another file has that name"
 msgstr "redo 无法写入 %q：另一个文件也叫这个名字"
 
 #. HEY!  %s is the name of a target, or a goal
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:374
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:374
 msgid "redo cannot name %q: it is not in the build directory"
 msgstr "redo 无法命名 %q：它不在构建目录里"
 
 #. HEY!  %s is the option, as -Sarg_prefix=1x
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:409
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:409
 #, perl-format
 msgid "%s: a prefix is a letter or `_', then letters, digits and `_'"
 msgstr "%s：前缀以字母或 `_' 开头，后面是字母、数字和 `_'"
 
 #. HEY!  %s is a name, which the encoding of arguments (what is
 #. typed after redo) has no bytes for
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:436
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:436
 msgid "redo cannot name %q: arguments cannot spell it"
 msgstr "redo 无法命名 %q：参数的编码无法表示它"
 
 #. HEY!  %s is a name; an argument (what is typed after redo) and the
 #. file system spell it in different bytes, in their encodings
-#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:441
+#: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:441
 msgid "redo cannot name %q: arguments and file names spell it differently"
 msgstr "redo 无法命名 %q：参数和文件名对它的拼写不同"
 

@@ -7,9 +7,9 @@ use warnings;
 use Test::More tests => 72;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
-use RdKw::WwW::SiteConf::Backend::Redo;
+use RdKw::WwW::SiteConf::Builder::Redo;
 
-my $class = 'RdKw::WwW::SiteConf::Backend::Redo';
+my $class = 'RdKw::WwW::SiteConf::Builder::Redo';
 # (the .do files by name; the default goal's is all.do, unless said)
 sub files { my ($p, @d) = @_; my %f = map { ($_->[0], $_->[1]) } $class->emit($p, @d ? $d[0] : q(all.do)); \%f }
 # A goal as -t selects it: of its own (-t goal), the default (-t ,goal, or

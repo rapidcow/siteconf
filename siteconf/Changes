@@ -5,10 +5,10 @@ Revision history of WwW-SiteConf
     BIG Unicode (I18N) update!  Due to the sheer size of
     this patch, many items aren't written by me.
 
-    *** The generators are RdKw::WwW::SiteConf::Backend::Name, found
+    *** The generators are RdKw::WwW::SiteConf::Builder::Name, found
         by name: each part of the name (a-z and 0-9, beginning with
         a letter; parts joined by `-') capitalized, so -G gmake is
-        Backend::Gmake.  make, bmake (new: the Makefile of make, for
+        Builder::Gmake.  make, bmake (new: the Makefile of make, for
         bmake) and gmake ship here.  ninja is no longer part of
         WwW-SiteConf: it is WwW-SiteConf-Ninja, released with it at
         the same version.  -G redo (WwW-SiteConf-Redo, the same)

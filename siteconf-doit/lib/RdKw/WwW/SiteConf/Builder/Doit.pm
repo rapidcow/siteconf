@@ -1,4 +1,4 @@
-package RdKw::WwW::SiteConf::Backend::Doit;
+package RdKw::WwW::SiteConf::Builder::Doit;
 
 use 5.008;
 use strict;
@@ -13,7 +13,7 @@ $VERSION = version->parse($VERSION);
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Backend::Doit - Python 3 doit backend for siteconf
+RdKw::WwW::SiteConf::Builder::Doit - Python 3 doit backend for siteconf
 
 =head1 DESCRIPTION
 

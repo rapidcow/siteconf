@@ -1,16 +1,16 @@
-package RdKw::WwW::SiteConf::Backend::Gmake;
+package RdKw::WwW::SiteConf::Builder::Gmake;
 
 use 5.008;
 use strict;
 use warnings;
 
-use RdKw::WwW::SiteConf::Backend::Make ();
-our $VERSION = $RdKw::WwW::SiteConf::Backend::Make::VERSION;
-our @ISA = qw( RdKw::WwW::SiteConf::Backend::Make );
+use RdKw::WwW::SiteConf::Builder::Make ();
+our $VERSION = $RdKw::WwW::SiteConf::Builder::Make::VERSION;
+our @ISA = qw( RdKw::WwW::SiteConf::Builder::Make );
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Backend::Gmake - GNU Makefile backend for siteconf
+RdKw::WwW::SiteConf::Builder::Gmake - GNU Makefile backend for siteconf
 
 =head1 SYNOPSIS
 
@@ -18,7 +18,7 @@ RdKw::WwW::SiteConf::Backend::Gmake - GNU Makefile backend for siteconf
 
 =head1 DESCRIPTION
 
-The very Makefile of L<RdKw::WwW::SiteConf::Backend::Make>, but for GNU Make
+The very Makefile of L<RdKw::WwW::SiteConf::Builder::Make>, but for GNU Make
 (4.0 or newer for a C<:>, which older versions do not unescape in
 a prerequisite), which can name more
 files: a C<$> is C<$$>; blanks, C<#> and C<:> are escaped with
@@ -48,13 +48,13 @@ before it begins.
 With C<-Sorder=1>, a directory marker is an order-only prerequisite
 (after a C<|>), so that what is made in a directory does not wait on how
 new its marker is.  Any other value of C<order> (C<0>, empty or none)
-leaves it as in L<RdKw::WwW::SiteConf::Backend::Make>.
+leaves it as in L<RdKw::WwW::SiteConf::Builder::Make>.
 The escaped name is then spelled as the file system spells it, as in
-L<RdKw::WwW::SiteConf::Backend::Make>.
+L<RdKw::WwW::SiteConf::Builder::Make>.
 
 =head2 Methods
 
-Those of L<RdKw::WwW::SiteConf::Backend::Make/Methods>, which change with
+Those of L<RdKw::WwW::SiteConf::Builder::Make/Methods>, which change with
 siteconf too, but for:
 
 =over

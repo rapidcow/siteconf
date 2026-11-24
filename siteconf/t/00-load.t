@@ -13,9 +13,9 @@ use Tools qw( describe make_cmd bmake_cmd gmake_since );
 BEGIN {
 	my @module = qw(
 		RdKw::WwW::SiteConf
-		RdKw::WwW::SiteConf::Backend::Bmake
-		RdKw::WwW::SiteConf::Backend::Gmake
-		RdKw::WwW::SiteConf::Backend::Make
+		RdKw::WwW::SiteConf::Builder::Bmake
+		RdKw::WwW::SiteConf::Builder::Gmake
+		RdKw::WwW::SiteConf::Builder::Make
 		RdKw::WwW::SiteConf::Modifiers
 	);
 	foreach my $module (@module) {

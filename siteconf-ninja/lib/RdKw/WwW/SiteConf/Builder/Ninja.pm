@@ -1,4 +1,4 @@
-package RdKw::WwW::SiteConf::Backend::Ninja;
+package RdKw::WwW::SiteConf::Builder::Ninja;
 
 use 5.008;
 use strict;
@@ -13,7 +13,7 @@ $VERSION = version->parse( $VERSION );
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Backend::Ninja - build.ninja backend for siteconf
+RdKw::WwW::SiteConf::Builder::Ninja - build.ninja backend for siteconf
 
 =head1 SYNOPSIS
 
@@ -42,7 +42,7 @@ and a C<#> included.  A vertical space (a line break, CR, form feed,
 ...) cannot be named, and is an error.
 
 F<build.ninja> is bytes, as the Makefile of
-L<RdKw::WwW::SiteConf::Backend::Make> is.  Ninja reads F<build.ninja> as bytes, so every name and every recipe is
+L<RdKw::WwW::SiteConf::Builder::Make> is.  Ninja reads F<build.ninja> as bytes, so every name and every recipe is
 spelled as the file system spells it: L<RdKw::I18N::CodeSets/filesys>.
 A name the file system cannot spell is an error.
 

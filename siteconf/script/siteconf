@@ -137,8 +137,8 @@ With C<-i>, set a default standard definition, such as C<-SB=build>.
 See L<RdKw::WwW::SiteConf::Configure/PATHS> for the names and defaults.
 May be repeated.
 
-With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Backend::Make>,
-L<RdKw::WwW::SiteConf::Backend::Gmake> and L<RdKw::WwW::SiteConf::Backend::Redo>;
+With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Builder::Make>,
+L<RdKw::WwW::SiteConf::Builder::Gmake> and L<RdKw::WwW::SiteConf::Builder::Redo>;
 C<ninja> has none).  Unlike with C<-i>,
 the value may be left out, and then the generator takes its default:
 C<-Sclean> makes a rule called C<clean>, which removes the files that
@@ -240,7 +240,7 @@ Support for C<-l> was added in 0.0300.
 C<make> (default), writing F<Makefile>; C<bmake>, writing the same
 for bmake (and saying to run C<bmake>); C<gmake>, writing one for GNU
 make, which can name files that make cannot (with blanks, C<#>, C<:>,
-C<$>, wildcards and so on: see L<RdKw::WwW::SiteConf::Backend::Gmake>);
+C<$>, wildcards and so on: see L<RdKw::WwW::SiteConf::Builder::Gmake>);
 C<ninja>, writing F<build.ninja>; or C<redo>, writing a F<.do> file
 for each target and each goal.  A name that the generator cannot
 spell is an error.
@@ -251,7 +251,7 @@ it is an error that says what to install.
 
 The C<gmake> and C<bmake> generators were added in 0.0300.
 
-A generator I<name> is the module C<RdKw::WwW::SiteConf::Backend::>I<Name>
+A generator I<name> is the module C<RdKw::WwW::SiteConf::Builder::>I<Name>
 (see L<RdKw::WwW::SiteConf/generate>): C<gmake> is C<Gmake>.
 
 =item B<-o> I<file>

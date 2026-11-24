@@ -1,4 +1,4 @@
-package RdKw::WwW::SiteConf::Backend::Make;
+package RdKw::WwW::SiteConf::Builder::Make;
 
 use 5.008;
 use strict;
@@ -9,7 +9,7 @@ our $VERSION = $RdKw::WwW::SiteConf::VERSION;
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Backend::Make - Makefile backend for siteconf
+RdKw::WwW::SiteConf::Builder::Make - Makefile backend for siteconf
 
 =head1 SYNOPSIS
 
@@ -28,7 +28,7 @@ escaping a file name in POSIX, and bmake reads a dependency line
 twice, so that not even C<$$> is a C<$>.  So a name with white
 space, a control, a C<$>, any of C<#:;=|(){}[]*?>, a C<\> at the
 end or a C<~> in front is an error here, and so is a target with any
-of C<%\E<lt>E<gt>"'`&>; L<RdKw::WwW::SiteConf::Backend::Gmake> escapes most of
+of C<%\E<lt>E<gt>"'`&>; L<RdKw::WwW::SiteConf::Builder::Gmake> escapes most of
 those.
 
 Names are spelled by C<< $class->_name >>, so that a subclass need
@@ -229,8 +229,8 @@ sub _name
 		|| ($where || '') eq 'target' && $s =~ /([%\\<>"'`&])/
 		or return $class->_fs($s);
 	my $c = $1;
-	require RdKw::WwW::SiteConf::Backend::Gmake;
-	my $gnu_can = eval { RdKw::WwW::SiteConf::Backend::Gmake->_name($s, $where); 1 };
+	require RdKw::WwW::SiteConf::Builder::Gmake;
+	my $gnu_can = eval { RdKw::WwW::SiteConf::Builder::Gmake->_name($s, $where); 1 };
 	die _status 0, tagmsg(E => diag($gnu_can
 		# HEY!  the %s is a character, as `$' or U+0020.
 		# You don't need to keep the ";)"; it's just

@@ -58,8 +58,26 @@ of them: each line is a command of its own, in a subshell of its own
 at the first that fails (C<set -e>); a backslash joins lines, a leading
 C<@> is dropped, a leading C<-> ignores failure, and a C<$$> is a C<$>.
 Directory markers are not made: the directory of a target is made when
-its F<.do> file is written.  There is nothing to clean with: redo has
-no such thing.
+its F<.do> file is written.
+
+A F<.do> file keeps two names in shell variables: the build directory,
+seen from where the F<.do> runs, in C<$d>; and the absolute name of
+C<$3>, in C<$o>.  The recipes run in the same shell (in subshells), so
+they see these too.  C<-Sarg_prefix> puts a prefix on both names (see
+L</Options>).
+
+A cleaning rule of C<-Sclean> or C<-Spurge> (named as with
+L<RdKw::WwW::SiteConf::Backend::Make/Options>) is I<name>F<.do> in the
+build directory, which goes to the build directory and removes the
+files with C<rm -f>.  So C<redo clean> removes them, and a later C<redo>
+makes them again.  A cleaning rule is named as a goal is, and may not
+have the name of the default goal's F<.do> (F<all.do>, or as C<-o>
+says).  Nor may it be C<default> or C<default.>I<ext>, in any
+directory: redo runs F<default.do> and F<default.>I<ext>F<.do> for a
+name that has no F<.do> of its own.  The F<.do> of a target or a goal
+does not say C<-Sclean>, C<-Spurge> or C<-Sarg_max> in its header, so
+it does not change with them, and redo does not make the target
+again.
 
 A target, and a goal, is named twice: as a file (its F<.do> file), and
 as an argument (to C<redo>, or C<redo-ifchange>).  So it is an error if
@@ -67,14 +85,44 @@ the encoding of arguments (B<argv> of L<RdKw::I18N::CodeSets>) spells
 it differently from the file system (B<filesys>): the bytes, and not the
 encodings, so that an ASCII name is all right with UTF-8 file names and
 ASCII arguments.  It is an error, too,
-if a goal has the name of a file that a target makes or needs (redo
-would take the goal for that file, and not make it), and if a target or
-a goal is out of the build directory (where its F<.do> file could not
+if a goal or a cleaning rule has the name of a file that a target makes
+or needs (redo would take the goal for that file, and not make it), if
+a F<.do> file would have the name of such a file, and if a target, a
+goal or a cleaning rule is out of the build directory (where its F<.do> file could not
 find the build directory again: a C<..> in its name, say).  The name
 of a directory is all right.  Any other name is quoted for the shell, a
 line break included.
 
 Tested with apenwarr's redo, 0.42d.
+
+=head2 Options
+
+Those of C<-S> of C<siteconf -g>:
+
+=over
+
+=item C<arg_prefix>
+
+The prefix of the shell variables of a F<.do> file: C<-Sarg_prefix=sc_>
+names them C<$sc_d> and C<$sc_o>.  The default is no prefix (C<$d> and
+C<$o>), and so is C<-Sarg_prefix> with no value, or an empty one.  A
+prefix is a letter or C<_>, and then letters, digits and C<_>.  Choose
+one that the recipes do not use.
+
+=item C<clean>, C<purge>
+
+As with L<RdKw::WwW::SiteConf::Backend::Make/Options>: a F<.do> file for
+each cleaning rule.
+
+=item C<arg_max>
+
+How many bytes of file names an C<rm> line of a cleaning rule may
+have, as with L<RdKw::WwW::SiteConf::Backend::Make/Options>.  The F<.do>
+runs C<rm> with each name an argument of its own, so
+C<-Sarg_max=auto> is an eighth of C<sysconf(_SC_ARG_MAX)>, with no other
+limit.  See L<RdKw::WwW::SiteConf/arg_max>.
+
+=back
 
 =head2 Methods
 
@@ -85,7 +133,7 @@ They change with siteconf: they are not a stable interface.
 
 =item B<options>
 
-None.
+C<arg_prefix>, C<clean>, C<purge> and C<arg_max>.
 
 =item B<default_output>
 
@@ -114,7 +162,7 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { () }
+sub options { qw( arg_prefix clean purge arg_max ) }
 
 sub default_output { q(all.do) }
 
@@ -125,11 +173,17 @@ sub emit
 	# WANT:goal), and no other; a target's says no goal.  So a .do is the
 	# same file whatever else is asked for, and is then left alone.
 	# (#! first: a redo may run a .do as a program, by execve)
+	# The options of the cleaning rules are said only in their own .do
+	# (a redo makes a target again if its .do changes)
+	my $clean_opt = qr/\A-S(?:clean|purge|arg_max)(?:=|\z)/;
 	my $head = sub {
+		my ($all, @goal) = @_;
 		"#!/bin/sh\n#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment(
-			{ %$plan, args => [ _with_goals($plan->{args} || [], @_) ] }) . "#\n";
+			{ %$plan, args => [ grep { $all || !/$clean_opt/ }
+				_with_goals($plan->{args} || [], @goal) ] }) . "#\n";
 	};
-	my $target_head = $head->();
+	my $target_head = $head->(0);
+	my $v = _vars($plan->{opt});
 	my $marker = qr{(?:\A|/)\Q$plan->{D}{e}\E\z};
 	my @file;
 
@@ -153,18 +207,18 @@ sub emit
 		@cmd or die _status 0, tagmsg(E => diag(__(
 			"%#q: no recipe to make it (and redo has no way to make"
 			. " nothing)"), $file));
-		my $text = $target_head . _preamble($target, 'out');
+		my $text = $target_head . _preamble($v, $target, 'out');
 		my @need = grep { !/$marker/ } @{ $node->{deps} };
-		$text .= _ifchange(@need);
+		$text .= _ifchange($v, @need);
 		# (the recipe, from the build directory)
-		$text .= "cd -- \"\${siteconf_B:-.}\"\n";
+		$text .= _cd($v);
 		for (@cmd) {
 			my ($ignore, $line) = @$_;
 			# (make's `$$' is the shell's `$')
 			$line =~ s/\$\$/\$/g;
 			$text .= $ignore ? "( $line ) || true\n" : "( $line )\n";
 		}
-		$text .= "mv -f -- " . _word($target) . " \"\$siteconf_out\"\n";
+		$text .= "mv -f -- " . _word($target) . " \"\$$v->{o}\"\n";
 		push @file, [ "$target.do", $text, 1 ];
 	}
 
@@ -209,10 +263,55 @@ sub emit
 		push @do, [ $alias, $goal->{default} ] if defined $goal->{default} && defined $alias;
 		for (@do) {
 			my ($do, $how) = @$_;
-			my $text = $head->($how) . _preamble($do);
-			$text .= _ifchange(@files);
+			my $text = $head->(0, $how) . _preamble($v, $do);
+			$text .= _ifchange($v, @files);
 			push @file, [ "$do.do", $text, 1 ];
 		}
+	}
+
+	# A cleaning rule (-Sclean, -Spurge) is name.do, named as a goal is,
+	# which removes its files from the build directory
+	my $max = RdKw::WwW::SiteConf::arg_max($plan->{opt});
+	for my $rule (@{ $plan->{clean} || [] }) {
+		my $name = $rule->{name};
+		defined $alias && $name eq $alias
+			# HEY!  the second %s is the .do file of the default goal
+			and die _status 0, tagmsg(E => diag(__(
+				"redo cannot name cleaning rule %q: %s is the default goal's"),
+				$name, "$alias.do"));
+		$taken{$name}
+			# HEY!  %s is the name of a cleaning rule (-Sclean), which a
+			# .do file is named after
+			and die _status 0, tagmsg(E => diag(__(
+				"redo cannot name cleaning rule %q: a file has that name"), $name));
+		# (default.do, default.EXT.do: redo would run it for other names,
+		# in that directory and below)
+		$name =~ m{(?:\A|/)default(?:\.[^/]*)?\z}
+			# HEY!  %s is the name of a cleaning rule; default.do is what
+			# redo runs for a name that has no .do of its own
+			and die _status 0, tagmsg(E => diag(__(
+				"redo cannot name cleaning rule %q: redo would run its .do"
+				. " for other names"), $name));
+		my $text = $head->(1) . _preamble($v, $name) . _cd($v);
+		my @word = map { _word($_) } grep { !/$marker/ } @{ $rule->{files} };
+		while (@word) {
+			my $line = shift @word;
+			$line .= ' ' . shift @word
+				while @word and (!$max || length($line) + 1 + length($word[0]) <= $max);
+			$text .= "rm -f -- $line\n";
+		}
+		push @file, [ "$name.do", $text, 1 ];
+	}
+
+	# No .do may be written over a file that a target makes or needs, or
+	# over another .do (goal `x' and target `x.do' would both be x.do)
+	my %seen;
+	for (@file) {
+		my $do = $_->[0];
+		$taken{$do} || $seen{$do}++
+			# HEY!  %s is the name of a .do file to be written
+			and die _status 0, tagmsg(E => diag(__(
+				"redo cannot write %q: another file has that name"), $do));
 	}
 	@file;
 }
@@ -259,11 +358,13 @@ sub _with_goals
 # where redo was run (JdeBP's: $0 is `build/site/x.do').  JdeBP's redo
 # also keeps each prerequisite by the name it was given, and looks for it
 # from where redo was run; so the .do stays where it was run, and names
-# what it needs by way of $siteconf_B: the build directory, seen from
-# there (empty, or ending in a `/'; not beginning with a `-').
+# what it needs by way of $d (`d' of _vars): the build directory, seen
+# from there (empty, or ending in a `/'; not beginning with a `-').  $3
+# is kept in $o, as an absolute name, for after the recipe's `cd'.
 sub _preamble
 {
-	my ($name, $out) = @_;
+	my ($v, $name, $out) = @_;
+	my ($d, $o) = @$v{qw( d o )};
 	_argv_is_fs($name);
 	my @up = split m!/!, $name, -1;
 	pop @up;
@@ -272,18 +373,37 @@ sub _preamble
 		and die _status 0, tagmsg(E => diag(__(
 			"redo cannot name %q: it is not in the build directory"), $name));
 	my $text = "set -e\n";
-	$text .= 'case $3 in /*) siteconf_out=$3 ;; *) siteconf_out=$PWD/$3 ;; esac' . "\n"
+	$text .= "case \$3 in /*) $o=\$3 ;; *) $o=\$PWD/\$3 ;; esac\n"
 		if $out;
-	$text .= 'case $0 in -*/*) siteconf_B=./${0%/*}/ ;; */*) siteconf_B=${0%/*}/ ;; *) siteconf_B= ;; esac' . "\n";
-	$text .= "siteconf_B=\$siteconf_B" . join('', ('../') x @up) . "\n" if @up;
+	$text .= "case \$0 in -*/*) $d=./\${0%/*}/ ;; */*) $d=\${0%/*}/ ;; *) $d= ;; esac\n";
+	$text .= "$d=\$$d" . join('', ('../') x @up) . "\n" if @up;
 	$text . "exec >&2\n";
 }
 
 # What a .do needs, each from the build directory (see _preamble)
 sub _ifchange
 {
-	@_ or return '';
-	"redo-ifchange " . join(' ', map { '"$siteconf_B"' . _word($_) } @_) . "\n";
+	my ($v, @need) = @_;
+	@need or return '';
+	"redo-ifchange " . join(' ', map { qq("\$$v->{d}") . _word($_) } @need) . "\n";
+}
+
+# To the build directory (see _preamble)
+sub _cd { "cd -- \"\${$_[0]{d}:-.}\"\n" }
+
+# The names of the shell variables (see _preamble): `d' and `o', after
+# -Sarg_prefix (none by default; -Sarg_prefix alone, or empty, is none)
+sub _vars
+{
+	my ($opt) = @_;
+	my $p = $opt ? $opt->{arg_prefix} : undef;
+	$p = '' unless defined $p;
+	$p =~ /\A(?:[A-Za-z_][A-Za-z0-9_]*)?\z/
+		# HEY!  %s is the option, as -Sarg_prefix=1x
+		or die _status 0, tagmsg(E => diag(__(
+			"%s: a prefix is a letter or `_', then letters, digits and `_'"),
+			"-Sarg_prefix=$p"));
+	+{ d => "${p}d", o => "${p}o" };
 }
 
 # A name, as one word of the shell, as the file system spells it (and

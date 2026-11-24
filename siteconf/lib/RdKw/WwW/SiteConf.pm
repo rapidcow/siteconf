@@ -802,6 +802,54 @@ sub shell_quote
 	"'$s'";
 }
 
+=item B<arg_max> I<opt> [, I<cap> ]
+
+Not a method.  How many bytes of file names a backend puts on one
+command line (an C<rm> of a cleaning rule), as C<-Sarg_max> in I<opt>
+(the options of the generator) says:
+
+=over
+
+=item no C<-Sarg_max>, or C<-Sarg_max> with no value
+
+16384: an eighth of 128 KiB, the least ARG_MAX we know of (Linux).
+
+=item C<-Sarg_max=>I<bytes>
+
+That many.  C<-Sarg_max=0> and C<-Sarg_max=> give 0: no limit, and so
+one command for all of the files.
+
+=item C<-Sarg_max=auto>
+
+An eighth of C<sysconf(_SC_ARG_MAX)> on the machine that runs
+C<siteconf -g>, and no more than I<cap> if that is given; 16384 if
+C<sysconf> does not say.
+
+=back
+
+Any other value is an error.
+
+=cut
+
+my $ARG_MAX = 16384;
+
+sub arg_max
+{
+	my ($opt, $cap) = @_;
+	my $v = $opt ? $opt->{arg_max} : undef;
+	defined $v or return $ARG_MAX;
+	length $v or return 0;
+	$v =~ /\A[0-9]+\z/ and return 0 + $v;
+	$v eq 'auto'
+		# HEY!  %s is the option, as -Sarg_max=lots
+		or die _status 0, tagmsg(E => diag(__(
+			"%s: expected a number of bytes, or auto"), "-Sarg_max=$v"));
+	require POSIX;
+	my $n = eval { POSIX::sysconf(POSIX::_SC_ARG_MAX()) };
+	$n = defined $n && $n > 0 ? int($n / 8) : $ARG_MAX;
+	defined $cap && $n > $cap ? $cap : $n;
+}
+
 =item B<header_comment> I<plan>
 
 Not a method.  The lines of a build file's header that say what made

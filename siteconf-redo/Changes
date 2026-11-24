@@ -9,3 +9,14 @@ Revision history of WwW-SiteConf-Redo
       what it needs from where redo was run, as JdeBP's redo (which
       runs a .do there, and keeps prerequisites by those names)
       needs.  The recipe then runs from the build directory.
+    * The shell variables of a .do are $d (the build directory) and
+      $o (the absolute name of $3), not $siteconf_B and
+      $siteconf_out.  -Sarg_prefix=PREFIX puts PREFIX before both.
+    * -Sclean and -Spurge write NAME.do for each cleaning rule, which
+      removes the files with rm -f; -Sarg_max as for make.  A
+      cleaning rule may not have the name of a file, or of the
+      default goal's .do, or be default or default.EXT (redo runs
+      those for other names).  No .do is written over a file that a
+      target makes or needs.  The .do of a target or a goal leaves
+      -Sclean, -Spurge and -Sarg_max out of its header, so redo does
+      not make the target again when they change.

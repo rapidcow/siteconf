@@ -61,7 +61,7 @@ siteconf too, but for:
 
 =item B<options>
 
-C<clean>, C<purge> and C<order>.
+C<clean>, C<purge>, C<arg_max> and C<order>.
 
 =back
 

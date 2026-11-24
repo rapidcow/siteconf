@@ -55,12 +55,15 @@ siteconf - configurable incremental build script generator
     #
     # -S, with -g: options of the generator (see its page)
     #
-    #   -Sclean            (make, gmake) a rule `clean': the opposite of `make'
+    #   -Sclean            (make, gmake, redo) a rule `clean': the opposite of `make'
     #   -Sclean='clean-&'  a rule for each goal: clean-all, clean-small
     #   -Sclean='clean,clean-&'   both
-    #   -Spurge            (make, gmake) like clean, and what is made on the way too
+    #   -Spurge            (make, gmake, redo) like clean, and what is made on the way too
     #                      (a different option: both can be had)
+    #   -Sarg_max=8192     (make, gmake, redo) bytes of file names per rm line
+    #                      (auto: an eighth of ARG_MAX; 0 or empty: one line)
     #   -Sorder=1          (gmake) directory markers after a |
+    #   -Sarg_prefix=sc_   (redo) the shell variables of a .do: $sc_d, $sc_o
 
     siteconf -l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
     siteconf list ...                         # same
@@ -134,8 +137,9 @@ With C<-i>, set a default standard definition, such as C<-SB=build>.
 See L<RdKw::WwW::SiteConf::Configure/PATHS> for the names and defaults.
 May be repeated.
 
-With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Backend::Make>
-and L<RdKw::WwW::SiteConf::Backend::Gmake>; C<ninja> and C<redo> have none).  Unlike with C<-i>,
+With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Backend::Make>,
+L<RdKw::WwW::SiteConf::Backend::Gmake> and L<RdKw::WwW::SiteConf::Backend::Redo>;
+C<ninja> has none).  Unlike with C<-i>,
 the value may be left out, and then the generator takes its default:
 C<-Sclean> makes a rule called C<clean>, which removes the files that
 the first goal names (C<-Sclean=&> makes none), and C<-Sorder> alone is

@@ -35,7 +35,7 @@ probe
 	defined $line && $line eq "ok\n";
 }
 redo_builds() or plan skip_all => "no redo";
-plan tests => 29;
+plan tests => 43;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q
 	-MRdKw::WwW::GenLib=0 ));
@@ -83,5 +83,25 @@ like($out, qr{To build, run: \( cd build && redo top \)$}m, q(... which is what 
 run(q(redo top), $redo, q(build/top));
 $out = run(q(siteconf -g -G redo -o /dev/null), $^X, $script, qw( -g -G redo -B build -t ), q(,), qw( -o /dev/null ));
 unlike($out, qr{\.do}, q(-t , -o /dev/null: no .do at all, as the targets' are as they were)) or diag $out;
+
+# -Sclean: clean.do removes what all makes, and redo makes it again
+# (-Sarg_prefix: the .do files work by other names too)
+$out = run(q(siteconf -g -G redo -Sclean -Spurge -Sarg_prefix=sc_), $^X, $script,
+	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ));
+ok(-x 'build/clean.do' && -x 'build/purge.do', q(-Sclean -Spurge: clean.do and purge.do));
+like(slurp('build/site/robots.txt.do'), qr/"\$sc_o"\n\z/, q(-Sarg_prefix=sc_: $sc_o));
+run('redo all', $redo, 'build/all');
+ok(-f 'build/site/robots.txt', '... redo all');
+run('redo clean', $redo, 'build/clean');
+ok(!-e 'build/site/robots.txt' && !-e 'build/site/sub/index.html', 'redo clean: the files are gone');
+run('redo all, after clean', $redo, 'build/all');
+ok(-f 'build/site/robots.txt' && -f 'build/site/sub/index.html', '... and redo all makes them again');
+$out = run(q(siteconf -g -G redo, without -Sclean -Spurge -Sarg_max), $^X, $script,
+	qw( -g -G redo -B build -t all -Sarg_prefix=sc_ ));
+unlike($out, qr{site/}, q(... the targets' .do files are left alone)) or diag $out;
+$out = run(q(siteconf -g -G redo, with them again), $^X, $script,
+	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ));
+run('redo purge', $redo, 'build/purge');
+ok(!-e 'build/site/robots.txt', 'redo purge: gone too');
 
 E2E::done();

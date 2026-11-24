@@ -44,8 +44,8 @@ like($gmake, qr!^site/x/y: html/y \| site/x/\.ok$!m, 'gmake -Sorder=1: a marker 
 like($gmake, qr!^site/x/\.ok: \| site/\.ok$!m, '... so is the marker of a parent');
 
 # --- what a generator knows
-is_deeply([ RdKw::WwW::SiteConf::Backend::Make->options ], [qw( clean purge )], 'make: clean, purge');
-is_deeply([ sort RdKw::WwW::SiteConf::Backend::Gmake->options ], [qw( clean order purge )], 'gmake: clean, order, purge');
+is_deeply([ RdKw::WwW::SiteConf::Backend::Make->options ], [qw( clean purge arg_max )], 'make: clean, purge, arg_max');
+is_deeply([ sort RdKw::WwW::SiteConf::Backend::Gmake->options ], [qw( arg_max clean order purge )], 'gmake: arg_max, clean, order, purge');
 
 # --- generate: no rule unless asked for, and what is unused is said
 my $dir = tempdir(CLEANUP => 1);

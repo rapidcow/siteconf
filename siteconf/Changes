@@ -215,6 +215,11 @@ Revision history of WwW-SiteConf
       that is not read.  A file that is JUST in one place and not
       in another is read in full (as in walk_deps).  The resolved
       manifest keeps the distinction.
+    * -G make, bmake, gmake: -Sarg_max=BYTES sets how many bytes of
+      file names an rm line of a cleaning rule has (16384 by
+      default; 0 or empty: one line).  -Sarg_max=auto is an eighth
+      of sysconf(_SC_ARG_MAX), and no more than 131062 (Linux takes
+      no argument of sh -c longer than 128 KiB).
     *** -Dclean is gone, and so is the clean rule unless asked for.
         -g takes -S, the options of the generator.  -Sclean makes the
         opposite of `make': the rule `clean' removes the files that the

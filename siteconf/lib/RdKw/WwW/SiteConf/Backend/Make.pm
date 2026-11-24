@@ -67,6 +67,17 @@ with those of C<clean>; the default name is C<purge>), but the rule
 removes as well what is made on the way to what the manifest names, and
 so on: a cache file, say.
 
+=item C<arg_max>
+
+How many bytes of file names an C<rm> line of a cleaning rule may
+have; more files go on more lines.  16384 without it, or with no value.
+C<-Sarg_max=>I<bytes> says how many, and C<-Sarg_max=0> or
+C<-Sarg_max=> puts all of them on one line.  C<-Sarg_max=auto> is an
+eighth of C<sysconf(_SC_ARG_MAX)> on the machine that runs
+C<siteconf -g>, but no more than 131062: make hands a recipe line to
+C<sh -c> as one argument, and Linux takes none longer than 128 KiB.
+See L<RdKw::WwW::SiteConf/arg_max>.
+
 =back
 
 The Makefile is bytes.  L<make(1)> reads the Makefile as bytes, in
@@ -86,7 +97,7 @@ They change with siteconf: they are not a stable interface.
 
 =item B<options>
 
-C<clean> and C<purge>.
+C<clean>, C<purge> and C<arg_max>.
 
 =item B<default_output>
 
@@ -109,9 +120,10 @@ use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
 # (Same gettext setup as SiteConf.pm.)
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
-# Bytes of file names per `rm' line.  The least ARG_MAX we know of is
-# 128 KiB for all arguments and the environment (Linux); this is an eighth.
-use constant RM_MAX => 16384;
+# Linux takes no argument longer than 128 KiB, its NUL included; make
+# hands each recipe line to `sh -c' as one, so -Sarg_max=auto (which
+# goes by the total) may not say more than this, with `rm -f -- '.
+use constant LINE_MAX => 131072 - 1 - length(q(rm -f -- ));
 
 sub _status { $! = 0; $? = shift; @_; }
 
@@ -147,15 +159,15 @@ sub _text
 		my @target = map { $name->($plan->{node}{$_}{bpath}) } @{ $goal->{files} };
 		$out .= $arg->($goal->{name}) . ": @target\n";
 	}
+	my $max = RdKw::WwW::SiteConf::arg_max($plan->{opt}, LINE_MAX);
 	for my $rule (@{ $plan->{clean} }) {
 		$out .= $arg->($rule->{name}) . ":\n";
-		# make hands each recipe line to `sh -c' as one argument, which
-		# Linux caps at 128 KiB.  So many files go on several lines.
+		# So many files go on several lines (0: one line)
 		my @file = map { _quote($fs->($_)) } @{ $rule->{files} };
 		while (@file) {
 			my $line = shift @file;
 			$line .= ' ' . shift @file
-				while @file and length($line) + 1 + length($file[0]) <= RM_MAX;
+				while @file and (!$max || length($line) + 1 + length($file[0]) <= $max);
 			$out .= "\trm -f -- $line\n";
 		}
 	}
@@ -190,7 +202,7 @@ sub _text
 	$out;
 }
 
-sub options { qw( clean purge ) }
+sub options { qw( clean purge arg_max ) }
 
 sub default_output { q(Makefile) }
 

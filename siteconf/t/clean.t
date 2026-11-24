@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 47;
+use Test::More tests => 55;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -154,4 +154,22 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Backend::Make->_text($
 	$mk = makefile({ D => {}, goals => [], dirs => [], order => [], node => {},
 		clean => [ { name => 'clean', files => [ 'x' x 20000, 'y' ] } ] });
 	is(scalar(() = $mk =~ /^\trm -f -- /mg), 2, 'a name over the budget has its own line');
+
+	# -Sarg_max: the budget
+	my $rm = sub {
+		my $mk = makefile({ D => {}, goals => [], dirs => [], order => [], node => {}, opt => { @_ },
+			clean => [ { name => 'clean', files => [@file] } ] });
+		[ $mk =~ /^\trm -f -- (.*)$/mg ];
+	};
+	is(scalar(@{ $rm->(arg_max => undef) }), scalar(@rm), '-Sarg_max alone: the default');
+	my $small = $rm->(arg_max => 1000);
+	is(scalar(grep { length > 1000 } @$small), 0, '-Sarg_max=1000: every line within it');
+	cmp_ok(@$small, '>', @rm, '... and so more lines');
+	is(scalar(@{ $rm->(arg_max => 0) }), 1, '-Sarg_max=0: one line');
+	is(scalar(@{ $rm->(arg_max => '') }), 1, '-Sarg_max=: one line');
+	my $auto = RdKw::WwW::SiteConf::arg_max({ arg_max => 'auto' }, 131062);
+	ok($auto > 0 && $auto <= 131062, "-Sarg_max=auto: $auto, within what Linux takes of one argument");
+	is(RdKw::WwW::SiteConf::arg_max({ arg_max => '007' }), 7, '-Sarg_max=007: 7');
+	ok(!eval { $rm->(arg_max => '-1'); 1 } && $@ =~ /-Sarg_max=-1: expected a number of bytes, or auto/,
+		'-Sarg_max=-1: an error');
 }

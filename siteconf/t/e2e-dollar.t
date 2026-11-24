@@ -23,7 +23,7 @@ my $make = $ENV{MAKE} || 'make';
 $make = undef if system("printf 'all:\\n' | $make -f - >/dev/null 2>&1");
 my ($gmake) = grep {
 	my $v = `$_ --version 2>/dev/null`;
-	$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > 3 || $1 == 3 && $2 > 81);
+	$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > 3 || $1 == 3 && $2 >= 81);
 } grep { defined } $ENV{GMAKE}, 'gmake', 'make';
 my $ninja = $ENV{NINJA} || 'ninja';
 $ninja = undef if system("$ninja --version >/dev/null 2>&1");
@@ -78,7 +78,7 @@ SKIP: {
 }
 
 SKIP: {
-	skip 'no GNU make newer than 3.81', 3 unless $gmake;
+	skip 'no GNU make', 3 unless $gmake;
 	builds('gmake', $gmake);
 }
 

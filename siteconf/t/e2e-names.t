@@ -28,15 +28,15 @@ sub gmake_since
 		$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > $major || $1 == $major && $2 >= $minor);
 	} grep { defined } $ENV{GMAKE}, 'gmake', 'make')[0];
 }
-# One newer than 3.81, for names with blanks; and one that can escape a
-# `:' in a prerequisite, which came in 4.0 (`unescape_char' in read.c)
-my $gmake = gmake_since(3, 82);
+# Any (3.81 is the oldest tested); and one that can escape a `:' in a
+# prerequisite, which came in 4.0 (`unescape_char' in read.c)
+my $gmake = gmake_since(3, 81);
 my $gmake_colon = gmake_since(4, 0);
 my $ninja = $ENV{NINJA} || 'ninja';
 $ninja = undef if system("$ninja --version >/dev/null 2>&1");
-plan tests => 64;
+plan tests => 66;
 
-my @name = ('sp ace', "ta\tb", 'ha#sh', 'co:lon', 'do$llar', 'st*ar', 'qu?est',
+my @name = ('sp ace', "ta\tb", 'ha#sh', 'do$llar', 'st*ar', 'qu?est',
 	'br[ack]et', '~tilde', 'back\\slash', 'back\\ space');
 
 # A project in a directory of its own (which is its own build directory)
@@ -124,7 +124,7 @@ sub spaced_builds
 }
 
 SKIP: {
-	skip 'no GNU make newer than 3.81', 15 unless $gmake;
+	skip 'no GNU make', 15 unless $gmake;
 	spaced_builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] });
 }
 SKIP: {
@@ -178,8 +178,8 @@ sub builds
 }
 
 SKIP: {
-	skip 'no GNU Make 4.0 or newer', 5 unless $gmake_colon;
-	builds($gmake_colon, sub { !(run($_[0], $gmake_colon, '-q'))[0] }, @name);
+	skip 'no GNU make', 5 unless $gmake;
+	builds($gmake, sub { !(run($_[0], $gmake, '-q'))[0] }, @name);
 }
 
 SKIP: {
@@ -206,6 +206,7 @@ SKIP: {
 # A target with a `:' in it, as a Perl module's manual page is named:
 # File::Spec as a string, File::Temp with ${U+003A}.  Each page is made
 # from a .pod made from its source, as man/3/NAME.html is on a man site.
+# File::Spec also needs `co:lon', by its header.
 sub colon_project
 {
 	project({
@@ -219,8 +220,9 @@ ${c}/man/3/File${U+003A}${U+003A}Temp.pod: ${a}/lib/File/Temp.pm
 man/3/${"File::Spec"}.html man/3/File${U+003A}${U+003A}Temp.html: ${a}/ ${B}/${c}/${@:R}.pod
 	cp ${B:Q}/${c:Q}/${@:R:Q}.pod ${B:Q}/${b:Q}/${@:Q}
 RULES
-		'html/lib/File/Spec.pm' => "=head1 NAME\n\nFile::Spec\n",
+		'html/lib/File/Spec.pm' => "# NEED: co\${U+003A}lon\n=head1 NAME\n\nFile::Spec\n",
 		'html/lib/File/Temp.pm' => "=head1 NAME\n\nFile::Temp\n",
+		'co:lon' => '',
 	});
 }
 
@@ -232,7 +234,7 @@ sub colon_builds
 	is($status, 0, "$G: generate targets with a colon") or return diag $out;
 	($status, $out) = run($dir, $tool);
 	is($status, 0, "$G: build them") or return diag $out;
-	is(contents("$dir/site/man/3/File::Spec.html"), "=head1 NAME\n\nFile::Spec\n",
+	is(contents("$dir/site/man/3/File::Spec.html"), "# NEED: co\${U+003A}lon\n=head1 NAME\n\nFile::Spec\n",
 		'... File::Spec, by way of its .pod');
 	is(contents("$dir/site/man/3/File::Temp.html"), "=head1 NAME\n\nFile::Temp\n",
 		'... and File::Temp');
@@ -240,6 +242,9 @@ sub colon_builds
 	my $t = time + 10;
 	utime $t, $t, "$dir/html/lib/File/Temp.pm" or die $!;
 	ok(!$up_to_date->($dir), '... and out of date when a source is newer');
+	run($dir, $tool);
+	utime ++$t, $t, "$dir/co:lon" or die $!;
+	ok(!$up_to_date->($dir), '... and when what a header NEEDs is newer');
 	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
 	ok($status == 0 && !-e "$dir/site/man/3/File::Spec.html"
 		&& !-e "$dir/site/man/3/File::Temp.pod", "$G: clean them") or diag $out;
@@ -247,13 +252,13 @@ sub colon_builds
 
 SKIP: {
 	my $why = fs_surprise('File::Spec.html', tempdir(CLEANUP => 1));
-	skip "file system: $why", 16 if defined $why;
+	skip "file system: $why", 18 if defined $why;
 	SKIP: {
-		skip 'no GNU Make 4.0 or newer', 7 unless $gmake_colon;
+		skip 'no GNU Make 4.0 or newer', 8 unless $gmake_colon;
 		colon_builds('gmake', $gmake_colon, sub { !(run($_[0], $gmake_colon, '-q'))[0] });
 	}
 	SKIP: {
-		skip 'no ninja', 7 unless $ninja;
+		skip 'no ninja', 8 unless $ninja;
 		colon_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
 	}
 	my $dir = colon_project();

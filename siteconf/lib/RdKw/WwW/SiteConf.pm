@@ -2345,10 +2345,12 @@ there is none (and so there is no I<file>).
 
 =item C<emit> I<plan>, I<file>
 
-The files to write: a list of C<[ NAME, BYTES ]>, each I<NAME>
-relative to the build directory.  I<plan> is what L</plan> returns,
-with C<opt>, C<prog> and C<args>; I<file> is the name of the file
-that C<default_output> names, or C<undef> for F</dev/null>.  A file
+The files to write: a list of C<[ NAME, BYTES ]> or
+C<[ NAME, BYTES, EXEC ]>, each I<NAME> relative to the build directory.
+A true I<EXEC> makes the file executable (as C<chmod +x> would, under
+the umask), for a build tool that runs it as a program.  I<plan> is
+what L</plan> returns, with C<opt>, C<prog> and C<args>; I<file> is
+the name of the file that C<default_output> names, or C<undef> for F</dev/null>.  A file
 whose I<NAME> is C<undef> is not written.
 
 =item C<build_command> I<generator>, I<builddir>, I<file>, I<goal>, I<plan>
@@ -2474,10 +2476,13 @@ sub generate
 	$plan->{output} = $outfile;
 	my @file = grep { defined $_->[0] } $module->emit($plan, $outfile);
 	for my $file (@file) {
-		my ($name, $text) = @$file;
+		my ($name, $text, $exec) = @$file;
 		my $path = "$self->{B}/$name";
 		_make_dir(dirname($path));
 		$self->_report($name, update_file($path, $text, raw => 1));
+		# (each time: update_file leaves a file alone that says the same)
+		$exec and (chmod 0777 & ~umask, _to_fs($path)
+			or die tagmsg(E => diag(__("cannot chmod %q: %m"), $path)));
 	}
 
 	# What to type next (the backend says, from the first goal of the

@@ -34,7 +34,7 @@ probe
 	defined $line && $line eq "ok\n";
 }
 redo_builds() or plan skip_all => "no redo that can build a file";
-plan tests => 26;
+plan tests => 29;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q
 	-MRdKw::WwW::GenLib=0 ));
@@ -43,6 +43,10 @@ run('./configure', $^X, './configure', '-q');
 
 my $out = run('siteconf -g -G redo', $^X, $script, qw( -g -G redo -B build -t all -t basic ));
 like($out, qr{To build, run: \( cd build && redo all \)$}m, 'says what to run');
+ok(!grep({ !-x } 'build/basic.do', 'build/all.do', glob('build/site/*.do')), 'the .do files are executable');
+chmod 0644, 'build/basic.do' or die "chmod: $!";
+run('siteconf -g -G redo, again', $^X, $script, qw( -g -q -G redo -B build -t all -t basic ));
+ok(-x 'build/basic.do', '... even one that was there, and is the same');
 run('redo basic', $redo, 'build/basic');
 ok(-f 'build/site/sub/index.html', 'redo basic: sub built');
 ok(!-e 'build/site/robots.txt', 'redo basic: only the subset');

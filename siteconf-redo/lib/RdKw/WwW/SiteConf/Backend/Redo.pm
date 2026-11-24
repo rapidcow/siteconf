@@ -124,8 +124,9 @@ sub emit
 	# A goal's .do says how that goal was asked for (-t goal, or -t
 	# WANT:goal), and no other; a target's says no goal.  So a .do is the
 	# same file whatever else is asked for, and is then left alone.
+	# (#! first: a redo may run a .do as a program, by execve)
 	my $head = sub {
-		"#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment(
+		"#!/bin/sh\n#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment(
 			{ %$plan, args => [ _with_goals($plan->{args} || [], @_) ] }) . "#\n";
 	};
 	my $target_head = $head->();
@@ -162,7 +163,7 @@ sub emit
 			$text .= $ignore ? "( $line ) || true\n" : "( $line )\n";
 		}
 		$text .= "mv -f -- " . _word($target) . " \"\$siteconf_out\"\n";
-		push @file, [ "$target.do", $text ];
+		push @file, [ "$target.do", $text, 1 ];
 	}
 
 	# The default goal's .do (all.do, which a bare redo makes, unless -o
@@ -208,7 +209,7 @@ sub emit
 			my ($do, $how) = @$_;
 			my $text = $head->($how) . _preamble($do);
 			$text .= "redo-ifchange " . join(' ', map { _word($_) } @files) . "\n" if @files;
-			push @file, [ "$do.do", $text ];
+			push @file, [ "$do.do", $text, 1 ];
 		}
 	}
 	@file;

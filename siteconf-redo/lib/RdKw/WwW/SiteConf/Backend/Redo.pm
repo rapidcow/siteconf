@@ -79,8 +79,10 @@ The F<.do> files, as C<[ >I<name>C<, >I<bytes>C< ]>.
 
 =item B<build_command> I<generator>, I<builddir>, I<file>, I<goal>
 
-C<redo> I<builddir>C</>I<goal>, or C<redo> in I<builddir> if there is
-no goal.
+C<( cd >I<builddir>C< && redo >I<goal>C< )>, run from the build
+directory as C<make -C> would be (and so with the database of redo
+there); C<redo> I<goal> if I<builddir> is C<.>, and without I<goal> if
+there is none.
 
 =back
 
@@ -154,8 +156,9 @@ sub build_command
 {
 	my ($class, $prog, $B, $file, $goal) = @_;
 	my $q = \&RdKw::WwW::SiteConf::shell_quote;
-	return ($prog, $q->($B eq '.' ? $goal : "$B/$goal")) if defined $goal;
-	$B eq '.' ? ($prog) : ('cd', $q->($B), '&&', $prog);
+	my @redo = ($prog, defined $goal ? $q->($goal) : ());
+	# (in a subshell, so that the shell stays where it is)
+	$B eq q(.) ? @redo : (q[(], q(cd), $q->($B), q(&&), @redo, q[)]);
 }
 
 # The beginning of the .do file of `name' (relative to the build

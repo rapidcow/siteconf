@@ -22,7 +22,7 @@ mkdir 'build' or die "mkdir: $!";
 run('./configure', $^X, './configure', '-q');
 
 my $out = run('siteconf -g -G redo', $^X, $script, qw( -g -G redo -B build -t all -t basic ));
-like($out, qr{To build, run: redo build/all$}m, 'says what to run');
+like($out, qr{To build, run: \( cd build && redo all \)$}m, 'says what to run');
 run('redo basic', $redo, 'build/basic');
 ok(-f 'build/site/sub/index.html', 'redo basic: sub built');
 ok(!-e 'build/site/robots.txt', 'redo basic: only the subset');

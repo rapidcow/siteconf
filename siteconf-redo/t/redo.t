@@ -64,6 +64,6 @@ is($f->{'all.do'} =~ /\n(set -e\nexec >&2\nredo-ifchange site\/x\n)\z/ && $1, "s
 		q(UTF-8 file names, Latin-1 arguments: an error)) or diag $@;
 }
 
-is_deeply([ $class->build_command('redo', 'build', undef, 'all') ], [ 'redo', 'build/all' ], 'to build: redo B/goal');
-is_deeply([ $class->build_command('redo', '.', undef, 'a b') ], [ 'redo', "'a b'" ], '... quoted');
-is_deeply([ $class->build_command('redo', 'build', undef, undef) ], [ 'cd', 'build', '&&', 'redo' ], '... or no goal');
+is_deeply([ $class->build_command('redo', 'build', undef, 'all') ], [ qw[ ( cd build && redo all ) ] ], q(to build: cd to B, then redo goal));
+is_deeply([ $class->build_command('redo', '.', undef, 'a b') ], [ q(redo), "'a b'" ], q(... quoted, and in B already));
+is_deeply([ $class->build_command('redo', 'build', undef, undef) ], [ qw[ ( cd build && redo ) ] ], q(... or no goal));

@@ -155,7 +155,9 @@ sub emit
 			. " nothing)"), $file));
 		my $text = $target_head . _preamble($target, 'out');
 		my @need = grep { !/$marker/ } @{ $node->{deps} };
-		$text .= "redo-ifchange " . join(' ', map { _word($_) } @need) . "\n" if @need;
+		$text .= _ifchange(@need);
+		# (the recipe, from the build directory)
+		$text .= "cd \"\${siteconf_B:-./}\"\n";
 		for (@cmd) {
 			my ($ignore, $line) = @$_;
 			# (make's `$$' is the shell's `$')
@@ -208,7 +210,7 @@ sub emit
 		for (@do) {
 			my ($do, $how) = @$_;
 			my $text = $head->($how) . _preamble($do);
-			$text .= "redo-ifchange " . join(' ', map { _word($_) } @files) . "\n" if @files;
+			$text .= _ifchange(@files);
 			push @file, [ "$do.do", $text, 1 ];
 		}
 	}
@@ -250,8 +252,15 @@ sub _with_goals
 
 # The beginning of the .do file of `name' (relative to the build
 # directory): stop at the first failure, keep where $3 is (if it is to
-# be written, as `out'), go to the build directory, and say what is said
+# be written, as `out'), find the build directory, and say what is said
 # on the standard error.
+#
+# A redo may run a .do where the .do is (apenwarr's: $0 is `x.do'), or
+# where redo was run (JdeBP's: $0 is `build/site/x.do').  JdeBP's redo
+# also keeps each prerequisite by the name it was given, and looks for it
+# from where redo was run; so the .do stays where it was run, and names
+# what it needs by way of $siteconf_B: the build directory, seen from
+# there (empty, or ending in a `/'; not beginning with a `-').
 sub _preamble
 {
 	my ($name, $out) = @_;
@@ -265,8 +274,16 @@ sub _preamble
 	my $text = "set -e\n";
 	$text .= 'case $3 in /*) siteconf_out=$3 ;; *) siteconf_out=$PWD/$3 ;; esac' . "\n"
 		if $out;
-	$text .= "cd " . join('/', ('..') x @up) . "\n" if @up;
+	$text .= 'case $0 in -*/*) siteconf_B=./${0%/*}/ ;; */*) siteconf_B=${0%/*}/ ;; *) siteconf_B= ;; esac' . "\n";
+	$text .= "siteconf_B=\$siteconf_B" . join('', ('../') x @up) . "\n" if @up;
 	$text . "exec >&2\n";
+}
+
+# What a .do needs, each from the build directory (see _preamble)
+sub _ifchange
+{
+	@_ or return '';
+	"redo-ifchange " . join(' ', map { '"$siteconf_B"' . _word($_) } @_) . "\n";
 }
 
 # A name, as one word of the shell, as the file system spells it (and

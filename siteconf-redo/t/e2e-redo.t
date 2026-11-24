@@ -51,10 +51,17 @@ run('redo basic', $redo, 'build/basic');
 ok(-f 'build/site/sub/index.html', 'redo basic: sub built');
 ok(!-e 'build/site/robots.txt', 'redo basic: only the subset');
 like(slurp('build/site/sub/index.html'), qr/location=sub\/index\.html/, 'redo: O.location');
-unlike(run('redo-ifchange again', "$redo-ifchange", 'build/basic'), qr/site\/index\.html/, 'redo: incremental');
+# (redo, and not redo-ifchange: JdeBP's runs only in a .do.  A goal is
+# made every time, and makes what it needs only if that is out of date)
+unlike(run('redo basic again', $redo, 'build/basic'), qr/site\/index\.html/, 'redo: incremental');
+# (what it says and when: JdeBP's redo looks at what is in a file, but
+# only if its time is not the second it was built in, as it may be here)
+open my $fh, '>>', 'html/index.html' or die "html/index.html: $!";
+print $fh "<!-- newer -->\n";
+close $fh or die "html/index.html: $!";
 my $t = time + 10;
-utime $t, $t, 'html/index.html' or die $!;
-like(run('redo-ifchange, a source newer', "$redo-ifchange", 'build/basic'), qr/site\/index\.html/, '... and out of date');
+utime $t, $t, 'html/index.html' or die "html/index.html: $!";
+like(run('redo basic, a source changed', $redo, 'build/basic'), qr/site\/index\.html/, '... and out of date');
 run('redo all', $redo, 'build/all');
 ok(-f 'build/site/robots.txt', 'redo all');
 

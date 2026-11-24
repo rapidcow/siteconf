@@ -5,3 +5,7 @@ Revision history of WwW-SiteConf-Redo
     First release.
     * Each .do begins with #!/bin/sh and is executable, for a redo
       that runs it as a program (by execve) and not by sh.
+    * A .do does not change directory before redo-ifchange: it names
+      what it needs from where redo was run, as JdeBP's redo (which
+      runs a .do there, and keeps prerequisites by those names)
+      needs.  The recipe then runs from the build directory.

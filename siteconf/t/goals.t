@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 66;
+use Test::More tests => 70;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -98,6 +98,14 @@ for my $sel ([',small,,other'], [',small', ',other']) {
 }
 is_deeply(how(plan_of("  small \t")), [ [ 'small', undef, 'small' ] ], '-t small (with white space): no default');
 is_deeply(names(plan_of('small', 'WANT:')), [qw(broken small)], 'the default goal comes first, wherever it is');
+is_deeply(how(plan_of('', ',small')), [ [ 'small', ',small', undef ] ], "-t '' is no field: -t '' -t ,small is small, the default");
+is_deeply(how(plan_of('  ', 'small')), [ [ 'small', undef, 'small' ] ], "... and -t ' ' -t small no default at all");
+is_deeply(how(plan_of('small', ',other')), [ [ 'other', ',other', undef ], [ 'small', undef, 'small' ] ], '-t small -t ,other: the default goal is first');
+{
+	my $sc = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ '', ' ' ], S => {});
+	eval { $sc->plan };
+	is_deeply($sc->{select_args}, [], "... and with -t '' -t ' ' alone, the header says no -t");
+}
 is_deeply(names(plan_of('other', 'WANT:broken', 'small')), [qw(other broken small)], 'selection order');
 is_deeply(names(plan_of('small', 'other', 'NEED:small')), [qw(small other)], 'duplicate goals appear once');
 ok(eval { plan_of('broken', 'WANT:broken'); 1 }, 'last mode wins: WANT') or diag $@;

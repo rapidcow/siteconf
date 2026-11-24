@@ -18,9 +18,10 @@ Revision history of WwW-SiteConf
         selected (the default goal first, as -t ,goal or -t ,; then
         -t goal, NEED: as no prefix, each once).
         -t is split by commas into fields, and each by POSIX white
-        space into goals (-t "$*").  An empty field (-t , or -t '')
-        opts into the default goal: what the next field names (-t
-        ,goal), or the first of the manifest.  The default goal is
+        space into goals (-t "$*"); a -t of nothing (-t '') has no
+        fields.  An empty field (-t ,) opts into the default goal:
+        what the next field names (-t ,goal), or the first of the
+        manifest, as without -t.  The default goal is
         the first, and with redo is all.do (or as -o says).  -o
         /dev/null writes no build file (only MY/MANIFEST).
     *** Perl 5.8 is required, and so is GenGenLib 0.0100.

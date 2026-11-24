@@ -2148,14 +2148,14 @@ sub _select_goals
 	# Each -t is fields, split by commas; a field of white space alone (or
 	# of nothing) opts into the default goal, and the first that does is
 	# it: what the next field names, if that is a name and no more (-t
-	# ,goal), or else the first of the manifest (-t , and -t '').  Any
+	# ,goal), or else the first of the manifest (-t , and -t ', x').  Any
 	# other field is names, split by white space, each a goal of its own.
-	# Without -t, it is -t ,.
+	# A -t of nothing (or white space alone) is no fields at all, and so
+	# no goal.  If no -t selects one, it is as -t , (with no -t said).
 	my ($default, @own);
-	my @arg = @{ $self->{goals} || [] };
-	for my $arg (@arg ? @arg : q(,)) {
+	for my $arg (@{ $self->{goals} || [] }) {
+		next if $arg =~ /\A[$SP]*\z/;
 		my @field = split /,/, $arg, -1;
-		@field = (q()) unless @field;
 		for (my $i = 0; $i < @field; $i++) {
 			if ($field[$i] =~ /\A[$SP]*\z/) {
 				next if $default;
@@ -2176,6 +2176,8 @@ sub _select_goals
 		}
 	}
 
+	my $implied = !$default && !@own;
+	$default = { arg => q() } if $implied;
 	my %goal = map { $_->{name} => $_ } @spec;
 	my $first = sub {
 		@spec ? $spec[0]{name} : die _status 0, tagmsg(E => diag(__(
@@ -2204,7 +2206,7 @@ sub _select_goals
 		$add->($sel, $mode, $name, own => $mode eq q(WANT) ? "WANT:$name" : $name);
 	}
 	# What the header says: nothing, without -t; else the default first
-	$self->{select_args} = !@arg ? []
+	$self->{select_args} = $implied ? []
 		: [ map { (q(-t), $_) } grep { defined }
 			(map { $how{$_}{default} } @order), (map { $how{$_}{own} } @order) ];
 	map {
@@ -2464,8 +2466,8 @@ sub generate
 		($self->{strict} ? '-A' : ()),
 		'-G', $G,
 		( map { ("-$_", $self->{fromhere}{$_}) } sort keys %{ $self->{fromhere} } ),
-		# (the goals as selected, in order, each once: -t '' is the first
-		# goal by name, and NEED: is no prefix)
+		# (the goals as selected: the default first, as -t ,goal or -t ,;
+		# then each other once, NEED: as no prefix; none if none was)
 		@{ $self->{select_args} || [] },
 		( map { ('-S', defined $S_all->{$_} ? "$_=$S_all->{$_}" : $_) } sort keys %$S_all ),
 	];

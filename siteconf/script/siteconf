@@ -376,10 +376,14 @@ opts into the default goal, and so does a field of a prefix alone
 (C<WANT:>, C<NEED:>).  The first that does says what the default goal
 is: what the next field of the same C<-t> names, if it is one name and
 no white space (C<-t ,goal>, C<-t ,WANT:goal>); or else the first goal
-of the manifest (C<-t ,>, C<-t ''>, C<-t ', goal'>).  Any later one is
-nothing, so in C<-t ,goal,,late> and C<-t ,goal -t ,late> the goal
-C<late> is a goal of its own.  Without C<-t>, it is C<-t ,>.  So C<-t
-"${GOAL:-,}"> is C<GOAL>, or the default goal if C<GOAL> is empty.
+of the manifest (C<-t ,>, C<-t ', goal'>).  Any later one is nothing,
+so in C<-t ,goal,,late> and C<-t ,goal -t ,late> the goal C<late> is a
+goal of its own.  A C<-t> of nothing, or of white space alone
+(C<-t ''>), has no fields at all, and selects nothing.  If no C<-t>
+selects a goal (or there is none), it is as C<-t ,>, but the header
+says no C<-t>.  So C<-t "${GOAL:-,}"> is C<GOAL>, or the default goal
+if C<GOAL> is empty; and C<-t "$GOAL"> is C<GOAL>, or with an empty
+C<GOAL> what siteconf would choose without it.
 
 A goal of its own appears once, at its first position, with the last
 prefix given for it.  The default goal, if there is one, is the first

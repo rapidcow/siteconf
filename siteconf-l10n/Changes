@@ -1,7 +1,7 @@
 Revision history of WwW-SiteConf-L10N
 
 
-0.00_00  2026-11-13  RC
+0.03_00  2026-11-24  RC
     (I want to say this version is mostly LLM generated, but
      most of the code isn't even in the module but rather the
      Makefile.PL and mkintl.pl, so... @v@ (but yes, those too

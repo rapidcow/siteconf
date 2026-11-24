@@ -1,7 +1,7 @@
 Revision history of WwW-GenLib
 
 
-0.03_00  2026-11-20  RC
+0.03_00  2026-11-24  RC
     *** Perl 5.008 is required, and so are
         RdKw::I18N::CodeSets, RdKw::L10N::TextDomain,
         and the version pragmatic module.

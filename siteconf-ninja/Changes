@@ -1,7 +1,9 @@
 Revision history of WwW-SiteConf-Ninja
 
 
-0.03_00  2026-11-23  AI
+0.03_00  2026-11-24  RC
+    (AI-generated.)
+
     First release on its own.  The ninja generator was
     RdKw::WwW::SiteConf::Ninja, in WwW-SiteConf; it is now
     RdKw::WwW::SiteConf::Backend::Ninja, here.

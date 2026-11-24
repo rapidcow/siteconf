@@ -4,7 +4,9 @@ use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '0.00_00';
+# We are going to use the same version since this module
+# has to update whenever translation strings change anyways.
+our $VERSION = '0.03_00';
 $VERSION = version->parse( $VERSION );
 
 =head1 NAME

@@ -1,7 +1,9 @@
 Revision history of WwW-SiteConf-Redo
 
 
-0.03_00  2026-11-23  AI
+0.03_00  2026-11-23  RC
+    (AI-generated.)
+
     First release.
     * Each .do begins with #!/bin/sh and is executable, for a redo
       that runs it as a program (by execve) and not by sh.

@@ -62,9 +62,14 @@ sub run
 
 my ($ok, $out, $err) = run('ヘッダー.html');
 is($out, 'résumé', 'a source and an INCLUDE of any name') or diag $err;
-($ok, $out, $err) = run('秘密');
-like("$err", qr/\A\S+ error - "秘密": undeclared dependency: "サイト\/秘密" \(aka "\\\$\{a\}\/秘密"\)/,
-	'and undeclared, of any name');
+{
+	# (names said as -C stderr:UTF-8 would have them, whatever the locale)
+	no warnings 'once';
+	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->locale->new(stderr => 'UTF-8', diag => 'unicode');
+	($ok, $out, $err) = run('秘密');
+	like("$err", qr/\A\S+ error - "秘密": undeclared dependency: "サイト\/秘密" \(aka "\\\$\{a\}\/秘密"\)/,
+		'and undeclared, of any name');
+}
 {
 	# (names said as -C diag:ascii would have them)
 	no warnings 'once';

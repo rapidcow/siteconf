@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 15:03-0600\n"
+"POT-Creation-Date: 2026-11-24 17:24-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../siteconf/script/siteconf:489 ../siteconf/share/configure.in:155
+#: ../siteconf/script/siteconf:490 ../siteconf/share/configure.in:155
 #: ../siteconf/share/presets/tem.render:59
 #: ../siteconf/share/presets/web.render:68
 #, perl-format
@@ -24,177 +24,177 @@ msgid "usage: %s"
 msgstr "usage: %s"
 
 #. HEY!  %s is the option, -D or -O.
-#: ../siteconf/script/siteconf:527 ../siteconf/script/siteconf:545
+#: ../siteconf/script/siteconf:528 ../siteconf/script/siteconf:546
 #: ../siteconf/share/configure.in:175
 #, perl-format
 msgid "%s: empty name."
 msgstr "%s: empty name."
 
-#: ../siteconf/script/siteconf:563 ../siteconf/share/configure.in:190
+#: ../siteconf/script/siteconf:564 ../siteconf/share/configure.in:190
 #: ../siteconf/share/presets/tem.render:56
 #: ../siteconf/share/presets/web.render:65
 msgid "too late to -C now."
 msgstr "too late to -C now."
 
-#: ../siteconf/script/siteconf:640
+#: ../siteconf/script/siteconf:641
 #, perl-format
 msgid "conflicting modes: %s and %s"
 msgstr "conflicting modes: %s and %s"
 
-#: ../siteconf/script/siteconf:644 ../siteconf/share/configure.in:192
+#: ../siteconf/script/siteconf:645 ../siteconf/share/configure.in:192
 msgid "too many arguments"
 msgstr "too many arguments"
 
-#: ../siteconf/script/siteconf:652
+#: ../siteconf/script/siteconf:653
 msgid "named outputs are only for init"
 msgstr "named outputs are only for init"
 
-#: ../siteconf/script/siteconf:654
+#: ../siteconf/script/siteconf:655
 msgid "unknown output name: %q"
 msgstr "unknown output name: %q"
 
-#: ../siteconf/script/siteconf:656
+#: ../siteconf/script/siteconf:657
 msgid "empty output path"
 msgstr "empty output path"
 
-#: ../siteconf/script/siteconf:665
+#: ../siteconf/script/siteconf:666
 #, perl-format
 msgid "option %s is not permitted in mode %s"
 msgstr "option %s is not permitted in mode %s"
 
-#: ../siteconf/script/siteconf:720
+#: ../siteconf/script/siteconf:721
 msgid "missing soft dependencies and -A was requested."
 msgstr "missing soft dependencies and -A was requested."
 
-#: ../siteconf/script/siteconf:736
+#: ../siteconf/script/siteconf:737
 msgid "cannot write to stdout: %m"
 msgstr "cannot write to stdout: %m"
 
-#: ../siteconf/script/siteconf:769
+#: ../siteconf/script/siteconf:770
 msgid "%#q: not a valid ASCII octal code point"
 msgstr "%#q: not a valid ASCII octal code point"
 
-#: ../siteconf/script/siteconf:787 ../siteconf/lib/RdKw/WwW/SiteConf.pm:571
+#: ../siteconf/script/siteconf:788 ../siteconf/lib/RdKw/WwW/SiteConf.pm:571
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1098
 msgid "cannot find the source tree %q: %m"
 msgstr "cannot find the source tree %q: %m"
 
-#: ../siteconf/script/siteconf:799 ../siteconf/lib/RdKw/WwW/SiteConf.pm:2273
+#: ../siteconf/script/siteconf:800 ../siteconf/lib/RdKw/WwW/SiteConf.pm:2273
 msgid "%q: expected NEED or WANT, not %q"
 msgstr "%q: expected NEED or WANT, not %q"
 
 #. HEY!  the %s is the separator, as the option that
 #. says it: -0 for a NUL, -012 for a newline
-#: ../siteconf/script/siteconf:811
+#: ../siteconf/script/siteconf:812
 msgid "%q: %q conflicts with record separator %s"
 msgstr "%q: %q conflicts with record separator %s"
 
-#: ../siteconf/script/siteconf:836
+#: ../siteconf/script/siteconf:837
 msgid "cannot find %q (is WwW-SiteConf installed?)"
 msgstr "cannot find %q (is WwW-SiteConf installed?)"
 
-#: ../siteconf/script/siteconf:845 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1501
+#: ../siteconf/script/siteconf:846 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1501
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:132
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:617
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:182
 msgid "cannot open file %q: %m"
 msgstr "cannot open file %q: %m"
 
-#: ../siteconf/script/siteconf:847 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1578
+#: ../siteconf/script/siteconf:848 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1578
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:671
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:197
 msgid "cannot read file %q: %m"
 msgstr "cannot read file %q: %m"
 
-#: ../siteconf/script/siteconf:900
+#: ../siteconf/script/siteconf:901
 msgid "Host-relative base URL"
 msgstr "Host-relative base URL"
 
-#: ../siteconf/script/siteconf:901
+#: ../siteconf/script/siteconf:902
 msgid "Absolute base URL"
 msgstr "Absolute base URL"
 
 #. HEY!  %s is the option (-Sx), and then what it may be
-#: ../siteconf/script/siteconf:906
+#: ../siteconf/script/siteconf:907
 #, perl-format
 msgid "%s: no such thing (valid: %s)"
 msgstr "%s: no such thing (valid: %s)"
 
 #. HEY!  %s is an option, as -Sa (and likewise in the next few)
-#: ../siteconf/script/siteconf:910 ../siteconf/script/siteconf:934
+#: ../siteconf/script/siteconf:911 ../siteconf/script/siteconf:935
 #, perl-format
 msgid "%s may not be empty."
 msgstr "%s may not be empty."
 
-#: ../siteconf/script/siteconf:914 ../siteconf/script/siteconf:919
+#: ../siteconf/script/siteconf:915 ../siteconf/script/siteconf:920
 #, perl-format
 msgid "%s must be a relative path."
 msgstr "%s must be a relative path."
 
-#: ../siteconf/script/siteconf:925
+#: ../siteconf/script/siteconf:926
 #, perl-format
 msgid "%s and %s are the same thing; pick one."
 msgstr "%s and %s are the same thing; pick one."
 
-#: ../siteconf/script/siteconf:942
+#: ../siteconf/script/siteconf:943
 msgid "bad preset name: %q"
 msgstr "bad preset name: %q"
 
-#: ../siteconf/script/siteconf:945
+#: ../siteconf/script/siteconf:946
 msgid "no such preset: %q"
 msgstr "no such preset: %q"
 
 #. HEY!  %s is the option, as -MModule=version (here and
 #. in the next four)
-#: ../siteconf/script/siteconf:963
+#: ../siteconf/script/siteconf:964
 #, perl-format
 msgid "%s: bad module name"
 msgstr "%s: bad module name"
 
-#: ../siteconf/script/siteconf:966
+#: ../siteconf/script/siteconf:967
 #, perl-format
 msgid "%s: no version for what is dropped"
 msgstr "%s: no version for what is dropped"
 
-#: ../siteconf/script/siteconf:970
+#: ../siteconf/script/siteconf:971
 #, perl-format
 msgid "%s: bad version"
 msgstr "%s: bad version"
 
-#: ../siteconf/script/siteconf:974
+#: ../siteconf/script/siteconf:975
 #, perl-format
 msgid "%s: configure always needs it"
 msgstr "%s: configure always needs it"
 
-#: ../siteconf/script/siteconf:979
+#: ../siteconf/script/siteconf:980
 #, perl-format
 msgid "%s: version %s or later is required"
 msgstr "%s: version %s or later is required"
 
-#: ../siteconf/script/siteconf:996
+#: ../siteconf/script/siteconf:997
 msgid "preset does not supply a render output"
 msgstr "preset does not supply a render output"
 
-#: ../siteconf/script/siteconf:1039
+#: ../siteconf/script/siteconf:1040
 msgid "Not changing %#q"
 msgstr "Not changing %#q"
 
-#: ../siteconf/script/siteconf:1045
+#: ../siteconf/script/siteconf:1046
 msgid "cannot remove %q: %m"
 msgstr "cannot remove %q: %m"
 
-#: ../siteconf/script/siteconf:1058 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:372
+#: ../siteconf/script/siteconf:1059 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:372
 msgid "cannot create file %q: %m"
 msgstr "cannot create file %q: %m"
 
-#: ../siteconf/script/siteconf:1061 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:382
+#: ../siteconf/script/siteconf:1062 ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:382
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:384
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:386
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:388
 msgid "cannot write file %q: %m"
 msgstr "cannot write file %q: %m"
 
-#: ../siteconf/script/siteconf:1064 ../siteconf/lib/RdKw/WwW/SiteConf.pm:2533
+#: ../siteconf/script/siteconf:1065 ../siteconf/lib/RdKw/WwW/SiteConf.pm:2533
 msgid "cannot chmod %q: %m"
 msgstr "cannot chmod %q: %m"
 
@@ -203,23 +203,23 @@ msgstr "cannot chmod %q: %m"
 #. the file is simply created.  I don't know why
 #. Claude felt the need to clarify this; this
 #. seems pretty clear to me. :/
-#: ../siteconf/script/siteconf:1074
+#: ../siteconf/script/siteconf:1075
 msgid "Overwrote %#q"
 msgstr "Overwrote %#q"
 
-#: ../siteconf/script/siteconf:1074
+#: ../siteconf/script/siteconf:1075
 msgid "Wrote %#q"
 msgstr "Wrote %#q"
 
-#: ../siteconf/script/siteconf:1079
+#: ../siteconf/script/siteconf:1080
 msgid "You already have configure."
 msgstr "You already have configure."
 
-#: ../siteconf/script/siteconf:1080
+#: ../siteconf/script/siteconf:1081
 msgid "You already have configure at %q."
 msgstr "You already have configure at %q."
 
-#: ../siteconf/script/siteconf:1082
+#: ../siteconf/script/siteconf:1083
 msgid ""
 "Pass -o /dev/null if you did mean to not generate configure,\n"
 "or -f to overwrite the existing one."
@@ -837,6 +837,7 @@ msgid "-Sarg_prefix needs a shell identifier and -Smode=cmdline"
 msgstr "-Sarg_prefix needs a shell identifier and -Smode=cmdline"
 
 #: ../siteconf-doit/lib/RdKw/WwW/SiteConf/Builder/Doit.pm:255
+#: ../siteconf-task/lib/RdKw/WwW/SiteConf/Builder/Task.pm:245
 msgid "%#q: no recipe to make it"
 msgstr "%#q: no recipe to make it"
 
@@ -929,6 +930,25 @@ msgstr "redo cannot name %q: arguments cannot spell it"
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:441
 msgid "redo cannot name %q: arguments and file names spell it differently"
 msgstr "redo cannot name %q: arguments and file names spell it differently"
+
+#: ../siteconf-task/lib/RdKw/WwW/SiteConf/Builder/Task.pm:159
+msgid ""
+"task cannot name %q: it is not UTF-8 in the encoding of this locale, and "
+"Taskfile.yml is UTF-8"
+msgstr ""
+"task cannot name %q: it is not UTF-8 in the encoding of this locale, and "
+"Taskfile.yml is UTF-8"
+
+#. HEY!  the second %s is the value, which has a line break
+#: ../siteconf-task/lib/RdKw/WwW/SiteConf/Builder/Task.pm:243
+msgid "%s: task cannot spell a line break in %q (it ends a command)"
+msgstr "%s: task cannot spell a line break in %q (it ends a command)"
+
+#: ../siteconf-task/lib/RdKw/WwW/SiteConf/Builder/Task.pm:263
+msgid ""
+"%#q: task cannot run its recipe: it is not UTF-8, and Taskfile.yml is UTF-8"
+msgstr ""
+"%#q: task cannot run its recipe: it is not UTF-8, and Taskfile.yml is UTF-8"
 
 #: ../siteconf/share/configure.in:53
 #, perl-format

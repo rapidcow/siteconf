@@ -2360,9 +2360,9 @@ sub manifest_text
 Writes F<MY/MANIFEST> (the goals, resolved), and the build files of
 I<generator> in the build directory.  I<generator> is C<make> (the
 default), C<bmake> or C<gmake>, which come with siteconf. C<ninja>,
-C<doit> and C<redo> are distributions of their own (WwW-SiteConf-Ninja,
-WwW-SiteConf-Doit and WwW-SiteConf-Redo) and may not be installed.  I<file>, if given,
-is the name of the build file (else F<Makefile>, F<build.ninja> or F<dodo.py>);
+C<doit>, C<redo> and C<task> are distributions of their own (WwW-SiteConf-Ninja,
+WwW-SiteConf-Doit, WwW-SiteConf-Redo and WwW-SiteConf-Task) and may not be installed.  I<file>, if given,
+is the name of the build file (else F<Makefile>, F<build.ninja>, F<dodo.py> or F<Taskfile.yml>);
 to C<redo>, which writes a file for each target and goal, it is the
 name of the default goal's (else F<all.do>).  I<file> F</dev/null> is
 no file: it is not written.  The files that would not change are left

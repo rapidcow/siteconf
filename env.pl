@@ -18,6 +18,7 @@ my @modules = qw(
 	siteconf-doit
 	siteconf-ninja
 	siteconf-redo
+	siteconf-task
 	template-provider
 	textdomain
 );

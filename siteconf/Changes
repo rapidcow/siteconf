@@ -12,8 +12,9 @@ Revision history of WwW-SiteConf
         bmake) and gmake ship here.  ninja is no longer part of
         WwW-SiteConf: it is WwW-SiteConf-Ninja, released with it at
         the same version.  -G redo (WwW-SiteConf-Redo, the same)
-        writes a .do file for each target and goal.  -G of one that
-        is not installed says so, and lists those that are.
+        writes a .do file for each target and goal.  -G task
+        (WwW-SiteConf-Task, the same) writes Taskfile.yml.  -G of
+        one that is not installed says so, and lists those that are.
     *** -g: the header of a build file says the goals as they were
         selected (the default goal first, as -t ,goal or -t ,; then
         -t goal, NEED: as no prefix, each once).

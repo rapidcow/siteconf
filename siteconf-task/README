@@ -1,0 +1,10 @@
+WwW-SiteConf-Task
+
+The `task' generator of siteconf: `siteconf -g -G task' writes
+Taskfile.yml (for Task, https://taskfile.dev/) instead of a Makefile.
+See RdKw::WwW::SiteConf::Builder::Task.
+
+It is released with WwW-SiteConf, at the same version, and needs
+that version.
+
+    perl Makefile.PL && make && make test && make install

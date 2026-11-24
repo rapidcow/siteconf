@@ -13,7 +13,7 @@ that is any relevant.
 
 Run `../env.pl make test` from each package directory: `codesets`,
 `textdomain`, `gengenlib`, `genlib`, `siteconf-l10n`,
-`template-provider`, `siteconf`, `siteconf-ninja`, and `siteconf-redo`. This rebuilds
+`template-provider`, `siteconf`, `siteconf-ninja`, `siteconf-redo`, and `siteconf-task`. This rebuilds
 `blib` and uses the workspace packages; direct `prove` runs can use
 obsolete share directory (which holds the template files).
 

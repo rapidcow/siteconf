@@ -1,0 +1,6 @@
+Revision history of WwW-SiteConf-Task
+
+
+0.03_00  2026-11-24  AI
+    First release.  RdKw::WwW::SiteConf::Builder::Task writes
+    Taskfile.yml for Task 3 (siteconf -g -G task).

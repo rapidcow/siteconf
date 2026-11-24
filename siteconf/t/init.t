@@ -54,7 +54,7 @@ ok(!-e 'bin/render-page', 'render mapping is relative to the project root');
 like(slurp('tools/setup'), qr/^\tA => "project",$/m, 'root is a default like any other');
 my $renderer = slurp('project/bin/render-page');
 like($renderer, qr/^# HAVE: bin\/render-page$/m, 'renderer HAVE is its mapped name');
-like($renderer, qr/^#\s+cd -- \$A && \$\{\^X\} bin\/render-page /m, 'Makefile example runs it by that name');
+like($renderer, qr/^#\s+cd -- \$\{A:Q\} && \$\{\^X:Q\} bin\/render-page /m, 'Makefile example runs it by that name');
 like($renderer, qr/^# bin\/render-page \(render\) - /m, 'renamed renderer says what it is');
 open my $rh, '>', 'project/bin/render-page' or die $!;
 print $rh "custom renderer\n";

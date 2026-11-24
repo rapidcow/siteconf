@@ -7,13 +7,29 @@ use strict;
 use warnings;
 use Test::More;
 use FindBin;
+use File::Temp qw( tempdir );
 use lib "$FindBin::Bin/lib";
 
 use E2E;
 
 my $script = E2E::setup();
 my $redo = $ENV{REDO} || 'redo';
-system("$redo --version >/dev/null 2>&1") == 0 or plan skip_all => "no redo";
+# Not --version: a redo may not have it, or not say its name in it.
+# What we need of redo is that it builds a file from its .do (in a
+# directory of its own, for redo keeps its state there).
+sub redo_builds
+{
+	my $dir = tempdir(CLEANUP => 1);
+	open my $fh, '>', "$dir/probe.do" or die "probe.do: $!";
+	print $fh "echo ok >\"\$3\"\n";
+	close $fh or die "probe.do: $!";
+	(my $q = $dir) =~ s/'/'\\''/g;
+	system("cd '$q' && $redo probe >/dev/null 2>&1") == 0 or return 0;
+	open $fh, '<', "$dir/probe" or return 0;
+	my $line = <$fh>;
+	defined $line && $line eq "ok\n";
+}
+redo_builds() or plan skip_all => "no redo that can build a file";
 plan tests => 26;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q

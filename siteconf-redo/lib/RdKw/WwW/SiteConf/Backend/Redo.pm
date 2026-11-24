@@ -373,10 +373,15 @@ sub _preamble
 			# HEY!  %s is the name of a target, or a goal
 			"redo cannot name %q: it is not in the build directory"), $name));
 	my $text = "set -e\n";
-	$text .= "case \$3 in /*) $o=\$3 ;; *) $o=\$PWD/\$3 ;; esac\n"
+	$text .= "case \$3 in /*) $o=\$3 ;; *) $o=\${PWD}/\$3 ;; esac\n"
 		if $out;
 	$text .= "case \$0 in -*/*) $d=./\${0%/*}/ ;; */*) $d=\${0%/*}/ ;; *) $d= ;; esac\n";
-	$text .= "$d=\$$d" . join('', ('../') x @up) . "\n" if @up;
+	$text .= "$d=\$$d" . ('../' x @up) . "\n" if @up;
+	# Certain redo implementations redirect standard
+	# output to $3 for writing, which is inconsistent
+	# with an ordinary Make backend.  So we'll merge
+	# standard output into standard error (which when
+	# run in an interactive shell a would be the tty).
 	$text . "exec >&2\n";
 }
 

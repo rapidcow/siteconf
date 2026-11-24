@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 35;
+use Test::More tests => 37;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf::Backend::Redo;
@@ -104,6 +104,12 @@ is($f->{'all.do'} =~ /\n(set -e\nexec >&2\nredo-ifchange site\/x\n)\z/ && $1, "s
 		RdKw::I18N::CodeSets->locale->new(filesys => q(UTF-8), argv => q(ISO-8859-1));
 	ok(!eval { files($plan); 1 } && $@ =~ /redo cannot name .*: arguments and file names spell it differently/,
 		q(UTF-8 file names, Latin-1 arguments: an error)) or diag $@;
+	$RdKw::I18N::CodeSets::LOCALE =
+		RdKw::I18N::CodeSets->locale->new(filesys => q(UTF-8), argv => q(ascii));
+	ok(!eval { files($plan); 1 } && $@ =~ /redo cannot name .*: arguments cannot spell it/,
+		q(UTF-8 file names, ASCII arguments: an error, for a name that is not ASCII)) or diag $@;
+	local $plan->{node}{x}{bpath} = q(site/resume.html);
+	ok(eval { files($plan); 1 }, q(... but not for one that is)) or diag $@;
 }
 
 is_deeply([ $class->build_command('redo', 'build', undef, 'all') ], [ qw[ ( cd build && redo all ) ] ], q(to build: cd to B, then redo the goal));

@@ -148,7 +148,9 @@ Sets I<cs> itself from what C<-C> was told, and returns it: each
 I<spec> is a I<category>B<:>I<encoding>; a I<category> alone, which means
 C<UTF-8> (and, for B<diag>, C<unicode>); or an I<encoding> alone,
 which means B<all:>I<encoding>.  A I<spec> may also be several, split
-by commas.  They are applied in order, so that a later one overrides
+by commas or POSIX white space (space, tab, newline, vertical tab, form
+feed, carriage return); what is empty between them is nothing, so that
+C<-C ''> and C<-C ,> say nothing at all.  They are applied in order, so that a later one overrides
 what came before: C<-C console:locale -C stderr:ascii>, or the same as
 C<console:locale,stderr:ascii>.  Dies (with a newline, so that the
 message can be said again as it is) if a I<spec> makes no sense, and
@@ -187,7 +189,9 @@ sub parse
 	my $prog = _who(_opt(parse => \@spec, 'prog'));
 	push @spec, @last;
 	my @pairs;
-	for my $spec (map { defined $_ && !ref $_ ? split(/,/, $_) : $_ } @spec) {
+	# (split by commas and POSIX white space; what is empty between them is
+	# nothing)
+	for my $spec (map { defined $_ && !ref $_ ? grep { length } split(/[,\t\n\cK\f\r ]+/, $_) : $_ } @spec) {
 		defined $spec or die _status 0, "${prog}undefined codeset\n";
 		if (ref $spec) {
 			ref $spec eq 'HASH' or die _status 0, "${prog}not a codeset: $spec\n";

@@ -5,7 +5,7 @@
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 129;
+use Test::More tests => 131;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -134,7 +134,11 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is_deeply({ %{ $CS->new->parse('argv,') } }, { argv => 'utf-8-strict' }, 'parse: a comma at the end');
 	ok(!eval { $CS->new->parse('nope'); 1 }, 'parse: neither');
 	like($@, qr/\Aunknown category or encoding "nope"\n\z/, '... says so');
-	ok(!eval { $CS->new->parse('argv,,env'); 1 }, 'parse: nothing between commas');
+	is_deeply({ %{ $CS->new->parse(q(argv,,env)) } }, { argv => q(utf-8-strict), env => q(utf-8-strict) },
+		q(parse: nothing between commas is nothing));
+	is_deeply({ %{ $CS->new->parse(" argv \t,\nenv:latin1 \f") } }, { argv => q(utf-8-strict), env => q(iso-8859-1) },
+		q(parse: white space splits too));
+	is_deeply({ %{ $CS->new->parse(q( , ), " \r") } }, {}, q(parse: white space and commas alone are nothing));
 }
 
 # --- stderr in ASCII: diag too

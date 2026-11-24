@@ -7,7 +7,10 @@ Revision history of I18N-CodeSets
     + RdKw::I18N::CodeSets: the code sets of stdin, stdout, stderr,
       argv, env and filesys (by default, as Encode::Locale says),
       and the diag mode (unicode or ascii), from new or from -C
-      specs (parse), and the process's own (locale).
+      specs (parse), and the process's own (locale).  A spec is
+      split by commas and POSIX white space, and what is empty
+      between them is nothing (-C '', -C , and SITECONF_CODESETS=' '
+      say nothing).
     + initstd, to_fs, un_fs (as in RdKw::WwW::GenGenLib 0.01_00,
       but of lists, and with { prog => ... } for who could not),
       un_argv, to_argv, decode_argv, encode_argv, getenv, setenv,

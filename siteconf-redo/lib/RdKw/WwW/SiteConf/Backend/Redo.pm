@@ -60,7 +60,9 @@ no such thing.
 A target, and a goal, is named twice: as a file (its F<.do> file), and
 as an argument (to C<redo>, or C<redo-ifchange>).  So it is an error if
 the encoding of arguments (B<argv> of L<RdKw::I18N::CodeSets>) spells
-it differently from the file system (B<filesys>).  It is an error, too,
+it differently from the file system (B<filesys>): the bytes, and not the
+encodings, so that an ASCII name is all right with UTF-8 file names and
+ASCII arguments.  It is an error, too,
 if a goal has the name of a file that a target makes or needs (redo
 would take the goal for that file, and not make it), and if a target or
 a goal is out of the build directory (where its F<.do> file could not
@@ -265,7 +267,14 @@ sub _argv_is_fs
 {
 	my ($name) = @_;
 	my $fs = RdKw::WwW::SiteConf::fs_text($name);
-	my $argv = RdKw::WwW::SiteConf::argv_text($name);
+	# (the bytes, and not the encodings: an ASCII name is the same in
+	# ASCII and UTF-8, and so is any name in the same encoding)
+	my $argv = eval { RdKw::WwW::SiteConf::argv_text($name) };
+	defined $argv
+		# HEY!  %s is a name, which the encoding of arguments (what is
+		# typed after redo) has no bytes for
+		or die _status 0, tagmsg(E => diag(__(
+			"redo cannot name %q: arguments cannot spell it"), $name));
 	$fs eq $argv
 		# HEY!  %s is a name; an argument (what is typed after redo) and the
 		# file system spell it in different bytes, in their encodings

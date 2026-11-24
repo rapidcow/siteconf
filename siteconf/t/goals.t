@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 44;
+use Test::More tests => 52;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -133,6 +133,23 @@ for my $G (qw( make gmake )) {
 ($status, $out) = run('-g', '-q', '-t', 'NEED:small', '-t', 'WANT:', '-t', 'small');
 is($status, 0, '-t NEED:small -t WANT: -t small') or diag $out;
 like(slurp('Makefile'), qr/^# options: -G make -t small -t WANT:broken$/m, '... is -t small -t WANT:broken in the header');
+
+($status, $out) = run('-g', '-q', '-t', 'small,WANT:other', '-t', 'WANT:,small');
+like(slurp('Makefile'), qr/^# options: -G make -t small -t WANT:other -t WANT:broken$/m,
+	'a comma list is a -t each, and an empty name is the first goal');
+
+# White space splits as a comma does, and what is empty between is nothing
+($status, $out) = run('-g', '-q', '-t', " small	other  ,,
+");
+is($status, 0, '-t with white space and empty pieces') or diag $out;
+like(slurp('Makefile'), qr/^# options: -G make -t small -t other$/m, '... is a -t for each goal');
+($status, $out) = run('-g', '-q', '-t', ',');
+is($status, 0, '-t , (no goal)') or diag $out;
+like(slurp('Makefile'), qr/^# options: -G make -t ,$/m, '... says so in the header');
+unlike(slurp('Makefile'), qr/^(?:small|other|broken):/m, '... and has no goal');
+is(slurp('MY/MANIFEST'), '', '... nor has the manifest');
+($status, $out) = run('-g', '-q', '-t', ' ');
+like($out, qr/goal `broken' NEEDs `missing'/, "-t ' ' is the first goal, as -t '' is");
 
 # -o /dev/null: no build file, and nothing to run
 unlink "$dir/Makefile" or die $!;

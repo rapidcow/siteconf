@@ -6,7 +6,7 @@ use utf8;
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 136;
+use Test::More tests => 138;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -112,6 +112,16 @@ HTML
 	is_deeply({ read_deps($f) }, {}, 'a blank is still necessary');
 	$f = spew('far', ("# x: y\n" x 40) . "# HAVE: a\n");
 	is_deeply({ read_deps($f) }, {}, 'no peeking far down past fields either');
+}
+
+# --- read_deps: strings
+{
+	my $f = spew('s', "# HAVE: \${\"a b\"}\n# NEED: x \${\"p: q # r\"}/y z : w\n# WANT: \${\"open\n");
+	my %d = read_deps($f);
+	is_deeply(\%d, { HAVE => '${"a b"}', NEED => [ 'x', '${"p: q # r"}/y', 'z' ],
+		WANT => ['${"open'] }, 'a string may have blanks, a colon and a #');
+	is_deeply([ norm_deps(@{ $d{NEED} }) ],
+		[ 'x', 'p${U+003A}${U+0020}q${U+0020}${U+0023}${U+0020}r/y', 'z' ], '... and is normalized to what escape_deps says');
 }
 
 # --- norm_deps

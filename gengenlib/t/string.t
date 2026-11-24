@@ -29,7 +29,7 @@ for my $bad ('"abc', '"\q"', '"\x{110000}"', '"\x{}"', '"a\\"') {
 is(unescape_var('a${"\s"}b${"表"}${""}'), "a b表", 'unescape_var: a string');
 is(unescape_var('a${"\q"}b'), 'a${"\q"}b', '... a bad one is left alone');
 
-is(norm_dep('x/${"a b"}'), 'x/${U+0061}${U+0020}${U+0062}', 'norm_dep: a character at a time');
+is(norm_dep('x/${"a b"}'), 'x/a${U+0020}b', 'norm_dep: what is safe is kept');
 is(subs_dep(undef, 'x/${"a\sb}"}y', on_missing => 'croak'), 'x/a b}y', 'subs_dep: braces in it');
 is(subs_dep({ a => 'A' }, '${a}/${"\s"}'), 'A/ ', 'next to a variable');
 is(norm_dep('${""}'), '', 'an empty string is nothing');

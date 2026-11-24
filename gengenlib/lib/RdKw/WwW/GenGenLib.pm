@@ -505,7 +505,9 @@ capitals; a field of any other name (C<USE:>, C<vim:>, C<Have:>)
 is someone else's, and is skipped: it neither ends the header nor
 begins one.  The names a field lists are separated by blanks (spaces
 and tabs) and by nothing else, so a no-break space is part of a name.
-They end at the end of the line, or at a colon (touching the last
+A line with C<${"> may have a string, C<${"...">C<}>, in a name, with
+blanks and colons in it: C<NEED: ${"two words"}> is one name.  Names
+end at the end of the line, or at a colon (touching the last
 name or not), as a vim modeline does; what follows is not read.
 That is what makes a block comment work:
 
@@ -635,7 +637,9 @@ sub read_deps
 			# at blanks: anything else is part of a name, but for
 			# a colon, which ends them (as it does a vim modeline),
 			# so that what closes a comment is not one.
-			my @list = /\G[\t ]*([^\t :]+)/gc;
+			my @list = /\$\{"/
+					? _words(substr($_, pos), blank => '\t ', colon => 1)
+					: /\G[\t ]*([^\t :]+)/gc;
 			$onit = 1;
 			next unless @list;
 
@@ -764,7 +768,9 @@ but a character, by its code point: 1 to 8 hex digits, in any
 case (and so is the C<U>), up to C<FFFFFFFF> (it fits an unsigned
 32-bit int; Unicode validity is not checked); it is normalized to
 C<${U+>I<hex>C<}>, in capitals and of at least 4 digits, and the
-character is what L</subs_deps> gives (see L</escape_deps>).  Any
+character is what L</subs_deps> gives (see L</escape_deps>).  A string,
+C<${"...">C<}>, is spelled as L</escape_deps> would spell its characters:
+C<${"hello world"}> is C<hello${U+0020}world>.  Any
 other C<$> is malformed: a trailing one, an unterminated C<${>,
 an empty C<${}>, a C<${U+...}> that is no code point, a C<$>
 before a C<}> or a C<.>, and so on.  The optional C<strict>
@@ -826,7 +832,8 @@ sub norm_deps
 				my $str = $1;
 				my $s = _decode_string(substr $str, 1, -1);
 				if (defined $s) {
-					$out .= join '', map { sprintf '${U+%04X}', ord } split //, $s;
+					# (what escape_deps leaves alone stays; the rest is ${U+...})
+						$out .= escape_deps($s);
 				} else {
 					$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
 						"cannot normalize %q: bad escape or code point in string %s"),
@@ -1242,6 +1249,29 @@ sub walk_deps
 	}
 
 	$kwds->{terminal} ? grep({ !$inner{$_} } @pool) : @pool;
+}
+
+# `${"..."}' as one unit, with whatever is in it
+my $STRING_UNIT = qr/\$\{"(?:[^"\\]|\\.)*"\}/s;
+
+# The words of a line that has a `${"', where a string may have blanks
+# (and a colon, and a #) in it.  `blank' is the inside of a character
+# class; with `colon', a colon ends the words; with `hash', so does a
+# # that begins a word.
+sub _words
+{
+	my ($text, %o) = @_;
+	my $b = $o{blank};
+	my $word = $o{colon} ? qr/(?:$STRING_UNIT|[^$b:])+/ : qr/(?:$STRING_UNIT|[^$b])+/;
+	my @w;
+	pos($text) = 0;
+	for (;;) {
+		$text =~ /\G[$b]+/gc;
+		last if $o{hash} && $text =~ /\G#/gc;
+		$text =~ /\G($word)/gc or last;
+		push @w, $1;
+	}
+	@w;
 }
 
 =item B<read_manifest> \%D, I<file>[, { prog => 'read_manifest' }]

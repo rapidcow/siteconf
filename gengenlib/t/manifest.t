@@ -154,4 +154,15 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	chdir '/' or die;
 }
 
+# --- strings: blanks and # in them; MAKE
+{
+	my $mf = parse("MAKE all\n\tNEED \${\"a b # c\"} d # comment \${\"x\"}\n\tWANT x\${\"y z\"}\n");
+	is_deeply([ $mf->needed ], [ 'a b # c', 'd' ], 'a string may have blanks and a #; a comment still ends the line');
+	is_deeply([ $mf->wanted ], ['xy z'], '... next to other characters');
+	is_deeply([ parse("MAKE \${\"all\"}\nNEED a\n")->targets ], ['all'], 'a string as a goal name');
+	ok(!eval { parse("MAKE \${\"a b\"}\nNEED a\n"); 1 }, 'a goal with a blank in it is refused');
+	ok(!eval { parse("MAKE \${\"a\"} b\nNEED a\n"); 1 }, 'so are two words');
+	ok(!eval { parse("MAKE \${\"a#b\"}\nNEED a\n"); 1 }, '... and a # or a $');
+}
+
 done_testing;

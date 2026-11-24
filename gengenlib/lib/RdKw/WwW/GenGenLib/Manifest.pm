@@ -70,7 +70,8 @@ definitions given to L</read>, and is a path from the current
 directory, which is taken to be C<${A}>.  Every file must exist, and
 none may include itself.
 
-C<MAKE> takes the name of a goal: any characters but white space
+C<MAKE> takes the name of a goal (a string, C<${"...">C<}>, stands for its
+characters, which must be a goal name as well): any characters but white space
 (of any script, a no-break space too), controls, format characters
 (a zero-width joiner, say), and C<:>, C<#>, C<%>, C<$> and C<\>, not
 beginning with a hyphen.  So it may have a slash, and letters of any
@@ -114,6 +115,7 @@ my $SP = '\t\n\cK\f\r ';
 # What a goal may be called: anything that is a name to make and ninja
 # alike, that is no white space (of any script), control or format
 # character, and none of `: # % $ \'; and no hyphen to begin with
+my $STRING = qr/\$\{"(?:[^"\\]|\\.)*"\}/s;
 my $GOAL = qr/\A(?!-)[^\s\p{Cc}\p{Cf}:#%\$\\]+\z/;
 
 =item B<read> \%D, I<file>[, { prog => 'read_manifest' }]
@@ -218,8 +220,14 @@ sub _read_line
 {
 	my ($st, $text, $pos) = @_;
 	my $prog = $st->{prog};
-	$text =~ s/(?:^|[$SP])#.*//so;
-	my ($kw, @arg) = $text =~ /([^$SP]+)/go;
+	my ($kw, @arg);
+	if ($text =~ /\$\{"/) {
+		# a string may have blanks and a # in it
+		($kw, @arg) = RdKw::WwW::GenGenLib::_words($text, blank => $SP, hash => 1);
+	} else {
+		$text =~ s/(?:^|[$SP])#.*//so;
+		($kw, @arg) = $text =~ /([^$SP]+)/go;
+	}
 	defined $kw or return;
 	# MAKE:, NEED: and WANT: are those, with a colon (and then
 	# a name may follow it, without a space)
@@ -240,7 +248,11 @@ sub _read_line
 	if ($kw eq 'MAKE') {
 		@arg == 1 or die _status 0, tagmsg($prog => diag(__(
 			"%s: MAKE takes exactly one goal name"), _where($pos)));
-		my $name = $arg[0];
+		# (a string is the only escape in a goal name, and what it
+			# says must be a goal name too)
+			(my $name = $arg[0]) =~ s{($STRING)}{
+				my $d = RdKw::WwW::GenGenLib::_decode_string(substr $1, 3, -2);
+				defined $d ? $d : $1 }ge;
 		$name =~ /$GOAL/
 			or die _status 0, tagmsg($prog => diag(__("%s: bad goal name %q"),
 			_where($pos), $name));

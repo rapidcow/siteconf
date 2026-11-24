@@ -1950,7 +1950,8 @@ Reads everything, resolves what is C<WANT>ed, and returns the build
 as a hash reference.  Dies, listing every one of them, if anything
 that is C<NEED>ed cannot be had.
 
-  goals   [ { name, files => [ FILE ... ], dropped => [ [FILE, WHY] ] } ]
+  goals   [ { name, select, files => [ FILE ... ], dropped => [ [FILE, WHY] ] } ]
+            (select: how -t says it, as `goal' or `WANT:goal')
   node    { FILE => { file, apath, nosrc, bpath, deps,
                       recipe => [ [ KIND, TEXT, WHERE ] ... ] } }
   order   [ FILE ... ]    all files, in order of appearance
@@ -2049,7 +2050,8 @@ sub _goals
 				}
 			}
 		}
-		push @goal, { name => $spec->{name}, files => \@files, dropped => \@dropped, just => \%just };
+		push @goal, { name => $spec->{name}, select => $spec->{select},
+			files => \@files, dropped => \@dropped, just => \%just };
 	}
 	# (what cannot be had comes before what it breaks: a file is done
 	# after what it takes to make it, so in the order they were done)
@@ -2145,7 +2147,7 @@ sub _select_goals
 	my @select = map { length $_ ? split(/,/, $_, -1) : $_ } @{ $self->{goals} || [] };
 	# Without -t, what a bare `make' makes: the first goal.  (The rest
 	# are for -t, or for a goal at the top that NEEDs them.)
-	return $spec[0] || () unless @select;
+	return $spec[0] ? { %{ $spec[0] }, select => $spec[0]{name} } : () unless @select;
 	my %goal = map { $_->{name} => $_ } @spec;
 	my (%mode, @order);
 	for my $select (@select) {
@@ -2161,12 +2163,14 @@ sub _select_goals
 		push @order, $name unless exists $mode{$name};
 		$mode{$name} = $mode;
 	}
+	# (each says how it was selected, as -t would say it: `WANT:goal', or
+	# `goal' for NEED, which needs no prefix)
 	map {
 		my $goal = $goal{$_};
-		$mode{$_} eq 'WANT'
-			? { %$goal, need => [], want => [ sort { $a->{order} <=> $b->{order} }
+		$mode{$_} eq q(WANT)
+			? { %$goal, select => "WANT:$_", need => [], want => [ sort { $a->{order} <=> $b->{order} }
 				@{ $goal->{need} }, @{ $goal->{want} } ] }
-			: $goal;
+			: { %$goal, select => $_ };
 	} @order;
 }
 
@@ -2254,13 +2258,14 @@ sub manifest_text
 
 Writes F<MY/MANIFEST> (the goals, resolved), and the build files of
 I<generator> in the build directory.  I<generator> is C<make> (the
-default) or C<gmake>, which come with siteconf, or C<ninja> or
-C<redo>, which are distributions of their own (WwW-SiteConf-Ninja and
-WwW-SiteConf-Redo) and may not be installed.  A generator that writes
-one file names it I<file>, if given (else F<Makefile> or
-F<build.ninja>); C<redo> writes a file for each target, and takes no
-I<file>.  The files that would not change are left alone, mtime and
-all.
+default), C<bmake> or C<gmake>, which come with siteconf, or C<ninja>
+or C<redo>, which are distributions of their own (WwW-SiteConf-Ninja
+and WwW-SiteConf-Redo) and may not be installed.  I<file>, if given,
+is the name of the build file (else F<Makefile> or F<build.ninja>);
+to C<redo>, which writes a file for each target and goal, it is the
+name of the default goal's (else F<all.do>).  I<file> F</dev/null> is
+no file: it is not written.  The files that would not change are left
+alone, mtime and all.
 
 The options of the generator are those C<S> of L</new> says.  Each
 generator knows some (see its own page); one that it does not know is
@@ -2270,9 +2275,9 @@ A generator I<name> is lowercase ASCII letters and digits, in parts
 joined by C<->, each beginning with a letter.  It is the module
 C<RdKw::WwW::SiteConf::Backend::>I<Name>: each part capitalized, and
 the C<-> dropped.  So C<gmake> is C<Gmake>, and C<g-make> would be
-C<GMake>.  The module has these class methods.  They are for the generators that come with
-siteconf or are released with it, and change with it: they are not a
-stable interface.
+C<GMake>.  The module has these class methods.  They are for the
+generators that come with siteconf or are released with it, and change
+with it: they are not a stable interface.
 
 =over
 
@@ -2282,14 +2287,16 @@ The names of the options (C<-S>) that it knows.
 
 =item C<default_output>
 
-The name of the one file it writes, or C<undef> if it writes many.
+The name of the file that I<file> names, by default, or C<undef> if
+there is none (and so there is no I<file>).
 
 =item C<emit> I<plan>, I<file>
 
 The files to write: a list of C<[ NAME, BYTES ]>, each I<NAME>
 relative to the build directory.  I<plan> is what L</plan> returns,
-with C<opt>, C<prog> and C<args>; I<file> is the name of the one file,
-if there is one.
+with C<opt>, C<prog> and C<args>; I<file> is the name of the file
+that C<default_output> names, or C<undef> for F</dev/null>.  A file
+whose I<NAME> is C<undef> is not written.
 
 =item C<build_command> I<generator>, I<builddir>, I<file>, I<goal>
 
@@ -2352,13 +2359,20 @@ sub generate
 	}
 	my $outfile = $module->default_output;
 	my $named = defined $out && length $out;
+	# (-o /dev/null: no such file, as with -i)
+	my $discard = $named && $out eq q(/dev/null);
 	if ($named) {
 		defined $outfile
-			# HEY!  the first %s is the generator (redo), and the
+			# HEY!  the first %s is the generator, and the
 			# second the name it was asked to write (with -o)
 			or die _status 0, tagmsg(E => diag(__(
 				"generator %s writes a file for each target, and cannot"
 				. " name them %q"), $G, $out));
+	}
+	if ($discard) {
+		$outfile = undef;
+		$named = 0;
+	} elsif ($named) {
 		$out =~ m!\A[^/\0]+\z! and $out !~ /\A\.\.?\z/
 			or die _status 0, tagmsg(E => diag(__("bad output name %q: "
 				. "stay in the build directory please"),
@@ -2395,11 +2409,14 @@ sub generate
 		($self->{strict} ? '-A' : ()),
 		'-G', $G,
 		( map { ("-$_", $self->{fromhere}{$_}) } sort keys %{ $self->{fromhere} } ),
-		( map { ('-t', $_) } @{ $self->{goals} || [] } ),
+		# (the goals as selected, in order, each once: -t '' is the first
+		# goal by name, and NEED: is no prefix)
+		( @{ $self->{goals} || [] } ? map { (q(-t), $_->{select}) } @{ $plan->{goals} } : () ),
 		( map { ('-S', defined $S_all->{$_} ? "$_=$S_all->{$_}" : $_) } sort keys %$S_all ),
 	];
 	# Bytes.  The backends spell the names as the file system does.
-	my @file = $module->emit($plan, $outfile);
+	# (and what has no name is not written: -o /dev/null)
+	my @file = grep { defined $_->[0] } $module->emit($plan, $outfile);
 	# update_file writes `dir/name' by way of `dir/tmp-name', which would
 	# take the place of a file of that name that we write too
 	my %emitted = map { File::Spec->canonpath($_->[0]) => 1 } @file;
@@ -2425,7 +2442,7 @@ sub generate
 	unless ($self->failed()) {
 		$self->_warn(__("Done!") . "\n");
 		# HEY!  %s is a command line, as the shell would read it
-		$self->_warn(diag(__("To build, run: %s"), "@cmd") . "\n");
+		$self->_warn(diag(__("To build, run: %s"), "@cmd") . "\n") if @file;
 	}
 	$plan;
 }

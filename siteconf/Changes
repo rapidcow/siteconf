@@ -7,13 +7,17 @@ Revision history of WwW-SiteConf
 
     *** The generators are RdKw::WwW::SiteConf::Backend::Name, found
         by name: each part of the name (a-z and 0-9, beginning with
-        a letter; parts joined by `-') capitalized, so -G gmake is Backend::Gmake.  make,
-        bmake (new: the Makefile of make, for bmake) and gmake ship
-        here.  ninja is no longer part of WwW-SiteConf: it is
-        WwW-SiteConf-Ninja, released with it at the same version.
-        -G redo (WwW-SiteConf-Redo, the same) writes a .do file for
-        each target and goal.  -G of one that is not installed says
-        so, and lists those that are.
+        a letter; parts joined by `-') capitalized, so -G gmake is
+        Backend::Gmake.  make, bmake (new: the Makefile of make, for
+        bmake) and gmake ship here.  ninja is no longer part of
+        WwW-SiteConf: it is WwW-SiteConf-Ninja, released with it at
+        the same version.  -G redo (WwW-SiteConf-Redo, the same)
+        writes a .do file for each target and goal.  -G of one that
+        is not installed says so, and lists those that are.
+    *** -g: the header of a build file says the goals as they were
+        selected (-t '' by name, NEED: as no prefix, each once), and
+        -t '', -t NEED: and -t WANT: are the first goal.  -o
+        /dev/null writes no build file (only MY/MANIFEST).
     *** Perl 5.8 is required, and so is GenGenLib 0.0100.
         Two new modules are required (RdKw::I18N::CodeSets and
         RdKw::L10N::TextDomain, the former requires Encode::Locale.)

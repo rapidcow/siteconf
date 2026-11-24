@@ -14,7 +14,7 @@ use E2E;
 my $script = E2E::setup();
 my $redo = $ENV{REDO} || 'redo';
 system("$redo --version >/dev/null 2>&1") == 0 or plan skip_all => "no redo";
-plan tests => 17;
+plan tests => 20;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q
 	-MRdKw::WwW::GenLib=0 ));
@@ -38,5 +38,10 @@ ok(-f 'build/site/robots.txt', 'redo all');
 $out = run(q(siteconf -g -G redo -t basic), $^X, $script, qw( -g -G redo -B build -t basic ));
 unlike($out, qr{site/}, q(... and only the goals are written)) or diag $out;
 like($out, qr{^(?:Writing|Updating) all\.do$}m, q(... all.do among them));
+
+# -o: the default goal's .do; /dev/null, none
+$out = run(q(siteconf -g -G redo -o /dev/null), $^X, $script, qw( -g -G redo -B build -t basic -o /dev/null ));
+ok(-f q(build/basic.do), q(... basic.do is there (unchanged, so left alone)));
+unlike($out, qr{all\.do}, q(... and no all.do)) or diag $out;
 
 E2E::done();

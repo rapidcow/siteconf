@@ -27,14 +27,16 @@ for F<site/index.html>, in the build directory), and one for each goal
 in the build directory, I<goal>F<.do> (with the directories its name
 says: F<demo/index.do> for C<demo/index>).  The first goal, the
 default, is F<all.do> as well, so that C<redo> alone makes it; so no
-other goal may be called C<all>.  A file of any of those names that is
-already there is overwritten.  So the output tree holds the F<.do>
-files too.
+other goal may be called C<all>.  C<-o> I<name>F<.do> names that file
+instead (and then a goal may be called C<all>), and C<-o /dev/null>
+writes none.  A file of any of those names that is already there is
+overwritten.  So the output tree holds the F<.do> files too.
 
-The header of a goal's F<.do> file says how C<siteconf -g> was run.
-That of a target's leaves out the goals (C<-t>), so that it is the same
-file whatever goals are asked for, and is left alone if its rule has not
-changed.
+The header of a F<.do> file says how C<siteconf -g> was run, but for
+the goals: a goal's says only how it was selected (C<-t goal>, or
+C<-t WANT:goal>), and a target's no goal at all.  So a F<.do> file is
+the same whatever other goals are asked for, and is left alone if what
+it says has not changed.
 
 A goal's F<.do> file runs C<redo-ifchange> on the files of the goal.
 A target's F<.do> file goes to the build directory (a F<.do> file runs
@@ -81,11 +83,12 @@ None.
 
 =item B<default_output>
 
-C<undef>: there are many files, and C<-o> cannot name them.
+F<all.do>: the file of the default goal, which C<-o> may name.
 
-=item B<emit> I<plan>
+=item B<emit> I<plan>, I<file>
 
-The F<.do> files, as C<[ >I<name>C<, >I<bytes>C< ]>.
+The F<.do> files, as C<[ >I<name>C<, >I<bytes>C< ]>; I<file> is that of
+the default goal, or C<undef> for none.
 
 =item B<build_command> I<generator>, I<builddir>, I<file>, I<goal>
 
@@ -106,17 +109,19 @@ sub _status { $! = 0; $? = shift; @_; }
 
 sub options { () }
 
-sub default_output { undef }
+sub default_output { q(all.do) }
 
 sub emit
 {
-	my ($class, $plan) = @_;
-	# A goal's .do says how it was asked for; a target's does not (with
-	# -t, -t WANT: or none, the same rule is the same file, which is
-	# then left alone)
-	my $head = "#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment($plan) . "#\n";
-	my $target_head = "#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment(
-		{ %$plan, args => [ _without_goals(@{ $plan->{args} || [] }) ] }) . "#\n";
+	my ($class, $plan, $default) = @_;
+	# A goal's .do says how that goal was asked for (-t goal, or -t
+	# WANT:goal), and no other; a target's says no goal.  So a .do is the
+	# same file whatever else is asked for, and is then left alone.
+	my $head = sub {
+		"#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment(
+			{ %$plan, args => [ _with_goals($plan->{args} || [], @_) ] }) . "#\n";
+	};
+	my $target_head = $head->();
 	my $marker = qr{(?:\A|/)\Q$plan->{D}{e}\E\z};
 	my @file;
 
@@ -153,23 +158,42 @@ sub emit
 		push @file, [ "$target.do", $text ];
 	}
 
-	# Each goal is its name; the first, the default, is `all' as well,
-	# which a bare redo makes (and so no other goal may be called that)
+	# The default goal's .do (all.do, which a bare redo makes, unless -o
+	# says otherwise; none for -o /dev/null): a name that redo looks for,
+	# and of no file, and of no other goal
+	my $alias;
+	if (defined $default) {
+		($alias = $default) =~ s/\.do\z//
+			# HEY!  %s is the name given with -o, for the default goal
+			or die _status 0, tagmsg(E => diag(__(
+				"redo cannot find %q: the name of a .do file ends in .do"),
+				$default));
+		length $alias && !$taken{$alias}
+			# HEY!  %s is the name given with -o (as default.do)
+			or die _status 0, tagmsg(E => diag(__(
+				"redo cannot name the default goal %q: a file has that name"),
+				$default));
+	}
+
+	# Each goal is its name, and the first (the default) is the alias too
 	my @goal = @{ $plan->{goals} };
 	for my $i (0 .. $#goal) {
 		my $name = $goal[$i]{name};
-		$i && $name eq q(all)
-			# HEY!  `all' is the name of a .do file, and not to be translated
+		$i && defined $alias && $name eq $alias
+			# HEY!  the second %s is the .do file of the default goal
 			and die _status 0, tagmsg(E => diag(__(
-				"redo cannot name goal %q: all.do is the default goal's"),
-				$name));
+				"redo cannot name goal %q: %s is the default goal's"),
+				$name, "$alias.do"));
 		$taken{$name}
 			# HEY!  %s is the name of a goal, which a .do file is named after
 			and die _status 0, tagmsg(E => diag(__(
 				"redo cannot name goal %q: a file has that name"), $name));
 		my @files = map { $plan->{node}{$_}{bpath} } @{ $goal[$i]{files} };
-		for my $do ($name, ($i == 0 && $name ne q(all) ? q(all) : ())) {
-			my $text = $head . _preamble($do);
+		my $head_text = $head->($goal[$i]{select});
+		my @do = ($name);
+		push @do, $alias if $i == 0 && defined $alias && $alias ne $name;
+		for my $do (@do) {
+			my $text = $head_text . _preamble($do);
 			$text .= "redo-ifchange " . join(' ', map { _word($_) } @files) . "\n" if @files;
 			push @file, [ "$do.do", $text ];
 		}
@@ -186,19 +210,23 @@ sub build_command
 	$B eq q(.) ? @redo : (q[(], q(cd), $q->($B), q(&&), @redo, q[)]);
 }
 
-# The arguments of the command line, but for -t and its goal (the others
-# all take a value, but for -A)
-sub _without_goals
+# The arguments of the command line, with these goals for its -t (in
+# their place: before -S, if not where -t was)
+sub _with_goals
 {
-	my @arg = @_;
+	my ($args, @goal) = @_;
+	my @arg = @$args;
+	my @t = map { (q(-t), $_) } grep { defined } @goal;
 	my @keep;
+	# (all take a value, but for -A)
 	while (@arg) {
 		my $opt = shift @arg;
 		if ($opt eq '-A') { push @keep, $opt; next }
 		my $value = shift @arg;
+		push @keep, splice(@t) if $opt eq '-t' || $opt eq '-S';
 		push @keep, $opt, $value unless $opt eq '-t';
 	}
-	@keep;
+	(@keep, @t);
 }
 
 # The beginning of the .do file of `name' (relative to the build

@@ -251,7 +251,10 @@ A generator I<name> is the module C<RdKw::WwW::SiteConf::Backend::>I<Name>
 
 With C<-g>, write I<file> in the build directory instead of F<Makefile>
 (or F<build.ninja>); say C<make -f Makefile.proj> to use it.  Just a
-name, not a path.  C<redo> writes many files, and takes no C<-o>.
+name, not a path.  C<redo> writes a file for each target and goal: to
+it, I<file> is the default goal's (instead of F<all.do>), and ends in
+F<.do>.  C<-o /dev/null> writes no such file (with C<make>, no Makefile:
+only F<MY/MANIFEST>).
 
 With C<-i>, may be repeated as C<-o name:path>, where I<name> is
 C<configure> or C<render>.  Bare C<-o path> means C<-o configure:path>.

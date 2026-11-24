@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 39;
+use Test::More tests => 44;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -127,5 +127,18 @@ for my $G (qw( make gmake )) {
 	($status, $out) = run('-g', '-q', '-G', $G, '-t', 'small', '-t', '');
 	like($out, qr/goal `broken' NEEDs `missing'/, "-G $G -t '': the first goal, broken");
 }
+
+# The header says the goals as they were selected: each once, by name, NEED: as
+# no prefix
+($status, $out) = run('-g', '-q', '-t', 'NEED:small', '-t', 'WANT:', '-t', 'small');
+is($status, 0, '-t NEED:small -t WANT: -t small') or diag $out;
+like(slurp('Makefile'), qr/^# options: -G make -t small -t WANT:broken$/m, '... is -t small -t WANT:broken in the header');
+
+# -o /dev/null: no build file, and nothing to run
+unlink "$dir/Makefile" or die $!;
+($status, $out) = run('-g', '-o', '/dev/null', '-t', 'small');
+is($status, 0, '-o /dev/null') or diag $out;
+ok(!-e "$dir/Makefile", '... writes no Makefile');
+unlike($out, qr/To build/, '... and says nothing to run');
 
 done_testing;

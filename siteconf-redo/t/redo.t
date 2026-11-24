@@ -4,13 +4,14 @@
 
 use strict;
 use warnings;
-use Test::More tests => 26;
+use Test::More tests => 35;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf::Backend::Redo;
 
 my $class = 'RdKw::WwW::SiteConf::Backend::Redo';
-sub files { my %f = map { @$_ } $class->emit($_[0]); \%f }
+# (the .do files by name; the default goal's is all.do, unless said)
+sub files { my ($p, @d) = @_; my %f = map { @$_ } $class->emit($p, @d ? $d[0] : q(all.do)); \%f }
 
 my $plan = {
 	prog => 'test', args => [], D => { e => '.ok' },
@@ -54,11 +55,33 @@ is($f->{'all.do'} =~ /\n(set -e\nexec >&2\nredo-ifchange site\/x\n)\z/ && $1, "s
 		q(... or be out of the build directory));
 }
 {
-	# a target's .do is the same whatever goals are asked for
-	local $plan->{args} = [ qw( -A -G redo -F M -t all -t WANT: -S x=y ) ];
+	# A target's .do is the same whatever goals are asked for, and a
+	# goal's whatever other goals are
+	local $plan->{args} = [ qw( -A -G redo -F M -t main -t WANT:small -S x=y ) ];
+	local $plan->{goals} = [ { name => q(main), select => q(main), files => [q(x)] },
+		{ name => q(small), select => q(WANT:small), files => [] } ];
 	my $f = files($plan);
 	like($f->{q(site/x.do)}, qr/^# options: -A -G redo -F M -S x=y$/m, q(a target leaves out -t));
-	like($f->{q(all.do)}, qr/^# options: -A -G redo -F M -t all -t WANT: -S x=y$/m, q(a goal says it));
+	like($f->{q(main.do)}, qr/^# options: -A -G redo -F M -t main -S x=y$/m, q(a goal says itself));
+	is($f->{q(all.do)}, $f->{q(main.do)}, q(... as all.do does, for the first));
+	like($f->{q(small.do)}, qr/^# options: -A -G redo -F M -t WANT:small -S x=y$/m, q(... WANT: and all));
+	local $plan->{args} = [ qw( -G redo ) ];
+	like(files($plan)->{q(small.do)}, qr/^# options: -G redo -t WANT:small$/m, q(... even if no -t was given));
+}
+{
+	# -o: the default goal's .do, instead of all.do; /dev/null (undef), none
+	local $plan->{goals} = [ { name => q(main), files => [q(x)] }, { name => q(all), files => [] } ];
+	is_deeply([ sort keys %{ files($plan, q(default.do)) } ], [ qw( all.do default.do main.do site/x.do ) ],
+		q(-o default.do: the default goal is default.do (and another may be all)));
+	is_deeply([ sort keys %{ files($plan, undef) } ], [ qw( all.do main.do site/x.do ) ],
+		q(-o /dev/null: no .do for the default goal but its own));
+	ok(!eval { files($plan, q(default)); 1 } && $@ =~ /redo cannot find `default': the name of a \.do file ends in \.do/,
+		q(-o without .do: redo would not find it));
+	ok(eval { files($plan, q(site.do)); 1 }, q(-o site.do: a directory is all right)) or diag $@;
+	ok(!eval { files($plan, q(in/x.do)); 1 } && $@ =~ /redo cannot name the default goal `in\/x\.do': a file has that name/,
+		q(-o in/x.do: a file is not));
+	ok(!eval { files($plan, q(all.do)); 1 } && $@ =~ /redo cannot name goal `all': all\.do is the default goal/,
+		q(... and no other goal may be it));
 }
 {
 	local $plan->{node}{x}{bpath} = '../out/x';

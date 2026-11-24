@@ -157,7 +157,7 @@ sub emit
 		my @need = grep { !/$marker/ } @{ $node->{deps} };
 		$text .= _ifchange(@need);
 		# (the recipe, from the build directory)
-		$text .= "cd \"\${siteconf_B:-./}\"\n";
+		$text .= "cd -- \"\${siteconf_B:-.}\"\n";
 		for (@cmd) {
 			my ($ignore, $line) = @$_;
 			# (make's `$$' is the shell's `$')
@@ -229,7 +229,7 @@ sub build_command
 		: (map { $_->{name} } grep { defined $_->{select} } @{ $plan->{goals} })[0];
 	my @redo = ($prog, defined $name ? $q->($name) : ());
 	# (in a subshell, so that the shell stays where it is)
-	$B eq q(.) ? @redo : (q[(], q(cd), $q->($B), q(&&), @redo, q[)]);
+	$B eq q(.) ? @redo : (q[(], q(cd), ($B =~ /\A-/ ? q(--) : ()), $q->($B), q(&&), @redo, q[)]);
 }
 
 # The arguments of the command line, with these goals for its -t (in

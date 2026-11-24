@@ -38,7 +38,7 @@ ok(!grep({ !$_->[2] } $class->emit($plan, q(all.do))), '... and every .do is to 
 like($do, qr/^set -e\n/m, 'stops at a failure');
 like($do, qr/^case \$3 in \/\*\) siteconf_out=\$3 ;; \*\) siteconf_out=\$PWD\/\$3 ;; esac\n\Q$B0\E\nsiteconf_B=\$siteconf_B\.\.\/\nexec >&2\n/m,
 	'keeps $3, and finds the build directory from where the .do is');
-like($do, qr/^redo-ifchange "\$siteconf_B"in\/x "\$siteconf_B"'a b' "\$siteconf_B"\.\/-o\ncd "\$\{siteconf_B:-\.\/\}"\n/m,
+like($do, qr/^redo-ifchange "\$siteconf_B"in\/x "\$siteconf_B"'a b' "\$siteconf_B"\.\/-o\ncd -- "\$\{siteconf_B:-\.\}"\n/m,
 	'needs what it needs (quoted), but not the marker; then goes to the build directory');
 like($do, qr/^\( cd \.\. && cp in\/x site\/x \)$/m, 'a command of its own, @ dropped');
 like($do, qr/^\( rm junk \$HOME \) \|\| true$/m, '- ignores failure; $$ is $');

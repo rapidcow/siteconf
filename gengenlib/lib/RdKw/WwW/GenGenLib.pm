@@ -514,9 +514,6 @@ That is what makes a block comment work:
    [%# HAVE: ${a}/abc :  # and anything else at all -%]
 
 and so a colon in a name is C<${U+003A}> (see L</escape_deps>).
-(Since 0.0100; before, only C<HAVE>, C<NEED> and C<WANT> after
-exactly one space were header lines, names were split at any
-white space, and a colon was part of a name.)
 
 The names undergo no parameter expansions.  So:
 
@@ -535,16 +532,17 @@ interpret those.
 
 The scan for header goes on for a while (about 32 lines)
 but stops at the first line that is malformed UTF-8.
-This means that L</read_deps> is safe to call on binary
-files.  (This feature was added in 0.0001.)
+This means that B<read_deps> is safe to call on binary
+files.  (Prior to 0.0001, B<read_deps> would choke on
+malformed UTF-8.)
 
-I<file> is a character string (see L</DESCRIPTION>); one that cannot
-be named on the file system is an error, forgiven or not.
+I<file> is a character string (see L</DESCRIPTION>);
+one that cannot be named on the file system is an error,
+forgiven or not.
 
-C<forgive_missing> is an optional boolean that decides
+I<forgive_missing> is an optional boolean that decides
 whether a file that cannot be opened to begin with can
 be forgiven.  Defaults to 0 (false; do not forgive).
-(This option was added in 0.0002.)
 
 C<lines> is an optional reference to a hash, which is filled with
 the line numbers of what is read, in the shape of the result: a
@@ -553,6 +551,7 @@ names, the line of each.  For example, a C<NEED> of two names on
 line 3 and one on line 4 gives C<< NEED => [3, 3, 4] >>.  What it
 held before is gone.
 
+The I<forgive_missing> option was added in 0.0002.
 The I<prog> and I<lines> options were added in 0.0100.
 
 =cut

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 36;
+use Test::More tests => 37;
 
 use File::Temp qw( tempdir );
 # (what is said is said as it is written, whatever the locale)
@@ -43,7 +43,8 @@ bad("MAKE a\nNEED /etc/passwd\n", qr/must be relative/, 'absolute');
 bad("MAKE a\nNEED ../x\n", qr/out of tree/, 'dotdot');
 # Accept either quoting style in the error returned by GenGenLib.
 bad("MAKE a\nNEED a\$b\n", qr/\AE: (?:MANIFEST|`MANIFEST') line 2: bad substitution: \$\{b\}$/, 'a variable');
-bad("MAKE a\nNEED a\${\$}b\n", qr/line 2: bad file name `a\$b'/, 'an escaped $, unescaped');
+is_deeply(files((parse("MAKE a\nNEED a\${\$}b\n"))[0]{need}), ['a$b'], 'an escaped $, unescaped (for the backend to escape)');
+bad("MAKE a\nNEED a\${U+0025}b\n", qr/line 2: bad file name `a%b'/, 'a %, which GNU Make reads as a pattern');
 @g = parse("MAKE a\nNEED a\${U+0020}b\nWANT c\${U+20}d\n");
 is_deeply(files($g[0]{need}), ['a b'], 'an escaped blank in NEED');
 is_deeply(files($g[0]{want}), ['c d'], 'a short escaped blank in WANT');

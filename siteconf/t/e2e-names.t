@@ -203,18 +203,19 @@ SKIP: {
 	ok(!-e "$dir/Makefile", '... and writes nothing');
 }
 
-# Targets with a `;' and a `|' in them, one in a directory with a `|',
-# whose marker is a target and (with -Sorder=1, and to ninja) an
-# order-only prerequisite.  pi|pe/x.html also needs se;mi.html and
-# in;|put, written as ${U+003B} and ${"|"}.
+# Targets with a `;', a `|' and a `$' in them, one in a directory with
+# a `|', whose marker is a target and (with -Sorder=1, and to ninja) an
+# order-only prerequisite.  pi|pe/x.html also needs se;mi.html,
+# do$llar.html and in;|put, written as ${U+003B}, ${U+0024} and ${"|"}
+# (and do$llar.html as ${$} and as $$).
 sub punct_project
 {
 	project({
-		MANIFEST => "MAKE all\n\tNEED pi\${\"|\"}pe/x.html\n",
+		MANIFEST => "MAKE all\n\tNEED pi\${\"|\"}pe/x.html do\$\$llar.html\n",
 		'Makefile.in' => <<'RULES',
-se${U+003B}mi.html: ${a}/
+se${U+003B}mi.html do${$}llar.html: ${a}/
 	printf '%s\n' ${@:Q} > ${B:Q}/${b:Q}/${@:Q}
-pi${"|"}pe/x.html: ${a}/ ${B}/${b}/se${U+003B}mi.html NEED:${A}/in${U+003B}${"|"}put
+pi${"|"}pe/x.html: ${a}/ ${B}/${b}/se${U+003B}mi.html ${B}/${b}/do${U+0024}llar.html NEED:${A}/in${U+003B}${"|"}put
 	cat ${B:Q}/${b:Q}/${"se;mi.html":Q} ${A:Q}/${"in;|put":Q} > ${B:Q}/${b:Q}/${@:Q}
 RULES
 		'in;|put' => "input\n",
@@ -226,7 +227,7 @@ sub punct_builds
 	my ($G, $tool, $up_to_date, @opt) = @_;
 	my $dir = punct_project();
 	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', @opt);
-	is($status, 0, "$G: generate targets with a ; and a |") or return diag $out;
+	is($status, 0, "$G: generate targets with a ;, a | and a \$") or return diag $out;
 	($status, $out) = run($dir, $tool);
 	is($status, 0, "$G: build them") or return diag $out;
 	is(contents("$dir/site/pi|pe/x.html"), "se;mi.html\ninput\n", '... in a directory with a |');
@@ -235,12 +236,13 @@ sub punct_builds
 	utime $t, $t, "$dir/in;|put" or die $!;
 	ok(!$up_to_date->($dir), '... and out of date when what they need is newer');
 	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
-	ok($status == 0 && !-e "$dir/site/pi|pe/x.html" && !-e "$dir/site/se;mi.html",
+	ok($status == 0 && !-e "$dir/site/pi|pe/x.html" && !-e "$dir/site/se;mi.html"
+		&& !-e "$dir/site/do\$llar.html",
 		"$G: clean them") or diag $out;
 }
 
 SKIP: {
-	my $why = fs_surprise('se;mi|pi', tempdir(CLEANUP => 1));
+	my $why = fs_surprise('se;mi|pi$e', tempdir(CLEANUP => 1));
 	skip "file system: $why", 12 if defined $why;
 	SKIP: {
 		skip 'no GNU make', 6 unless $gmake;

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 236;
+use Test::More tests => 238;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -778,6 +778,20 @@ MSG
 		'... but no $ to Make (bmake reads $$ twice)');
 	like($@, qr/^E: make cannot name `t\$ool' \(with inescapable `\$'\).*GNU Make can/s,
 		'... and says so, and who can');
+}
+
+# --- a $ in a target and in MANIFEST: $$, ${$} and ${U+0024}
+{
+	my $dir = project({
+		MANIFEST => "MAKE all\n\tNEED a\$\$b.html c\${\$}d.html e\${U+0024}f.html\n",
+		'Makefile.in' => "a\$\$b.html c\${\$}d.html \${b}/e\${U+0024}f.html: \${a}/\n\ttrue\n",
+	});
+	my $plan = eval { plan_of($dir) };
+	is_deeply($plan && [ sort grep { /\.html\z/ } keys %{ $plan->{node} } ],
+		[ 'a$b.html', 'c$d.html', 'e$f.html' ], 'a $ in a target, said three ways') or diag $@;
+	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a\$b.html: \${a}/\n\ttrue\n" });
+	ok(!eval { plan_of($dir) } && $@ =~ /`a\$b\.html': target is not preceded by a legal prefix/,
+		'... but a lone $ is a tree we do not know') or diag $@;
 }
 
 # --- a `:' in a name, as in man/3/File::Spec.html: GNU Make and ninja

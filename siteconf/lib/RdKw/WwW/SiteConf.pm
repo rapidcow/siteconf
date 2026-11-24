@@ -327,7 +327,7 @@ site> is fine.
 =item the files themselves
 
 A source file declares its place in the graph in a header (see
-L<RdKw::WwW::GenLib/read_deps>, which also says what comments they
+L<RdKw::WwW::GenGenLib/read_deps>, which also says what comments they
 may hide in):
 
     # HAVE: ${A}/${a}/index.html

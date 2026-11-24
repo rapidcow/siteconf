@@ -41,7 +41,7 @@ if (@ARGV) {
 	my %env = prepend_path( PERL5LIB => get_inc() );
 	$ENV{$_} = join($sep, @{ $env{$_} }) for keys %env;
 	exec @ARGV;
-	exit "exec $ARGV[0]: $!\n";
+	die "exec $ARGV[0]: $!\n";
 }
 
 unless (defined $shell) {

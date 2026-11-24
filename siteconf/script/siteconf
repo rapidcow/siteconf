@@ -368,14 +368,17 @@ C<-t goal> and C<-t NEED:goal> keep the manifest's C<NEED> and
 C<WANT> declarations.  C<-t WANT:goal> treats every file in that goal
 as C<WANT>ed, so files that cannot be built are warned about and dropped.
 The prefix goes before the goal, unlike the filter used with C<-l>.
-Without I<goal> (C<-t WANT:>, C<-t NEED:>, C<-t ''>), it is the
+Without I<goal> (C<-t WANT:>, C<-t NEED:>, C<-t ,>), it is the
 default goal, the first of the manifest, as with C<-l>.
 
-May be repeated, or be a list, split by commas and POSIX white space
-(C<-t 'a,b c'> is C<-t a -t b -t c>, so C<-t "$*"> will do), in which
-what is empty between them is nothing: so C<-t ,> selects no goal at
-all, and the build file has none.  But a C<-t> of nothing, or of white
-space alone (C<-t ''>), is the default goal, as above.  A repeated goal
+May be repeated, or be a list (C<-t 'a,b c'> is C<-t a -t b -t c>, so
+C<-t "$*"> will do).  Commas split it into fields, and a field that is
+empty (or white space alone) is a goal of no name: the default goal, as
+above.  So C<-t ,> is the default goal, and so is C<-t "${GOAL:-,}">
+if C<GOAL> is empty.  POSIX white space splits a field further, and what
+is empty between it is nothing: C<-t ''>, or C<-t> of white space alone,
+adds no goal, and if no C<-t> adds one, it is as if there were none.  A
+repeated goal
 appears once, at its first position, with the last prefix given for
 it.  The first selected goal is the default build goal.  Without
 C<-t>, only the first goal of the manifest is generated, as a bare

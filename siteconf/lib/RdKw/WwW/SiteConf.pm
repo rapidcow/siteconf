@@ -2143,15 +2143,20 @@ sub _finish
 sub _select_goals
 {
 	my ($self, @spec) = @_;
-	my @arg = @{ $self->{goals} || [] };
-	# Without -t, what a bare `make' makes: the first goal.  (The rest
-	# are for -t, or for a goal at the top that NEEDs them.)
-	return $spec[0] ? { %{ $spec[0] }, select => $spec[0]{name} } : () unless @arg;
-	# -t "goal,goal goal" is -t goal -t goal -t goal, and what is empty
-	# between them is nothing (so -t , is no goal); but -t '' (or white
-	# space alone) is the first goal, by no name
-	my @select = map { /\A[$SP]*\z/ ? q() : grep { length } split /[,$SP]+/ } @arg;
-	return () unless @select;
+	# -t "goal,goal goal" is -t goal -t goal -t goal.  White space only
+	# splits (so -t '' is nothing at all); a comma splits fields, and a
+	# field that is empty is a goal of no name, the first (so -t , is it).
+	my @select = map {
+		my $arg = $_;
+		$arg =~ /,/
+			? map { /\A[$SP]*\z/ ? q() : grep { length } split /[$SP]+/ } split /,/, $arg, -1
+			: grep { length } split /[$SP]+/, $arg;
+	} @{ $self->{goals} || [] };
+	$self->{selected} = scalar @select;
+	# Without -t (or with one of nothing), what a bare `make' makes: the
+	# first goal.  (The rest are for -t, or for a goal at the top that
+	# NEEDs them.)
+	return $spec[0] ? { %{ $spec[0] }, select => $spec[0]{name} } : () unless @select;
 	my %goal = map { $_->{name} => $_ } @spec;
 	my (%mode, @order);
 	for my $select (@select) {
@@ -2415,10 +2420,7 @@ sub generate
 		( map { ("-$_", $self->{fromhere}{$_}) } sort keys %{ $self->{fromhere} } ),
 		# (the goals as selected, in order, each once: -t '' is the first
 		# goal by name, and NEED: is no prefix)
-		( !@{ $self->{goals} || [] } ? ()
-			: @{ $plan->{goals} } ? map { (q(-t), $_->{select}) } @{ $plan->{goals} }
-			# (-t , is no goal: it says so)
-			: (q(-t), q(,)) ),
+		( $self->{selected} ? map { (q(-t), $_->{select}) } @{ $plan->{goals} } : () ),
 		( map { ('-S', defined $S_all->{$_} ? "$_=$S_all->{$_}" : $_) } sort keys %$S_all ),
 	];
 	# Bytes.  The backends spell the names as the file system does.

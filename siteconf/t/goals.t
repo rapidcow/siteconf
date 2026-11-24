@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 52;
+use Test::More tests => 53;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -83,10 +83,13 @@ is_deeply([map { $_->[0] } @{ $p->{goals}[0]{dropped} }], [qw(missing partial ab
 like($p->{goals}[0]{dropped}[1][1], qr/missing-dependency/, 'a missing prerequisite drops the whole file');
 ok(!exists $p->{node}{partial}, 'no incomplete rule for the dropped file');
 is_deeply(plan_of('WANT:'), plan_of('WANT:broken'), 'no name is the first goal: WANT:');
-for my $sel ('', 'NEED:') {
+for my $sel (',', 'NEED:') {
 	eval { plan_of($sel) };
 	like($@, qr/goal `broken' NEEDs `missing'/, "... and `$sel'");
 }
+is_deeply(names(plan_of('small', '')), ['small'], "-t '' is nothing at all");
+eval { plan_of(" \t") };
+like($@, qr/goal `broken' NEEDs `missing'/, q(... and white space alone is no -t: the first goal));
 is_deeply(names(plan_of('small', 'WANT:')), [qw(small broken)], '... wherever it is');
 is_deeply(names(plan_of('other', 'WANT:broken', 'small')), [qw(other broken small)], 'selection order');
 is_deeply(names(plan_of('small', 'other', 'NEED:small')), [qw(small other)], 'duplicate goals appear once');
@@ -122,10 +125,11 @@ unlike(slurp('MY/MANIFEST'), qr/^MAKE small/m, 'the resolved manifest has the se
 isnt($status, 0, 'CLI NEED still fails on missing requirements');
 like($out, qr/goal `broken' NEEDs `missing'/, 'CLI says why');
 
-# -t '' (as -t "$DEFAULT" says, if it is empty) is the first goal, whatever the generator
+# -t , (as -t "${DEFAULT:-,}" says, if it is empty) is the first goal,
+# whatever the generator
 for my $G (qw( make gmake )) {
-	($status, $out) = run('-g', '-q', '-G', $G, '-t', 'small', '-t', '');
-	like($out, qr/goal `broken' NEEDs `missing'/, "-G $G -t '': the first goal, broken");
+	($status, $out) = run('-g', '-q', '-G', $G, '-t', 'small', '-t', ',');
+	like($out, qr/goal `broken' NEEDs `missing'/, "-G $G -t ,: the first goal, broken");
 }
 
 # The header says the goals as they were selected: each once, by name, NEED: as
@@ -135,21 +139,21 @@ is($status, 0, '-t NEED:small -t WANT: -t small') or diag $out;
 like(slurp('Makefile'), qr/^# options: -G make -t small -t WANT:broken$/m, '... is -t small -t WANT:broken in the header');
 
 ($status, $out) = run('-g', '-q', '-t', 'small,WANT:other', '-t', 'WANT:,small');
+is($status, 0, '-t small,WANT:other -t WANT:,small') or diag $out;
 like(slurp('Makefile'), qr/^# options: -G make -t small -t WANT:other -t WANT:broken$/m,
-	'a comma list is a -t each, and an empty name is the first goal');
+	'... is a -t each, and an empty name is the first goal');
 
-# White space splits as a comma does, and what is empty between is nothing
-($status, $out) = run('-g', '-q', '-t', " small	other  ,,
-");
-is($status, 0, '-t with white space and empty pieces') or diag $out;
+# White space splits too, but what is empty between it is nothing; and so
+# is a field of white space alone, between commas, the first goal
+($status, $out) = run('-g', '-q', '-t', " small\tother \n", '-t', '');
+is($status, 0, '-t with white space, and -t of nothing') or diag $out;
 like(slurp('Makefile'), qr/^# options: -G make -t small -t other$/m, '... is a -t for each goal');
-($status, $out) = run('-g', '-q', '-t', ',');
-is($status, 0, '-t , (no goal)') or diag $out;
-like(slurp('Makefile'), qr/^# options: -G make -t ,$/m, '... says so in the header');
-unlike(slurp('Makefile'), qr/^(?:small|other|broken):/m, '... and has no goal');
-is(slurp('MY/MANIFEST'), '', '... nor has the manifest');
-($status, $out) = run('-g', '-q', '-t', ' ');
-like($out, qr/goal `broken' NEEDs `missing'/, "-t ' ' is the first goal, as -t '' is");
+($status, $out) = run(q(-g), q(-q), q(-t), "small, \t,WANT:");
+is($status, 0, q(-t "small, \t,WANT:")) or diag $out;
+like(slurp(q(Makefile)), qr/^# options: -G make -t small -t WANT:broken$/m,
+	'... a field of white space alone is the first goal (and the last mode wins)');
+($status, $out) = run('-g', '-q', '-t', '', '-t', ' ');
+like($out, qr/goal `broken' NEEDs `missing'/, "-t '' -t ' ' is no -t: the first goal");
 
 # -o /dev/null: no build file, and nothing to run
 unlink "$dir/Makefile" or die $!;

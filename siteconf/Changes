@@ -16,10 +16,11 @@ Revision history of WwW-SiteConf
         is not installed says so, and lists those that are.
     *** -g: the header of a build file says the goals as they were
         selected (-t '' by name, NEED: as no prefix, each once), and
-        -t '', -t NEED: and -t WANT: are the first goal.  -t is split
-        by commas and POSIX white space (-t "$*"), and what is empty
-        between them is nothing: -t , is no goal.  -o /dev/null
-        writes no build file (only MY/MANIFEST).
+        -t ,, -t NEED: and -t WANT: are the first goal.  -t is split
+        by commas into fields (an empty one is the first goal), and
+        each by POSIX white space (-t "$*"), where what is empty is
+        nothing: -t '' adds no goal.  -o /dev/null writes no build
+        file (only MY/MANIFEST).
     *** Perl 5.8 is required, and so is GenGenLib 0.0100.
         Two new modules are required (RdKw::I18N::CodeSets and
         RdKw::L10N::TextDomain, the former requires Encode::Locale.)

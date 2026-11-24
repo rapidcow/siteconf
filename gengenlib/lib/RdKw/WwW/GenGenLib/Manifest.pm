@@ -65,7 +65,7 @@ C<NEED:index.html>).
 
 C<INCLUDE> takes one or more paths, and reads those manifests where it
 stands, as if they were written there: the last C<MAKE> goes on in
-them, and on after them.  A path is a spec of B<subs_deps> with the
+them, and on after them.  A path is a spec of L<RdKw::WwW::GenGenLib/subs_deps> with the
 definitions given to L</read>, and is a path from the current
 directory, which is taken to be C<${A}>.  Every file must exist, and
 none may include itself.
@@ -78,10 +78,11 @@ script.  There is nothing to escape.  A goal is only made once.
 
 C<NEED> and C<WANT> take any number of names, which belong to the last
 C<MAKE>; each is split off at white space, and is unescaped as a spec
-of B<subs_deps> without definitions is (see L<RdKw::WwW::GenGenLib/escape_dep>, which writes one): C<${$}>
-or C<$$> is a C<$>, C<${U+>I<hex>C<}> is that character (C<${U+0020}>
+of B<RdKw::WwW::GenGenLib/subs_deps> without definitions is (see
+L<RdKw::WwW::GenGenLib/escape_deps>, which writes one): C<${$}> or
+C<$$> is a C<$>, C<${U+>I<hex>C<}> is that character (C<${U+0020}>
 for a space, C<${U+0023}> for a C<#> that is no comment, and C<${"...">C<}>
-for a string, as in C<${"some\sbread"}>: see B<scan_string>), and a
+for a string, as in C<${"some\sbread"}>: see L<RdKw::WwW::SiteConf/scan_string>), and a
 leading C<${A}/> is the root and is dropped, as it is in a header.
 Any other variable, and any malformed C<$>, is an error, and so is a
 name that is nothing, or that has a NUL in it.  What a name I<may> be

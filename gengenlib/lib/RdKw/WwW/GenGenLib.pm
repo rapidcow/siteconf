@@ -94,7 +94,7 @@ that's what we call ourselves: read L<make(1)>-like
 declarations.  Helps keep the mind sane. ;D
 
 A value says the characters it cannot spell, as a header does:
-C<${U+0020}> is a space and C<${$}> a C<$> (see B<unescape_vars>).
+C<${U+0020}> is a space and C<${$}> a C<$> (see L</unescape_vars>).
 Code points above U+10FFFF are accepted as-is; invalidate them if you care
 about only the valid Unicode code points.
 
@@ -149,9 +149,9 @@ sub read_make
 
 =item B<write_make> I<file>, \%vars[, prog => 'write_make']
 
-The reverse of B<read_make>, through B<update_file>.  Keys are
-sorted by length, then alphabetically.  Values are escaped by B<escape_var>.
-There is no header: I<prog> is only for errors.
+The reverse of L</read_make>, through L</update_file>.  Keys are
+sorted by length, then alphabetically.  Values are escaped by
+L</escape_vars>.  There is no header: I<prog> is only for errors.
 
 Errors are prefixed with I<prog>, else C<'write_make'>.
 The I<prog> option and escaped values were added in 0.0100.
@@ -195,9 +195,9 @@ and every other character, including those of any script, is itself.
 A C<$> is C<${$}> if a C<{> comes next, so that it cannot be taken for the
 start of an escape; any other C<$> is just a C<$>.
 
-This is much less than what B<escape_deps> does, which escapes whatever
+This is much less than what L</escape_deps> does, which escapes whatever
 means something to make, a shell or a header, because a file made for
-B<read_make> (and a shell loop that reads a line at a time) does not
+L</read_make> (and a shell loop that reads a line at a time) does not
 need to say any of that.  Names are never escaped.
 
 Added in 0.0100.  EXPERIMENTAL.
@@ -512,7 +512,7 @@ That is what makes a block comment work:
    /*** WANT: evil${U+0020}file: ***/
    [%# HAVE: ${a}/abc :  # and anything else at all -%]
 
-and so a colon in a name is C<${U+003A}> (see B<escape_dep>).
+and so a colon in a name is C<${U+003A}> (see L</escape_deps>).
 (Since 0.0100; before, only C<HAVE>, C<NEED> and C<WANT> after
 exactly one space were header lines, names were split at any
 white space, and a colon was part of a name.)
@@ -764,7 +764,7 @@ but a character, by its code point: 1 to 8 hex digits, in any
 case (and so is the C<U>), up to C<FFFFFFFF> (it fits an unsigned
 32-bit int; Unicode validity is not checked); it is normalized to
 C<${U+>I<HEX>C<}>, in capitals and of at least 4 digits, and the
-character is what B<subs_deps> gives (see B<escape_deps>).  Any
+character is what B<subs_deps> gives (see L</escape_deps>).  Any
 other C<$> is malformed: a trailing one, an unterminated C<${>,
 an empty C<${}>, a C<${U+...}> that is no code point, a C<$>
 before a C<}> or a C<.>, and so on.  The optional C<strict>
@@ -878,12 +878,12 @@ sub norm_dep
 =item B<subs_deps> \%D, I<spec>... { strict => 0, on_missing => 'vanish' }
 
 Substitute dependency specifications with
-the given definitions.  C<norm_deps> is
+the given definitions.  L</norm_deps> is
 called to normalize the specification (and
 is given the options, if any).  The map is
 optional since 0.0100, so this could be an
-inverse operation of C<escape_deps>.
-C<strict> is passed to B<norm_deps>.
+inverse operation of L</escape_deps>.
+C<strict> is passed to L</norm_deps>.
 The C<on_missing> option (added in 0.0100) may be one of:
 
 =over
@@ -1106,7 +1106,7 @@ Enumerate all dependencies of a path specification.
 C<\%D> is a required map of variable definitions.
 C<\%G> is an optional map for normalized path
 specifications associated with their header values.
-Every specification is normalized (see B<norm_deps>)
+Every specification is normalized (see L</norm_deps>)
 on its way in, so the list returned and the keys of
 C<\%G> are normalized too, and C<$a/x> and C<${a}/x>
 are the same entry.
@@ -1138,7 +1138,7 @@ so the graph is a negative cache too.  Its value is:
 
 =item *
 
-the header (what B<read_deps> returns, as a hash
+the header (what L</read_deps> returns, as a hash
 reference), for a regular file that was read;
 
 =item *
@@ -1151,7 +1151,7 @@ the list, and is not looked for again);
 =item *
 
 C<undef>, for what C<follow> denied: it is listed, but
-was never read (see B<follow_ok>).
+was never read (see L</follow_ok>).
 
 =back
 
@@ -1248,9 +1248,9 @@ sub walk_deps
 
 The goals in I<file> (a name, or a reference to the text), as an
 L<RdKw::WwW::GenGenLib::Manifest>, which says what that looks like.
-The names in it are unescaped, as B<subs_dep> does without definitions:
+The names in it are unescaped, as L</subs_dep> does without definitions:
 C<${U+0020}> is a space, and C<${$}> a C<$>.  C<\%D> is required, as
-for B<walk_deps>, and is substituted in the paths of C<INCLUDE> only;
+for L</walk_deps>, and is substituted in the paths of C<INCLUDE> only;
 those are opened from the current directory, which is taken to be
 C<${A}>.  An empty map reads a manifest that includes nothing that
 needs a definition.

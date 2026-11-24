@@ -215,6 +215,10 @@ Revision history of WwW-SiteConf
       that is not read.  A file that is JUST in one place and not
       in another is read in full (as in walk_deps).  The resolved
       manifest keeps the distinction.
+    * -l -s sorts the names by path segment: fewer segments first,
+      then the first segment that differs, by Unicode code point.
+      It never uses the locale (LC_COLLATE), so the order is the
+      same everywhere.  Without -s, -l lists in manifest order.
     * -G make, bmake, gmake: -Sarg_max=BYTES sets how many bytes of
       file names an rm line of a cleaning rule has (16384 by
       default; 0 or empty: one line).  -Sarg_max=auto is an eighth

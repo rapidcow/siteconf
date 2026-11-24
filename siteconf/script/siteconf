@@ -65,7 +65,7 @@ siteconf - configurable incremental build script generator
     #   -Sorder=1          (gmake) directory markers after a |
     #   -Sarg_prefix=sc_   (redo) the shell variables of a .do: $sc_d, $sc_o
 
-    siteconf -l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]
+    siteconf -l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]] [-s]
     siteconf list ...                         # same
     siteconf -l -0 -F ${B}/MY/MANIFEST -t all |
         tar -c -f site.tar -C ${B}/${b} --null -T -
@@ -416,6 +416,17 @@ C<-072> for a colon.  C<-012> is the default.
 
 Added in 0.0300.
 
+=item B<-s>
+
+With C<-l>, sort the names by their path segments (split at C</>).
+A name with fewer segments comes first; two with as many are ordered by
+the first segment that differs, compared by Unicode code point (as
+the bytes of UTF-8 compare), whatever the encoding of the output.  The
+locale (C<LC_COLLATE>) is never used, so the order is the same
+everywhere.  So C<b.html> comes before C<a/x.html>, C<a/x.html> before
+C<b/a.html>, and C<Z.html> before C<a.html>.  Without C<-s>, the names
+are in the order of the manifest.
+
 =back
 
 =head1 ENVIRONMENT
@@ -484,7 +495,8 @@ my $usage = do {
 		. "$pad         [-Sopt=val ...] [-Dvar[=val] ...] [-Ovar[=val] ...]",
 		"-g [-A] [-B builddir] [-G generator] [-F manifest] [-R rulebook]\n"
 		. "$pad         [-o file] [-t [NEED:|WANT:]goal ...] [-Sopt[=val] ...]",
-		"-l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]",
+		"-l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]\n"
+		. "$pad         [-s]",
 		"-V [-V [-V]]";
 };
 
@@ -541,6 +553,7 @@ GetOptions(
 	't=s'      => $opt{t},
 	# (-0 alone is a NUL, -072 a colon: an octal number, as perl's -0 takes)
 	'0:s'      => \$opt{0},
+	's'        => \$opt{s},
 	'h|help'   => sub { print $usage; exit 0 },
 	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
@@ -653,7 +666,7 @@ sub _not_for_us {
 }
 
 if ($opt{mode} eq 'init') {
-	foreach (qw( 0 A B F G R )) {
+	foreach (qw( 0 A B F G R s )) {
 		defined $opt{$_} and _not_for_us("-$_", '-i (init)');
 	}
 	foreach (qw( t )) {
@@ -676,7 +689,7 @@ if ($opt{mode} eq 'init') {
 	# Just as a side remark, I don't think `siteconf make'
 	# makes a lot of sense sense.  it stands for generate, but
 	# i wrote make so that it'd be four letters like init.
-	foreach (qw( 0 P f )) {
+	foreach (qw( 0 P f s )) {
 		defined $opt{$_} and _not_for_us("-$_", '-g (make)');
 	}
 	foreach (qw( M )) {
@@ -713,6 +726,31 @@ if ($opt{mode} eq 'init') {
 exit 0;
 
 # ---
+
+# Each name (the first of each pair), with the separator after it
+sub _put
+{
+	my $sep = shift;
+	for (@_) {
+		print STDOUT $_->[0], $sep or die $cs->tagmsg($prog => $cs->diag(__(
+			"cannot write to stdout: %m")));
+	}
+}
+
+# -s: fewer segments first; then the first segment that differs, by
+# Unicode code point.  Never by locale (LC_COLLATE): the order must be
+# the same everywhere.
+sub _by_segments
+{
+	no locale;
+	my ($x, $y) = @_;
+	@$x <=> @$y and return @$x <=> @$y;
+	for my $i (0 .. $#$x) {
+		my $c = $x->[$i] cmp $y->[$i];
+		return $c if $c;
+	}
+	0;
+}
 
 # `siteconf -l': the names, for other programs (tar -T, xargs -0), so
 # they are spelled as the file system does -- and not as a message is,
@@ -762,6 +800,9 @@ sub do_list
 					"-t $t", $type));
 			push @name, grep { !$seen{$_}++ } map { $mf->$_($goal) } @kind;
 		}
+		# (with -s: each name as the file system spells it, and its
+		# segments as characters, to sort by)
+		my @fs;
 		for my $name (@name) {
 			my $fs = $cs->to_fs($name, { prog => $mf->file });
 			index($fs, $sep) < 0 or die $cs->diag(__(
@@ -769,9 +810,14 @@ sub do_list
 				# says it: -0 for a NUL, -012 for a newline
 				"%q: %q conflicts with record separator %s"),
 				$file, $name, sprintf('-0%o', ord $sep)) . "\n";
-			print STDOUT $fs, $sep or die $cs->tagmsg($prog => $cs->diag(__(
-				"cannot write to stdout: %m")));
+			# (written as it comes, unless it is to be sorted)
+			if ($opt->{s}) {
+				push @fs, [ $fs, [ split m!/!, $name, -1 ] ];
+			} else {
+				_put($sep, [ $fs ]);
+			}
 		}
+		_put($sep, sort { _by_segments($a->[1], $b->[1]) } @fs) if $opt->{s};
 		1;
 	} or die $cs->tagmsg($prog => "$@");
 	STDOUT->flush() or die $cs->tagmsg($prog =>

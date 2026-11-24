@@ -16,7 +16,7 @@ use RdKw::WwW::GenGenLib qw( write_make );
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
-plan tests => 44;
+plan tests => 51;
 
 my $dir = tempdir(CLEANUP => 1);
 sub put
@@ -124,3 +124,33 @@ ok($ok, '-B: INCLUDE with a definition') or diag $err;
 is($out, "a\nb\n", '... goes on with the goal');
 bad(qr/\Asiteconf: INC line 3: bad substitution: \$\{p\}$/, 'no -B: nothing is defined', '-l', '-F', 'INC');
 bad(qr/\Asiteconf: INC line 3: bad substitution: \$\{p\}$/, '-B /dev/null: the same', '-l', '-B', '/dev/null', '-F', 'INC');
+
+# -s: by segments: fewer first, then by code point (never by locale)
+put('SORT', <<'M');
+MAKE all
+	NEED b/a.html
+	NEED z.html
+	NEED a/x.html
+	NEED é.html
+	NEED Z.html
+	NEED a/b/c.html
+	NEED a.html
+	WANT a/é/x.html
+	WANT a/z/x.html
+M
+($out, $err, $ok) = list('-l', '-s', '-F', 'SORT');
+ok($ok && $err eq '', '-s') or diag $err;
+my @want = ('Z.html', 'a.html', 'z.html', 'é.html', 'a/x.html', 'b/a.html',
+	'a/b/c.html', 'a/z/x.html', 'a/é/x.html');
+is($out, join('', map { Encode::encode('UTF-8', "$_\n") } @want),
+	'... fewer segments first, then the first segment that differs, by code point');
+($out, $err, $ok) = list('-C', 'filesys:ISO-8859-1', '-l', '-s', '-F', 'SORT');
+is($out, join('', map { Encode::encode('ISO-8859-1', "$_\n") } @want), '... in any encoding');
+{
+	local $ENV{LC_ALL} = 'en_US.UTF-8';
+	($out, $err, $ok) = list('-l', '-s', '-F', 'SORT');
+	is($out, join('', map { Encode::encode('UTF-8', "$_\n") } @want), '... and in any locale');
+}
+($out, $err, $ok) = list('-l', '-F', 'SORT');
+like($out, qr/\Ab\/a\.html\nz\.html\n/, 'without -s, the order of the manifest');
+bad(qr/-s is not permitted in mode -g \(make\)/, '-s elsewhere', '-g', '-s');

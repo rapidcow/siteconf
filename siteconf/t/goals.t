@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 37;
+use Test::More tests => 39;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -121,5 +121,11 @@ unlike(slurp('MY/MANIFEST'), qr/^MAKE small/m, 'the resolved manifest has the se
 ($status, $out) = run('-g', '-t', 'NEED:broken');
 isnt($status, 0, 'CLI NEED still fails on missing requirements');
 like($out, qr/goal `broken' NEEDs `missing'/, 'CLI says why');
+
+# -t '' (as -t "$DEFAULT" says, if it is empty) is the first goal, whatever the generator
+for my $G (qw( make gmake )) {
+	($status, $out) = run('-g', '-q', '-G', $G, '-t', 'small', '-t', '');
+	like($out, qr/goal `broken' NEEDs `missing'/, "-G $G -t '': the first goal, broken");
+}
 
 done_testing;

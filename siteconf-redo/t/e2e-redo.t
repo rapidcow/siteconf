@@ -21,8 +21,12 @@ sub redo_builds
 {
 	my $dir = tempdir(CLEANUP => 1);
 	open my $fh, '>', "$dir/probe.do" or die "probe.do: $!";
-	print $fh "echo ok >\"\$3\"\n";
+	print $fh <<\probe;
+#!/bin/sh
+echo ok >"$3";
+probe
 	close $fh or die "probe.do: $!";
+	chmod 0777 & ~umask, "$dir/probe.do" or die "probe.do: $!";
 	(my $q = $dir) =~ s/'/'\\''/g;
 	system("cd '$q' && $redo probe >/dev/null 2>&1") == 0 or return 0;
 	open $fh, '<', "$dir/probe" or return 0;

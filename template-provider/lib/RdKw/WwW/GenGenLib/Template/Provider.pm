@@ -445,7 +445,7 @@ sub access
 =item B<load> I<name>
 
 As in L<Template::Provider>, as the options say (C<INSERT> goes
-through B<load>, the rest through L</fetch>).  A name we do not find
+through B<load>, the rest through B<fetch>).  A name we do not find
 is declined, for the next provider.
 
 =cut

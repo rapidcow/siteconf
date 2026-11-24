@@ -35,13 +35,17 @@ and for the arguments to F</bin/sh>. By default each recipe line runs in a fresh
 =item B<options>
 
 By default recipes use C<sh -c> with textual shell quoting.
-C<-Srecipe_mode=cmdline> passes each C<:Q> expansion as a shell argument.
-Use C<:Q> at an unquoted shell word position in this mode. The shell sees
-the recipe arguments as its positional parameters. C<-Sarg_prefix=arg>
-first saves them as C<arg1>, C<arg2>, etc., then shifts them away.
-Choose a prefix the recipe does not use.
+C<-Smode=cmdline> passes each C<:Q> expansion as a shell argument.
+Use C<:Q> at an unquoted shell word position in this mode. A simple command uses
+positional parameters directly. For any command outside the exec parser's
+literal-word syntax, the shell first saves the arguments in C<arg1>,
+C<arg2>, etc., then shifts them away. The recipe can use C<set --> freely.
+C<-Sarg_prefix=name> changes the variable prefix. Omitting the option or passing bare
+C<-Sarg_prefix> selects C<arg>. Explicit C<-Sarg_prefix=> disables saving
+and shifting, so each expansion uses its positional parameter directly.
+Choose a nonempty prefix the recipe does not use.
 
-C<-Srecipe_mode=exec> runs a simple external command directly. Commands outside
+C<-Smode=exec> runs a simple external command directly. Commands outside
 the supported literal-word syntax run through the default shell form.
 
 In all modes, a leading C<cd [--] dir &&> with a literal directory
@@ -72,7 +76,7 @@ Return the shell words for running doit in the build directory.
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { qw(recipe_mode arg_prefix no_chdir clean purge) }
+sub options { qw(mode arg_prefix no_chdir clean purge) }
 sub default_output { 'dodo.py' }
 
 sub _literal
@@ -146,6 +150,7 @@ sub _action
 	unless ($argv) {
 		my @args;
 		if ($mode eq 'cmdline') {
+			$prefix = '' if _exec($line, $word);
 			$line =~ s/\0(\d+)\0/
 				push(@args, $word->[$1]);
 				'"$' . '{' . $prefix . scalar(@args) . '}"'
@@ -195,15 +200,16 @@ sub emit
 		if defined $file && $file !~ /\A[^.]+\.py\z/;
 	my $out = "# -*- coding: utf-8 -*-\n" . RdKw::WwW::SiteConf::header_comment($plan);
 	my $opt = $plan->{opt} || {};
-	my $mode = exists $opt->{recipe_mode} ? ($opt->{recipe_mode} || '') : 'shell';
+	my $mode = exists $opt->{mode} ? ($opt->{mode} || '') : 'shell';
 	die _status 0, tagmsg(E => diag(__("unknown recipe mode %q"), $mode))
 		unless $mode =~ /\A(?:cmdline|exec|shell)\z/;
 	my $no_chdir = exists $opt->{no_chdir} && (!defined $opt->{no_chdir} || $opt->{no_chdir} ne '0');
 	my $prefix = $opt->{arg_prefix};
-	if (exists $opt->{arg_prefix}) {
-		defined $prefix && $prefix =~ /\A[A-Za-z_][A-Za-z0-9_]*\z/ && $mode eq 'cmdline'
-			or die _status 0, tagmsg(E => diag(__("-Sarg_prefix needs a shell identifier and -Srecipe_mode=cmdline")));
+	if (defined $prefix && length $prefix) {
+		$prefix =~ /\A[A-Za-z_][A-Za-z0-9_]*\z/ && $mode eq 'cmdline'
+			or die _status 0, tagmsg(E => diag(__("-Sarg_prefix needs a shell identifier and -Smode=cmdline")));
 	}
+	$prefix = 'arg' unless defined $prefix;
 	my @goal = @{ $plan->{goals} };
 	my @default = @goal ? _goal($goal[0]{name}) : ();
 	$out .= "\nimport errno\nimport os\nimport sys\nfrom doit.action import CmdAction\nfrom doit.tools import config_changed\n\n";
@@ -237,7 +243,7 @@ PY
 	for my $f (@{ $plan->{order} }) {
 		my $node = $plan->{node}{$f};
 		my $target = $node->{bpath};
-		my @cmd = _commands($node->{recipe}, $mode, defined $prefix ? $prefix : '', $no_chdir);
+		my @cmd = _commands($node->{recipe}, $mode, $prefix, $no_chdir);
 		die _status 0, tagmsg(E => diag(__("%#q: no recipe to make it"), $target)) unless @cmd;
 		my @deps = grep { !$marker{$_} } @{ $node->{deps} };
 		$out .= '    yield _file(' . _literal(_task_name('file', $target)) . ', '

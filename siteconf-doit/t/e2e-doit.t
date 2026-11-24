@@ -14,7 +14,7 @@ run('siteconf -i', $^X, $script, qw(-i -P web -Osite_url=https://example.test
 	-SB=build -q -MRdKw::WwW::GenLib=0));
 mkdir 'build' or die $!;
 run('./configure', $^X, './configure', '-q');
-run('generate', $^X, $script, qw(-g -q -G doit -B build -t all -t basic -o custom.py -Srecipe_mode=exec -Spurge), "'-Sclean=clean-&'");
+run('generate', $^X, $script, qw(-g -q -G doit -B build -t all -t basic -o custom.py -Smode=exec -Spurge), "'-Sclean=clean-&'");
 chdir 'build' or die $!;
 run('subset', $doit, qw(run -f custom.py basic));
 ok(-f 'site/sub/index.html', 'nested target built');

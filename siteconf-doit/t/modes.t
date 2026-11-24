@@ -20,13 +20,14 @@ print $src "data";
 close $src or die $!;
 my $installed = system('doit --version >/dev/null 2>&1') == 0;
 for my $mode (qw(exec cmdline prefix)) {
-	$plan->{opt} = $mode eq 'prefix' ? { recipe_mode => 'cmdline', arg_prefix => 'arg' } : { recipe_mode => $mode };
+	$plan->{opt} = $mode eq 'prefix' ? { mode => 'cmdline', arg_prefix => 'saved' } : { mode => $mode };
+	$recipe[2][1] = ' && cd sub && set -- changed; cp ' if $mode eq 'prefix';
 	my ($file) = $backend->emit($plan, "$mode.py");
 	my $text = $file->[1];
 	if ($mode eq 'exec') {
 		like($text, qr/\['cp', 'source \$', '\.\.\/target'\], '\.\/sub'/, 'direct argv and cwd');
 	} elsif ($mode eq 'prefix') {
-		like($text, qr/arg2=\$\{2\}; shift 2; cp "\$\{arg1\}"/, 'save arguments and shift');
+		like($text, qr/saved2=\$\{2\}; shift 2; set -- changed; cp "\$\{saved1\}"/, 'save arguments and shift');
 	} else {
 		like($text, qr/cp "\$\{1\}" "\$\{2\}".*'sh', 'source \$'.*'\.\/sub'/,
 			'shell positional args and argv zero');
@@ -49,17 +50,28 @@ SKIP: {
 	ok(!-e 'target', 'sweep continued after error');
 }
 @recipe = ([text => 'cat '], [word => 'input file'], [text => ' > target']);
-$plan->{opt} = { recipe_mode => 'exec' };
+$plan->{opt} = { mode => 'exec' };
 my ($fallback) = $backend->emit($plan, 'dodo.py');
 like($fallback->[1], qr{\['/bin/sh', '-c', .* > target', 'sh'\]}, 'exec fallback keeps textual quoting');
 @recipe = ([text => 'cd -- '], [word => 'space dir'], [text => '/sub && cat input > target']);
 for my $mode (qw(shell exec cmdline)) {
-	$plan->{opt} = {recipe_mode => $mode};
+	$plan->{opt} = {mode => $mode};
 	my ($out) = $backend->emit($plan, 'dodo.py');
 	like($out->[1], qr/'cat input > target', 'sh'\], 'space dir\/sub'/, "cwd for redirection in $mode");
 	$plan->{opt}{no_chdir} = undef;
 	($out) = $backend->emit($plan, 'dodo.py');
-	like($out->[1], qr/'-c', 'cd -- .*cat input > target'.*\], None/, "explicit cd in $mode");
+	like($out->[1], qr/'-c', '.*cd -- .*cat input > target'.*\], None/, "explicit cd in $mode");
 }
+@recipe = ([text => 'set -- changed; cat '], [word => 'source $']);
+for my $opt ({}, {arg_prefix => undef}) {
+	$plan->{opt} = {mode => 'cmdline', %$opt};
+	my ($out) = $backend->emit($plan, 'dodo.py');
+	like($out->[1], qr/arg1=\$\{1\}; shift 1; set -- changed; cat "\$\{arg1\}"/,
+		'default prefix survives set --');
+}
+$plan->{opt} = {mode => 'cmdline', arg_prefix => ''};
+my ($unsaved) = $backend->emit($plan, 'dodo.py');
+like($unsaved->[1], qr/'-c', 'set -- changed; cat "\$\{1\}"', 'sh', 'source \$'/,
+	'explicit empty prefix leaves arguments positional, without saving or shifting');
 chdir $cwd or die $!;
 done_testing();

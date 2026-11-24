@@ -416,7 +416,7 @@ C<-072> for a colon.  C<-012> is the default.
 
 Added in 0.0300.
 
-=item B<-s>
+=item B<-s>, B<--sort>
 
 With C<-l>, sort the names by their path segments (split at C</>).
 A name with fewer segments comes first; two with as many are ordered by
@@ -495,8 +495,8 @@ my $usage = do {
 		. "$pad         [-Sopt=val ...] [-Dvar[=val] ...] [-Ovar[=val] ...]",
 		"-g [-A] [-B builddir] [-G generator] [-F manifest] [-R rulebook]\n"
 		. "$pad         [-o file] [-t [NEED:|WANT:]goal ...] [-Sopt[=val] ...]",
-		"-l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]]\n"
-		. "$pad         [-s]",
+		"-l [-B builddir] [-F manifest] [-s] [-0[octal]]\n"
+		. "$pad         [-t [goal][:NEED|:WANT] ...]",
 		"-V [-V [-V]]";
 };
 
@@ -553,12 +553,12 @@ GetOptions(
 	't=s'      => $opt{t},
 	# (-0 alone is a NUL, -072 a colon: an octal number, as perl's -0 takes)
 	'0:s'      => \$opt{0},
-	's'        => \$opt{s},
+	's|sort'   => \$opt{s},
 	'h|help'   => sub { print $usage; exit 0 },
 	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
 	'A'        => \$opt{A},
-	'f'        => \$opt{f},
+	'f|force'  => \$opt{f},
 	# Reject misplaced -C arguments
 	'C:s'      => sub { die $cs->tagmsg($prog => __("too late to -C now.")); },
 ) or die $usage;

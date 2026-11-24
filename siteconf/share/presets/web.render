@@ -2,7 +2,7 @@
 # HAVE: @PATH@
 # NEED: ${B}/MY/option.mk
 #
-# (Note that we do not "NEED" MY/config.mk; doing so
+# (Note that we do not ``NEED'' MY/config.mk; doing so
 # would declare an undesirable dependency edge that
 # undermines the very point of separating these two.
 #
@@ -11,12 +11,11 @@
 #
 # @NAME@ - Template Toolkit webpage renderer
 #
-# To invoke this, add to your Makefile.in (or whatever
-# you set your "R" path to):
+# To invoke this, add to your Makefile.in:
 #
 #    resource/location.html: @PATH@
-#       cd -- $A && ${^X} @PATH_Q@ -B $B \
-#          -- $a/${.IMPSRC} $B/$b/${.TARGET}
+#       cd -- ${A:Q} && ${^X:Q} @PATH_Q@ -B ${B:Q} \
+#          -- ${a:Q}/${.IMPSRC:Q} ${B:Q}/${b:Q}/${.TARGET}
 #
 # (Multiple files are okay!)
 #

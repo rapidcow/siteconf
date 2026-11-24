@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 262;
+use Test::More tests => 255;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -769,12 +769,12 @@ MSG
 	$dir = project({ MANIFEST => $manifest, 'html/a.html' => lines( NEED => [ 'x$' ] ) });
 	ok(!eval { plan_of($dir) }, 'a lone $ is still stray');
 	like($@, qr/stray \$ in `x\$'/, '... and says so');
-	require RdKw::WwW::SiteConf::GMake;
+	require RdKw::WwW::SiteConf::Backend::Gmake;
 	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
-	like(eval { RdKw::WwW::SiteConf::GMake->_emit(\%emit) },
+	like(eval { RdKw::WwW::SiteConf::Backend::Gmake->_text(\%emit) },
 		qr/^site\/a\.html: html\/a\.html t\$\$ool d\$\$\/x d\$\$\/y site\/\.ok$/m,
 		'... and $$ to GNU Make') or diag $@;
-	ok(!eval { RdKw::WwW::SiteConf::Make->_emit(\%emit) },
+	ok(!eval { RdKw::WwW::SiteConf::Backend::Make->_text(\%emit) },
 		'... but no $ to Make (bmake reads $$ twice)');
 	like($@, qr/^E: make cannot name `t\$ool' \(with inescapable `\$'\).*GNU Make can/s,
 		'... and says so, and who can');
@@ -794,8 +794,8 @@ MSG
 		'... but a lone $ is a tree we do not know') or diag $@;
 }
 
-# --- a `:' in a name, as in man/3/File::Spec.html: GNU Make and ninja
-# escape it, and make cannot
+# --- a `:' in a name, as in man/3/File::Spec.html: GNU Make escapes
+# it, and make cannot
 {
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED man/3/\${\"File::Spec\"}.html\n",
@@ -808,13 +808,10 @@ MSG
 		[ 'site/man/3/File::Spec.pod', 'site/man/3/.ok' ],
 		'a colon in a MANIFEST entry, a target and a prerequisite') or diag $@;
 	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
-	like(eval { RdKw::WwW::SiteConf::GMake->_emit(\%emit) },
+	like(eval { RdKw::WwW::SiteConf::Backend::Gmake->_text(\%emit) },
 		qr/^site\/man\/3\/File\\:\\:Spec\.html: site\/man\/3\/File\\:\\:Spec\.pod /m,
 		'... is \\: to GNU Make') or diag $@;
-	require RdKw::WwW::SiteConf::Ninja;
-	like(eval { RdKw::WwW::SiteConf::Ninja->_emit(\%emit) },
-		qr/^build site\/man\/3\/File\$:\$:Spec\.html: /m, '... and $: to ninja') or diag $@;
-	ok(!eval { RdKw::WwW::SiteConf::Make->_emit(\%emit) }
+	ok(!eval { RdKw::WwW::SiteConf::Backend::Make->_text(\%emit) }
 		&& $@ =~ /make cannot name `site\/man\/3\/File::Spec\.(?:html|pod)' \(with inescapable `:'\)/,
 		'... and make cannot') or diag $@;
 }
@@ -822,7 +819,7 @@ MSG
 # --- ${U+hex}: a character, by its code point, in headers too
 SKIP: {
 	my $why = fs_surprise("d\xf0\x9f\x98\x80", tempdir(CLEANUP => 1));
-	skip "file system: $why", 9 if defined $why;
+	skip "file system: $why", 8 if defined $why;
 	# The fixture below uses UTF-8 bytes for the file name, whatever
 	# encoding the host locale uses for its own file names.
 	local $RdKw::I18N::CodeSets::LOCALE =
@@ -842,18 +839,14 @@ SKIP: {
 			or diag $@;
 	}
 	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
-	# _emit spells names as the file system does.  Here that is UTF-8.
-	my $emit = sub { my $t = eval { $_[0]->_emit(\%emit) }; defined $t ? Encode::decode('UTF-8', $t) : undef };
-	like($emit->('RdKw::WwW::SiteConf::GMake'),
+	# _text spells names as the file system does.  Here that is UTF-8.
+	my $emit = sub { my $t = eval { $_[0]->_text(\%emit) }; defined $t ? Encode::decode('UTF-8', $t) : undef };
+	like($emit->('RdKw::WwW::SiteConf::Backend::Gmake'),
 		qr/^site\/a\.html: html\/a\.html x d\\ x d\\#h d\x{1F600} d\/y site\/\.ok$/m,
 		'GNU Make: escaped') or diag $@;
-	ok(!eval { RdKw::WwW::SiteConf::Make->_emit(\%emit) }
+	ok(!eval { RdKw::WwW::SiteConf::Backend::Make->_text(\%emit) }
 		&& $@ =~ /make cannot name `d x' \(with inescapable U\+0020\).*GNU Make can/s,
 		'make: a space cannot be') or diag $@;
-	require RdKw::WwW::SiteConf::Ninja;
-	like($emit->('RdKw::WwW::SiteConf::Ninja'),
-		qr/^build site\/a\.html: rule1 html\/a\.html \| x d\$ x d#h d\x{1F600} d\/y \|\| site\/\.ok$/m,
-		'ninja: escaped') or diag $@;
 }
 
 # --- ... and in Makefile.in, as render's own example has it
@@ -912,8 +905,7 @@ SKIP: {
 
 # --- what each generator cannot name, it says so
 {
-	require RdKw::WwW::SiteConf::GMake;
-	require RdKw::WwW::SiteConf::Ninja;
+	require RdKw::WwW::SiteConf::Backend::Gmake;
 	my %gmake = (
 		'a b' => 'a\\ b', "a\tb" => "a\\\tb", 'a#b' => 'a\\#b', 'a:b' => 'a\\:b',
 		'a$b' => 'a$$b', 'a*b' => 'a[*]b', 'a?b' => 'a[?]b',
@@ -925,46 +917,39 @@ SKIP: {
 		q(a<b>"c'd`e&f{g}) => q(a<b>"c'd`e&f{g}), 'a\\%b' => 'a\\%b', 'a&' => 'a&', "a\\\tb" => "a\\\\\\\tb",
 	);
 	for my $name (sort keys %gmake) {
-		is(eval { RdKw::WwW::SiteConf::GMake->_name($name) }, $gmake{$name}, "GNU Make: `" . escape_dep($name) . "'")
+		is(eval { RdKw::WwW::SiteConf::Backend::Gmake->_name($name) }, $gmake{$name}, "GNU Make: `" . escape_dep($name) . "'")
 			or diag $@;
 	}
 	for my $where (qw( target order )) {
-		is(eval { RdKw::WwW::SiteConf::GMake->_name('a b;c|d\\|e', $where) }, 'a\\ b\\\\\\;c|d\\|e',
+		is(eval { RdKw::WwW::SiteConf::Backend::Gmake->_name('a b;c|d\\|e', $where) }, 'a\\ b\\\\\\;c|d\\|e',
 			"GNU Make: a `|' is as it is ($where)") or diag $@;
 	}
 	# a `%' in a target (2k+1 backslashes for k), and a space after a `&'
 	my %target = ('a%b' => 'a\\%b', 'a\\%b' => 'a\\\\\\%b', 'a&' => 'a& ', 'a\\&' => 'a\\& ', 'a&b' => 'a&b');
 	for my $name (sort keys %target) {
-		is(eval { RdKw::WwW::SiteConf::GMake->_name($name, 'target') }, $target{$name},
+		is(eval { RdKw::WwW::SiteConf::Backend::Gmake->_name($name, 'target') }, $target{$name},
 			"GNU Make: target `" . escape_dep($name) . "'") or diag $@;
 	}
 	for my $name ("a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a=b', 'a\\', 'a(b)', 'b)') {
-		ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name($name) }
+		ok(!defined eval { RdKw::WwW::SiteConf::Backend::Gmake->_name($name) }
 			&& $@ =~ /\AE: GNU Make cannot name/, "GNU Make cannot: `" . escape_dep($name) . "'");
 	}
-	ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name("a\tb", 'target') }
+	ok(!defined eval { RdKw::WwW::SiteConf::Backend::Gmake->_name("a\tb", 'target') }
 		&& $@ =~ /\AE: GNU Make cannot name .* U\+0009/, 'GNU Make cannot: a tab in a target');
 	for my $name ('a#b', 'a%b', 'a\\b', q(a"b), q(a'b), 'a`b', 'a<b', 'a>b', 'a&b', 'a{b', 'a(b') {
-		ok(!defined eval { RdKw::WwW::SiteConf::Make->_name($name, 'target') }
+		ok(!defined eval { RdKw::WwW::SiteConf::Backend::Make->_name($name, 'target') }
 			&& $@ =~ /\AE: make cannot name .*GNU Make can/s, "make cannot, GNU Make can: target `" . escape_dep($name) . "'");
 	}
 	{
 		# Spelled as the file system does.  Here that is UTF-8.
 		local $RdKw::I18N::CodeSets::LOCALE =
 			RdKw::I18N::CodeSets->locale->new(filesys => 'UTF-8');
-		is(RdKw::WwW::SiteConf::Make->_name("a+b,c\x{e9}\x{a0}%\\d"),
+		is(RdKw::WwW::SiteConf::Backend::Make->_name("a+b,c\x{e9}\x{a0}%\\d"),
 			Encode::encode('UTF-8', "a+b,c\x{e9}\x{a0}%\\d"),
 			'make: what needs no escape is as it is');
-		is(RdKw::WwW::SiteConf::Make->_name(q(a<b>"c'd`e&f)), q(a<b>"c'd`e&f),
+		is(RdKw::WwW::SiteConf::Backend::Make->_name(q(a<b>"c'd`e&f)), q(a<b>"c'd`e&f),
 			'... in a prerequisite, quotes, <> and & too');
 	}
-	ok(!defined eval { RdKw::WwW::SiteConf::Make->_name('a=b') }
+	ok(!defined eval { RdKw::WwW::SiteConf::Backend::Make->_name('a=b') }
 		&& $@ =~ /make cannot name `a=b' \(with inescapable `='\)$/, '... and there is no -G gmake for some');
-	for my $name ("a\nb", "a\rb", "a\x{2028}b") {
-		ok(!defined eval { RdKw::WwW::SiteConf::Ninja::_path($name) }
-			&& $@ =~ /\AE: ninja cannot name/, "ninja cannot: `" . escape_dep($name) . "'");
-	}
-	is(RdKw::WwW::SiteConf::Ninja::_path("a b:c\$d\te#f|g"), "a\$ b\$:c\$\$d\te#f\${pipe}g", 'ninja: escaped');
-	is(RdKw::WwW::SiteConf::Ninja::_path(q(a%b\\c<d>"e'f`g&h(i){j})), q(a%b\\c<d>"e'f`g&h(i){j}),
-		'ninja: the rest as they are');
 }

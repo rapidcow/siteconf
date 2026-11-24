@@ -102,6 +102,8 @@ MAKE_FRAG
 	$text .= <<'MAKE_FRAG';
 
 SITECONF = ../siteconf
+SITECONF_NINJA = ../siteconf-ninja
+SITECONF_REDO = ../siteconf-redo
 GENLIB = ../genlib
 GENGENLIB = ../gengenlib
 PROVIDER = ../template-provider
@@ -115,6 +117,9 @@ pot :
 		$(SITECONF)/script/siteconf \
 		$(SITECONF)/lib/RdKw/WwW/SiteConf.pm \
 		$(SITECONF)/lib/RdKw/WwW/SiteConf/*.pm \
+		$(SITECONF)/lib/RdKw/WwW/SiteConf/Backend/*.pm \
+		$(SITECONF_NINJA)/lib/RdKw/WwW/SiteConf/Backend/Ninja.pm \
+		$(SITECONF_REDO)/lib/RdKw/WwW/SiteConf/Backend/Redo.pm \
 		$(SITECONF)/share/configure.in \
 		$(SITECONF)/share/presets/*.config \
 		$(SITECONF)/share/presets/*.render \

@@ -4,10 +4,10 @@ Makefile.PL
 README
 lib/RdKw/WwW/SiteConf.pm
 lib/RdKw/WwW/SiteConf/Configure.pod
-lib/RdKw/WwW/SiteConf/GMake.pm
-lib/RdKw/WwW/SiteConf/Make.pm
+lib/RdKw/WwW/SiteConf/Backend/Bmake.pm
+lib/RdKw/WwW/SiteConf/Backend/Gmake.pm
+lib/RdKw/WwW/SiteConf/Backend/Make.pm
 lib/RdKw/WwW/SiteConf/Modifiers.pm
-lib/RdKw/WwW/SiteConf/Ninja.pm
 script/siteconf
 share/configure.in
 share/presets/tem.config
@@ -18,12 +18,12 @@ t/00-load.t
 t/bytes.t
 t/clean.t
 t/configure.t
+t/e2e-bmake.t
 t/e2e-dollar.t
 t/e2e-glob.t
 t/diag.t
 t/e2e-make.t
 t/e2e-names.t
-t/e2e-ninja.t
 t/general.t
 t/goals.t
 t/strict.t
@@ -34,7 +34,6 @@ t/init.t
 t/list.t
 t/manifest.t
 t/modifiers.t
-t/ninja.t
 t/options.t
 t/render.t
 t/lib/E2E.pm

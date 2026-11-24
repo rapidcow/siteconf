@@ -1,6 +1,6 @@
 #!perl
 #
-# t/e2e-dollar.t - siteconf -g, then make, GNU make or ninja, for a
+# t/e2e-dollar.t - siteconf -g, then make or GNU make, for a
 # recipe that hands the shell a :Q'd value with `$' in it: the `$' is
 # the shell's, and no tool may take it for its own
 
@@ -25,9 +25,7 @@ my ($gmake) = grep {
 	my $v = `$_ --version 2>/dev/null`;
 	$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > 3 || $1 == 3 && $2 >= 81);
 } grep { defined } $ENV{GMAKE}, 'gmake', 'make';
-my $ninja = $ENV{NINJA} || 'ninja';
-$ninja = undef if system("$ninja --version >/dev/null 2>&1");
-plan tests => 9;
+plan tests => 6;
 
 my $X = q{d$llar $(x) ${y} $$ $ '$' "$" a|b `x`};
 
@@ -82,7 +80,3 @@ SKIP: {
 	builds('gmake', $gmake);
 }
 
-SKIP: {
-	skip 'no ninja', 3 unless $ninja;
-	builds('ninja', $ninja);
-}

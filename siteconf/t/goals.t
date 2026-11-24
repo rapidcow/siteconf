@@ -110,9 +110,9 @@ unlike(slurp('Makefile'), qr/^other:/m, 'unselected goal omitted');
 like(slurp('Makefile'), qr/-t WANT:broken -t small/, 'generation header preserves selectors');
 is_deeply([read_manifest({}, "$dir/MY/MANIFEST")->needed('broken')], ['present'],
 	'resolved manifest contains only buildable files');
-($status, $out) = run('-g', '-q', '-G', 'ninja', '-t', 'other', '-t', 'WANT:broken');
-is($status, 0, 'selection works with Ninja too') or diag $out;
-like(slurp('build.ninja'), qr/^default other$/m, 'first selected goal is the default');
+($status, $out) = run('-g', '-q', '-G', 'gmake', '-t', 'other', '-t', 'WANT:broken');
+is($status, 0, 'selection works with GNU Make too') or diag $out;
+like(slurp('Makefile'), qr/^\.PHONY: [^\n]*\nother:/m, 'first selected goal is the default');
 unlike(slurp('MY/MANIFEST'), qr/^MAKE small/m, 'the resolved manifest has the selected goals only');
 ($status, $out) = run('-g', '-t', 'NEED:broken');
 isnt($status, 0, 'CLI NEED still fails on missing requirements');

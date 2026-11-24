@@ -1,0 +1,10 @@
+WwW-SiteConf-Redo
+
+The `redo' generator of siteconf: `siteconf -g -G redo' writes a .do
+file for each target and goal, for redo.  See
+RdKw::WwW::SiteConf::Backend::Redo.
+
+It is released with WwW-SiteConf, at the same version, and needs
+that version.
+
+    perl Makefile.PL && make && make test && make install

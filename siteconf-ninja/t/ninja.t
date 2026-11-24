@@ -7,9 +7,9 @@ use warnings;
 use Test::More tests => 14;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
-use RdKw::WwW::SiteConf::Ninja;
+use RdKw::WwW::SiteConf::Backend::Ninja;
 
-sub cmd { RdKw::WwW::SiteConf::Ninja::_command($_[0]) }
+sub cmd { RdKw::WwW::SiteConf::Backend::Ninja::_command($_[0]) }
 
 is(cmd("\tcp a b\n"), '( cp a b )', 'one line');
 is(cmd("\tcd x\n\tls\n"), '( cd x ) && ( ls )',
@@ -29,13 +29,13 @@ my $plan = {
 	order => ['x'], dirs => [],
 	node => { x => { bpath => 'site/x', recipe => [], deps => ['in/x'] } },
 };
-ok(!eval { RdKw::WwW::SiteConf::Ninja->_emit($plan); 1 }, 'no recipe, no build');
+ok(!eval { RdKw::WwW::SiteConf::Backend::Ninja->_text($plan); 1 }, 'no recipe, no build');
 like($@, qr/no recipe/, '... says so');
 
 $plan->{node}{x}{recipe} = [ [ text => "\tcp \$< \$\@\n", 'x' ] ];
 $plan->{node}{x}{deps} = [ 'in/x', 'a b', 'site/.ok' ];
 $plan->{dirs} = [ { dir => 'site', marker => 'site/.ok', deps => [] } ];
-my $text = RdKw::WwW::SiteConf::Ninja->_emit($plan);
+my $text = RdKw::WwW::SiteConf::Backend::Ninja->_text($plan);
 like($text, qr/^build site\/x: rule1 in\/x \| a\$ b \|\| site\/\.ok$/m,
 	'input, implicit (escaped), order-only');
 like($text, qr/^default all$/m, 'default goal');
@@ -43,6 +43,6 @@ like($text, qr/^build all: phony site\/x$/m, 'goal');
 
 $plan->{node}{x}{nosrc} = 1;
 $plan->{node}{x}{deps} = [ 'a b', 'site/.ok' ];
-$text = RdKw::WwW::SiteConf::Ninja->_emit($plan);
+$text = RdKw::WwW::SiteConf::Backend::Ninja->_text($plan);
 like($text, qr/^build site\/x: rule1 \| a\$ b \|\| site\/\.ok$/m,
 	'no source, no input: the first dependency is not one');

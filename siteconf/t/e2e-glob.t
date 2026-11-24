@@ -1,6 +1,6 @@
 #!perl
 #
-# t/e2e-glob.t - siteconf -g, then GNU make or ninja, for a source and a
+# t/e2e-glob.t - siteconf -g, then GNU make, for a source and a
 # target of Makefile.in that are named like a dynamic route:
 # feed/[year]/index.html.  A glob would match the decoy files too.
 
@@ -23,9 +23,7 @@ my ($gmake) = grep {
 	my $v = `$_ --version 2>/dev/null`;
 	$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > 3 || $1 == 3 && $2 > 81);
 } grep { defined } $ENV{GMAKE}, 'gmake', 'make';
-my $ninja = $ENV{NINJA} || 'ninja';
-$ninja = undef if system("$ninja --version >/dev/null 2>&1");
-plan tests => 17;
+plan tests => 10;
 
 sub run
 {
@@ -90,10 +88,6 @@ sub builds
 SKIP: {
 	skip 'no GNU Make newer than 3.81', 7 unless $gmake;
 	builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] });
-}
-SKIP: {
-	skip 'no ninja', 7 unless $ninja;
-	builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
 }
 {
 	my $dir = project();

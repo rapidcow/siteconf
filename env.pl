@@ -15,6 +15,8 @@ my @modules = qw(
 	genlib
 	siteconf
 	siteconf-l10n
+	siteconf-ninja
+	siteconf-redo
 	template-provider
 	textdomain
 );

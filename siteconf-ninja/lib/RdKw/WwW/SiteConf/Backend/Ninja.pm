@@ -1,26 +1,30 @@
-package RdKw::WwW::SiteConf::Ninja;
+package RdKw::WwW::SiteConf::Backend::Ninja;
 
 use 5.008;
 use strict;
 use warnings;
 
-use RdKw::WwW::SiteConf ();
-our $VERSION = $RdKw::WwW::SiteConf::VERSION;
+use version;
+use RdKw::WwW::SiteConf 0.03_00 ();
+
+# (released with siteconf, at its version)
+our $VERSION = '0.03_00';
+$VERSION = version->parse( $VERSION );
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Ninja - build.ninja backend for siteconf
+RdKw::WwW::SiteConf::Backend::Ninja - build.ninja backend for siteconf
 
 =head1 SYNOPSIS
 
-    my $text = RdKw::WwW::SiteConf::Ninja->_emit($plan);
+    $siteconf->generate(q(ninja));   # siteconf -g -G ninja
 
 =head1 DESCRIPTION
 
-I<$plan> is what C<< RdKw::WwW::SiteConf->plan >> returns, with a
-C<prog> to credit in the header.  Each goal is a C<phony> build
-statement, the first of which is the C<default>.  Every file gets a
-rule of its own (C<rule1>, C<rule2>, ...), holding the recipe from
+The generator C<ninja> of L<RdKw::WwW::SiteConf/generate>.  Each
+goal is a C<phony> build statement, the first of which is the
+C<default>.  Every file gets a rule of its own (C<rule1>, C<rule2>,
+...), holding the recipe from
 F<Makefile.in>, since by now it has been spelled out for that very
 file; the sources and the first dependency are the explicit inputs,
 the rest are implicit, and the directory marker is order-only.
@@ -37,11 +41,37 @@ F<build.ninja> sets to C<|>.  Any other character is as it is, a tab
 and a C<#> included.  A vertical space (a line break, CR, form feed,
 ...) cannot be named, and is an error.
 
-C<_emit> returns bytes, as L<RdKw::WwW::SiteConf::Make> does.  Ninja
-reads F<build.ninja> as bytes, so every name and every recipe is
+F<build.ninja> is bytes, as the Makefile of
+L<RdKw::WwW::SiteConf::Backend::Make> is.  Ninja reads F<build.ninja> as bytes, so every name and every recipe is
 spelled as the file system spells it: B<filesys> of
 L<RdKw::I18N::CodeSets>.  A name the file system cannot spell is an
 error.
+
+=head2 Methods
+
+These are what L<RdKw::WwW::SiteConf/generate> asks of a generator.
+They change with siteconf: they are not a stable interface.
+
+=over
+
+=item B<options>
+
+None: C<ninja -t clean> cleans.
+
+=item B<default_output>
+
+F<build.ninja>.
+
+=item B<emit> I<plan>, I<file>
+
+F<build.ninja>, as C<[ >I<file>C<, >I<bytes>C< ]>.
+
+=item B<build_command> I<generator>, I<builddir>, I<file>, I<goal>
+
+C<ninja>, with C<-C> I<builddir> unless it is C<.>, C<-f> I<file> if
+it is defined, and I<goal> if it is.
+
+=back
 
 =cut
 
@@ -57,10 +87,22 @@ sub _fs { RdKw::WwW::SiteConf::fs_text($_[0]) }
 
 # Every string from the plan goes through _fs, so the result is bytes
 # throughout.  Make.pm says why.
-# (-S has nothing for ninja: `ninja -t clean' cleans)
-sub _options { () }
+sub options { () }
 
-sub _emit
+sub default_output { q(build.ninja) }
+
+sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ] }
+
+sub build_command
+{
+	my ($class, $prog, $B, $file, $goal) = @_;
+	my $q = \&RdKw::WwW::SiteConf::shell_quote;
+	($prog, ($B eq q(.) ? () : (q(-C), $q->($B))),
+		(defined $file ? (q(-f), $q->($file)) : ()),
+		(defined $goal ? $q->($goal) : ()));
+}
+
+sub _text
 {
 	my ($class, $plan) = @_;
 	my @goal = @{ $plan->{goals} };
@@ -152,38 +194,11 @@ sub _escape { (my $b = $_[0]) =~ s/([ :\$])/\$$1/g; $b }
 # make's recipe, in make's words, as one command in ninja's.  A lone
 # `$' in it is for make, and we do not have any (`$$' stays `$$': it is
 # `$' to the shell either way, and a `$' to ninja is written `$$').
+# Each command is grouped, so that `|| true' is not for what came before.
 sub _command
 {
-	my ($recipe) = @_;
-	my @logical;
-	my $joining;
-	for my $line (split /\n/, $recipe) {
-		if ($joining) {
-			# make drops the tab of a continuation line
-			$line =~ s/^\t//;
-			$logical[-1] .= $line;
-		} else {
-			$line =~ s/^\t//;
-			push @logical, $line;
-		}
-		# The backslash goes, and the newline with it, as the shell does.
-		$joining = $logical[-1] =~ s/\\\z//;
-	}
-
-	my @cmd;
-	for my $line (@logical) {
-		next if $line =~ /\A[\t\n\cK\f\r ]*\z/;
-		my $ignore = 0;
-		# @ is for make to not echo, - is to not mind
-		while ($line =~ s/\A[\t\n\cK\f\r ]*([-@+])[\t\n\cK\f\r ]*//) {
-			$ignore = 1 if $1 eq '-';
-		}
-		$line =~ s/[\t\n\cK\f\r ]+\z//;
-		# (grouped, so that `|| true' is not for what came before)
-		$line = $ignore ? "( ( $line ) || true )" : "( $line )";
-		push @cmd, $line;
-	}
-	join ' && ', @cmd;
+	join q( && ), map { $_->[0] ? "( ( $_->[1] ) || true )" : "( $_->[1] )" }
+		RdKw::WwW::SiteConf::recipe_commands($_[0]);
 }
 
 1;

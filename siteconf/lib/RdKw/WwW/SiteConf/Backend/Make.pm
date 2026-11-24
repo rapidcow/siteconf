@@ -1,4 +1,4 @@
-package RdKw::WwW::SiteConf::Make;
+package RdKw::WwW::SiteConf::Backend::Make;
 
 use 5.008;
 use strict;
@@ -9,26 +9,26 @@ our $VERSION = $RdKw::WwW::SiteConf::VERSION;
 
 =head1 NAME
 
-RdKw::WwW::SiteConf::Make - Makefile backend for siteconf
+RdKw::WwW::SiteConf::Backend::Make - Makefile backend for siteconf
 
 =head1 SYNOPSIS
 
-    my $text = RdKw::WwW::SiteConf::Make->_emit($plan);
+    $siteconf->generate(q(make));   # siteconf -g -G make
 
 =head1 DESCRIPTION
 
-I<$plan> is what C<< RdKw::WwW::SiteConf->plan >> returns, with a
-C<prog> to credit in the header.  Each goal becomes a phony target,
-the first of which is what a bare L<make(1)> builds; there is also a
-rule to clean up if C<-Sclean> asks for it (see below).  The one thing asked of L<make(1)> is that a recipe may be
-a tab-indented shell fragment, so any make will do.
+The generator C<make> of L<RdKw::WwW::SiteConf/generate>.  Each goal
+becomes a phony target, the first of which is what a bare L<make(1)>
+builds; there is also a rule to clean up if C<-Sclean> asks for it
+(see below).  The one thing asked of L<make(1)> is that a recipe may
+be a tab-indented shell fragment, so any make will do.
 
 Any make will not do with just any name, though: there is no
 escaping a file name in POSIX, and bmake reads a dependency line
 twice, so that not even C<$$> is a C<$>.  So a name with white
 space, a control, a C<$>, any of C<#:;=|(){}[]*?>, a C<\> at the
 end or a C<~> in front is an error here, and so is a target with any
-of C<%\E<lt>E<gt>"'`&>; L<RdKw::WwW::SiteConf::GMake> escapes most of
+of C<%\E<lt>E<gt>"'`&>; L<RdKw::WwW::SiteConf::Backend::Gmake> escapes most of
 those.
 
 Names are spelled by C<< $class->_name >>, so that a subclass need
@@ -69,13 +69,39 @@ so on: a cache file, say.
 
 =back
 
-C<_emit> returns bytes.  L<make(1)> reads the Makefile as bytes, in
+The Makefile is bytes.  L<make(1)> reads the Makefile as bytes, in
 no particular encoding.  So every name in a rule, a recipe or the
 header is spelled as the file system spells it: B<filesys> of
 L<RdKw::I18N::CodeSets>; except the name of a goal or a cleaning rule
 (which one types after C<make>), which is spelled as an argument is:
 B<argv>.  A name the file system cannot
 spell is an error.
+
+=head2 Methods
+
+These are what L<RdKw::WwW::SiteConf/generate> asks of a generator.
+They change with siteconf: they are not a stable interface.
+
+=over
+
+=item B<options>
+
+C<clean> and C<purge>.
+
+=item B<default_output>
+
+F<Makefile>.
+
+=item B<emit> I<plan>, I<file>
+
+The Makefile, as C<[ >I<file>C<, >I<bytes>C< ]>.
+
+=item B<build_command> I<generator>, I<builddir>, I<file>, I<goal>
+
+I<generator> (C<make> or C<gmake>), with C<-C> I<builddir> unless it
+is C<.>, C<-f> I<file> if it is defined, and I<goal> if it is.
+
+=back
 
 =cut
 
@@ -96,7 +122,7 @@ sub _fs { RdKw::WwW::SiteConf::fs_text($_[1]) }
 # Every string from the plan goes through _fs.  The result is bytes
 # throughout: a byte string joined to a character string would be
 # upgraded by perl, and spelled wrong.
-sub _emit
+sub _text
 {
 	my ($class, $plan) = @_;
 	# (where a name is, for GNU Make: a `target', an `order'-only
@@ -164,8 +190,20 @@ sub _emit
 	$out;
 }
 
-# The names of the options (-S) that we know
-sub _options { qw( clean purge ) }
+sub options { qw( clean purge ) }
+
+sub default_output { q(Makefile) }
+
+sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ] }
+
+sub build_command
+{
+	my ($class, $prog, $B, $file, $goal) = @_;
+	my $q = \&RdKw::WwW::SiteConf::shell_quote;
+	($prog, ($B eq q(.) ? () : (q(-C), $q->($B))),
+		(defined $file ? (q(-f), $q->($file)) : ()),
+		(defined $goal ? $q->($goal) : ()));
+}
 
 # Whether a directory marker is an order-only prerequisite (after a `|')
 sub _order_only { 0 }
@@ -179,8 +217,8 @@ sub _name
 		|| ($where || '') eq 'target' && $s =~ /([%\\<>"'`&])/
 		or return $class->_fs($s);
 	my $c = $1;
-	require RdKw::WwW::SiteConf::GMake;
-	my $gnu_can = eval { RdKw::WwW::SiteConf::GMake->_name($s, $where); 1 };
+	require RdKw::WwW::SiteConf::Backend::Gmake;
+	my $gnu_can = eval { RdKw::WwW::SiteConf::Backend::Gmake->_name($s, $where); 1 };
 	die _status 0, tagmsg(E => diag($gnu_can
 		# HEY!  the %s is a character, as `$' or U+0020.
 		# You don't need to keep the ";)"; it's just

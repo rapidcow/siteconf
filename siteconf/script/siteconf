@@ -47,10 +47,10 @@ siteconf - configurable incremental build script generator
 
     ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
 
-    siteconf -g [-A] [-B outdir] [-G make|gmake|ninja] [-t [NEED:|WANT:]goal ...]
+    siteconf -g [-A] [-B outdir] [-G make|bmake|gmake|ninja|redo] [-t [NEED:|WANT:]goal ...]
                 [-Sopt[=val] ...] [-q]
     siteconf make ...                         # same
-    cd ${B} && [make|gmake|ninja] [goal]   # ninja -t clean to clean
+    cd ${B} && [make|bmake|gmake|ninja|redo] [goal]   # ninja -t clean to clean
 
     #
     # -S, with -g: options of the generator (see its page)
@@ -134,8 +134,8 @@ With C<-i>, set a default standard definition, such as C<-SB=build>.
 See L<RdKw::WwW::SiteConf::Configure/PATHS> for the names and defaults.
 May be repeated.
 
-With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Make>
-and L<RdKw::WwW::SiteConf::GMake>; C<ninja> has none).  Unlike with C<-i>,
+With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Backend::Make>
+and L<RdKw::WwW::SiteConf::Backend::Gmake>; C<ninja> and C<redo> have none).  Unlike with C<-i>,
 the value may be left out, and then the generator takes its default:
 C<-Sclean> makes a rule called C<clean>, which removes the files that
 the first goal names (C<-Sclean=&> makes none), and C<-Sorder> alone is
@@ -230,19 +230,28 @@ Support for C<-l> was added in 0.0300.
 
 =item B<-G> I<generator>
 
-C<make> (default), writing F<Makefile>; C<gmake>, writing one for GNU
+C<make> (default), writing F<Makefile>; C<bmake>, writing the same
+for bmake (and saying to run C<bmake>); C<gmake>, writing one for GNU
 make, which can name files that make cannot (with blanks, C<#>, C<:>,
-C<$>, wildcards and so on: see L<RdKw::WwW::SiteConf::GMake>); or
-C<ninja>, writing F<build.ninja>.  A name that the generator cannot
+C<$>, wildcards and so on: see L<RdKw::WwW::SiteConf::Backend::Gmake>);
+C<ninja>, writing F<build.ninja>; or C<redo>, writing a F<.do> file
+for each target and each goal.  A name that the generator cannot
 spell is an error.
 
-The C<gmake> generator was added in 0.0300.
+C<ninja> and C<redo> are distributions of their own
+(WwW-SiteConf-Ninja and WwW-SiteConf-Redo).  Without one, C<-G> of
+it is an error that says what to install.
+
+The C<gmake> and C<bmake> generators were added in 0.0300.
+
+A generator I<name> is the module C<RdKw::WwW::SiteConf::Backend::>I<Name>
+(see L<RdKw::WwW::SiteConf/generate>): C<gmake> is C<Gmake>.
 
 =item B<-o> I<file>
 
 With C<-g>, write I<file> in the build directory instead of F<Makefile>
 (or F<build.ninja>); say C<make -f Makefile.proj> to use it.  Just a
-name, not a path.
+name, not a path.  C<redo> writes many files, and takes no C<-o>.
 
 With C<-i>, may be repeated as C<-o name:path>, where I<name> is
 C<configure> or C<render>.  Bare C<-o path> means C<-o configure:path>.

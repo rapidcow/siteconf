@@ -922,6 +922,46 @@ sub recipe_bytes
 # `$' for make is $$; for what the shell reads, which make must not
 sub _dollars { (my $s = $_[0]) =~ s/\$/\$\$/g; $s }
 
+=item B<recipe_commands> I<bytes>
+
+Not a method.  A recipe in make's words (what B<recipe_bytes>
+returns) as the commands that make would run, for a backend that is
+not make: a list of C<[ >I<ignore>C<, >I<command>C< ]>, one for each
+line of the recipe that is not blank.  A backslash at the end of a
+line joins the next line to it (the backslash and the newline go, as
+the shell would take them, and so does the tab that begins the next
+line, as make takes it).  The C<@>, C<-> and C<+> in front are gone;
+I<ignore> is true if a C<-> said to ignore a failure.  A C<$$> is
+as it is: it is the shell's C<$>.
+
+=cut
+
+sub recipe_commands
+{
+	my ($recipe) = @_;
+	my @logical;
+	my $joining;
+	for my $line (split /\n/, $recipe) {
+		# (make drops the tab of a continuation line too)
+		$line =~ s/^\t//;
+		if ($joining) { $logical[-1] .= $line } else { push @logical, $line }
+		$joining = $logical[-1] =~ s/\\\z//;
+	}
+
+	my @cmd;
+	for my $line (@logical) {
+		next if $line =~ /\A[$SP]*\z/;
+		my $ignore = 0;
+		# @ is for make to not echo, - is to not mind
+		while ($line =~ s/\A[$SP]*([-@+])[$SP]*//) {
+			$ignore = 1 if $1 eq '-';
+		}
+		$line =~ s/[$SP]+\z//;
+		push @cmd, [ $ignore, $line ];
+	}
+	@cmd;
+}
+
 # Names that cannot escape from the source or the output tree.  Only an
 # empty name and a NUL are refused for every backend: the selected
 # backend must escape or reject any other character.  A name is also
@@ -2210,47 +2250,123 @@ sub manifest_text
 
 =item B<generate> [ I<generator>, [ I<file> ] ]
 
-Writes F<MY/MANIFEST> (the goals, resolved), and the build file
-for I<generator> (C<make>, the default, C<gmake> or C<ninja>), named
-I<file> in the build directory if given (else F<Makefile> or
-F<build.ninja>).
-The files that would not change are left alone, mtime and all.
+Writes F<MY/MANIFEST> (the goals, resolved), and the build files of
+I<generator> in the build directory.  I<generator> is C<make> (the
+default) or C<gmake>, which come with siteconf, or C<ninja> or
+C<redo>, which are distributions of their own (WwW-SiteConf-Ninja and
+WwW-SiteConf-Redo) and may not be installed.  A generator that writes
+one file names it I<file>, if given (else F<Makefile> or
+F<build.ninja>); C<redo> writes a file for each target, and takes no
+I<file>.  The files that would not change are left alone, mtime and
+all.
 
 The options of the generator are those C<S> of L</new> says.  Each
 generator knows some (see its own page); one that it does not know is
 said to be unused, if it has a value.
 
+A generator I<name> is lowercase ASCII letters and digits, beginning
+with a letter, in parts joined by C<->.  It is the module
+C<RdKw::WwW::SiteConf::Backend::>I<Name>: each part capitalized, and
+the C<-> dropped.  So C<gmake> is C<Gmake>, and C<g-make> would be
+C<GMake>.  The module has these class methods.  They are for the generators that come with
+siteconf or are released with it, and change with it: they are not a
+stable interface.
+
+=over
+
+=item C<options>
+
+The names of the options (C<-S>) that it knows.
+
+=item C<default_output>
+
+The name of the one file it writes, or C<undef> if it writes many.
+
+=item C<emit> I<plan>, I<file>
+
+The files to write: a list of C<[ NAME, BYTES ]>, each I<NAME>
+relative to the build directory.  I<plan> is what L</plan> returns,
+with C<opt>, C<prog> and C<args>; I<file> is the name of the one file,
+if there is one.
+
+=item C<build_command> I<generator>, I<builddir>, I<file>, I<goal>
+
+The words of what to type to build I<goal> (or the default, if
+C<undef>), quoted for the shell.  I<file> is C<undef> unless it was
+named.
+
+=back
+
+=item B<generators>
+
+Not a method.  The names of the generators that are installed (that
+have a module in C<@INC>), sorted.
+
 =cut
 
-my %generator = (
-	make => [ 'RdKw::WwW::SiteConf::Make', 'Makefile' ],
-	gmake => [ 'RdKw::WwW::SiteConf::GMake', 'Makefile' ],
-	ninja => [ 'RdKw::WwW::SiteConf::Ninja', 'build.ninja' ],
-);
+# A generator is the module Backend::Name: each part of its name
+# capitalized, without the `-' between them
+my $BACKEND_NAME = qr/\A[a-z][a-z0-9]*(?:-[a-z0-9]+)*\z/;
+
+sub _backend_module
+{
+	my ($name) = @_;
+	q(RdKw::WwW::SiteConf::Backend::) . join q(), map { ucfirst } split /-/, $name;
+}
+
+sub generators
+{
+	my %found;
+	for my $dir (grep { !ref } @INC) {
+		opendir my $dh, "$dir/RdKw/WwW/SiteConf/Backend" or next;
+		for my $file (readdir $dh) {
+			my ($leaf) = $file =~ /\A((?:[A-Z][a-z0-9]*)+)\.pm\z/ or next;
+			# (a capital begins a part: Gmake is gmake, GMake g-make)
+			$found{ join q(-), map { lc } $leaf =~ /([A-Z][a-z0-9]*)/g } = 1;
+		}
+	}
+	sort keys %found;
+}
 
 sub generate
 {
 	my ($self, $G, $out) = @_;
 	$G = 'make' unless defined $G and length $G;
-	my $gen = $generator{$G} or die _status 0, tagmsg(E => diag(__(
+	$G =~ $BACKEND_NAME or die _status 0, tagmsg(E => diag(__(
 		# HEY!  %s is the generators (make, gmake, ninja)
 		"unknown generator %q.  Choose one of: %s"),
-		$G, join(', ', sort keys %generator)));
-	my ($module, $outfile) = @$gen;
+		$G, join(q(, ), generators())));
+	my $module = _backend_module($G);
+	(my $pm = "$module.pm") =~ s!::!/!g;
+	unless (eval { require $pm; 1 }) {
+		# (a backend that is there but broken says why)
+		$@ =~ /\ACan't locate \Q$pm\E in \@INC/ or die $@;
+		die _status 0, tagmsg(E => diag(__(
+			# HEY!  the first %s is the generator (ninja), the second the
+			# module that would be it, and the third the generators that
+			# are installed (make, gmake)
+			"unknown generator %q (%s is not installed).  Choose one of: %s"),
+			$G, $module, join(q(, ), generators())));
+	}
+	my $outfile = $module->default_output;
 	my $named = defined $out && length $out;
 	if ($named) {
+		defined $outfile
+			# HEY!  the first %s is the generator (redo), and the
+			# second the name it was asked to write (with -o)
+			or die _status 0, tagmsg(E => diag(__(
+				"generator %s writes a file for each target, and cannot"
+				. " name them %q"), $G, $out));
 		$out =~ m!\A[^/\0]+\z! and $out !~ /\A\.\.?\z/
 			or die _status 0, tagmsg(E => diag(__("bad output name %q: "
 				. "stay in the build directory please"),
 				$out));
 		$outfile = $out;
 	}
-	(my $pm = "$module.pm") =~ s!::!/!g;
-	require $pm;
 
 	# What the backend has no use for is said (if it has a value; a name
 	# alone is for whichever backend knows it), and not planned for
-	my %known = map { $_ => 1 } $module->_options;
+	my %known = map { $_ => 1 } $module->options;
 	my $S_all = $self->{S};
 	my %S = %$S_all;
 	for my $k (sort keys %S) {
@@ -2267,7 +2383,7 @@ sub generate
 	$plan->{opt} = \%S;
 	my $My = "$self->{B}/MY";
 	# (one file, so that no goal is a file name; -l -F says which)
-	$self->_report('MANIFEST', update_file("$My/MANIFEST",
+	$self->_report('MY/MANIFEST', update_file("$My/MANIFEST",
 		join("\n", map { $self->manifest_text($_) } @{ $plan->{goals} })));
 
 	# What made it, for the header (see header_comment).  Not -o: the file
@@ -2281,16 +2397,29 @@ sub generate
 		( map { ('-S', defined $S_all->{$_} ? "$_=$S_all->{$_}" : $_) } sort keys %$S_all ),
 	];
 	# Bytes.  The backends spell the names as the file system does.
-	my $text = $module->_emit($plan);
-	$self->_report($outfile, update_file("$self->{B}/$outfile", $text, raw => 1));
+	my @file = $module->emit($plan, $outfile);
+	# update_file writes `dir/name' by way of `dir/tmp-name', which would
+	# take the place of a file of that name that we write too
+	my %emitted = map { File::Spec->canonpath($_->[0]) => 1 } @file;
+	for my $name (map { $_->[0] } @file) {
+		my $tmp = File::Spec->canonpath(dirname($name) . '/tmp-' . basename($name));
+		$emitted{$tmp} and die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s are two names of files that the generator writes;
+			# the first is written by way of the second
+			"generator %s cannot write both %q and %q: the first is"
+			. " written by way of the second"), $G, $name, $tmp));
+	}
+	for my $file (@file) {
+		my ($name, $text) = @$file;
+		my $path = "$self->{B}/$name";
+		_make_dir(dirname($path));
+		$self->_report($name, update_file($path, $text, raw => 1));
+	}
 
-	# What to type next: the builder (named after the generator), with
-	# -C if we are not in the build directory, -f if the file is not
-	# the one it would look for, and the first goal of the manifest.
-	my @cmd = ($G);
-	push @cmd, '-C', shell_quote($self->{B}) unless $self->{B} eq '.';
-	push @cmd, '-f', shell_quote($outfile) if $named;
-	push @cmd, shell_quote($plan->{goals}[0]{name}) if @{ $plan->{goals} };
+	# What to type next (the backend says, from the first goal of the
+	# manifest)
+	my @cmd = $module->build_command($G, $self->{B}, $named ? $outfile : undef,
+		@{ $plan->{goals} } ? $plan->{goals}[0]{name} : undef);
 	unless ($self->failed()) {
 		$self->_warn(__("Done!") . "\n");
 		# HEY!  %s is a command line, as the shell would read it
@@ -2299,11 +2428,26 @@ sub generate
 	$plan;
 }
 
+# A directory, and those above it, unless it is there
+sub _make_dir
+{
+	my ($dir) = @_;
+	my $fs = _to_fs($dir);
+	return if -d $fs;
+	require File::Path;
+	File::Path::make_path($fs, { error => \my $err });
+	for (@$err) {
+		my (undef, $why) = %$_;
+		die _status 0, tagmsg(E => diag(__(
+			# HEY!  the %s is why, as the system says it
+			"cannot create directory %q: %s"), $dir, $why));
+	}
+}
+
 sub _report
 {
 	my ($self, $name, $what) = @_;
 	return unless $what;
-	$name = "MY/$name" if $name eq 'MANIFEST';
 	$self->_warn(diag($what > 1
 		# HEY!  ``Writing'' creates the file, and
 		# ``Updating'' overwrites it.   (The phrasing

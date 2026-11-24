@@ -5,13 +5,14 @@
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 BEGIN {
 	my @module = qw(
 		RdKw::WwW::SiteConf
-		RdKw::WwW::SiteConf::GMake
-		RdKw::WwW::SiteConf::Make
+		RdKw::WwW::SiteConf::Backend::Bmake
+		RdKw::WwW::SiteConf::Backend::Gmake
+		RdKw::WwW::SiteConf::Backend::Make
 		RdKw::WwW::SiteConf::Modifiers
 	);
 	foreach my $module (@module) {

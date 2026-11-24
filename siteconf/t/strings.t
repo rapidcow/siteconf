@@ -17,8 +17,7 @@ use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib );
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
-use RdKw::WwW::SiteConf::GMake;
-use RdKw::WwW::SiteConf::Ninja;
+use RdKw::WwW::SiteConf::Backend::Gmake;
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
@@ -115,17 +114,17 @@ M
 }
 
 # --- a line break, or a carriage return, in a :Q word
-for my $tool (qw( GMake Ninja )) {
-	my $class = "RdKw::WwW::SiteConf::$tool";
+for my $tool (qw( Gmake )) {
+	my $class = "RdKw::WwW::SiteConf::Backend::$tool";
 	my $dir = project('Makefile.in' => "x: \${a}/x\n\techo \${\"a\\nb\":Q}\n");
 	my $p = plan_of($dir);
 	$p->{prog} = 'test';
-	ok(!eval { $class->_emit($p); 1 }, "$tool: a line break cannot be said");
+	ok(!eval { $class->_text($p); 1 }, "$tool: a line break cannot be said");
 	like($@, qr/Makefile\.in line 2: \w+ cannot spell a line break in `a\\nb'|line break/, '... it says so');
 	$dir = project('Makefile.in' => "x: \${a}/x\n\techo \${\"Icon\\r\":Q}\n");
 	$p = plan_of($dir);
 	$p->{prog} = 'test';
-	ok(eval { $class->_emit($p); 1 }, "$tool: a carriage return can") or diag $@;
+	ok(eval { $class->_text($p); 1 }, "$tool: a carriage return can") or diag $@;
 }
 
 # --- the MANIFEST

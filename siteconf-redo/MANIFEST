@@ -1,0 +1,9 @@
+MANIFEST
+Changes
+Makefile.PL
+README
+lib/RdKw/WwW/SiteConf/Backend/Redo.pm
+t/00-load.t
+t/e2e-redo.t
+t/lib/E2E.pm
+t/redo.t

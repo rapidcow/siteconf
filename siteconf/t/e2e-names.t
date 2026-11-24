@@ -1,6 +1,6 @@
 #!perl
 #
-# t/e2e-names.t - siteconf -g, then GNU make or ninja, for a page that
+# t/e2e-names.t - siteconf -g, then GNU make, for a page that
 # needs files that are hard to name: spelled in its header by
 # escape_dep, and in the build file as each tool would have them
 
@@ -32,9 +32,7 @@ sub gmake_since
 # prerequisite, which came in 4.0 (`unescape_char' in read.c)
 my $gmake = gmake_since(3, 81);
 my $gmake_colon = gmake_since(4, 0);
-my $ninja = $ENV{NINJA} || 'ninja';
-$ninja = undef if system("$ninja --version >/dev/null 2>&1");
-plan tests => 100;
+plan tests => 58;
 
 my @name = ('sp ace', "ta\tb", 'ha#sh', 'se;mi', 'pi|pe', 'do$llar', 'st*ar', 'qu?est',
 	'br[ack]et', '~tilde', 'back\\slash', 'back\\ space');
@@ -115,7 +113,7 @@ sub spaced_builds
 		ok(!$up_to_date->($dir), "rebuild after $dep changes");
 		utime $st[8], $st[9], "$dir/$dep" or die "$dep: $!";
 	}
-	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
+	($status, $out) = run($dir, $tool, q(purge));
 	is($status, 0, "$G: clean spaced names") or diag $out;
 	ok(!-e "$dir/site/implicit name.html" && !-e "$dir/site/dir name/page name.html"
 		&& !-e "$dir/site/other name.html", 'clean removed the complete names');
@@ -126,10 +124,6 @@ sub spaced_builds
 SKIP: {
 	skip 'no GNU make', 15 unless $gmake;
 	spaced_builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] });
-}
-SKIP: {
-	skip 'no ninja', 15 unless $ninja;
-	spaced_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
 }
 {
 	my $dir = spaced_project();
@@ -159,7 +153,7 @@ sub builds
 {
 	my ($tool, $up_to_date, @need) = @_;
 	my $dir = project(@need);
-	my $G = defined $ninja && $tool eq $ninja ? 'ninja' : 'gmake';
+	my $G = q(gmake);
 	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G);
 	is($status, 0, "siteconf -g -G $G") or return diag $out;
 	($status, $out) = run($dir, $tool);
@@ -182,10 +176,6 @@ SKIP: {
 	builds($gmake, sub { !(run($_[0], $gmake, '-q'))[0] }, @name);
 }
 
-SKIP: {
-	skip 'no ninja', 5 unless $ninja;
-	builds($ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ }, @name);
-}
 
 # What they cannot name, they say so of
 {
@@ -204,7 +194,7 @@ SKIP: {
 }
 
 # Targets with a `;', a `|' and a `$' in them, one in a directory with
-# a `|', whose marker is a target and (with -Sorder=1, and to ninja) an
+# a `|', whose marker is a target and (with -Sorder=1) an
 # order-only prerequisite.  pi|pe/x.html also needs se;mi.html,
 # do$llar.html and in;|put, written as ${U+003B}, ${U+0024} and ${"|"}
 # (and do$llar.html as ${$} and as $$).
@@ -235,7 +225,7 @@ sub punct_builds
 	my $t = time + 10;
 	utime $t, $t, "$dir/in;|put" or die $!;
 	ok(!$up_to_date->($dir), '... and out of date when what they need is newer');
-	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
+	($status, $out) = run($dir, $tool, q(purge));
 	ok($status == 0 && !-e "$dir/site/pi|pe/x.html" && !-e "$dir/site/se;mi.html"
 		&& !-e "$dir/site/do\$llar.html",
 		"$G: clean them") or diag $out;
@@ -243,20 +233,16 @@ sub punct_builds
 
 SKIP: {
 	my $why = fs_surprise('se;mi|pi$e', tempdir(CLEANUP => 1));
-	skip "file system: $why", 12 if defined $why;
+	skip "file system: $why", 6 if defined $why;
 	SKIP: {
 		skip 'no GNU make', 6 unless $gmake;
 		punct_builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] }, '-Sorder=1');
-	}
-	SKIP: {
-		skip 'no ninja', 6 unless $ninja;
-		punct_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
 	}
 }
 
 # Targets with a `%', a `#', a `\', quotes, a `&' at the end, and
 # `<>(){}', all in a directory with a `%', whose marker is a target and
-# (with -Sorder=1, and to ninja) an order-only prerequisite.
+# (with -Sorder=1) an order-only prerequisite.
 # per%cent/x.html also needs in%put.  A `%' and a `#' inside a word are
 # written as they are, in MANIFEST and in Makefile.in.
 my @odd = ('hello%20world.html', 'h#sh.html', 'back\\slash.html', q(q"u'o`te.html), 'amp&',
@@ -291,21 +277,17 @@ sub odd_builds
 	ok(!$up_to_date->($dir), '... and out of date when what they need is newer');
 	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', @opt, '-F', 'MY/MANIFEST', '-t', 'all');
 	is($status, 0, '... and the resolved manifest can be read back') or diag $out;
-	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
+	($status, $out) = run($dir, $tool, q(purge));
 	ok($status == 0 && !grep({ -e "$dir/site/$_" } @odd, 'per%cent/x.html'),
 		"$G: clean them") or diag $out;
 }
 
 SKIP: {
 	my $why = fs_surprise(q(%#\\"'`&<>(){}), tempdir(CLEANUP => 1));
-	skip "file system: $why", 22 if defined $why;
+	skip "file system: $why", 14 if defined $why;
 	SKIP: {
 		skip 'no GNU make', 8 unless $gmake;
 		odd_builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] }, '-Sorder=1');
-	}
-	SKIP: {
-		skip 'no ninja', 8 unless $ninja;
-		odd_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
 	}
 	my $dir = odd_project();
 	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'make');
@@ -373,21 +355,17 @@ sub colon_builds
 	run($dir, $tool);
 	utime ++$t, $t, "$dir/co:lon" or die $!;
 	ok(!$up_to_date->($dir), '... and when what a header NEEDs is newer');
-	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
+	($status, $out) = run($dir, $tool, q(purge));
 	ok($status == 0 && !-e "$dir/site/man/3/File::Spec.html"
 		&& !-e "$dir/site/man/3/File::Temp.pod", "$G: clean them") or diag $out;
 }
 
 SKIP: {
 	my $why = fs_surprise('File::Spec.html', tempdir(CLEANUP => 1));
-	skip "file system: $why", 18 if defined $why;
+	skip "file system: $why", 10 if defined $why;
 	SKIP: {
 		skip 'no GNU Make 4.0 or newer', 8 unless $gmake_colon;
 		colon_builds('gmake', $gmake_colon, sub { !(run($_[0], $gmake_colon, '-q'))[0] });
-	}
-	SKIP: {
-		skip 'no ninja', 8 unless $ninja;
-		colon_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
 	}
 	my $dir = colon_project();
 	my ($status, $out) = run($dir, $^X, $script, '-g', '-q');

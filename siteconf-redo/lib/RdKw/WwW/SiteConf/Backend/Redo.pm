@@ -237,13 +237,12 @@ sub _with_goals
 	my @arg = @$args;
 	my @t = map { (q(-t), $_) } grep { defined } @goal;
 	my @keep;
-	# (all take a value, but for -A)
+	# (-t is followed by its value; -S has its own glued on, as -Sname=value)
 	while (@arg) {
 		my $opt = shift @arg;
-		if ($opt eq '-A') { push @keep, $opt; next }
-		my $value = shift @arg;
-		push @keep, splice(@t) if $opt eq '-t' || $opt eq '-S';
-		push @keep, $opt, $value unless $opt eq '-t';
+		if ($opt eq '-t') { shift @arg; push @keep, splice(@t); next }
+		push @keep, splice(@t) if $opt =~ /\A-S/;
+		push @keep, $opt;
 	}
 	(@keep, @t);
 }

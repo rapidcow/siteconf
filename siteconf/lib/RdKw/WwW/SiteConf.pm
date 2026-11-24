@@ -530,14 +530,12 @@ sub new
 		. "You should ./configure first. ;)"), $conf));
 	my %D = read_make($conf, prog => $self->{prog});
 	# F and R (the manifest and the rules) are external to the project:
-	# paths from where we are, not from the project root.  The overrides
-	# are noted so that we can credit them in the header.
-	my %fromhere;
+	# paths from where we are, not from the project root.  The header does
+	# not say them: a fork of either is the same build file.
 	if ($arg{D}) {
 		my $Doverrides = $arg{D};
 		foreach (keys %$Doverrides) {
 			$D{$_} = $Doverrides->{$_};
-			$fromhere{$_} = $Doverrides->{$_} if $_ eq 'F' or $_ eq 'R';
 		}
 	}
 	for my $k (qw( A B a b c R F e )) {
@@ -572,7 +570,6 @@ sub new
 	defined $self->{Rabs}
 		or die tagmsg(E => diag(__("cannot find the source tree %q: %m"), $D{A}));
 	$_ = _un_fs($_) for @$self{qw( Babs Rabs )};
-	$self->{fromhere} = \%fromhere;
 	$self;
 }
 
@@ -2465,11 +2462,10 @@ sub generate
 	$plan->{prog} = "$self->{prog} -g -G $G";
 	$plan->{args} = [
 		($self->{strict} ? '-A' : ()),
-		( map { ("-$_", $self->{fromhere}{$_}) } sort keys %{ $self->{fromhere} } ),
 		# (the goals as selected: the default first, as -t ,goal or -t ,;
 		# then each other once, NEED: as no prefix; none if none was)
 		@{ $self->{select_args} || [] },
-		( map { ('-S', defined $S_all->{$_} ? "$_=$S_all->{$_}" : $_) } sort keys %$S_all ),
+		( map { defined $S_all->{$_} ? "-S$_=$S_all->{$_}" : "-S$_" } sort keys %$S_all ),
 	];
 	# Bytes.  The backends spell the names as the file system does.
 	# (and what has no name is not written: -o /dev/null)

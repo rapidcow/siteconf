@@ -69,13 +69,13 @@ is($f->{'all.do'} =~ /\n(set -e\nexec >&2\nredo-ifchange site\/x\n)\z/ && $1, "s
 {
 	# A target's .do is the same whatever goals are asked for, and a
 	# goal's whatever other goals are
-	local $plan->{args} = [ qw( -A -F M ), q(-t), q(,main), qw( -t main -t WANT:small -S x=y ) ];
+	local $plan->{args} = [ qw( -A ), q(-t), q(,main), qw( -t main -t WANT:small -Sx=y -Sflag ) ];
 	local $plan->{goals} = [ both(q(main), [q(x)]), { name => q(small), select => q(WANT:small), files => [] } ];
 	my $f = files($plan);
-	like($f->{q(site/x.do)}, qr/^# options: -A -F M -S x=y$/m, q(a target leaves out -t));
-	like($f->{q(main.do)}, qr/^# options: -A -F M -t main -S x=y$/m, q(a goal says itself));
-	like($f->{q(all.do)}, qr/^# options: -A -F M -t ,main -S x=y$/m, q(... and the default, as the default));
-	like($f->{q(small.do)}, qr/^# options: -A -F M -t WANT:small -S x=y$/m, q(... WANT: and all));
+	like($f->{q(site/x.do)}, qr/^# options: -A -Sx=y -Sflag$/m, q(a target leaves out -t));
+	like($f->{q(main.do)}, qr/^# options: -A -t main -Sx=y -Sflag$/m, q(a goal says itself));
+	like($f->{q(all.do)}, qr/^# options: -A -t ,main -Sx=y -Sflag$/m, q(... and the default, as the default));
+	like($f->{q(small.do)}, qr/^# options: -A -t WANT:small -Sx=y -Sflag$/m, q(... WANT: and all));
 	local $plan->{args} = [];
 	like(files($plan)->{q(small.do)}, qr/^# options: -t WANT:small$/m, q(... even if no -t was given));
 }

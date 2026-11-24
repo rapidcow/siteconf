@@ -4,7 +4,6 @@
 # what order; and what the header of the build file says made it
 
 use strict;
-use utf8;
 use warnings;
 use Test::More;
 use FindBin;
@@ -19,6 +18,8 @@ use RdKw::WwW::GenGenLib qw( write_make );
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
+
+plan tests => 26;
 
 my $dir = tempdir(CLEANUP => 1);
 make_path("$dir/MY", "$dir/html");

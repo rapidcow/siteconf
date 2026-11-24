@@ -2401,18 +2401,16 @@ sub generate
 	my ($self, $G, $out) = @_;
 	$G = 'make' unless defined $G and length $G;
 	$G =~ $BACKEND_NAME or die _status 0, tagmsg(E => diag(__(
-		"unknown generator %q (siteconf -VV lists those installed)"),
-		$G));
+		"invalid generator name: %q"), $G));
 	my $module = _backend_module($G);
 	(my $pm = "$module.pm") =~ s!::!/!g;
 	unless (eval { require $pm; 1 }) {
 		# (a backend that is there but broken says why)
 		$@ =~ /\ACan't locate \Q$pm\E in \@INC/ or die $@;
 		die _status 0, tagmsg(E => diag(__(
-			# HEY!  the first %s is the generator (ninja), the second the
-			# module that would be it
-			"unknown generator %q (%s is not installed;"
-			. " siteconf -VV lists those that are)"),
+			# HEY!  %q is the generator (ninja), and
+			# %s is the module that implements it
+			"unknown generator: %q (%s is not installed)"),
 			$G, $module));
 	}
 	my $outfile = $module->default_output;

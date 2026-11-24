@@ -158,8 +158,8 @@ locale files as well.
 The format and order are subject to change.
 
 C<-V> and C<-VV> were added and implemented in 0.0100.
-C<-VVV> was extended in 0.0300.  C<-VV> lists the generators, and the
-codesets (which were C<-VVV> only), in 0.0300.
+C<-VVV> was extended in 0.0300.  C<-VV> started listing
+the generators and the codesets in 0.0300.
 
 =item B<-i>, B<init>
 

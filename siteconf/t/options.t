@@ -95,9 +95,9 @@ PM
 backend(Odd_one => "1;\n");
 unshift @INC, $lib;
 
-like(gen_error('Make'), qr/\AE: unknown generator `Make' \(siteconf -VV lists those installed\)$/, 'a name -G cannot have');
-like(gen_error('foo-2x'), qr/unknown generator `foo-2x' \(/, 'a part of a name begins with a letter');
-like(gen_error('nope'), qr/unknown generator `nope' \(RdKw::WwW::SiteConf::Backend::Nope is not installed; siteconf -VV lists those that are\)$/,
+like(gen_error('Make'), qr/invalid generator name: `Make'$/, 'a name -G cannot have');
+like(gen_error('foo-2x'), qr/invalid generator name: `foo-2x'/, 'a part of a name begins with a letter');
+like(gen_error('nope'), qr/unknown generator: `nope' \(RdKw::WwW::SiteConf::Backend::Nope is not installed/,
 	'a generator that is not installed');
 # (others may be installed: ninja, redo, or one in the works)
 my @gen = RdKw::WwW::SiteConf::generators();

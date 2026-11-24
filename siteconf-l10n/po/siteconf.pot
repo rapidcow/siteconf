@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 02:09-0600\n"
+"POT-Creation-Date: 2026-11-24 02:29-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -647,43 +647,42 @@ msgid "%s: %q is also the name of a goal or another rule"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2404
-msgid "unknown generator %q (siteconf -VV lists those installed)"
+msgid "invalid generator name: %q"
 msgstr ""
 
-#. HEY!  the first %s is the generator (ninja), the second the
-#. module that would be it
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2414
-msgid ""
-"unknown generator %q (%s is not installed; siteconf -VV lists those that are)"
+#. HEY!  %q is the generator (ninja), and
+#. %s is the module that implements it
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2413
+msgid "unknown generator: %q (%s is not installed)"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2427
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2425
 msgid "generator %s writes a file for each target, and cannot name them %q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2435
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2433
 msgid "bad output name %q: stay in the build directory please"
 msgstr ""
 
 #. HEY!  the first %s is an option, as -Sclean=x, and the second
 #. the generator (make, gmake, ninja)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2452
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2450
 #, perl-format
 msgid "%s: unused by generator %s"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2490 ../siteconf/share/configure.in:302
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2488 ../siteconf/share/configure.in:302
 msgid "Done!"
 msgstr ""
 
 #. HEY!  %s is a command line, as the shell would read it
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2492
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2490
 #, perl-format
 msgid "To build, run: %s"
 msgstr ""
 
 #. HEY!  the %s is why, as the system says it
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2509
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2507
 msgid "cannot create directory %q: %s"
 msgstr ""
 
@@ -694,11 +693,11 @@ msgstr ""
 #. is considered to be our files, so it is
 #. assumed that the state prior to updating is
 #. consistent with the state now.)
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2525 ../siteconf/share/configure.in:291
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2523 ../siteconf/share/configure.in:291
 msgid "Writing %#q"
 msgstr ""
 
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2526 ../siteconf/share/configure.in:291
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2524 ../siteconf/share/configure.in:291
 msgid "Updating %#q"
 msgstr ""
 

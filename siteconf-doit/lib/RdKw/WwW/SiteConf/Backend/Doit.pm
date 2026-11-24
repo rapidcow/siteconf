@@ -198,7 +198,7 @@ sub emit
 	my ($class, $plan, $file) = @_;
 	die _status 0, tagmsg(E => diag(__("%q: doit needs an output name of the form name.py"), $file))
 		if defined $file && $file !~ /\A[^.]+\.py\z/;
-	my $out = "# -*- coding: utf-8 -*-\n" . RdKw::WwW::SiteConf::header_comment($plan);
+	my $out = "# -*- coding: utf-8 -*-\n# doit dodo.py!\n" . RdKw::WwW::SiteConf::header_comment($plan);
 	my $opt = $plan->{opt} || {};
 	my $mode = exists $opt->{mode} ? ($opt->{mode} || '') : 'shell';
 	die _status 0, tagmsg(E => diag(__("unknown recipe mode %q"), $mode))

@@ -278,7 +278,7 @@ quotes, and a backslash begins one of these:
 
     \a \b \t \n \v \f \r \e   the control characters of C
     \s                        a space
-    \x{HEX}                   a code point (1 to 8 hex digits)
+    \x{hex}                   a code point (1 to 8 hex digits)
     \\ \"                     a backslash, a double quote
 
 Anything else after a backslash, a code point above U+10FFFF, and a
@@ -763,7 +763,7 @@ C<$$> is a literal C<$>.  C<${U+>I<hex>C<}> is not a variable
 but a character, by its code point: 1 to 8 hex digits, in any
 case (and so is the C<U>), up to C<FFFFFFFF> (it fits an unsigned
 32-bit int; Unicode validity is not checked); it is normalized to
-C<${U+>I<HEX>C<}>, in capitals and of at least 4 digits, and the
+C<${U+>I<hex>C<}>, in capitals and of at least 4 digits, and the
 character is what L</subs_deps> gives (see L</escape_deps>).  Any
 other C<$> is malformed: a trailing one, an unterminated C<${>,
 an empty C<${}>, a C<${U+...}> that is no code point, a C<$>
@@ -778,8 +778,8 @@ Recognized variables and the project root are still normalized.
 C<strict> takes precedence: malformed input still dies even
 with C<pass_thru> enabled.  Defaults to C<< pass_thru => 0 >>.
 
-Added in 0.0002.  C<pass_thru> added in 0.0003;
-C<${U+hex}> escapes added in 0.0100.
+Added in 0.0002.  The option C<pass_thru> was added in 0.0003,
+and the C<${U+>I<hex>C<}> escapes were added in 0.0100.
 
 =cut
 
@@ -1028,7 +1028,7 @@ scalar context, the first).
 
 What is safe is left as it is: letters and digits (in ASCII), and
 C</ . _ - + @>.  A C<$> is C<${$}>, and anything else is
-C<${U+>I<HEX>C<}>, its code point (as in C<${U+0020}> for a space,
+C<${U+>I<hex>C<}>, its code point (as in C<${U+0020}> for a space,
 or C<${U+003A}> for a colon).  That is any metacharacter (of the
 shell, make, a header line) and any comment character, whether or
 not it means anything where the name is going: C<;>, C<#>, C<:>,

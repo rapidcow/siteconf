@@ -35,14 +35,14 @@ Revision history of WwW-GenGenLib
       subs_deps gives back (with or without definitions, which
       are optional now), and read_deps reads as one name: a $
       is ${$}, and what is not a letter, digit or one of
-      / . _ - + @ is ${U+HEX} (any metacharacter: ; # : %
+      / . _ - + @ is ${U+hex} (any metacharacter: ; # : %
       quotes, globs and the like).
       { unicode => 1 } leaves what is not ASCII as it is (but
       for controls, surrogates, line breaks and white space,
       which { unicode_space => 1 } leaves too).
     *** norm_deps, subs_deps: ${U+hex} (1 to 8 hex digits, up to
         10FFFF) is the character of that code point, not a
-        variable; normalized to ${U+HEX} of 4 digits or more.
+        variable; normalized to ${U+hex} of 4 digits or more.
         Any other ${U+...} is malformed.
     * split_dep: an escaped $ (${$}) or character (${U+...}) is
       no root.

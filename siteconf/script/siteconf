@@ -146,8 +146,8 @@ the first goal names (C<-Sclean=&> makes none), and C<-Sorder> alone is
 the same as C<-Sorder=0>.  An option the generator does not know is said
 to be unused, unless it has no value or C<-q> was given.
 
-C<c> was added in 0.0201.  C<clean> was too, as a definition; it is
-an option of the generator now.
+C<c> was added in 0.0201.  C<clean> was added in 0.0201 but moved
+to C<-Sclean> in 0.0300.
 
 =item B<-h>, B<--help>
 

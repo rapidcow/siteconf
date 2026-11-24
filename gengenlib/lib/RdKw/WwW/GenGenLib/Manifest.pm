@@ -112,10 +112,12 @@ sub _status { $! = 0; $? = shift; @_; }
 # (This is the same character set used in SiteConf.pm)
 my $SP = '\t\n\cK\f\r ';
 
+# A string literal, ${"..."}
+my $STRING = qr/\$\{"(?:[^"\\]|\\.)*"\}/s;
+
 # What a goal may be called: anything that is a name to make and ninja
 # alike, that is no white space (of any script), control or format
 # character, and none of `: # % $ \'; and no hyphen to begin with
-my $STRING = qr/\$\{"(?:[^"\\]|\\.)*"\}/s;
 my $GOAL = qr/\A(?!-)[^\s\p{Cc}\p{Cf}:#%\$\\]+\z/;
 
 =item B<read> \%D, I<file>[, { prog => 'read_manifest' }]

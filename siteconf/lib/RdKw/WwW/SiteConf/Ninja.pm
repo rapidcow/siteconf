@@ -32,8 +32,9 @@ joins lines, a leading C<@> is dropped and a leading C<-> ignores
 failure.  For clean-up there is C<ninja -t clean>.
 
 A space, C<:> or C<$> in a name is escaped (as C<$ >, C<$:> and
-C<$$>); a vertical space (a line break, CR, form feed, ...) or a
-C<|> cannot be, and is an error.
+C<$$>).  A C<|> has no escape, and is C<${pipe}>, a variable that
+F<build.ninja> sets to C<|>.  A vertical space (a line break, CR,
+form feed, ...) cannot be named, and is an error.
 
 C<_emit> returns bytes, as L<RdKw::WwW::SiteConf::Make> does.  Ninja
 reads F<build.ninja> as bytes, so every name and every recipe is
@@ -65,6 +66,9 @@ sub _emit
 
 	my $out = "#\n# build.ninja!\n" . RdKw::WwW::SiteConf::header_comment($plan) . "#\n" . <<NINJA;
 ninja_required_version = 1.3
+
+# (a `|' in a path would end it; \${pipe} does not)
+pipe = |
 
 rule mkdir_marker
   command = [ -d \$dir ] || mkdir \$dir && > \$out
@@ -121,23 +125,24 @@ NINJA
 }
 
 # A path, as ninja wants to read it (which is never with a line
-# break, nor with a `|', which ends it): bytes.
+# break, and with a `|' as ${pipe}): bytes.
 sub _path
 {
 	my ($s) = @_;
 	_vertical($s);
-	_escape(_fs($s));
+	(my $b = _escape(_fs($s))) =~ s/\|/\${pipe}/g;
+	$b;
 }
 
 # An error if ninja cannot name the string, whatever it escapes
 sub _vertical
 {
 	my ($s) = @_;
-	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}|])/
-		# HEY!  the %s is a character, as `|' or U+000A
+	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}])/
+		# HEY!  the %s is a character, as U+000A
 		and die _status 0, tagmsg(E => diag(__(
 			"ninja cannot name %q (with inescapable %s)"),
-			$s, $1 eq '|' ? "`|'" : sprintf('U+%04X', ord $1)));
+			$s, sprintf('U+%04X', ord $1)));
 }
 
 # What ninja reads as a space, a colon or a variable in bytes, escaped

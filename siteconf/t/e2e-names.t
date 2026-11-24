@@ -34,9 +34,9 @@ my $gmake = gmake_since(3, 81);
 my $gmake_colon = gmake_since(4, 0);
 my $ninja = $ENV{NINJA} || 'ninja';
 $ninja = undef if system("$ninja --version >/dev/null 2>&1");
-plan tests => 66;
+plan tests => 78;
 
-my @name = ('sp ace', "ta\tb", 'ha#sh', 'do$llar', 'st*ar', 'qu?est',
+my @name = ('sp ace', "ta\tb", 'ha#sh', 'se;mi', 'pi|pe', 'do$llar', 'st*ar', 'qu?est',
 	'br[ack]et', '~tilde', 'back\\slash', 'back\\ space');
 
 # A project in a directory of its own (which is its own build directory)
@@ -194,13 +194,62 @@ SKIP: {
 	isnt($status, 0, 'Make cannot name a space');
 	like($out, qr/make cannot name `sp ace' \(with inescapable U\+0020\).*GNU Make can/s,
 		'... and says that GNU Make can');
-	$dir = project('pi|pe');
-	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'ninja');
-	like($out, qr/ninja cannot name `pi\|pe' \(with inescapable `\|'\)/, 'ninja cannot name a |');
 	$dir = project('se;mi');
+	($status, $out) = run($dir, $^X, $script, '-g', '-q');
+	like($out, qr/make cannot name `se;mi' \(with inescapable `;'\).*GNU Make can/s, 'Make cannot name a ;');
+	$dir = project('eq=ual');
 	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'gmake');
-	like($out, qr/GNU Make cannot name `se;mi' \(with inescapable `;'\)/, 'GNU Make cannot name a ;');
+	like($out, qr/GNU Make cannot name `eq=ual' \(with inescapable `='\)/, 'GNU Make cannot name a =');
 	ok(!-e "$dir/Makefile", '... and writes nothing');
+}
+
+# Targets with a `;' and a `|' in them, one in a directory with a `|',
+# whose marker is a target and (with -Sorder=1, and to ninja) an
+# order-only prerequisite.  pi|pe/x.html also needs se;mi.html and
+# in;|put, written as ${U+003B} and ${"|"}.
+sub punct_project
+{
+	project({
+		MANIFEST => "MAKE all\n\tNEED pi\${\"|\"}pe/x.html\n",
+		'Makefile.in' => <<'RULES',
+se${U+003B}mi.html: ${a}/
+	printf '%s\n' ${@:Q} > ${B:Q}/${b:Q}/${@:Q}
+pi${"|"}pe/x.html: ${a}/ ${B}/${b}/se${U+003B}mi.html NEED:${A}/in${U+003B}${"|"}put
+	cat ${B:Q}/${b:Q}/${"se;mi.html":Q} ${A:Q}/${"in;|put":Q} > ${B:Q}/${b:Q}/${@:Q}
+RULES
+		'in;|put' => "input\n",
+	});
+}
+
+sub punct_builds
+{
+	my ($G, $tool, $up_to_date, @opt) = @_;
+	my $dir = punct_project();
+	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', @opt);
+	is($status, 0, "$G: generate targets with a ; and a |") or return diag $out;
+	($status, $out) = run($dir, $tool);
+	is($status, 0, "$G: build them") or return diag $out;
+	is(contents("$dir/site/pi|pe/x.html"), "se;mi.html\ninput\n", '... in a directory with a |');
+	ok($up_to_date->($dir), '... and then they are up to date');
+	my $t = time + 10;
+	utime $t, $t, "$dir/in;|put" or die $!;
+	ok(!$up_to_date->($dir), '... and out of date when what they need is newer');
+	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
+	ok($status == 0 && !-e "$dir/site/pi|pe/x.html" && !-e "$dir/site/se;mi.html",
+		"$G: clean them") or diag $out;
+}
+
+SKIP: {
+	my $why = fs_surprise('se;mi|pi', tempdir(CLEANUP => 1));
+	skip "file system: $why", 12 if defined $why;
+	SKIP: {
+		skip 'no GNU make', 6 unless $gmake;
+		punct_builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] }, '-Sorder=1');
+	}
+	SKIP: {
+		skip 'no ninja', 6 unless $ninja;
+		punct_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
+	}
 }
 
 # A target with a `:' in it, as a Perl module's manual page is named:

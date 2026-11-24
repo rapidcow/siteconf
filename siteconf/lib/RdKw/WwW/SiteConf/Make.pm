@@ -98,6 +98,8 @@ sub _fs { RdKw::WwW::SiteConf::fs_text($_[1]) }
 sub _emit
 {
 	my ($class, $plan) = @_;
+	# (where a name is, for GNU Make: a `target', an `order'-only
+	# prerequisite, or another prerequisite)
 	my $name = sub { $class->_name(@_) };
 	my $fs = sub { $class->_fs(@_) };
 	# What is typed after `make' (the name of a goal, or of a rule): as an
@@ -133,12 +135,12 @@ sub _emit
 	my $deps = sub {
 		my @dep = $order ? grep({ !$marker{$_} } @_) : @_;
 		my @mark = $order ? grep({ $marker{$_} } @_) : ();
-		join ' ', (map { $name->($_) } @dep), (@mark ? ('|', map { $name->($_) } @mark) : ());
+		join ' ', (map { $name->($_) } @dep), (@mark ? ('|', map { $name->($_, 'order') } @mark) : ());
 	};
 
 	for my $dir (@{ $plan->{dirs} }) {
 		my $d = _quote($fs->($dir->{dir}));
-		$out .= $name->($dir->{marker}) . ": " . $deps->(@{ $dir->{deps} }) . "\n";
+		$out .= $name->($dir->{marker}, 'target') . ": " . $deps->(@{ $dir->{deps} }) . "\n";
 		$out .= "\t[ -d $d ] || mkdir -- $d\n";
 		$out .= "\t\@> " . _quote($fs->($dir->{marker})) . "\n";
 	}
@@ -150,7 +152,7 @@ sub _emit
 				# HEY!  the second %s is the value, which has a line break
 				"%s: make cannot spell a line break in %q (it ends a command)"));
 		$recipe .= "\n" if length $recipe and $recipe !~ /\n\z/;
-		$out .= $name->($node->{bpath}) . ": " . $deps->(@{ $node->{deps} }) . "\n" . $recipe;
+		$out .= $name->($node->{bpath}, 'target') . ": " . $deps->(@{ $node->{deps} }) . "\n" . $recipe;
 	}
 	$out;
 }

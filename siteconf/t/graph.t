@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 233;
+use Test::More tests => 236;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -905,12 +905,18 @@ SKIP: {
 		'a$b' => 'a$$b', 'a*b' => 'a[*]b', 'a?b' => 'a[?]b',
 		'a[b]' => 'a[[]b]', '~a' => './~a', 'a\\b' => 'a\\b', 'a\\ b' => 'a\\\\\\ b',
 		'a\\*b' => 'a\\\\[*]b', 'a%b' => 'a%b', 'a(b' => 'a(b', 'a~' => 'a~',
+		# a `;' twice over; a `|' only before the order-only prerequisites
+		'a;b' => 'a\\\\\\;b', 'a\\;b' => 'a\\\\\\\\\\\\\\;b', 'a|b' => 'a\\|b', 'a\\|b' => 'a\\\\\\|b',
 	);
 	for my $name (sort keys %gmake) {
 		is(eval { RdKw::WwW::SiteConf::GMake->_name($name) }, $gmake{$name}, "GNU Make: `" . escape_dep($name) . "'")
 			or diag $@;
 	}
-	for my $name ("a|b", "a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a;b', 'a=b', 'a\\', 'a(b)') {
+	for my $where (qw( target order )) {
+		is(eval { RdKw::WwW::SiteConf::GMake->_name('a b;c|d\\|e', $where) }, 'a\\ b\\\\\\;c|d\\|e',
+			"GNU Make: a `|' is as it is ($where)") or diag $@;
+	}
+	for my $name ("a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a=b', 'a\\', 'a(b)') {
 		ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name($name) }
 			&& $@ =~ /\AE: GNU Make cannot name/, "GNU Make cannot: `" . escape_dep($name) . "'");
 	}
@@ -922,11 +928,11 @@ SKIP: {
 			Encode::encode('UTF-8', "a+b,c\x{e9}\x{a0}%\\d"),
 			'make: what needs no escape is as it is');
 	}
-	ok(!defined eval { RdKw::WwW::SiteConf::Make->_name('a;b') }
-		&& $@ =~ /make cannot name `a;b' \(with inescapable `;'\)$/, '... and there is no -G gmake for some');
-	for my $name ("a\nb", "a\rb", "a\x{2028}b", 'a|b') {
+	ok(!defined eval { RdKw::WwW::SiteConf::Make->_name('a=b') }
+		&& $@ =~ /make cannot name `a=b' \(with inescapable `='\)$/, '... and there is no -G gmake for some');
+	for my $name ("a\nb", "a\rb", "a\x{2028}b") {
 		ok(!defined eval { RdKw::WwW::SiteConf::Ninja::_path($name) }
 			&& $@ =~ /\AE: ninja cannot name/, "ninja cannot: `" . escape_dep($name) . "'");
 	}
-	is(RdKw::WwW::SiteConf::Ninja::_path("a b:c\$d\te#f"), "a\$ b\$:c\$\$d\te#f", 'ninja: escaped');
+	is(RdKw::WwW::SiteConf::Ninja::_path("a b:c\$d\te#f|g"), "a\$ b\$:c\$\$d\te#f\${pipe}g", 'ninja: escaped');
 }

@@ -4,15 +4,20 @@
 
 use strict;
 use warnings;
-use Test::More tests => 24;
+use Test::More tests => 29;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use TestPaths qw( script_path perl5lib );
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
 use RdKw::WwW::SiteConf::Backend::Make;
 use RdKw::WwW::SiteConf::Backend::Gmake;
+
+my $script = script_path();
 
 my $plan = {
 	prog => 'test', D => {}, clean => [],
@@ -90,25 +95,41 @@ PM
 backend(Odd_one => "1;\n");
 unshift @INC, $lib;
 
-like(gen_error('Make'), qr/unknown generator `Make'.  Choose one of: bmake, broken, gmake, make, many/, 'a name -G cannot have');
-like(gen_error('foo-2x'), qr/unknown generator `foo-2x'.  Choose one of: /, 'a part of a name begins with a letter');
-like(gen_error('nope'), qr/unknown generator `nope' \(RdKw::WwW::SiteConf::Backend::Nope is not installed\).  Choose one of: bmake, broken, gmake, make, many/,
+like(gen_error('Make'), qr/\AE: unknown generator `Make' \(siteconf -VV lists those installed\)$/, 'a name -G cannot have');
+like(gen_error('foo-2x'), qr/unknown generator `foo-2x' \(/, 'a part of a name begins with a letter');
+like(gen_error('nope'), qr/unknown generator `nope' \(RdKw::WwW::SiteConf::Backend::Nope is not installed; siteconf -VV lists those that are\)$/,
 	'a generator that is not installed');
-is_deeply([ grep { !/\A(?:ninja|redo)\z/ } RdKw::WwW::SiteConf::generators() ], [qw( bmake broken gmake make many )],
-	'the generators are those installed that -G can name');
+# (others may be installed: ninja, redo, or one in the works)
+my @gen = RdKw::WwW::SiteConf::generators();
+is(join(' ', grep { /\A(?:bmake|broken|gmake|make|many|odd_one)\z/ } map { $_->[0] } @gen),
+	'bmake broken gmake make many', 'the generators are those installed that -G can name');
+is_deeply([ map { $_->[0] } @gen ], [ sort map { $_->[0] } @gen ], '... in order');
+is((map { $_->[1] } grep { $_->[0] eq 'many' } @gen)[0], "$lib/RdKw/WwW/SiteConf/Backend/Many.pm", '... with the file of each');
 like(gen_error('broken'), qr/broken here/, 'a broken generator is not said to be missing');
 like(said('many'), qr/Writing d\/e\/one\.do\n.*Writing two\.do\n.*To build, run: many$/s, 'many files, and what to run');
 ok(-f "$dir/d/e/one.do" && -f "$dir/two.do", '... are written, directories and all');
 like(gen_error('many', 'x'), qr/generator many writes a file for each target, and cannot name them `x'/,
 	'... and cannot be named');
-# (update_file writes x.do by way of tmp-x.do)
-backend(Clash => <<'PM');
-package RdKw::WwW::SiteConf::Backend::Clash;
+# (update_file writes by way of a temporary file of its own, so a file
+# called tmp-x.do is only that)
+backend(Tmp => <<'PM');
+package RdKw::WwW::SiteConf::Backend::Tmp;
 sub options { () }
 sub default_output { undef }
 sub emit { ([ 'd/tmp-x.do', "1\n" ], [ 'd/x.do', "2\n" ]) }
-sub build_command { ('clash') }
+sub build_command { ('tmp') }
 1;
 PM
-like(gen_error('clash'), qr/generator clash cannot write both `d\/x\.do' and `d\/tmp-x\.do'/,
-	'a file that another is written by way of');
+is(gen_error("tmp") . join('', map { open my $fh, '<', "$dir/d/$_" or die; <$fh> } qw( tmp-x.do x.do )),
+	"1\n2\n", 'x.do and tmp-x.do are each written');
+
+# --- siteconf -VV lists the generators and the codesets; -VVV where
+# each generator is
+{
+	local $ENV{PERL5LIB} = join ':', $lib, perl5lib();
+	my $vv = `"$^X" "$script" -VV 2>&1`;
+	like($vv, qr/^generator make\ngenerator many$/m, '-VV: the generators');
+	like($vv, qr/^argv:\S* env:\S* filesys:/m, '... and the codesets');
+	like(`"$^X" "$script" -VVV 2>&1`, qr/^generator many "\Q$lib\E\/RdKw\/WwW\/SiteConf\/Backend\/Many\.pm"$/m,
+		'-VVV: where each generator is');
+}

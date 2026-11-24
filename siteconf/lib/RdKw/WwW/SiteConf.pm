@@ -2362,8 +2362,11 @@ C<emit> was given.
 
 =item B<generators>
 
-Not a method.  The names of the generators that are installed (that
-have a module in C<@INC>), sorted.
+Not a method.  The generators that are installed (that have a module
+in C<@INC>), sorted by name: a list of C<[ NAME, FILE ]>, where
+I<FILE> is the module that C<require> would load.  It reads every
+directory of C<@INC>, so only C<siteconf -VV> asks for it; C<-G>
+loads the one module it names.
 
 =cut
 
@@ -2381,14 +2384,16 @@ sub generators
 {
 	my %found;
 	for my $dir (grep { !ref } @INC) {
-		opendir my $dh, "$dir/RdKw/WwW/SiteConf/Backend" or next;
-		for my $file (readdir $dh) {
+		my $sub = "$dir/RdKw/WwW/SiteConf/Backend";
+		opendir my $dh, $sub or next;
+		for my $file (sort readdir $dh) {
 			my ($leaf) = $file =~ /\A((?:[A-Z][a-z0-9]*)+)\.pm\z/ or next;
-			# (a capital begins a part: Gmake is gmake, GMake g-make)
-			$found{ join q(-), map { lc } $leaf =~ /([A-Z][a-z0-9]*)/g } = 1;
+			# (a capital begins a part: Gmake is gmake, GMake g-make;
+			# and the first in @INC is the one that is loaded)
+			$found{ join q(-), map { lc } $leaf =~ /([A-Z][a-z0-9]*)/g } ||= "$sub/$file";
 		}
 	}
-	sort keys %found;
+	map { [ $_, $found{$_} ] } sort keys %found;
 }
 
 sub generate
@@ -2396,9 +2401,8 @@ sub generate
 	my ($self, $G, $out) = @_;
 	$G = 'make' unless defined $G and length $G;
 	$G =~ $BACKEND_NAME or die _status 0, tagmsg(E => diag(__(
-		# HEY!  %s is the generators (make, gmake, ninja)
-		"unknown generator %q.  Choose one of: %s"),
-		$G, join(q(, ), generators())));
+		"unknown generator %q (siteconf -VV lists those installed)"),
+		$G));
 	my $module = _backend_module($G);
 	(my $pm = "$module.pm") =~ s!::!/!g;
 	unless (eval { require $pm; 1 }) {
@@ -2406,10 +2410,10 @@ sub generate
 		$@ =~ /\ACan't locate \Q$pm\E in \@INC/ or die $@;
 		die _status 0, tagmsg(E => diag(__(
 			# HEY!  the first %s is the generator (ninja), the second the
-			# module that would be it, and the third the generators that
-			# are installed (make, gmake)
-			"unknown generator %q (%s is not installed).  Choose one of: %s"),
-			$G, $module, join(q(, ), generators())));
+			# module that would be it
+			"unknown generator %q (%s is not installed;"
+			. " siteconf -VV lists those that are)"),
+			$G, $module));
 	}
 	my $outfile = $module->default_output;
 	my $named = defined $out && length $out;
@@ -2471,17 +2475,6 @@ sub generate
 	# (and what has no name is not written: -o /dev/null)
 	$plan->{output} = $outfile;
 	my @file = grep { defined $_->[0] } $module->emit($plan, $outfile);
-	# update_file writes `dir/name' by way of `dir/tmp-name', which would
-	# take the place of a file of that name that we write too
-	my %emitted = map { File::Spec->canonpath($_->[0]) => 1 } @file;
-	for my $name (map { $_->[0] } @file) {
-		my $tmp = File::Spec->canonpath(dirname($name) . '/tmp-' . basename($name));
-		$emitted{$tmp} and die _status 0, tagmsg(E => diag(__(
-			# HEY!  %s are two names of files that the generator writes;
-			# the first is written by way of the second
-			"generator %s cannot write both %q and %q: the first is"
-			. " written by way of the second"), $G, $name, $tmp));
-	}
 	for my $file (@file) {
 		my ($name, $text) = @$file;
 		my $path = "$self->{B}/$name";

@@ -152,11 +152,14 @@ Print usage and exit.
 =item B<-V>, B<--version>
 
 Print the siteconf version and exit.  Repeat as C<-VV> for library
-versions, or C<-VVV> for module and locale paths as well.
+versions, the generators (C<-G>) that are installed, and the codeset
+of each category; or C<-VVV> for the paths of modules, generators and
+locale files as well.
 The format and order are subject to change.
 
 C<-V> and C<-VV> were added and implemented in 0.0100.
-C<-VVV> was extended in 0.0300.
+C<-VVV> was extended in 0.0300.  C<-VV> lists the generators, and the
+codesets (which were C<-VVV> only), in 0.0300.
 
 =item B<-i>, B<init>
 
@@ -544,9 +547,9 @@ GetOptions(
 ) or die $usage;
 
 if ($vee) {
-	# -V: ours alone; -VV: what we run on, and what we found; -VVV:
-	# also where we found our catalogs and share, and how we spell
-	# things.  None of it goes through $cs->diag, which may not work.
+	# -V: ours alone; -VV: what we run on, what we found, and how we
+	# spell things; -VVV: also where we found modules, generators, our
+	# catalogs and share.  None of it goes through $cs->diag, which may not work.
 	# (at -VV and up, it is in the list below)
 	if ($vee == 1) {
 		print "$prog version $RdKw::WwW::SiteConf::VERSION\n";
@@ -579,17 +582,13 @@ if ($vee) {
 		my $ver = $fren->VERSION();
 		print "$name$where version " . (defined $ver ? $ver : '(none)') . "\n";
 	}
-	exit unless $vee > 2;
 
-	# Perl-ish quotes, as pq() makes them; these are bytes, as the system spells them
-	my $l10n = $INC{'RdKw/WwW/SiteConf/L10N.pm'};
-	if ($l10n) {
-		no warnings 'once';
-		print "L10N domain " . pq($RdKw::WwW::SiteConf::L10N::DOMAIN) . "\n";
-		print "L10N locale directory " . pq($RdKw::WwW::SiteConf::L10N::LOCALEDIR) . "\n";
+	# The generators (-G) that are installed: found, not loaded, so a
+	# broken one is listed too
+	for (RdKw::WwW::SiteConf::generators()) {
+		my ($G, $file) = @$_;
+		print "generator $G" . ($vee > 2 ? " " . pq($file) : "") . "\n";
 	}
-	my $dist = eval { File::ShareDir::dist_dir('WwW-SiteConf') };
-	print "share directory " . (defined $dist ? pq($dist) : '(none)') . "\n";
 
 	# (stdin, stdout, stderr are in the order of their file numbers)
 	# What each category is set to (empty if it is not), and what it
@@ -602,6 +601,17 @@ if ($vee) {
 		"$_:" . ($set eq $enc ? $set : "$set(=$enc)");
 	} qw( argv env filesys stdin stdout stderr );
 	print "@cats\n";
+	exit 0 unless $vee > 2;
+
+	# Perl-ish quotes, as pq() makes them; these are bytes, as the system spells them
+	my $l10n = $INC{'RdKw/WwW/SiteConf/L10N.pm'};
+	if ($l10n) {
+		no warnings 'once';
+		print "L10N domain " . pq($RdKw::WwW::SiteConf::L10N::DOMAIN) . "\n";
+		print "L10N locale directory " . pq($RdKw::WwW::SiteConf::L10N::LOCALEDIR) . "\n";
+	}
+	my $dist = eval { File::ShareDir::dist_dir('WwW-SiteConf') };
+	print "share directory " . (defined $dist ? pq($dist) : '(none)') . "\n";
 	exit 0;
 }
 

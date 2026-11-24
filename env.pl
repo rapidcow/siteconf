@@ -40,8 +40,8 @@ GetOptions("s=s" => \$shell) or die $usage;
 if (@ARGV) {
 	my %env = prepend_path( PERL5LIB => get_inc() );
 	$ENV{$_} = join($sep, @{ $env{$_} }) for keys %env;
-	exec @ARGV;
-	die "exec $ARGV[0]: $!\n";
+	exec { $ARGV[0] } @ARGV;
+	exit $!;
 }
 
 unless (defined $shell) {

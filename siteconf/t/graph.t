@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 238;
+use Test::More tests => 262;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -476,9 +476,9 @@ SKIP:	{
 		}
 	}
 	# (a quote in it would confuse `the quotes')
-	$dir = project({ MANIFEST => "MAKE all\n\tNEED it's.css\n" });
+	$dir = project({ MANIFEST => "MAKE all\n\tNEED /it's.css\n" });
 	eval { plan_of($dir) };
-	like($@, qr/bad file name "it's\.css"/, 'a name with a quote is "quoted"');
+	like($@, qr/file name "\/it's\.css" must be relative/, 'a name with a quote is "quoted"');
 
 	# ${<} cannot be in a prerequisite
 	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${<}\n\ttrue\n" });
@@ -921,6 +921,8 @@ SKIP: {
 		'a\\*b' => 'a\\\\[*]b', 'a%b' => 'a%b', 'a(b' => 'a(b', 'a~' => 'a~',
 		# a `;' twice over; a `|' only before the order-only prerequisites
 		'a;b' => 'a\\\\\\;b', 'a\\;b' => 'a\\\\\\\\\\\\\\;b', 'a|b' => 'a\\|b', 'a\\|b' => 'a\\\\\\|b',
+		# as they are
+		q(a<b>"c'd`e&f{g}) => q(a<b>"c'd`e&f{g}), 'a\\%b' => 'a\\%b', 'a&' => 'a&', "a\\\tb" => "a\\\\\\\tb",
 	);
 	for my $name (sort keys %gmake) {
 		is(eval { RdKw::WwW::SiteConf::GMake->_name($name) }, $gmake{$name}, "GNU Make: `" . escape_dep($name) . "'")
@@ -930,9 +932,21 @@ SKIP: {
 		is(eval { RdKw::WwW::SiteConf::GMake->_name('a b;c|d\\|e', $where) }, 'a\\ b\\\\\\;c|d\\|e',
 			"GNU Make: a `|' is as it is ($where)") or diag $@;
 	}
-	for my $name ("a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a=b', 'a\\', 'a(b)') {
+	# a `%' in a target (2k+1 backslashes for k), and a space after a `&'
+	my %target = ('a%b' => 'a\\%b', 'a\\%b' => 'a\\\\\\%b', 'a&' => 'a& ', 'a\\&' => 'a\\& ', 'a&b' => 'a&b');
+	for my $name (sort keys %target) {
+		is(eval { RdKw::WwW::SiteConf::GMake->_name($name, 'target') }, $target{$name},
+			"GNU Make: target `" . escape_dep($name) . "'") or diag $@;
+	}
+	for my $name ("a\nb", "a\rb", "a\fb", "a\x{2028}b", 'a=b', 'a\\', 'a(b)', 'b)') {
 		ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name($name) }
 			&& $@ =~ /\AE: GNU Make cannot name/, "GNU Make cannot: `" . escape_dep($name) . "'");
+	}
+	ok(!defined eval { RdKw::WwW::SiteConf::GMake->_name("a\tb", 'target') }
+		&& $@ =~ /\AE: GNU Make cannot name .* U\+0009/, 'GNU Make cannot: a tab in a target');
+	for my $name ('a#b', 'a%b', 'a\\b', q(a"b), q(a'b), 'a`b', 'a<b', 'a>b', 'a&b', 'a{b', 'a(b') {
+		ok(!defined eval { RdKw::WwW::SiteConf::Make->_name($name, 'target') }
+			&& $@ =~ /\AE: make cannot name .*GNU Make can/s, "make cannot, GNU Make can: target `" . escape_dep($name) . "'");
 	}
 	{
 		# Spelled as the file system does.  Here that is UTF-8.
@@ -941,6 +955,8 @@ SKIP: {
 		is(RdKw::WwW::SiteConf::Make->_name("a+b,c\x{e9}\x{a0}%\\d"),
 			Encode::encode('UTF-8', "a+b,c\x{e9}\x{a0}%\\d"),
 			'make: what needs no escape is as it is');
+		is(RdKw::WwW::SiteConf::Make->_name(q(a<b>"c'd`e&f)), q(a<b>"c'd`e&f),
+			'... in a prerequisite, quotes, <> and & too');
 	}
 	ok(!defined eval { RdKw::WwW::SiteConf::Make->_name('a=b') }
 		&& $@ =~ /make cannot name `a=b' \(with inescapable `='\)$/, '... and there is no -G gmake for some');
@@ -949,4 +965,6 @@ SKIP: {
 			&& $@ =~ /\AE: ninja cannot name/, "ninja cannot: `" . escape_dep($name) . "'");
 	}
 	is(RdKw::WwW::SiteConf::Ninja::_path("a b:c\$d\te#f|g"), "a\$ b\$:c\$\$d\te#f\${pipe}g", 'ninja: escaped');
+	is(RdKw::WwW::SiteConf::Ninja::_path(q(a%b\\c<d>"e'f`g&h(i){j})), q(a%b\\c<d>"e'f`g&h(i){j}),
+		'ninja: the rest as they are');
 }

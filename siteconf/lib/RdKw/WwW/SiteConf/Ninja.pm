@@ -33,8 +33,9 @@ failure.  For clean-up there is C<ninja -t clean>.
 
 A space, C<:> or C<$> in a name is escaped (as C<$ >, C<$:> and
 C<$$>).  A C<|> has no escape, and is C<${pipe}>, a variable that
-F<build.ninja> sets to C<|>.  A vertical space (a line break, CR,
-form feed, ...) cannot be named, and is an error.
+F<build.ninja> sets to C<|>.  Any other character is as it is, a tab
+and a C<#> included.  A vertical space (a line break, CR, form feed,
+...) cannot be named, and is an error.
 
 C<_emit> returns bytes, as L<RdKw::WwW::SiteConf::Make> does.  Ninja
 reads F<build.ninja> as bytes, so every name and every recipe is

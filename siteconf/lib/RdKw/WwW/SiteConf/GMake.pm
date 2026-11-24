@@ -31,12 +31,20 @@ C<k> before it: GNU Make looks for the C<;> that begins a recipe
 before it unescapes a rule line.  A C<|> is escaped (C<\|>) among the
 prerequisites before the order-only ones, and only there: in a target,
 or after the C<|> that begins the order-only prerequisites, it is as
-it is, and so is a backslash before it.  GNU Make 3.81 and 4.4.1 both
-read them so.
+it is, and so is a backslash before it.  A C<%> is escaped (C<\%>) in
+a target, where it would make a pattern rule, with C<2k+1>
+backslashes for C<k> before it; in a prerequisite it is as it is, and
+so is a backslash before it.  A target that ends in C<&> has a space
+before its colon, since GNU Make 4.3 and newer read C<&:> as the
+colon of grouped targets.  GNU Make 3.81 and 4.4.1 both read all of
+these so.  Other characters (C<E<lt>E<gt>"'`&{}>, a C<(>, and a
+C<\> before none of the above) are as they are.
 
 What it cannot name is an error still: a vertical space (a line
-break, CR, form feed, ...), a C<=>, a C<\> at the end, or a name that
-ends in parentheses, which would be an archive member.
+break, CR, form feed, ...), a C<=>, a C<\> at the end, a tab in a
+target, or a name that ends in C<)>.  Such a name would be an archive
+member, or would end the list of members that a C<(> in a name
+before it begins.
 With C<-Sorder=1>, a directory marker is an order-only prerequisite
 (after a C<|>), so that what is made in a directory does not wait on how
 new its marker is.  Any other value of C<order> (C<0>, empty or none)
@@ -64,25 +72,32 @@ sub _name
 {
 	my ($class, $s, $where) = @_;
 	$where ||= '';
+	my $target = $where eq 'target';
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}=]|\\\z)/
+		|| $target && $s =~ /(\t)/
 		# HEY!  the %s is a character, as `=' or U+000A
 		and die _status 0, tagmsg(E => diag(__(
 			"GNU Make cannot name %q (with inescapable %s)"),
 			$s, $class->_char($1)));
-	$s =~ /\(.*\)\z/s
+	# (a name that ends in `)' can also end the member list that a `(' in
+	# a name before it begins, as in `lib(a.o' `b.o)')
+	$s =~ /\)\z/
 		# HEY!  lib(member.o) is how make names a member of an archive
 		and die _status 0, tagmsg(E => diag(__(
 			"GNU Make cannot name %q (reserved for archive members)"),
 			$s));
 	$s =~ s/\$/\$\$/g;
-	$s =~ s{(\\*)([\t #:;|])}{
+	$s =~ s{(\\*)([\t #:;|%])}{
 		my ($bs, $c) = ($1, $2);
 		$c eq ';' ? '\\' x (4 * length($bs) + 3) . ';'
 		: $c eq '|' && $where ne '' ? "$bs|"
+		: $c eq '%' && !$target ? "$bs%"
 		: "$bs$bs\\$c"
 	}ge;
 	$s =~ s/(\\*)([*?\[])/$1$1\[$2\]/g;
 	$s =~ s/\A~/.\/~/;
+	# (GNU Make 4.3 reads `&:' as the colon of grouped targets)
+	$s .= ' ' if $target && $s =~ /&\z/;
 	$class->_fs($s);
 }
 

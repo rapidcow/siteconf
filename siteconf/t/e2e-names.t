@@ -34,7 +34,7 @@ my $gmake = gmake_since(3, 81);
 my $gmake_colon = gmake_since(4, 0);
 my $ninja = $ENV{NINJA} || 'ninja';
 $ninja = undef if system("$ninja --version >/dev/null 2>&1");
-plan tests => 78;
+plan tests => 100;
 
 my @name = ('sp ace', "ta\tb", 'ha#sh', 'se;mi', 'pi|pe', 'do$llar', 'st*ar', 'qu?est',
 	'br[ack]et', '~tilde', 'back\\slash', 'back\\ space');
@@ -252,6 +252,83 @@ SKIP: {
 		skip 'no ninja', 6 unless $ninja;
 		punct_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
 	}
+}
+
+# Targets with a `%', a `#', a `\', quotes, a `&' at the end, and
+# `<>(){}', all in a directory with a `%', whose marker is a target and
+# (with -Sorder=1, and to ninja) an order-only prerequisite.
+# per%cent/x.html also needs in%put.  A `%' and a `#' inside a word are
+# written as they are, in MANIFEST and in Makefile.in.
+my @odd = ('hello%20world.html', 'h#sh.html', 'back\\slash.html', q(q"u'o`te.html), 'amp&',
+	'(an<g>{le}.html');
+sub odd_project
+{
+	project({
+		MANIFEST => "MAKE all\n\tNEED per%cent/x.html hello%20world.html\n",
+		'Makefile.in' => <<'RULES',
+hello%20world.html h#sh.html back${U+005C}slash.html q${U+0022}u${U+0027}o${U+0060}te.html amp${U+0026} ${U+0028}an${U+003C}g${U+003E}${U+007B}le${U+007D}.html: ${a}/
+	printf '%s\n' ${@:Q} > ${B:Q}/${b:Q}/${@:Q}
+per%cent/x.html: ${a}/ ${B}/${b}/hello%20world.html ${B}/${b}/h#sh.html ${B}/${b}/back${U+005C}slash.html ${B}/${b}/q${U+0022}u${U+0027}o${U+0060}te.html ${B}/${b}/amp${U+0026} ${B}/${b}/${U+0028}an${U+003C}g${U+003E}${U+007B}le${U+007D}.html NEED:${A}/in%put
+	cat ${B:Q}/${b:Q}/${"amp&":Q} ${A:Q}/in%put > ${B:Q}/${b:Q}/${@:Q}
+RULES
+		'in%put' => "input\n",
+	});
+}
+
+sub odd_builds
+{
+	my ($G, $tool, $up_to_date, @opt) = @_;
+	my $dir = odd_project();
+	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', @opt);
+	is($status, 0, "$G: generate targets with a %, a #, a \\, quotes and a &") or return diag $out;
+	($status, $out) = run($dir, $tool);
+	is($status, 0, "$G: build them") or return diag $out;
+	is_deeply([map { contents("$dir/site/$_") } @odd], [map { "$_\n" } @odd], '... each by its name');
+	is(contents("$dir/site/per%cent/x.html"), "amp&\ninput\n", '... and in a directory with a %');
+	ok($up_to_date->($dir), '... and then they are up to date');
+	my $t = time + 10;
+	utime $t, $t, "$dir/in%put" or die $!;
+	ok(!$up_to_date->($dir), '... and out of date when what they need is newer');
+	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', @opt, '-F', 'MY/MANIFEST', '-t', 'all');
+	is($status, 0, '... and the resolved manifest can be read back') or diag $out;
+	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
+	ok($status == 0 && !grep({ -e "$dir/site/$_" } @odd, 'per%cent/x.html'),
+		"$G: clean them") or diag $out;
+}
+
+SKIP: {
+	my $why = fs_surprise(q(%#\\"'`&<>(){}), tempdir(CLEANUP => 1));
+	skip "file system: $why", 22 if defined $why;
+	SKIP: {
+		skip 'no GNU make', 8 unless $gmake;
+		odd_builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] }, '-Sorder=1');
+	}
+	SKIP: {
+		skip 'no ninja', 8 unless $ninja;
+		odd_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
+	}
+	my $dir = odd_project();
+	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'make');
+	like($out, qr/make cannot name .* \(with inescapable `[%#\\"'`&<>(){}]'\),\n.*GNU Make can/,
+		'POSIX Make cannot name them, but GNU Make can');
+	ok($status != 0 && !-e "$dir/Makefile", '... and writes nothing');
+	# (but as prerequisites, by a header, they are as they are)
+	$dir = project('pc%t', 'ba\\ck', q(q"u'o`te), '<a&b>');
+	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'make');
+	is($status, 0, 'POSIX Make names them in a prerequisite') or diag $out;
+	SKIP: {
+		skip 'no make', 1 unless -x '/usr/bin/make' || $gmake;
+		($status, $out) = run($dir, -x '/usr/bin/make' ? '/usr/bin/make' : $gmake);
+		ok($status == 0 && -f "$dir/site/a.html", '... and make builds it') or diag $out;
+	}
+	# (in a target; a tab in a prerequisite is escaped)
+	$dir = project({ MANIFEST => "MAKE all\n\tNEED ta\${U+0009}b\n",
+		'Makefile.in' => "ta\${U+0009}b: \${a}/\n\ttouch \${B:Q}/\${b:Q}/\${\@:Q}\n" });
+	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'gmake');
+	like($out, qr/GNU Make cannot name .* \(with inescapable U\+0009\)/, 'GNU Make cannot name a tab in a target');
+	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'make');
+	ok($out =~ /make cannot name .* \(with inescapable U\+0009\)/ && $out !~ /GNU Make can/,
+		'... and POSIX Make does not say that it can') or diag $out;
 }
 
 # A target with a `:' in it, as a Perl module's manual page is named:

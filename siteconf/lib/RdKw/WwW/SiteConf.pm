@@ -922,14 +922,15 @@ sub recipe_bytes
 # `$' for make is $$; for what the shell reads, which make must not
 sub _dollars { (my $s = $_[0]) =~ s/\$/\$\$/g; $s }
 
-# Names that cannot escape from the source or the output tree.
-# A space, a `:', `;', `|' or `$' and the wildcards `*?[]' are allowed
-# here; the selected backend must escape or reject them.  A name is
-# also refused if the file system spells a character of it with an ASCII byte that is special (fs_text).
+# Names that cannot escape from the source or the output tree.  Only an
+# empty name and a NUL are refused for every backend: the selected
+# backend must escape or reject any other character.  A name is also
+# refused if the file system spells a character of it with an ASCII
+# byte that is special (fs_text).
 sub _check_file
 {
 	my ($file, $where) = @_;
-	$file =~ m!\A[^\t\n\cK\f\r\0#%\\<>"'`(){}&]+\z!
+	length $file && $file !~ /\0/
 		or die _status 0, tagmsg(E => diag(__(
 			# HEY!  The first %s is always where (a file, or `file' line 3),
 			# in this message and in those that follow it
@@ -952,8 +953,8 @@ You can also give a scalar reference instead of a file name.  It is
 read by L<RdKw::WwW::GenGenLib/read_manifest> (so names are unescaped),
 and then what we cannot have is an error: a reserved goal name, and a
 file name we do not permit as a target (an absolute one, one with
-C<..>, or special characters other than spaces, C<:>, C<;>, C<|> and C<$>).  The backend
-escapes those, or rejects them in the case of POSIX make.
+C<..>, or an empty one, or one with a NUL).  The backend escapes any
+other special character or rejects it; POSIX make rejects most of them.
 
 =cut
 

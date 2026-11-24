@@ -27,8 +27,9 @@ Any make will not do with just any name, though: there is no
 escaping a file name in POSIX, and bmake reads a dependency line
 twice, so that not even C<$$> is a C<$>.  So a name with white
 space, a control, a C<$>, any of C<#:;=|(){}[]*?>, a C<\> at the
-end or a C<~> in front is an error here; L<RdKw::WwW::SiteConf::GMake>
-escapes most of those.
+end or a C<~> in front is an error here, and so is a target with any
+of C<%\E<lt>E<gt>"'`&>; L<RdKw::WwW::SiteConf::GMake> escapes most of
+those.
 
 Names are spelled by C<< $class->_name >>, so that a subclass need
 only say how else to spell them.
@@ -107,6 +108,12 @@ sub _emit
 	my $arg = sub { RdKw::WwW::SiteConf::argv_text($_[0]) };
 	my $D = $plan->{D};
 	my @goal = @{ $plan->{goals} };
+	# Every target is named as one first: the goal lines name them as
+	# prerequisites, and an error there would say what GNU Make can do
+	# with a prerequisite (a tab, say), which is not what it can do with
+	# a target.
+	$name->($_, 'target') for (map { $_->{marker} } @{ $plan->{dirs} }),
+		map { $plan->{node}{$_}{bpath} } @{ $plan->{order} };
 	my $out = "#\n# Makefile!\n" . RdKw::WwW::SiteConf::header_comment($plan) . "#\n"
 		. ".PHONY: " . join(' ', map { $arg->($_->{name}) } @goal, @{ $plan->{clean} }) . "\n";
 
@@ -166,11 +173,14 @@ sub _order_only { 0 }
 # A name, as any make reads it: as it is, or not at all
 sub _name
 {
-	my ($class, $s) = @_;
-	$s =~ /([\p{Cc} \x{2028}\x{2029}\$#:;=|(){}\[\]*?]|\\\z|\A~)/ or return $class->_fs($s);
+	my ($class, $s, $where) = @_;
+	# (and in a target, what siteconf has never let a target have)
+	$s =~ /([\p{Cc} \x{2028}\x{2029}\$#:;=|(){}\[\]*?]|\\\z|\A~)/
+		|| ($where || '') eq 'target' && $s =~ /([%\\<>"'`&])/
+		or return $class->_fs($s);
 	my $c = $1;
 	require RdKw::WwW::SiteConf::GMake;
-	my $gnu_can = eval { RdKw::WwW::SiteConf::GMake->_name($s); 1 };
+	my $gnu_can = eval { RdKw::WwW::SiteConf::GMake->_name($s, $where); 1 };
 	die _status 0, tagmsg(E => diag($gnu_can
 		# HEY!  the %s is a character, as `$' or U+0020.
 		# You don't need to keep the ";)"; it's just

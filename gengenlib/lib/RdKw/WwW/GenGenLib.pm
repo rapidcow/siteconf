@@ -51,6 +51,7 @@ use Encode ();
 use File::Basename qw( basename dirname );
 use File::Compare ();
 use File::Spec;
+use File::Temp ();
 use IO::Handle ();
 
 # Import locale and set up gettext.
@@ -352,23 +353,38 @@ sub update_file
 	my $prog = _getprog(\%opt, 'update_file');
 	my $layer = $opt{raw} ? ':raw' : ':encoding(UTF-8)';
 	#
-	# Try writing to the same file system to ensure atomicity.
-	# Polluting directory is fine, since we usually own the
-	# whole directory (MY/ over MY/*.mk) anyways...
+	# The temporary file is in the same directory, so that the rename
+	# is atomic.  File::Temp gives it a name that no file has (a redo
+	# file, say, which a fixed name like tmp-Makefile could be), and
+	# creates it with O_EXCL.
 	#
-	my $tmp = File::Spec->catfile(dirname($file), 'tmp-' . basename($file));
-
-	my ($tmp_fs, $file_fs) = map { to_fs($_, { prog => $prog }) } $tmp, $file;
-
-	open my $fh, ">$layer", $tmp_fs
-		or die tagmsg($prog => diag(__(
-			"cannot create file %q: %m"), $tmp));
+	my $dir = dirname($file);
+	my $file_fs = to_fs($file, { prog => $prog });
+	my $dir_fs = to_fs($dir, { prog => $prog });
+	# (the template is ASCII, so the name is the same in bytes; but it
+	# must be bytes, or perl would upgrade $dir_fs when it joins them)
+	(my $template = '.' . basename($file)) =~ s/[^A-Za-z0-9._-]/_/g;
+	utf8::downgrade($template);
+	my ($fh, $tmp_fs) = eval {
+		File::Temp::tempfile("$template.XXXXXXXX", DIR => $dir_fs, UNLINK => 0)
+	} or die tagmsg($prog => diag(__(
+		"cannot create file %q: %m"), File::Spec->catfile($dir, "$template.XXXXXXXX")));
+	my $tmp = File::Spec->catfile($dir, basename($tmp_fs));
+	my $fail = sub {
+		my $msg = diag(@_);
+		close $fh;
+		unlink $tmp_fs;
+		die tagmsg($prog => $msg);
+	};
+	# File::Temp makes it 0600; a file we write is as open() would make it
+	chmod 0666 & ~umask, $tmp_fs
+		or $fail->(__("cannot write file %q: %m"), $tmp);
+	binmode $fh, $layer
+		or $fail->(__("cannot write file %q: %m"), $tmp);
 	print $fh $text
-		or die tagmsg($prog => diag(__(
-			"cannot write file %q: %m"), $tmp));
+		or $fail->(__("cannot write file %q: %m"), $tmp);
 	close $fh
-		or die tagmsg($prog => diag(__(
-			"cannot write file %q: %m"), $tmp));
+		or $fail->(__("cannot write file %q: %m"), $tmp);
 
 	my $exists = -e $file_fs;
 	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0) {
@@ -376,9 +392,7 @@ sub update_file
 		return 0;  # make it numeric so `>' isn't upset
 	}
 	rename $tmp_fs, $file_fs
-		or die tagmsg($prog => diag(__(
-			"cannot rename %q to %q: %m"),
-			$tmp, $file));
+		or $fail->(__("cannot rename %q to %q: %m"), $tmp, $file);
 	$exists ? 1 : 2;
 }
 

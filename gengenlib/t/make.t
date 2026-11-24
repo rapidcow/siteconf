@@ -6,7 +6,7 @@ use utf8;
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 13 + 19 + 6;
+use Test::More tests => 15 + 19 + 6;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -24,6 +24,10 @@ my $dir = tempdir(CLEANUP => 1);
 # --- write_make / read_make / update_file
 {
 	my $f = "$dir/x.mk";
+	# (a file of that name is someone else's)
+	open my $other, '>', "$dir/tmp-x.mk" or die $!;
+	print $other "mine\n";
+	close $other or die $!;
 	cmp_ok(write_make($f, { b => 'site', aa => 'a b', c => 'é' }, prog => 'test'),
 		'==', 2, 'write_make creates');
 	is_deeply({ read_make($f) }, { b => 'site', aa => 'a b', c => 'é' },
@@ -38,7 +42,10 @@ my $dir = tempdir(CLEANUP => 1);
 	is((stat $f)[9], 1000000000, 'mtime kept');
 	cmp_ok(write_make($f, { b => 'docs' }, prog => 'test'),
 		'==', 1, 'changed');
-	ok(!-e "$dir/tmp-x.mk", 'no temporary left behind');
+	opendir my $dh, $dir or die $!;
+	is_deeply([sort grep { !/\A\.\.?\z/ } readdir $dh], ['tmp-x.mk', 'x.mk'], 'no temporary left behind');
+	is(do { open my $fh, '<', "$dir/tmp-x.mk"; local $/; <$fh> }, "mine\n", '... and tmp-x.mk is as it was');
+	is((stat $f)[2] & 07777, 0666 & ~umask, '... and the mode is as umask says');
 	ok(!eval { write_make($f, { 'a=b' => 1 }, prog => 'test'); 1 }, 'bad name refused');
 }
 

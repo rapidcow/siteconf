@@ -24,12 +24,17 @@ RdKw::WwW::SiteConf::Backend::Redo - redo backend for siteconf
 The generator C<redo> of L<RdKw::WwW::SiteConf/generate>.  It writes a
 F<.do> file for each target, next to the target (F<site/index.html.do>
 for F<site/index.html>, in the build directory), and one for each goal
-in the build directory.  The first goal, the default, is F<all.do>,
-whatever its name, so that C<redo> alone makes it (and so its name may
-be that of a directory); the others are I<goal>F<.do>, and none may be
-called C<all>.  A file of any of those names that is already there is
-overwritten.  So the output tree holds the F<.do>
+in the build directory, I<goal>F<.do> (with the directories its name
+says: F<demo/index.do> for C<demo/index>).  The first goal, the
+default, is F<all.do> as well, so that C<redo> alone makes it; so no
+other goal may be called C<all>.  A file of any of those names that is
+already there is overwritten.  So the output tree holds the F<.do>
 files too.
+
+The header of a goal's F<.do> file says how C<siteconf -g> was run.
+That of a target's leaves out the goals (C<-t>), so that it is the same
+file whatever goals are asked for, and is left alone if its rule has not
+changed.
 
 A goal's F<.do> file runs C<redo-ifchange> on the files of the goal.
 A target's F<.do> file goes to the build directory (a F<.do> file runs
@@ -54,10 +59,12 @@ A target, and a goal, is named twice: as a file (its F<.do> file), and
 as an argument (to C<redo>, or C<redo-ifchange>).  So it is an error if
 the encoding of arguments (B<argv> of L<RdKw::I18N::CodeSets>) spells
 it differently from the file system (B<filesys>).  It is an error, too,
-if a goal has the name of a target or of a directory of one, and if
-a target is out of the build directory (where its F<.do> file could
-not find the build directory again).  Any other name is quoted for the
-shell, a line break included.
+if a goal has the name of a file that a target makes or needs (redo
+would take the goal for that file, and not make it), and if a target or
+a goal is out of the build directory (where its F<.do> file could not
+find the build directory again: a C<..> in its name, say).  The name
+of a directory is all right.  Any other name is quoted for the shell, a
+line break included.
 
 Tested with apenwarr's redo, 0.42d.
 
@@ -82,10 +89,10 @@ The F<.do> files, as C<[ >I<name>C<, >I<bytes>C< ]>.
 
 =item B<build_command> I<generator>, I<builddir>, I<file>, I<goal>
 
-C<( cd >I<builddir>C< && redo all )>, run from the build directory as
-C<make -C> would be (and so with the database of redo there):
-I<goal>, the first, is F<all.do>.  C<redo all> if I<builddir> is
-C<.>, and without C<all> if there is no goal.
+C<( cd >I<builddir>C< && redo >I<goal>C< )>, run from the build
+directory as C<make -C> would be (and so with the database of redo
+there); C<redo> I<goal> if I<builddir> is C<.>, and without I<goal> if
+there is none.
 
 =back
 
@@ -104,16 +111,22 @@ sub default_output { undef }
 sub emit
 {
 	my ($class, $plan) = @_;
+	# A goal's .do says how it was asked for; a target's does not (with
+	# -t, -t WANT: or none, the same rule is the same file, which is
+	# then left alone)
 	my $head = "#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment($plan) . "#\n";
+	my $target_head = "#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment(
+		{ %$plan, args => [ _without_goals(@{ $plan->{args} || [] }) ] }) . "#\n";
 	my $marker = qr{(?:\A|/)\Q$plan->{D}{e}\E\z};
 	my @file;
 
-	# What a goal may not be called: a target, or a directory of one
+	# What a goal may not be called: a file, which redo would take for
+	# that file (a target, as the same .do file; or a source, which redo
+	# does not make).  A directory is all right.
 	my %taken;
 	for my $file (@{ $plan->{order} }) {
-		my $path = $plan->{node}{$file}{bpath};
-		$taken{$path} = 1;
-		$taken{$path} = 1 while $path =~ s!/[^/]*\z!!;
+		my $node = $plan->{node}{$file};
+		$taken{$_} = 1 for $node->{bpath}, grep { !/$marker/ } @{ $node->{deps} };
 	}
 
 	for my $file (@{ $plan->{order} }) {
@@ -127,7 +140,7 @@ sub emit
 		@cmd or die _status 0, tagmsg(E => diag(__(
 			"%#q: no recipe to make it (and redo has no way to make"
 			. " nothing)"), $file));
-		my $text = $head . _preamble($target, 'out');
+		my $text = $target_head . _preamble($target, 'out');
 		my @need = grep { !/$marker/ } @{ $node->{deps} };
 		$text .= "redo-ifchange " . join(' ', map { _word($_) } @need) . "\n" if @need;
 		for (@cmd) {
@@ -140,26 +153,26 @@ sub emit
 		push @file, [ "$target.do", $text ];
 	}
 
-	# The first goal, the default, is `all', which a bare redo makes; the
-	# others are named as they are, and may not be called that
-	my $first = 1;
-	for my $goal (@{ $plan->{goals} }) {
-		my $name = $first ? q(all) : $goal->{name};
-		!$first && $name eq q(all)
+	# Each goal is its name; the first, the default, is `all' as well,
+	# which a bare redo makes (and so no other goal may be called that)
+	my @goal = @{ $plan->{goals} };
+	for my $i (0 .. $#goal) {
+		my $name = $goal[$i]{name};
+		$i && $name eq q(all)
 			# HEY!  `all' is the name of a .do file, and not to be translated
 			and die _status 0, tagmsg(E => diag(__(
 				"redo cannot name goal %q: all.do is the default goal's"),
 				$name));
-		$first = 0;
 		$taken{$name}
 			# HEY!  %s is the name of a goal, which a .do file is named after
 			and die _status 0, tagmsg(E => diag(__(
-				"redo cannot name goal %q: a target or its directory has"
-				. " that name"), $name));
-		my $text = $head . _preamble($name);
-		my @files = map { $plan->{node}{$_}{bpath} } @{ $goal->{files} };
-		$text .= "redo-ifchange " . join(' ', map { _word($_) } @files) . "\n" if @files;
-		push @file, [ "$name.do", $text ];
+				"redo cannot name goal %q: a file has that name"), $name));
+		my @files = map { $plan->{node}{$_}{bpath} } @{ $goal[$i]{files} };
+		for my $do ($name, ($i == 0 && $name ne q(all) ? q(all) : ())) {
+			my $text = $head . _preamble($do);
+			$text .= "redo-ifchange " . join(' ', map { _word($_) } @files) . "\n" if @files;
+			push @file, [ "$do.do", $text ];
+		}
 	}
 	@file;
 }
@@ -168,10 +181,24 @@ sub build_command
 {
 	my ($class, $prog, $B, $file, $goal) = @_;
 	my $q = \&RdKw::WwW::SiteConf::shell_quote;
-	# (the first goal is all.do)
-	my @redo = ($prog, defined $goal ? q(all) : ());
+	my @redo = ($prog, defined $goal ? $q->($goal) : ());
 	# (in a subshell, so that the shell stays where it is)
 	$B eq q(.) ? @redo : (q[(], q(cd), $q->($B), q(&&), @redo, q[)]);
+}
+
+# The arguments of the command line, but for -t and its goal (the others
+# all take a value, but for -A)
+sub _without_goals
+{
+	my @arg = @_;
+	my @keep;
+	while (@arg) {
+		my $opt = shift @arg;
+		if ($opt eq '-A') { push @keep, $opt; next }
+		my $value = shift @arg;
+		push @keep, $opt, $value unless $opt eq '-t';
+	}
+	@keep;
 }
 
 # The beginning of the .do file of `name' (relative to the build

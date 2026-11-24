@@ -14,7 +14,7 @@ use E2E;
 my $script = E2E::setup();
 my $redo = $ENV{REDO} || 'redo';
 system("$redo --version >/dev/null 2>&1") == 0 or plan skip_all => "no redo";
-plan tests => 14;
+plan tests => 17;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q
 	-MRdKw::WwW::GenLib=0 ));
@@ -33,5 +33,10 @@ utime $t, $t, 'html/index.html' or die $!;
 like(run('redo-ifchange, a source newer', "$redo-ifchange", 'build/basic'), qr/site\/index\.html/, '... and out of date');
 run('redo all', $redo, 'build/all');
 ok(-f 'build/site/robots.txt', 'redo all');
+
+# Other goals: the same rules, so the targets' .do files are left alone
+$out = run(q(siteconf -g -G redo -t basic), $^X, $script, qw( -g -G redo -B build -t basic ));
+unlike($out, qr{site/}, q(... and only the goals are written)) or diag $out;
+like($out, qr{^(?:Writing|Updating) all\.do$}m, q(... all.do among them));
 
 E2E::done();

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 21;
+use Test::More tests => 26;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf::Backend::Redo;
@@ -35,17 +35,30 @@ is($f->{'all.do'} =~ /\n(set -e\nexec >&2\nredo-ifchange site\/x\n)\z/ && $1, "s
 	'the goal needs its files, from the build directory');
 
 {
-	local $plan->{goals} = [ { name => q(site), files => [q(x)] }, { name => q(small), files => [] } ];
-	is_deeply([ sort keys %{ files($plan) } ], [ qw( all.do site/x.do small.do ) ],
-		q(the first goal is all.do, whatever its name (here a directory's)));
-	local $plan->{goals} = [ { name => q(all), files => [q(x)] }, { name => q(site), files => [q(x)] } ];
-	ok(!eval { files($plan); 1 } && $@ =~ /redo cannot name goal `site': a target or its directory/,
-		q(another goal cannot have the name of a directory of a target));
-	local $plan->{goals} = [ { name => q(all), files => [q(x)] }, { name => q(site/x), files => [q(x)] } ];
-	ok(!eval { files($plan); 1 } && $@ =~ /redo cannot name goal `site\/x'/, q(... or of a target));
+	local $plan->{goals} = [ { name => q(site), files => [q(x)] }, { name => q(demo/index), files => [] } ];
+	my $f = files($plan);
+	is_deeply([ sort keys %$f ], [ qw( all.do demo/index.do site.do site/x.do ) ],
+		q(each goal is its name (here that of a directory), and the first all too));
+	is($f->{q(all.do)}, $f->{q(site.do)}, q(... the same file));
+	like($f->{q(demo/index.do)}, qr/^cd \.\.\nexec >&2\n\z/m, q(a goal in a directory goes back to the build directory));
+	for my $bad ([ q(site/x), q(a target) ], [ q(in/x), q(a source) ]) {
+		local $plan->{goals} = [ { name => $bad->[0], files => [q(x)] } ];
+		ok(!eval { files($plan); 1 } && $@ =~ /redo cannot name goal `\Q$bad->[0]\E': a file has that name/,
+			qq(a goal cannot have the name of $bad->[1]));
+	}
 	local $plan->{goals} = [ { name => q(main), files => [q(x)] }, { name => q(all), files => [q(x)] } ];
 	ok(!eval { files($plan); 1 } && $@ =~ /redo cannot name goal `all': all\.do is the default/,
 		q(... or be all, if it is not the first));
+	local $plan->{goals} = [ { name => q(../up), files => [q(x)] } ];
+	ok(!eval { files($plan); 1 } && $@ =~ /redo cannot name `\.\.\/up': it is not in the build directory/,
+		q(... or be out of the build directory));
+}
+{
+	# a target's .do is the same whatever goals are asked for
+	local $plan->{args} = [ qw( -A -G redo -F M -t all -t WANT: -S x=y ) ];
+	my $f = files($plan);
+	like($f->{q(site/x.do)}, qr/^# options: -A -G redo -F M -S x=y$/m, q(a target leaves out -t));
+	like($f->{q(all.do)}, qr/^# options: -A -G redo -F M -t all -t WANT: -S x=y$/m, q(a goal says it));
 }
 {
 	local $plan->{node}{x}{bpath} = '../out/x';
@@ -70,6 +83,6 @@ is($f->{'all.do'} =~ /\n(set -e\nexec >&2\nredo-ifchange site\/x\n)\z/ && $1, "s
 		q(UTF-8 file names, Latin-1 arguments: an error)) or diag $@;
 }
 
-is_deeply([ $class->build_command('redo', 'build', undef, 'all') ], [ qw[ ( cd build && redo all ) ] ], q(to build: cd to B, then redo all));
-is_deeply([ $class->build_command(q(redo), q(.), undef, q(a b)) ], [ qw( redo all ) ], q(... whatever the goal is called, in B already));
+is_deeply([ $class->build_command('redo', 'build', undef, 'all') ], [ qw[ ( cd build && redo all ) ] ], q(to build: cd to B, then redo the goal));
+is_deeply([ $class->build_command(q(redo), q(.), undef, q(a b)) ], [ q(redo), "'a b'" ], q(... quoted, in B already));
 is_deeply([ $class->build_command('redo', 'build', undef, undef) ], [ qw[ ( cd build && redo ) ] ], q(... or no goal));

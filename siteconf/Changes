@@ -6,8 +6,8 @@ Revision history of WwW-SiteConf
     this patch, many items aren't written by me.
 
     *** The generators are RdKw::WwW::SiteConf::Backend::Name, found
-        by name: each part of the name (a-z and 0-9, parts joined
-        by `-') capitalized, so -G gmake is Backend::Gmake.  make,
+        by name: each part of the name (a-z and 0-9, beginning with
+        a letter; parts joined by `-') capitalized, so -G gmake is Backend::Gmake.  make,
         bmake (new: the Makefile of make, for bmake) and gmake ship
         here.  ninja is no longer part of WwW-SiteConf: it is
         WwW-SiteConf-Ninja, released with it at the same version.

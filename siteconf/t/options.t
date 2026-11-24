@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 23;
+use Test::More tests => 24;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -91,6 +91,7 @@ backend(Odd_one => "1;\n");
 unshift @INC, $lib;
 
 like(gen_error('Make'), qr/unknown generator `Make'.  Choose one of: bmake, broken, gmake, make, many/, 'a name -G cannot have');
+like(gen_error('foo-2x'), qr/unknown generator `foo-2x'.  Choose one of: /, 'a part of a name begins with a letter');
 like(gen_error('nope'), qr/unknown generator `nope' \(RdKw::WwW::SiteConf::Backend::Nope is not installed\).  Choose one of: bmake, broken, gmake, make, many/,
 	'a generator that is not installed');
 is_deeply([ grep { !/\A(?:ninja|redo)\z/ } RdKw::WwW::SiteConf::generators() ], [qw( bmake broken gmake make many )],

@@ -2264,8 +2264,8 @@ The options of the generator are those C<S> of L</new> says.  Each
 generator knows some (see its own page); one that it does not know is
 said to be unused, if it has a value.
 
-A generator I<name> is lowercase ASCII letters and digits, beginning
-with a letter, in parts joined by C<->.  It is the module
+A generator I<name> is lowercase ASCII letters and digits, in parts
+joined by C<->, each beginning with a letter.  It is the module
 C<RdKw::WwW::SiteConf::Backend::>I<Name>: each part capitalized, and
 the C<-> dropped.  So C<gmake> is C<Gmake>, and C<g-make> would be
 C<GMake>.  The module has these class methods.  They are for the generators that come with
@@ -2306,7 +2306,7 @@ have a module in C<@INC>), sorted.
 
 # A generator is the module Backend::Name: each part of its name
 # capitalized, without the `-' between them
-my $BACKEND_NAME = qr/\A[a-z][a-z0-9]*(?:-[a-z0-9]+)*\z/;
+my $BACKEND_NAME = qr/\A[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)*\z/;
 
 sub _backend_module
 {

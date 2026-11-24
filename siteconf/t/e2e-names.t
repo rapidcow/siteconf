@@ -13,7 +13,7 @@ use lib "$FindBin::Bin/lib";
 use File::Basename qw( dirname );
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
-use TestPaths qw( script_path perl5lib );
+use TestPaths qw( script_path perl5lib fs_surprise );
 use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 
 my $script = script_path();
@@ -26,7 +26,7 @@ my ($gmake) = grep {
 } grep { defined } $ENV{GMAKE}, 'gmake', 'make';
 my $ninja = $ENV{NINJA} || 'ninja';
 $ninja = undef if system("$ninja --version >/dev/null 2>&1");
-plan tests => 48;
+plan tests => 64;
 
 my @name = ('sp ace', "ta\tb", 'ha#sh', 'co:lon', 'do$llar', 'st*ar', 'qu?est',
 	'br[ack]et', '~tilde', 'back\\slash', 'back\\ space');
@@ -193,4 +193,64 @@ SKIP: {
 	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'gmake');
 	like($out, qr/GNU Make cannot name `se;mi' \(with inescapable `;'\)/, 'GNU Make cannot name a ;');
 	ok(!-e "$dir/Makefile", '... and writes nothing');
+}
+
+# A target with a `:' in it, as a Perl module's manual page is named:
+# File::Spec as a string, File::Temp with ${U+003A}.  Each page is made
+# from a .pod made from its source, as man/3/NAME.html is on a man site.
+sub colon_project
+{
+	project({
+		MANIFEST => "MAKE all\n\tNEED man/3/\${\"File::Spec\"}.html\n"
+			. "\tNEED man/3/File\${U+003A}\${U+003A}Temp.html\n",
+		'Makefile.in' => <<'RULES',
+${c}/man/3/${"File::Spec"}.pod: ${a}/lib/File/Spec.pm
+	cp ${a:Q}/${<:Q} ${B:Q}/${c:Q}/${@:Q}
+${c}/man/3/File${U+003A}${U+003A}Temp.pod: ${a}/lib/File/Temp.pm
+	cp ${a:Q}/${<:Q} ${B:Q}/${c:Q}/${@:Q}
+man/3/${"File::Spec"}.html man/3/File${U+003A}${U+003A}Temp.html: ${a}/ ${B}/${c}/${@:R}.pod
+	cp ${B:Q}/${c:Q}/${@:R:Q}.pod ${B:Q}/${b:Q}/${@:Q}
+RULES
+		'html/lib/File/Spec.pm' => "=head1 NAME\n\nFile::Spec\n",
+		'html/lib/File/Temp.pm' => "=head1 NAME\n\nFile::Temp\n",
+	});
+}
+
+sub colon_builds
+{
+	my ($G, $tool, $up_to_date) = @_;
+	my $dir = colon_project();
+	my ($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge');
+	is($status, 0, "$G: generate targets with a colon") or return diag $out;
+	($status, $out) = run($dir, $tool);
+	is($status, 0, "$G: build them") or return diag $out;
+	is(contents("$dir/site/man/3/File::Spec.html"), "=head1 NAME\n\nFile::Spec\n",
+		'... File::Spec, by way of its .pod');
+	is(contents("$dir/site/man/3/File::Temp.html"), "=head1 NAME\n\nFile::Temp\n",
+		'... and File::Temp');
+	ok($up_to_date->($dir), '... and then they are up to date');
+	my $t = time + 10;
+	utime $t, $t, "$dir/html/lib/File/Temp.pm" or die $!;
+	ok(!$up_to_date->($dir), '... and out of date when a source is newer');
+	($status, $out) = run($dir, $tool, $G eq 'ninja' ? ('-t', 'clean') : ('purge'));
+	ok($status == 0 && !-e "$dir/site/man/3/File::Spec.html"
+		&& !-e "$dir/site/man/3/File::Temp.pod", "$G: clean them") or diag $out;
+}
+
+SKIP: {
+	my $why = fs_surprise('File::Spec.html', tempdir(CLEANUP => 1));
+	skip "file system: $why", 16 if defined $why;
+	SKIP: {
+		skip 'no GNU Make newer than 3.81', 7 unless $gmake;
+		colon_builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] });
+	}
+	SKIP: {
+		skip 'no ninja', 7 unless $ninja;
+		colon_builds('ninja', $ninja, sub { (run($_[0], $ninja, '-n'))[1] =~ /no work to do/ });
+	}
+	my $dir = colon_project();
+	my ($status, $out) = run($dir, $^X, $script, '-g', '-q');
+	like($out, qr/make cannot name `[^']*File::\w+\.\w+' \(with inescapable `:'\)/,
+		'POSIX Make cannot name a colon');
+	ok($status != 0 && !-e "$dir/Makefile", '... and writes nothing');
 }

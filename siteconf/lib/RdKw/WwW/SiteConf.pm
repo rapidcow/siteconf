@@ -1156,7 +1156,7 @@ sub _subst
 				$mods = $1;
 				$x = '';
 			} else {
-				($x, $mods) = $body =~ /\A([^:]*)(?::(.*))?\z/s;
+				($x, $mods) = ($body =~ /\A([^:]*)(?::(.*))?\z/s);
 			}
 		}
 		# `${A}/x' with an A of `.' would leave `./x' behind, so
@@ -1220,7 +1220,7 @@ sub _subst
 					}
 				);
 			};
-			defined $val or die _status 0, $@ =~ /\AE: / ? $@ : "E: $where: $@";
+			defined $val or die _status 0, ($@ =~ /\AE: /) ? $@ : "E: $where: $@";
 		}
 		if ($val eq '.' && length $slash) {
 			# `./' is no use to anyone
@@ -1510,7 +1510,7 @@ sub _rule_line
 {
 	my ($self, $text, $where, $line, $augment) = @_;
 	my $st = $self->{reading};
-	my ($src, $dep) = $text =~ /\A($TARGETS):(.*)\z/so;
+	my ($src, $dep) = ($text =~ /\A($TARGETS):(.*)\z/so);
 	# After a `;' is the first line of the recipe, and a tab
 	# line after this one is the next
 	my $cmd;
@@ -1537,7 +1537,7 @@ sub _rule_line
 		if (!$augment && !$rule->{decided} && $dep =~ /[^$SP]/o) {
 			$rule->{decided} = 1;
 			# the first word (a ${...} may hold spaces, in :S/ /_/)
-			my ($first) = $dep =~ /\A[$SP]*($WORD)/o;
+			my ($first) = ($dep =~ /\A[$SP]*($WORD)/o);
 			if (defined $first and defined(my $from = _source_of($first))) {
 				# ${a} alone says there is none (and ${<} is not known)
 				my $name_of = length $from

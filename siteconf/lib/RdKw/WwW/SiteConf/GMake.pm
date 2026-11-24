@@ -19,7 +19,8 @@ RdKw::WwW::SiteConf::GMake - GNU Makefile backend for siteconf
 =head1 DESCRIPTION
 
 The very Makefile of L<RdKw::WwW::SiteConf::Make>, but for GNU Make
-(newer than 3.81, which cannot escape a C<:>), which can name more
+(newer than 3.81; 4.0 or newer for a C<:>, which older versions
+do not unescape in a prerequisite), which can name more
 files: a C<$> is C<$$>; blanks, C<#> and C<:> are escaped with
 a backslash (and so is a backslash before them); a wildcard is in
 brackets (C<a[*]b>), so that it only ever matches itself; and a C<~>

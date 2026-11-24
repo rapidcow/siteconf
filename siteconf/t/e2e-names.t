@@ -19,11 +19,19 @@ use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
 
-# A GNU make that can escape a `:' (which 3.81 cannot)
-my ($gmake) = grep {
-	my $v = `$_ --version 2>/dev/null`;
-	$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > 3 || $1 == 3 && $2 > 81);
-} grep { defined } $ENV{GMAKE}, 'gmake', 'make';
+# The first GNU make at least as new as major.minor
+sub gmake_since
+{
+	my ($major, $minor) = @_;
+	(grep {
+		my $v = `$_ --version 2>/dev/null`;
+		$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > $major || $1 == $major && $2 >= $minor);
+	} grep { defined } $ENV{GMAKE}, 'gmake', 'make')[0];
+}
+# One newer than 3.81, for names with blanks; and one that can escape a
+# `:' in a prerequisite, which came in 4.0 (`unescape_char' in read.c)
+my $gmake = gmake_since(3, 82);
+my $gmake_colon = gmake_since(4, 0);
 my $ninja = $ENV{NINJA} || 'ninja';
 $ninja = undef if system("$ninja --version >/dev/null 2>&1");
 plan tests => 64;
@@ -170,8 +178,8 @@ sub builds
 }
 
 SKIP: {
-	skip 'no GNU Make newer than 3.81', 5 unless $gmake;
-	builds($gmake, sub { !(run($_[0], $gmake, '-q'))[0] }, @name);
+	skip 'no GNU Make 4.0 or newer', 5 unless $gmake_colon;
+	builds($gmake_colon, sub { !(run($_[0], $gmake_colon, '-q'))[0] }, @name);
 }
 
 SKIP: {
@@ -241,8 +249,8 @@ SKIP: {
 	my $why = fs_surprise('File::Spec.html', tempdir(CLEANUP => 1));
 	skip "file system: $why", 16 if defined $why;
 	SKIP: {
-		skip 'no GNU Make newer than 3.81', 7 unless $gmake;
-		colon_builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] });
+		skip 'no GNU Make 4.0 or newer', 7 unless $gmake_colon;
+		colon_builds('gmake', $gmake_colon, sub { !(run($_[0], $gmake_colon, '-q'))[0] });
 	}
 	SKIP: {
 		skip 'no ninja', 7 unless $ninja;

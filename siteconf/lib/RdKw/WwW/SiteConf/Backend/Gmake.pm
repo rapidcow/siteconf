@@ -88,15 +88,15 @@ sub _name
 	my $target = $where eq 'target';
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}=]|\\\z)/
 		|| $target && $s =~ /(\t)/
-		# HEY!  the %s is a character, as `=' or U+000A
 		and die _status 0, tagmsg(E => diag(__(
+			# HEY!  the %s is a character, as `=' or U+000A
 			"GNU Make cannot name %q (with inescapable %s)"),
 			$s, $class->_char($1)));
 	# (a name that ends in `)' can also end the member list that a `(' in
 	# a name before it begins, as in `lib(a.o' `b.o)')
 	$s =~ /\)\z/
-		# HEY!  lib(member.o) is how make names a member of an archive
 		and die _status 0, tagmsg(E => diag(__(
+			# HEY!  lib(member.o) is how make names a member of an archive
 			"GNU Make cannot name %q (reserved for archive members)"),
 			$s));
 	$s =~ s/\$/\$\$/g;

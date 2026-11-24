@@ -182,8 +182,8 @@ sub _vertical
 {
 	my ($s) = @_;
 	$s =~ /([\n\cK\f\r\x{85}\x{2028}\x{2029}])/
-		# HEY!  the %s is a character, as U+000A
 		and die _status 0, tagmsg(E => diag(__(
+			# HEY!  the %s is a character, as U+000A
 			"ninja cannot name %q (with inescapable %s)"),
 			$s, sprintf('U+%04X', ord $1)));
 }

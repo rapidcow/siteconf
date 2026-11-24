@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 06:30-0600\n"
+"POT-Creation-Date: 2026-11-24 06:54-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -114,11 +114,13 @@ msgstr "相对于主机的基础 URL"
 msgid "Absolute base URL"
 msgstr "绝对基础 URL"
 
+#. HEY!  %s is the option (-Sx), and then what it may be
 #: ../siteconf/script/siteconf:860
 #, perl-format
 msgid "%s: no such thing (valid: %s)"
 msgstr "%s：没有这一项（有效的有：%s）"
 
+#. HEY!  %s is an option, as -Sa (and likewise in the next few)
 #: ../siteconf/script/siteconf:864 ../siteconf/script/siteconf:888
 #, perl-format
 msgid "%s may not be empty."
@@ -142,6 +144,8 @@ msgstr "预设名有误：%q"
 msgid "no such preset: %q"
 msgstr "没有这个预设：%q"
 
+#. HEY!  %s is the option, as -MModule=version (here and
+#. in the next four)
 #: ../siteconf/script/siteconf:917
 #, perl-format
 msgid "%s: bad module name"
@@ -277,6 +281,7 @@ msgstr "%1$s：%2$q：${%3$s} 是相对于 ${B} 的；请写 ${B}/${%3$s}。"
 msgid "%s: %q: %s is no code point"
 msgstr "%s：%#q：%s 不是码位"
 
+#. HEY!  the last %s is the variable, as ${name}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:714
 msgid "%s: %q: no such variable %s"
 msgstr "%s：%#q：没有变量 %s"
@@ -290,6 +295,7 @@ msgstr "%s：%q 中有多余的 $"
 msgid "%s: empty path"
 msgstr "%s：路径为空"
 
+#. HEY!  %s is the option, as -Sarg_max=lots
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:846
 #, perl-format
 msgid "%s: expected a number of bytes, or auto"
@@ -318,6 +324,7 @@ msgstr "%s：文件名 %q 必须是相对的"
 msgid "%s: file name %q is out of tree"
 msgstr "%s：文件名 %q 在树外"
 
+#. HEY!  %s is the option, as -Sclean=a,,b
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1067
 #, perl-format
 msgid "%s: a name of a rule may not be empty"
@@ -596,6 +603,9 @@ msgstr ""
 " （%s），\n"
 "  但它不存在，只好没有它继续下去。( ˶•ᴖ•)"
 
+#. HEY!  This is where a NEED (or a WANT) was said, and is
+#. said in parentheses after what is needed: %q is the file,
+#. and %d the line in it
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1904
 msgid "in header of %q line %d"
 msgstr "在 %q 的头部第 %d 行"
@@ -634,6 +644,8 @@ msgstr "%s 中，经由 WANT 的目标 %q"
 msgid "in %s, via NEEDed goal %q"
 msgstr "%s 中，经由 NEED 的目标 %q"
 
+#. HEY!  the %s is where (as above); what
+#. follows the colon is why, a line each
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2090
 msgid ""
 "goal %q NEEDs %q\n"
@@ -694,6 +706,8 @@ msgstr "生成器名有误：%q"
 msgid "unknown generator: %q (%s is not installed)"
 msgstr "未知的生成器 %q（未安装 %s）"
 
+#. HEY!  the first %s is the generator, and the
+#. second the name it was asked to write (with -o)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2475
 msgid "generator %s writes a file for each target, and cannot name them %q"
 msgstr "生成器 %s 为每个目标各写一个文件，无法把它们命名为 %q"
@@ -772,10 +786,12 @@ msgstr ":S 的未知标志 %q"
 msgid "unknown modifier %q"
 msgstr "未知的修饰符 %q"
 
+#. HEY!  the %s is a character, as `=' or U+000A
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Gmake.pm:93
 msgid "GNU Make cannot name %q (with inescapable %s)"
 msgstr "GNU make 无法表示 %q（其中有 %s）"
 
+#. HEY!  lib(member.o) is how make names a member of an archive
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Gmake.pm:100
 msgid "GNU Make cannot name %q (reserved for archive members)"
 msgstr "GNU make 无法表示 %q（它会被当成归档成员）"
@@ -830,6 +846,7 @@ msgstr "%s：ninja 无法表示 %q 中的换行（换行会结束命令）"
 msgid "%#q: no recipe to make it (and ninja has no way to make nothing)"
 msgstr "%#q：没有生成它的配方（而 ninja 没法从无到有地生成）"
 
+#. HEY!  the %s is a character, as U+000A
 #: ../siteconf-ninja/lib/RdKw/WwW/SiteConf/Backend/Ninja.pm:187
 msgid "ninja cannot name %q (with inescapable %s)"
 msgstr "ninja 无法表示 %q（其中有 %s）"
@@ -843,52 +860,68 @@ msgstr "%s：redo 无法表示 %q 中的换行（换行会结束命令）"
 msgid "%#q: no recipe to make it (and redo has no way to make nothing)"
 msgstr "%#q：没有生成它的配方（而 redo 没法从无到有地生成）"
 
+#. HEY!  %s is the name given with -o, for the default goal
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:235
 msgid "redo cannot find %q: the name of a .do file ends in .do"
 msgstr "redo 找不到 %q：.do 文件的名称以 .do 结尾"
 
+#. HEY!  %s is the name given with -o (as default.do)
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:240
 msgid "redo cannot name the default goal %q: a file has that name"
 msgstr "redo 无法把默认目标命名为 %q：已有文件叫这个名字"
 
+#. HEY!  the second %s is the .do file of the default goal
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:255
 msgid "redo cannot name goal %q: %s is the default goal's"
 msgstr "redo 无法命名目标 %q：%s 属于默认目标"
 
+#. HEY!  %s is the name of a goal, which a .do file is named after
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:260
 msgid "redo cannot name goal %q: a file has that name"
 msgstr "redo 无法命名目标 %q：已有文件叫这个名字"
 
+#. HEY!  the second %s is the .do file of the default goal
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:280
 msgid "redo cannot name cleaning rule %q: %s is the default goal's"
 msgstr "redo 无法命名清理规则 %q：%s 属于默认目标"
 
+#. HEY!  %s is the name of a cleaning rule (-Sclean), which a
+#. .do file is named after
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:286
 msgid "redo cannot name cleaning rule %q: a file has that name"
 msgstr "redo 无法命名清理规则 %q：已有文件叫这个名字"
 
+#. HEY!  %s is the name of a cleaning rule; default.do is what
+#. redo runs for a name that has no .do of its own
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:293
 msgid ""
 "redo cannot name cleaning rule %q: redo would run its .do for other names"
 msgstr "redo 无法命名清理规则 %q：redo 会为别的名称运行它的 .do"
 
+#. HEY!  %s is the name of a .do file to be written
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:314
 msgid "redo cannot write %q: another file has that name"
 msgstr "redo 无法写入 %q：另一个文件也叫这个名字"
 
+#. HEY!  %s is the name of a target, or a goal
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:374
 msgid "redo cannot name %q: it is not in the build directory"
 msgstr "redo 无法命名 %q：它不在构建目录里"
 
+#. HEY!  %s is the option, as -Sarg_prefix=1x
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:404
 #, perl-format
 msgid "%s: a prefix is a letter or `_', then letters, digits and `_'"
 msgstr "%s：前缀以字母或 `_' 开头，后面是字母、数字和 `_'"
 
+#. HEY!  %s is a name, which the encoding of arguments (what is
+#. typed after redo) has no bytes for
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:431
 msgid "redo cannot name %q: arguments cannot spell it"
 msgstr "redo 无法命名 %q：参数的编码无法表示它"
 
+#. HEY!  %s is a name; an argument (what is typed after redo) and the
+#. file system spell it in different bytes, in their encodings
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:436
 msgid "redo cannot name %q: arguments and file names spell it differently"
 msgstr "redo 无法命名 %q：参数和文件名对它的拼写不同"
@@ -1230,6 +1263,8 @@ msgstr "%s：%s 后面要跟文件名（注释请用 #）"
 msgid "%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"
 msgstr "%s：应为 MAKE、NEED、WANT、JUST-NEED 或 JUST-WANT，而不是 %q"
 
+#. HEY!  the first %s is the class name (in every message
+#. that starts so), and the second is an option name
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:192
 #, perl-format
 msgid "%s is not supported"
@@ -1255,6 +1290,7 @@ msgstr "%#q：缺少 HAVE"
 msgid "%#q: You HAVE %q, but it is actually %s"
 msgstr "%#q：你 HAVE %q，但它其实是 %s"
 
+#. HEY!  the last %s is the variable, as ${name}.
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:277
 msgid "%q: no such variable %s"
 msgstr "%q：没有变量 %s"

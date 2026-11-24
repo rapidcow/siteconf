@@ -185,10 +185,10 @@ sub new
 	my ($class, $args) = @_;
 	$args = { %{ $args || {} } };
 	for my $k (qw( COMPILE_DIR COMPILE_EXT )) {
-		# HEY!  the first %s is the class name (in every message
-		# that starts so), and the second is an option name
 		defined $args->{$k}
 			and die _status 0, "$class: " .
+			# HEY!  the first %s is the class name (in every message
+			# that starts so), and the second is an option name
 			diag(__("%s is not supported"), $k)
 			. "\n";
 	}
@@ -272,8 +272,8 @@ sub _vars
 	my ($self, $spec) = @_;
 	for (norm_deps($spec) =~ /\$\{([^}]+)\}/g) {
 		$_ eq '$' || /\AU\+/ || defined $self->{DEFINITION}{$_}
-			# HEY!  the last %s is the variable, as ${name}.
 			or die _status 0, __PACKAGE__ . ": " . diag(__(
+			# HEY!  the last %s is the variable, as ${name}.
 			"%q: no such variable %s"), $spec, "\${$_}")
 			. "\n";
 	}
@@ -418,9 +418,9 @@ sub access
 		my $declared = $self->{DECLARED}{$dep};
 		if ($self->{CHECK_DEPS} && !$declared) {
 			my $why = $self->{REFUSED}{$dep};
-			# HEY!  the first (or only) %s is a name, as "%q (aka %q)"
-			# says it, and a second is an option name, as it is
 			return (undef, !defined $why
+				# HEY!  the first (or only) %s is a name, as "%q (aka %q)"
+				# says it, and a second is an option name, as it is
 				? diag(__("undeclared dependency: %s"), $self->_named($dep))
 				: $why eq 'ALLOW_PREFIXES'
 				? diag(__("%s is declared, but forbidden because %s does not permit its root"),

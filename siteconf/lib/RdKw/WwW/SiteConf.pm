@@ -709,8 +709,8 @@ sub _expand
 			$out .= chr hex $1;
 		} elsif ($spec =~ /\G\$(?:\{(\w+)\}|(\w))/gc) {
 			my $x = defined $1 ? $1 : $2;
-			# HEY!  the last %s is the variable, as ${name}
 			defined $var{$x} or die _status 0, tagmsg(E => diag(__(
+				# HEY!  the last %s is the variable, as ${name}
 				"%s: %q: no such variable %s"),
 				$where, $spec, "\${$x}"));
 			$out .= $var{$x};
@@ -841,8 +841,8 @@ sub arg_max
 	length $v or return 0;
 	$v =~ /\A[0-9]+\z/ and return 0 + $v;
 	$v eq 'auto'
-		# HEY!  %s is the option, as -Sarg_max=lots
 		or die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is the option, as -Sarg_max=lots
 			"%s: expected a number of bytes, or auto"), "-Sarg_max=$v"));
 	require POSIX;
 	my $n = eval { POSIX::sysconf(POSIX::_SC_ARG_MAX()) };
@@ -1062,8 +1062,8 @@ sub _clean_pattern
 	my @pat;
 	for my $name (split /,/, $c, -1) {
 		length $name
-			# HEY!  %s is the option, as -Sclean=a,,b
 			or die _status 0, tagmsg(E => diag(__(
+				# HEY!  %s is the option, as -Sclean=a,,b
 				"%s: a name of a rule may not be empty"), "-S$key=$c"));
 		$name =~ $RULE_NAME
 			or die _status 0, tagmsg(E => diag(__(
@@ -1897,10 +1897,10 @@ sub _entries
 		my @line = @{ $L->{$key} || [] };
 		map {
 			my $at = _blame($file, $line[$_]);
-			# HEY!  This is where a NEED (or a WANT) was said, and is
-			# said in parentheses after what is needed: %q is the file,
-			# and %d the line in it
 			[ $name[$_], $self->_dep($name[$_], $at),
+				# HEY!  This is where a NEED (or a WANT) was said, and is
+				# said in parentheses after what is needed: %q is the file,
+				# and %d the line in it
 				diag(__("in header of %q line %d"), $file, $line[$_]), $just ];
 		} 0 .. $#name;
 	} [ $kind, 0 ], [ "JUST-$kind", 1 ];
@@ -2084,9 +2084,9 @@ sub _goals
 					: $ent->{vmode} eq 'WANT' ? diag(__("in %s, via WANTed goal %q"), $at, $ent->{via})
 					: diag(__("in %s, via NEEDed goal %q"), $at, $ent->{via});
 				if ($kind eq 'need') {
-					# HEY!  the %s is where (as above); what
-					# follows the colon is why, a line each
 					push @err, [ $node->{seq}, scalar @err, tagmsg(E => diag(__(
+						# HEY!  the %s is where (as above); what
+						# follows the colon is why, a line each
 						"goal %q NEEDs %q\n (%s),\n  but cannot be made:"),
 						$spec->{name}, $file, $where)) . $causes->('E') ];
 				} else {
@@ -2469,9 +2469,9 @@ sub generate
 	my $discard = $named && $out eq q(/dev/null);
 	if ($named) {
 		defined $outfile
-			# HEY!  the first %s is the generator, and the
-			# second the name it was asked to write (with -o)
 			or die _status 0, tagmsg(E => diag(__(
+				# HEY!  the first %s is the generator, and the
+				# second the name it was asked to write (with -o)
 				"generator %s writes a file for each target, and cannot"
 				. " name them %q"), $G, $out));
 	}

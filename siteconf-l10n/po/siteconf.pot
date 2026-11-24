@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 06:30-0600\n"
+"POT-Creation-Date: 2026-11-24 06:54-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -116,11 +116,13 @@ msgstr ""
 msgid "Absolute base URL"
 msgstr ""
 
+#. HEY!  %s is the option (-Sx), and then what it may be
 #: ../siteconf/script/siteconf:860
 #, perl-format
 msgid "%s: no such thing (valid: %s)"
 msgstr ""
 
+#. HEY!  %s is an option, as -Sa (and likewise in the next few)
 #: ../siteconf/script/siteconf:864 ../siteconf/script/siteconf:888
 #, perl-format
 msgid "%s may not be empty."
@@ -144,6 +146,8 @@ msgstr ""
 msgid "no such preset: %q"
 msgstr ""
 
+#. HEY!  %s is the option, as -MModule=version (here and
+#. in the next four)
 #: ../siteconf/script/siteconf:917
 #, perl-format
 msgid "%s: bad module name"
@@ -275,6 +279,7 @@ msgstr ""
 msgid "%s: %q: %s is no code point"
 msgstr ""
 
+#. HEY!  the last %s is the variable, as ${name}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:714
 msgid "%s: %q: no such variable %s"
 msgstr ""
@@ -288,6 +293,7 @@ msgstr ""
 msgid "%s: empty path"
 msgstr ""
 
+#. HEY!  %s is the option, as -Sarg_max=lots
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:846
 #, perl-format
 msgid "%s: expected a number of bytes, or auto"
@@ -316,6 +322,7 @@ msgstr ""
 msgid "%s: file name %q is out of tree"
 msgstr ""
 
+#. HEY!  %s is the option, as -Sclean=a,,b
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1067
 #, perl-format
 msgid "%s: a name of a rule may not be empty"
@@ -572,6 +579,9 @@ msgid ""
 "  but it is missing; going on without it. :("
 msgstr ""
 
+#. HEY!  This is where a NEED (or a WANT) was said, and is
+#. said in parentheses after what is needed: %q is the file,
+#. and %d the line in it
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1904
 msgid "in header of %q line %d"
 msgstr ""
@@ -606,6 +616,8 @@ msgstr ""
 msgid "in %s, via NEEDed goal %q"
 msgstr ""
 
+#. HEY!  the %s is where (as above); what
+#. follows the colon is why, a line each
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2090
 msgid ""
 "goal %q NEEDs %q\n"
@@ -661,6 +673,8 @@ msgstr ""
 msgid "unknown generator: %q (%s is not installed)"
 msgstr ""
 
+#. HEY!  the first %s is the generator, and the
+#. second the name it was asked to write (with -o)
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2475
 msgid "generator %s writes a file for each target, and cannot name them %q"
 msgstr ""
@@ -739,10 +753,12 @@ msgstr ""
 msgid "unknown modifier %q"
 msgstr ""
 
+#. HEY!  the %s is a character, as `=' or U+000A
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Gmake.pm:93
 msgid "GNU Make cannot name %q (with inescapable %s)"
 msgstr ""
 
+#. HEY!  lib(member.o) is how make names a member of an archive
 #: ../siteconf/lib/RdKw/WwW/SiteConf/Backend/Gmake.pm:100
 msgid "GNU Make cannot name %q (reserved for archive members)"
 msgstr ""
@@ -795,6 +811,7 @@ msgstr ""
 msgid "%#q: no recipe to make it (and ninja has no way to make nothing)"
 msgstr ""
 
+#. HEY!  the %s is a character, as U+000A
 #: ../siteconf-ninja/lib/RdKw/WwW/SiteConf/Backend/Ninja.pm:187
 msgid "ninja cannot name %q (with inescapable %s)"
 msgstr ""
@@ -808,52 +825,68 @@ msgstr ""
 msgid "%#q: no recipe to make it (and redo has no way to make nothing)"
 msgstr ""
 
+#. HEY!  %s is the name given with -o, for the default goal
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:235
 msgid "redo cannot find %q: the name of a .do file ends in .do"
 msgstr ""
 
+#. HEY!  %s is the name given with -o (as default.do)
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:240
 msgid "redo cannot name the default goal %q: a file has that name"
 msgstr ""
 
+#. HEY!  the second %s is the .do file of the default goal
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:255
 msgid "redo cannot name goal %q: %s is the default goal's"
 msgstr ""
 
+#. HEY!  %s is the name of a goal, which a .do file is named after
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:260
 msgid "redo cannot name goal %q: a file has that name"
 msgstr ""
 
+#. HEY!  the second %s is the .do file of the default goal
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:280
 msgid "redo cannot name cleaning rule %q: %s is the default goal's"
 msgstr ""
 
+#. HEY!  %s is the name of a cleaning rule (-Sclean), which a
+#. .do file is named after
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:286
 msgid "redo cannot name cleaning rule %q: a file has that name"
 msgstr ""
 
+#. HEY!  %s is the name of a cleaning rule; default.do is what
+#. redo runs for a name that has no .do of its own
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:293
 msgid ""
 "redo cannot name cleaning rule %q: redo would run its .do for other names"
 msgstr ""
 
+#. HEY!  %s is the name of a .do file to be written
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:314
 msgid "redo cannot write %q: another file has that name"
 msgstr ""
 
+#. HEY!  %s is the name of a target, or a goal
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:374
 msgid "redo cannot name %q: it is not in the build directory"
 msgstr ""
 
+#. HEY!  %s is the option, as -Sarg_prefix=1x
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:404
 #, perl-format
 msgid "%s: a prefix is a letter or `_', then letters, digits and `_'"
 msgstr ""
 
+#. HEY!  %s is a name, which the encoding of arguments (what is
+#. typed after redo) has no bytes for
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:431
 msgid "redo cannot name %q: arguments cannot spell it"
 msgstr ""
 
+#. HEY!  %s is a name; an argument (what is typed after redo) and the
+#. file system spell it in different bytes, in their encodings
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Backend/Redo.pm:436
 msgid "redo cannot name %q: arguments and file names spell it differently"
 msgstr ""
@@ -1188,6 +1221,8 @@ msgstr ""
 msgid "%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"
 msgstr ""
 
+#. HEY!  the first %s is the class name (in every message
+#. that starts so), and the second is an option name
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:192
 #, perl-format
 msgid "%s is not supported"
@@ -1213,6 +1248,7 @@ msgstr ""
 msgid "%#q: You HAVE %q, but it is actually %s"
 msgstr ""
 
+#. HEY!  the last %s is the variable, as ${name}.
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:277
 msgid "%q: no such variable %s"
 msgstr ""

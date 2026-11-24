@@ -855,12 +855,12 @@ sub do_init
 		site_url => N__('Absolute base URL'),
 	);
 	for my $k (keys %S) {
-		# HEY!  %s is the option (-Sx), and then what it may be
 		exists $Dd{$k} || $k eq 'c' or die $cs->tagmsg($prog => $cs->diag(__(
+			# HEY!  %s is the option (-Sx), and then what it may be
 			"%s: no such thing (valid: %s)"), "-S$k", 'A B a b c R F e'));
 		$Dd{$k} = $S{$k};
-		# HEY!  %s is an option, as -Sa (and likewise in the next few)
 		defined $Dd{$k} && length $Dd{$k} or die $cs->tagmsg($prog => $cs->diag(__(
+			# HEY!  %s is an option, as -Sa (and likewise in the next few)
 			"%s may not be empty."), "-S$k"));
 	}
 	File::Spec->file_name_is_absolute($Dd{b})
@@ -910,10 +910,10 @@ sub do_init
 	my %user;
 	for my $m (@spec) {
 		my ($drop, $module, $min) = $m =~ /\A(-?)([^=]*)(?:=(.*))?\z/s;
-		# HEY!  %s is the option, as -MModule=version (here and
-		# in the next four)
 		$module =~ /\A\w+(?:::\w+)*\z/
 			or die $cs->tagmsg($prog => $cs->diag(__(
+			# HEY!  %s is the option, as -MModule=version (here and
+			# in the next four)
 			"%s: bad module name"), "-M$m"));
 		$drop && defined $min
 			and die $cs->tagmsg($prog => $cs->diag(__(

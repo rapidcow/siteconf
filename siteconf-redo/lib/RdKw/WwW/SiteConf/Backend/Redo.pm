@@ -230,13 +230,13 @@ sub emit
 	my $alias;
 	if (defined $default) {
 		($alias = $default) =~ s/\.do\z//
-			# HEY!  %s is the name given with -o, for the default goal
 			or die _status 0, tagmsg(E => diag(__(
+				# HEY!  %s is the name given with -o, for the default goal
 				"redo cannot find %q: the name of a .do file ends in .do"),
 				$default));
 		length $alias && !$taken{$alias}
-			# HEY!  %s is the name given with -o (as default.do)
 			or die _status 0, tagmsg(E => diag(__(
+				# HEY!  %s is the name given with -o (as default.do)
 				"redo cannot name the default goal %q: a file has that name"),
 				$default));
 	}
@@ -250,13 +250,13 @@ sub emit
 		my @do;
 		if (defined $goal->{select}) {
 			defined $alias && $name eq $alias
-				# HEY!  the second %s is the .do file of the default goal
 				and die _status 0, tagmsg(E => diag(__(
+					# HEY!  the second %s is the .do file of the default goal
 					"redo cannot name goal %q: %s is the default goal's"),
 					$name, "$alias.do"));
 			$taken{$name}
-				# HEY!  %s is the name of a goal, which a .do file is named after
 				and die _status 0, tagmsg(E => diag(__(
+					# HEY!  %s is the name of a goal, which a .do file is named after
 					"redo cannot name goal %q: a file has that name"), $name));
 			push @do, [ $name, $goal->{select} ];
 		}
@@ -275,21 +275,21 @@ sub emit
 	for my $rule (@{ $plan->{clean} || [] }) {
 		my $name = $rule->{name};
 		defined $alias && $name eq $alias
-			# HEY!  the second %s is the .do file of the default goal
 			and die _status 0, tagmsg(E => diag(__(
+				# HEY!  the second %s is the .do file of the default goal
 				"redo cannot name cleaning rule %q: %s is the default goal's"),
 				$name, "$alias.do"));
 		$taken{$name}
-			# HEY!  %s is the name of a cleaning rule (-Sclean), which a
-			# .do file is named after
 			and die _status 0, tagmsg(E => diag(__(
+				# HEY!  %s is the name of a cleaning rule (-Sclean), which a
+				# .do file is named after
 				"redo cannot name cleaning rule %q: a file has that name"), $name));
 		# (default.do, default.EXT.do: redo would run it for other names,
 		# in that directory and below)
 		$name =~ m{(?:\A|/)default(?:\.[^/]*)?\z}
-			# HEY!  %s is the name of a cleaning rule; default.do is what
-			# redo runs for a name that has no .do of its own
 			and die _status 0, tagmsg(E => diag(__(
+				# HEY!  %s is the name of a cleaning rule; default.do is what
+				# redo runs for a name that has no .do of its own
 				"redo cannot name cleaning rule %q: redo would run its .do"
 				. " for other names"), $name));
 		my $text = $head->(1) . _preamble($v, $name) . _cd($v);
@@ -309,8 +309,8 @@ sub emit
 	for (@file) {
 		my $do = $_->[0];
 		$taken{$do} || $seen{$do}++
-			# HEY!  %s is the name of a .do file to be written
 			and die _status 0, tagmsg(E => diag(__(
+				# HEY!  %s is the name of a .do file to be written
 				"redo cannot write %q: another file has that name"), $do));
 	}
 	@file;
@@ -369,8 +369,8 @@ sub _preamble
 	my @up = split m!/!, $name, -1;
 	pop @up;
 	grep { $_ eq '..' || $_ eq '.' || $_ eq '' } @up
-		# HEY!  %s is the name of a target, or a goal
 		and die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is the name of a target, or a goal
 			"redo cannot name %q: it is not in the build directory"), $name));
 	my $text = "set -e\n";
 	$text .= "case \$3 in /*) $o=\$3 ;; *) $o=\$PWD/\$3 ;; esac\n"
@@ -399,8 +399,8 @@ sub _vars
 	my $p = $opt ? $opt->{arg_prefix} : undef;
 	$p = '' unless defined $p;
 	$p =~ /\A(?:[A-Za-z_][A-Za-z0-9_]*)?\z/
-		# HEY!  %s is the option, as -Sarg_prefix=1x
 		or die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is the option, as -Sarg_prefix=1x
 			"%s: a prefix is a letter or `_', then letters, digits and `_'"),
 			"-Sarg_prefix=$p"));
 	+{ d => "${p}d", o => "${p}o" };
@@ -425,14 +425,14 @@ sub _argv_is_fs
 	# ASCII and UTF-8, and so is any name in the same encoding)
 	my $argv = eval { RdKw::WwW::SiteConf::argv_text($name) };
 	defined $argv
-		# HEY!  %s is a name, which the encoding of arguments (what is
-		# typed after redo) has no bytes for
 		or die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is a name, which the encoding of arguments (what is
+			# typed after redo) has no bytes for
 			"redo cannot name %q: arguments cannot spell it"), $name));
 	$fs eq $argv
-		# HEY!  %s is a name; an argument (what is typed after redo) and the
-		# file system spell it in different bytes, in their encodings
 		or die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is a name; an argument (what is typed after redo) and the
+			# file system spell it in different bytes, in their encodings
 			"redo cannot name %q: arguments and file names spell it"
 			. " differently"), $name));
 	1;

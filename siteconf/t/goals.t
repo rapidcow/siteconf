@@ -162,7 +162,7 @@ for my $case (@case) {
 	my ($t, $header) = @$case;
 	($status, $out) = run('-g', '-q', '-t', @$t);
 	is($status, 0, "-t @$t") or diag $out;
-	like(slurp('Makefile'), qr/^# options: -G make \Q$header\E$/m, "... is $header in the header");
+	like(slurp('Makefile'), qr/^# options: \Q$header\E$/m, "... is $header in the header");
 }
 like(slurp('Makefile'), qr/^\.PHONY: [^\n]*\nsmall:/m, '... and the default goal is the first rule');
 

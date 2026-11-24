@@ -40,7 +40,7 @@ ok(-f 'build/site/robots.txt', 'redo all');
 $out = run(q(siteconf -g -G redo -t , -t basic), $^X, $script, qw( -g -G redo -B build -t ), q(,), qw( -t basic ));
 unlike($out, qr{site/}, q(... and only the goals are written)) or diag $out;
 like($out, qr{^Updating all\.do$}m, q(... all.do, now the default goal's));
-like(slurp(q(build/all.do)), qr/^# options: -G redo -t ,$/m, q(... as its header says));
+like(slurp(q(build/all.do)), qr/^# options: -t ,$/m, q(... as its header says));
 like($out, qr{To build, run: \( cd build && redo all \)$}m, q(... which is what to run));
 run(q(redo, for all.do), $redo, q(build/all));
 

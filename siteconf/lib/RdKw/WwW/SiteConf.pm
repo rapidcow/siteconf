@@ -2459,12 +2459,12 @@ sub generate
 	$self->_report('MY/MANIFEST', update_file("$My/MANIFEST",
 		join("\n", map { $self->manifest_text($_) } @{ $plan->{goals} })));
 
-	# What made it, for the header (see header_comment).  Not -o: the file
-	# may be moved, and is the same file by any name.
-	$plan->{prog} = "$self->{prog} -g";
+	# What made it, for the header (see header_comment): the program with
+	# its generator, then the options.  Not -o: the file may be moved, and
+	# is the same file by any name.
+	$plan->{prog} = "$self->{prog} -g -G $G";
 	$plan->{args} = [
 		($self->{strict} ? '-A' : ()),
-		'-G', $G,
 		( map { ("-$_", $self->{fromhere}{$_}) } sort keys %{ $self->{fromhere} } ),
 		# (the goals as selected: the default first, as -t ,goal or -t ,;
 		# then each other once, NEED: as no prefix; none if none was)

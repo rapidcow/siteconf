@@ -33,7 +33,7 @@ probe
 	my $line = <$fh>;
 	defined $line && $line eq "ok\n";
 }
-redo_builds() or plan skip_all => "no redo that can build a file";
+redo_builds() or plan skip_all => "no redo";
 plan tests => 29;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q

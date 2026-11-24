@@ -638,19 +638,20 @@ sub read_deps
 			# a colon, which ends them (as it does a vim modeline),
 			# so that what closes a comment is not one.
 			my @list = /\$\{"/
-					? _words(substr($_, pos), blank => '\t ', colon => 1)
-					: /\G[\t ]*([^\t :]+)/gc;
+				? _words(substr($_, pos), blank => '\t ', colon => 1)
+				: /\G[\t ]*([^\t :]+)/gc;
 			$onit = 1;
 			next unless @list;
 
 			if ($type eq 'HAVE') {
-				# HEY!  Keep the second-person pronoun.
-				# It's mildly sarcastic (with that period
-				# at the end) -- imagine a "wtf" stare as
-				# in... "you HAVE too many.  The hell are
-				# you tryin' to be, the whole universe?"
-				# Like that.
-				die _status 0, tagmsg($prog => diag(__("%#q line %d: You HAVE too many."), $file, $.))
+				die _status 0, tagmsg($prog => diag(__(
+					# HEY!  Keep the second-person pronoun.
+					# It's mildly sarcastic (with that period
+					# at the end) -- imagine a "wtf" stare as
+					# in... "you HAVE too many.  The hell are
+					# you tryin' to be, the whole universe?"
+					# Like that.
+					"%#q line %d: You HAVE too many."), $file, $.))
 					if @list > 1 or exists $I{$type};
 				$I{HAVE} = $list[0];
 				$L->{HAVE} = $.;
@@ -772,7 +773,7 @@ character is what L</subs_deps> gives (see L</escape_deps>).  A string,
 C<${"...">C<}>, is spelled as L</escape_deps> would spell its characters:
 C<${"hello world"}> is C<hello${U+0020}world>.  Any
 other C<$> is malformed: a trailing one, an unterminated C<${>,
-an empty C<${}>, a C<${U+...}> that is no code point, a C<$>
+an empty C<${}>, a C<${U+>I<hex>C<}> that is no code point, a C<$>
 before a C<}> or a C<.>, and so on.  The optional C<strict>
 option decides whether to die on malformed input, or to
 replace unpaired dollar signs
@@ -816,7 +817,8 @@ sub norm_deps
 			if (/\G([^\$]+)/gc) {
 				$out .= $1;
 			} elsif (/\G\$\{([Uu]\+[^}]*)\}/gc) {
-				# A character, not a variable
+				# Unicode character, not a variable.
+				# (I never liked variables with + anyways. >:P)
 				my $name = $1;
 				my $n = _code_point($name);
 				if (defined $n) {
@@ -828,12 +830,15 @@ sub norm_deps
 					$out .= ($keep ? '$' : '${$}') . "{$name}";
 				}
 			} elsif (/\G\$\{("(?:[^"\\]|\\.)*")\}/gc) {
-				# A string: each character of it is one
+				# string literal
 				my $str = $1;
 				my $s = _decode_string(substr $str, 1, -1);
 				if (defined $s) {
-					# (what escape_deps leaves alone stays; the rest is ${U+...})
-						$out .= escape_deps($s);
+					# Typically these guys are good citizens
+					# with occasional dangerous characters,
+					# so give them a second chance and only
+					# re-escape the specials and wide chars.
+					$out .= escape_deps($s);
 				} else {
 					$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
 						"cannot normalize %q: bad escape or code point in string %s"),
@@ -841,7 +846,7 @@ sub norm_deps
 					$out .= ($keep ? '$' : '${$}') . "{$str}";
 				}
 			} elsif (/\G\$\{"/gc) {
-				# (not closed, or something after it)
+				# Runaway string literal?
 				$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
 					"cannot normalize %q: bad string after \${"), $_));
 				$out .= ($keep ? '$' : '${$}') . '{"';
@@ -851,7 +856,7 @@ sub norm_deps
 				# includes "$$"
 				$out .= "\${$1}";
 			} elsif (/\G\$/gc) {
-				# Anything else is not a variable we recognize
+				# Anything else is not a variable we recognize.
 				if ($kwds->{strict}) {
 					die _status 0, tagmsg($prog => diag(__(
 						"cannot normalize %q: trailing \$"), $_))
@@ -1118,13 +1123,13 @@ on its way in, so the list returned and the keys of
 C<\%G> are normalized too, and C<$a/x> and C<${a}/x>
 are the same entry.
 
-Return the dependencies (NEEDs, JUST-NEEDs, WANTs and JUST-WANTs) of the
-given path specifications pooled, recursively with
-the dependents of all relative non-build dependents,
-and update C<\%G> as a side-effect.  This list is
-deduplicated symbolically, and files that are either
-not regular files, are build dependents, or lack
-headers are returned without their dependents.
+Return the dependencies (NEEDs, JUST-NEEDs, WANTs and
+JUST-WANTs) of the given path specifications pooled,
+recursively with the dependents of all relative
+non-build dependents, and update C<\%G> as a side-effect.
+This list is deduplicated symbolically, and files that
+are either not regular files, are build dependents, or
+lack headers are returned without their dependents.
 
 Note that build dependents are solely identified
 symbolically by the C<${B}> prefix.

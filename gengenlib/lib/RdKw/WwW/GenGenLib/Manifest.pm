@@ -222,7 +222,8 @@ sub _read_line
 	my $prog = $st->{prog};
 	my ($kw, @arg);
 	if ($text =~ /\$\{"/) {
-		# a string may have blanks and a # in it
+		# String literals may be present:  upgrade
+		# to the same stateful lexer read_deps uses.
 		($kw, @arg) = RdKw::WwW::GenGenLib::_words($text, blank => $SP, hash => 1);
 	} else {
 		$text =~ s/(?:^|[$SP])#.*//so;
@@ -249,10 +250,10 @@ sub _read_line
 		@arg == 1 or die _status 0, tagmsg($prog => diag(__(
 			"%s: MAKE takes exactly one goal name"), _where($pos)));
 		# (a string is the only escape in a goal name, and what it
-			# says must be a goal name too)
-			(my $name = $arg[0]) =~ s{($STRING)}{
-				my $d = RdKw::WwW::GenGenLib::_decode_string(substr $1, 3, -2);
-				defined $d ? $d : $1 }ge;
+		# says must be a goal name too)
+		(my $name = $arg[0]) =~ s{($STRING)}{
+			my $d = RdKw::WwW::GenGenLib::_decode_string(substr $1, 3, -2);
+			defined $d ? $d : $1 }ge;
 		$name =~ /$GOAL/
 			or die _status 0, tagmsg($prog => diag(__("%s: bad goal name %q"),
 			_where($pos), $name));
@@ -263,12 +264,14 @@ sub _read_line
 		return;
 	}
 	if ($kw =~ /\A(?:JUST-)?(?:NEED|WANT)\z/) {
-		# HEY!  the second %s is the string "NEED" or "WANT"
-		$st->{cur} or die _status 0, tagmsg($prog => diag(__("%s: %s before any MAKE"),
+		$st->{cur} or die _status 0, tagmsg($prog => diag(__(
+			# HEY!  the second %s is the string "NEED" or "WANT"
+			"%s: %s before any MAKE"),
 			_where($pos), $kw));
-		# HEY!  the second %s is the string "NEED" or "WANT"
-		@arg or die _status 0, tagmsg($prog => diag(__("%s: %s takes a file"
-			. " (use # for comments)"), _where($pos), $kw));
+		@arg or die _status 0, tagmsg($prog => diag(__(
+			# HEY!  the second %s is the string "NEED" or "WANT"
+			"%s: %s takes a file (use # for comments)"),
+			_where($pos), $kw));
 		(my $key = lc $kw) =~ s/\Ajust-//;
 		my $just = $kw =~ /\AJUST-/ ? 1 : 0;
 		push @{ $st->{cur}{$key} }, map {
@@ -276,7 +279,8 @@ sub _read_line
 		} @arg;
 		return;
 	}
-	die _status 0, tagmsg($prog => diag(__("%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"),
+	die _status 0, tagmsg($prog => diag(__(
+		"%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"),
 		_where($pos), $kw));
 }
 

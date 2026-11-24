@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 35;
+use Test::More tests => 37;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -82,6 +82,12 @@ is_deeply([map { $_->[0] } @{ $p->{goals}[0]{dropped} }], [qw(missing partial ab
 	'WANT drops original NEEDs and WANTs in manifest order');
 like($p->{goals}[0]{dropped}[1][1], qr/missing-dependency/, 'a missing prerequisite drops the whole file');
 ok(!exists $p->{node}{partial}, 'no incomplete rule for the dropped file');
+is_deeply(plan_of('WANT:'), plan_of('WANT:broken'), 'no name is the first goal: WANT:');
+for my $sel ('', 'NEED:') {
+	eval { plan_of($sel) };
+	like($@, qr/goal `broken' NEEDs `missing'/, "... and `$sel'");
+}
+is_deeply(names(plan_of('small', 'WANT:')), [qw(small broken)], '... wherever it is');
 is_deeply(names(plan_of('other', 'WANT:broken', 'small')), [qw(other broken small)], 'selection order');
 is_deeply(names(plan_of('small', 'other', 'NEED:small')), [qw(small other)], 'duplicate goals appear once');
 ok(eval { plan_of('broken', 'WANT:broken'); 1 }, 'last mode wins: WANT') or diag $@;
@@ -95,8 +101,6 @@ for my $case (
 	['WANT:nope', qr/missing goal `nope'/],
 	['want:small', qr/expected NEED or WANT/],
 	['small:WANT', qr/expected NEED or WANT/],
-	['WANT:', qr/expected a goal name/],
-	['', qr/expected a goal name/],
 ) {
 	eval { plan_of($case->[0]) };
 	like($@, $case->[1], "bad selector: $case->[0]");

@@ -2154,7 +2154,9 @@ sub _select_goals
 		$mode eq 'NEED' || $mode eq 'WANT'
 			or die _status 0, tagmsg(E => diag(__("%q: expected NEED or WANT, not %q"),
 				"-t $select", $mode));
-		length $name or die _status 0, tagmsg(E => diag(__("%q: expected a goal name"), "-t $select"));
+		# (no name is the default goal, the first, as with -l)
+		$name = @spec ? $spec[0]{name} : die _status 0, tagmsg(E => diag(__(
+			"%q: expected a goal name"), "-t $select")) unless length $name;
 		exists $goal{$name} or die _status 0, tagmsg(E => diag(__("%#q: missing goal %q"), $self->{D}{F}, $name));
 		push @order, $name unless exists $mode{$name};
 		$mode{$name} = $mode;

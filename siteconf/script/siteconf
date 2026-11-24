@@ -358,13 +358,15 @@ needs, and C<-t all -t small> everything that either of them says.
 
 Added in 0.0300.
 
-=item B<-t> [B<NEED:>|B<WANT:>]I<goal>
+=item B<-t> [B<NEED:>|B<WANT:>][I<goal>]
 
 With C<-g>, generate only the selected goals, in the order requested.
 C<-t goal> and C<-t NEED:goal> keep the manifest's C<NEED> and
 C<WANT> declarations.  C<-t WANT:goal> treats every file in that goal
 as C<WANT>ed, so files that cannot be built are warned about and dropped.
 The prefix goes before the goal, unlike the filter used with C<-l>.
+Without I<goal> (C<-t WANT:>, C<-t NEED:>, C<-t ''>), it is the
+default goal, the first of the manifest, as with C<-l>.
 
 May be repeated, or be a comma-separated list (C<-t a,b> is
 C<-t a -t b>); a repeated goal appears once, at its first position,

@@ -24,8 +24,11 @@ RdKw::WwW::SiteConf::Backend::Redo - redo backend for siteconf
 The generator C<redo> of L<RdKw::WwW::SiteConf/generate>.  It writes a
 F<.do> file for each target, next to the target (F<site/index.html.do>
 for F<site/index.html>, in the build directory), and one for each goal
-in the build directory (F<all.do>).  A file of that name that is
-already there is overwritten.  So the output tree holds the F<.do>
+in the build directory.  The first goal, the default, is F<all.do>,
+whatever its name, so that C<redo> alone makes it (and so its name may
+be that of a directory); the others are I<goal>F<.do>, and none may be
+called C<all>.  A file of any of those names that is already there is
+overwritten.  So the output tree holds the F<.do>
 files too.
 
 A goal's F<.do> file runs C<redo-ifchange> on the files of the goal.
@@ -79,10 +82,10 @@ The F<.do> files, as C<[ >I<name>C<, >I<bytes>C< ]>.
 
 =item B<build_command> I<generator>, I<builddir>, I<file>, I<goal>
 
-C<( cd >I<builddir>C< && redo >I<goal>C< )>, run from the build
-directory as C<make -C> would be (and so with the database of redo
-there); C<redo> I<goal> if I<builddir> is C<.>, and without I<goal> if
-there is none.
+C<( cd >I<builddir>C< && redo all )>, run from the build directory as
+C<make -C> would be (and so with the database of redo there):
+I<goal>, the first, is F<all.do>.  C<redo all> if I<builddir> is
+C<.>, and without C<all> if there is no goal.
 
 =back
 
@@ -137,8 +140,17 @@ sub emit
 		push @file, [ "$target.do", $text ];
 	}
 
+	# The first goal, the default, is `all', which a bare redo makes; the
+	# others are named as they are, and may not be called that
+	my $first = 1;
 	for my $goal (@{ $plan->{goals} }) {
-		my $name = $goal->{name};
+		my $name = $first ? q(all) : $goal->{name};
+		!$first && $name eq q(all)
+			# HEY!  `all' is the name of a .do file, and not to be translated
+			and die _status 0, tagmsg(E => diag(__(
+				"redo cannot name goal %q: all.do is the default goal's"),
+				$name));
+		$first = 0;
 		$taken{$name}
 			# HEY!  %s is the name of a goal, which a .do file is named after
 			and die _status 0, tagmsg(E => diag(__(
@@ -156,7 +168,8 @@ sub build_command
 {
 	my ($class, $prog, $B, $file, $goal) = @_;
 	my $q = \&RdKw::WwW::SiteConf::shell_quote;
-	my @redo = ($prog, defined $goal ? $q->($goal) : ());
+	# (the first goal is all.do)
+	my @redo = ($prog, defined $goal ? q(all) : ());
 	# (in a subshell, so that the shell stays where it is)
 	$B eq q(.) ? @redo : (q[(], q(cd), $q->($B), q(&&), @redo, q[)]);
 }

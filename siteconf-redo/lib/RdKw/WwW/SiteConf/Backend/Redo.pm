@@ -25,16 +25,20 @@ The generator C<redo> of L<RdKw::WwW::SiteConf/generate>.  It writes a
 F<.do> file for each target, next to the target (F<site/index.html.do>
 for F<site/index.html>, in the build directory), and one for each goal
 in the build directory, I<goal>F<.do> (with the directories its name
-says: F<demo/index.do> for C<demo/index>).  The first goal, the
-default, is F<all.do> as well, so that C<redo> alone makes it; so no
-other goal may be called C<all>.  C<-o> I<name>F<.do> names that file
-instead (and then a goal may be called C<all>), and C<-o /dev/null>
-writes none.  A file of any of those names that is already there is
-overwritten.  So the output tree holds the F<.do> files too.
+says: F<demo/index.do> for C<demo/index>).  The default goal (C<-t ,>,
+C<-t ,goal>; see C<-t> of L<siteconf(1)>) is F<all.do> instead, so
+that C<redo> alone makes it, and is I<goal>F<.do> too only if it is a
+goal of its own as well; so if there is a default goal, no goal of its
+own may be called C<all>.  C<-o> I<name>F<.do> names that file instead
+(and then a goal may be called C<all>), and C<-o /dev/null> writes none.
+A file of any of those names that is already there is overwritten.  So
+the output tree holds the F<.do> files too.
 
 The header of a F<.do> file says how C<siteconf -g> was run, but for
 the goals: a goal's says only how it was selected (C<-t goal>, or
-C<-t WANT:goal>), and a target's no goal at all.  So a F<.do> file is
+C<-t WANT:goal>; F<all.do>, C<-t ,goal> or C<-t ,>), and a target's no
+goal at all.
+  So a F<.do> file is
 the same whatever other goals are asked for, and is left alone if what
 it says has not changed.
 
@@ -92,12 +96,13 @@ F<all.do>: the file of the default goal, which C<-o> may name.
 The F<.do> files, as C<[ >I<name>C<, >I<bytes>C< ]>; I<file> is that of
 the default goal, or C<undef> for none.
 
-=item B<build_command> I<generator>, I<builddir>, I<file>, I<goal>
+=item B<build_command> I<generator>, I<builddir>, I<file>, I<goal>, I<plan>
 
-C<( cd >I<builddir>C< && redo >I<goal>C< )>, run from the build
+C<( cd >I<builddir>C< && redo >I<name>C< )>, run from the build
 directory as C<make -C> would be (and so with the database of redo
-there); C<redo> I<goal> if I<builddir> is C<.>, and without I<goal> if
-there is none.
+there); C<redo> I<name> if I<builddir> is C<.>.  I<name> is that of the
+default goal's F<.do> (C<all>, or as C<-o> says), or if there is none,
+the first goal of its own; or there is no I<name>.
 
 =back
 
@@ -163,6 +168,8 @@ sub emit
 	# The default goal's .do (all.do, which a bare redo makes, unless -o
 	# says otherwise; none for -o /dev/null): a name that redo looks for,
 	# and of no file, and of no other goal
+	# (and only if there is a default goal: -t goal has none)
+	undef $default unless grep { defined $_->{default} } @{ $plan->{goals} };
 	my $alias;
 	if (defined $default) {
 		($alias = $default) =~ s/\.do\z//
@@ -177,25 +184,29 @@ sub emit
 				$default));
 	}
 
-	# Each goal is its name, and the first (the default) is the alias too
-	my @goal = @{ $plan->{goals} };
-	for my $i (0 .. $#goal) {
-		my $name = $goal[$i]{name};
-		$i && defined $alias && $name eq $alias
-			# HEY!  the second %s is the .do file of the default goal
-			and die _status 0, tagmsg(E => diag(__(
-				"redo cannot name goal %q: %s is the default goal's"),
-				$name, "$alias.do"));
-		$taken{$name}
-			# HEY!  %s is the name of a goal, which a .do file is named after
-			and die _status 0, tagmsg(E => diag(__(
-				"redo cannot name goal %q: a file has that name"), $name));
-		my @files = map { $plan->{node}{$_}{bpath} } @{ $goal[$i]{files} };
-		my $head_text = $head->($goal[$i]{select});
-		my @do = ($name);
-		push @do, $alias if $i == 0 && defined $alias && $alias ne $name;
-		for my $do (@do) {
-			my $text = $head_text . _preamble($do);
+	# A goal of its own (-t goal) is goal.do; the default goal (-t , or
+	# -t ,goal) is the alias, and is not goal.do unless it is a goal of
+	# its own too (-t ,goal,goal)
+	for my $goal (@{ $plan->{goals} }) {
+		my $name = $goal->{name};
+		my @files = map { $plan->{node}{$_}{bpath} } @{ $goal->{files} };
+		my @do;
+		if (defined $goal->{select}) {
+			defined $alias && $name eq $alias
+				# HEY!  the second %s is the .do file of the default goal
+				and die _status 0, tagmsg(E => diag(__(
+					"redo cannot name goal %q: %s is the default goal's"),
+					$name, "$alias.do"));
+			$taken{$name}
+				# HEY!  %s is the name of a goal, which a .do file is named after
+				and die _status 0, tagmsg(E => diag(__(
+					"redo cannot name goal %q: a file has that name"), $name));
+			push @do, [ $name, $goal->{select} ];
+		}
+		push @do, [ $alias, $goal->{default} ] if defined $goal->{default} && defined $alias;
+		for (@do) {
+			my ($do, $how) = @$_;
+			my $text = $head->($how) . _preamble($do);
 			$text .= "redo-ifchange " . join(' ', map { _word($_) } @files) . "\n" if @files;
 			push @file, [ "$do.do", $text ];
 		}
@@ -205,9 +216,15 @@ sub emit
 
 sub build_command
 {
-	my ($class, $prog, $B, $file, $goal) = @_;
+	my ($class, $prog, $B, $file, $goal, $plan) = @_;
 	my $q = \&RdKw::WwW::SiteConf::shell_quote;
-	my @redo = ($prog, defined $goal ? $q->($goal) : ());
+	# The default goal, by its alias (all, unless -o said otherwise), or
+	# else the first goal of its own
+	my ($first) = $plan ? @{ $plan->{goals} } : ();
+	my $name = !$first ? $goal
+		: defined $first->{default} && defined $plan->{output} ? ($plan->{output} =~ /\A(.*)\.do\z/s)[0]
+		: (map { $_->{name} } grep { defined $_->{select} } @{ $plan->{goals} })[0];
+	my @redo = ($prog, defined $name ? $q->($name) : ());
 	# (in a subshell, so that the shell stays where it is)
 	$B eq q(.) ? @redo : (q[(], q(cd), $q->($B), q(&&), @redo, q[)]);
 }
@@ -220,13 +237,12 @@ sub _with_goals
 	my @arg = @$args;
 	my @t = map { (q(-t), $_) } grep { defined } @goal;
 	my @keep;
-	# (all take a value, but for -A)
+	# (-t is followed by its value; -S has its own glued on, as -Sname=value)
 	while (@arg) {
 		my $opt = shift @arg;
-		if ($opt eq '-A') { push @keep, $opt; next }
-		my $value = shift @arg;
-		push @keep, splice(@t) if $opt eq '-t' || $opt eq '-S';
-		push @keep, $opt, $value unless $opt eq '-t';
+		if ($opt eq '-t') { shift @arg; push @keep, splice(@t); next }
+		push @keep, splice(@t) if $opt =~ /\A-S/;
+		push @keep, $opt;
 	}
 	(@keep, @t);
 }

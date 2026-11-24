@@ -530,14 +530,12 @@ sub new
 		. "You should ./configure first. ;)"), $conf));
 	my %D = read_make($conf, prog => $self->{prog});
 	# F and R (the manifest and the rules) are external to the project:
-	# paths from where we are, not from the project root.  The overrides
-	# are noted so that we can credit them in the header.
-	my %fromhere;
+	# paths from where we are, not from the project root.  The header does
+	# not say them: a fork of either is the same build file.
 	if ($arg{D}) {
 		my $Doverrides = $arg{D};
 		foreach (keys %$Doverrides) {
 			$D{$_} = $Doverrides->{$_};
-			$fromhere{$_} = $Doverrides->{$_} if $_ eq 'F' or $_ eq 'R';
 		}
 	}
 	for my $k (qw( A B a b c R F e )) {
@@ -572,7 +570,6 @@ sub new
 	defined $self->{Rabs}
 		or die tagmsg(E => diag(__("cannot find the source tree %q: %m"), $D{A}));
 	$_ = _un_fs($_) for @$self{qw( Babs Rabs )};
-	$self->{fromhere} = \%fromhere;
 	$self;
 }
 
@@ -1950,8 +1947,10 @@ Reads everything, resolves what is C<WANT>ed, and returns the build
 as a hash reference.  Dies, listing every one of them, if anything
 that is C<NEED>ed cannot be had.
 
-  goals   [ { name, select, files => [ FILE ... ], dropped => [ [FILE, WHY] ] } ]
-            (select: how -t says it, as `goal' or `WANT:goal')
+  goals   [ { name, default, select, files => [ FILE ... ], dropped => [ [FILE, WHY] ] } ]
+            (how -t says it: default, if it is the default goal, as `,goal',
+            `,' or `WANT:'; select, if it is a goal of its own, as `goal'
+            or `WANT:goal'.  The default goal, if any, is the first.)
   node    { FILE => { file, apath, nosrc, bpath, deps,
                       recipe => [ [ KIND, TEXT, WHERE ] ... ] } }
   order   [ FILE ... ]    all files, in order of appearance
@@ -2050,7 +2049,7 @@ sub _goals
 				}
 			}
 		}
-		push @goal, { name => $spec->{name}, select => $spec->{select},
+		push @goal, { name => $spec->{name}, select => $spec->{select}, default => $spec->{default},
 			files => \@files, dropped => \@dropped, just => \%just };
 	}
 	# (what cannot be had comes before what it breaks: a file is done
@@ -2143,44 +2142,89 @@ sub _finish
 sub _select_goals
 {
 	my ($self, @spec) = @_;
-	# -t "goal,goal goal" is -t goal -t goal -t goal.  White space only
-	# splits (so -t '' is nothing at all); a comma splits fields, and a
-	# field that is empty is a goal of no name, the first (so -t , is it).
-	my @select = map {
-		my $arg = $_;
-		$arg =~ /,/
-			? map { /\A[$SP]*\z/ ? q() : grep { length } split /[$SP]+/ } split /,/, $arg, -1
-			: grep { length } split /[$SP]+/, $arg;
-	} @{ $self->{goals} || [] };
-	$self->{selected} = scalar @select;
-	# Without -t (or with one of nothing), what a bare `make' makes: the
-	# first goal.  (The rest are for -t, or for a goal at the top that
-	# NEEDs them.)
-	return $spec[0] ? { %{ $spec[0] }, select => $spec[0]{name} } : () unless @select;
+	# Each -t is fields, split by commas; a field of white space alone (or
+	# of nothing) opts into the default goal, and the first that does is
+	# it: what the next field names, if that is a name and no more (-t
+	# ,goal), or else the first of the manifest (-t , and -t ', x').  Any
+	# other field is names, split by white space, each a goal of its own.
+	# A -t of nothing (or white space alone) is no fields at all, and so
+	# no goal.  If no -t selects one, it is as -t , (with no -t said).
+	my ($default, @own);
+	for my $arg (@{ $self->{goals} || [] }) {
+		next if $arg =~ /\A[$SP]*\z/;
+		my @field = split /,/, $arg, -1;
+		for (my $i = 0; $i < @field; $i++) {
+			if ($field[$i] =~ /\A[$SP]*\z/) {
+				next if $default;
+				my $next = $field[$i + 1];
+				$default = defined $next && $next =~ /\A[^$SP]+\z/
+					? { arg => $field[++$i], named => 1 } : { arg => q() };
+				next;
+			}
+			for my $sel (grep { length } split /[$SP]+/, $field[$i]) {
+				my ($mode, $name) = _selector($sel);
+				# (WANT: and NEED: alone are the first of the manifest)
+				if (!length $name) {
+					$default ||= { arg => $sel, mode => $mode };
+					next;
+				}
+				push @own, $sel;
+			}
+		}
+	}
+
+	my $implied = !$default && !@own;
+	$default = { arg => q() } if $implied;
 	my %goal = map { $_->{name} => $_ } @spec;
-	my (%mode, @order);
-	for my $select (@select) {
-		my ($mode, $name) = index($select, ':') < 0
-			? ('NEED', $select) : split(/:/, $select, 2);
-		$mode eq 'NEED' || $mode eq 'WANT'
-			or die _status 0, tagmsg(E => diag(__("%q: expected NEED or WANT, not %q"),
-				"-t $select", $mode));
-		# (no name is the default goal, the first, as with -l)
-		$name = @spec ? $spec[0]{name} : die _status 0, tagmsg(E => diag(__(
-			"%q: expected a goal name"), "-t $select")) unless length $name;
+	my $first = sub {
+		@spec ? $spec[0]{name} : die _status 0, tagmsg(E => diag(__(
+			"%q: expected a goal name"), "-t $_[0]"));
+	};
+	my (%mode, %how, @order);
+	my $add = sub {
+		my ($sel, $mode, $name, $how, $as) = @_;
 		exists $goal{$name} or die _status 0, tagmsg(E => diag(__("%#q: missing goal %q"), $self->{D}{F}, $name));
 		push @order, $name unless exists $mode{$name};
 		$mode{$name} = $mode;
+		$how{$name}{$how} = $as;
+	};
+	# (each says how it was selected, as -t would say it: the default as
+	# `,goal' if named, `,' or `WANT:' if the first of the manifest; and
+	# another as `goal' or `WANT:goal', NEED being no prefix)
+	if ($default) {
+		my ($mode, $name) = $default->{named} ? _selector($default->{arg})
+			: ($default->{mode} || q(NEED), q());
+		my $as = $default->{named} ? q(,) . ($mode eq q(WANT) ? "WANT:$name" : $name)
+			: $mode eq q(WANT) ? q(WANT:) : q(,);
+		$add->($default->{arg}, $mode, length $name ? $name : $first->($default->{arg}), default => $as);
 	}
-	# (each says how it was selected, as -t would say it: `WANT:goal', or
-	# `goal' for NEED, which needs no prefix)
+	for my $sel (@own) {
+		my ($mode, $name) = _selector($sel);
+		$add->($sel, $mode, $name, own => $mode eq q(WANT) ? "WANT:$name" : $name);
+	}
+	# What the header says: nothing, without -t; else the default first
+	$self->{select_args} = $implied ? []
+		: [ map { (q(-t), $_) } grep { defined }
+			(map { $how{$_}{default} } @order), (map { $how{$_}{own} } @order) ];
 	map {
 		my $goal = $goal{$_};
+		my %how = (default => $how{$_}{default}, select => $how{$_}{own});
 		$mode{$_} eq q(WANT)
-			? { %$goal, select => "WANT:$_", need => [], want => [ sort { $a->{order} <=> $b->{order} }
+			? { %$goal, %how, need => [], want => [ sort { $a->{order} <=> $b->{order} }
 				@{ $goal->{need} }, @{ $goal->{want} } ] }
-			: { %$goal, select => $_ };
+			: { %$goal, %how };
 	} @order;
+}
+
+# A selector of -t: its mode (NEED, unless it says WANT:) and its name
+sub _selector
+{
+	my ($sel) = @_;
+	my ($mode, $name) = index($sel, ':') < 0 ? (q(NEED), $sel) : split(/:/, $sel, 2);
+	$mode eq 'NEED' || $mode eq 'WANT'
+		or die _status 0, tagmsg(E => diag(__("%q: expected NEED or WANT, not %q"),
+			"-t $sel", $mode));
+	($mode, $name);
 }
 
 # The cleaning rules, as { name, files => [ BPATH ] } (see
@@ -2307,11 +2351,12 @@ with C<opt>, C<prog> and C<args>; I<file> is the name of the file
 that C<default_output> names, or C<undef> for F</dev/null>.  A file
 whose I<NAME> is C<undef> is not written.
 
-=item C<build_command> I<generator>, I<builddir>, I<file>, I<goal>
+=item C<build_command> I<generator>, I<builddir>, I<file>, I<goal>, I<plan>
 
 The words of what to type to build I<goal> (or the default, if
 C<undef>), quoted for the shell.  I<file> is C<undef> unless it was
-named.
+named.  I<plan> is that of C<emit>, with C<output>: the I<file> that
+C<emit> was given.
 
 =back
 
@@ -2411,20 +2456,20 @@ sub generate
 	$self->_report('MY/MANIFEST', update_file("$My/MANIFEST",
 		join("\n", map { $self->manifest_text($_) } @{ $plan->{goals} })));
 
-	# What made it, for the header (see header_comment).  Not -o: the file
-	# may be moved, and is the same file by any name.
-	$plan->{prog} = "$self->{prog} -g";
+	# What made it, for the header (see header_comment): the program with
+	# its generator, then the options.  Not -o: the file may be moved, and
+	# is the same file by any name.
+	$plan->{prog} = "$self->{prog} -g -G $G";
 	$plan->{args} = [
 		($self->{strict} ? '-A' : ()),
-		'-G', $G,
-		( map { ("-$_", $self->{fromhere}{$_}) } sort keys %{ $self->{fromhere} } ),
-		# (the goals as selected, in order, each once: -t '' is the first
-		# goal by name, and NEED: is no prefix)
-		( $self->{selected} ? map { (q(-t), $_->{select}) } @{ $plan->{goals} } : () ),
-		( map { ('-S', defined $S_all->{$_} ? "$_=$S_all->{$_}" : $_) } sort keys %$S_all ),
+		# (the goals as selected: the default first, as -t ,goal or -t ,;
+		# then each other once, NEED: as no prefix; none if none was)
+		@{ $self->{select_args} || [] },
+		( map { defined $S_all->{$_} ? "-S$_=$S_all->{$_}" : "-S$_" } sort keys %$S_all ),
 	];
 	# Bytes.  The backends spell the names as the file system does.
 	# (and what has no name is not written: -o /dev/null)
+	$plan->{output} = $outfile;
 	my @file = grep { defined $_->[0] } $module->emit($plan, $outfile);
 	# update_file writes `dir/name' by way of `dir/tmp-name', which would
 	# take the place of a file of that name that we write too
@@ -2447,7 +2492,7 @@ sub generate
 	# What to type next (the backend says, from the first goal of the
 	# manifest)
 	my @cmd = $module->build_command($G, $self->{B}, $named ? $outfile : undef,
-		@{ $plan->{goals} } ? $plan->{goals}[0]{name} : undef);
+		@{ $plan->{goals} } ? $plan->{goals}[0]{name} : undef, $plan);
 	unless ($self->failed()) {
 		$self->_warn(__("Done!") . "\n");
 		# HEY!  %s is a command line, as the shell would read it

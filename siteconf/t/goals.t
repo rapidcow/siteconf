@@ -5,7 +5,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 53;
+use Test::More tests => 70;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -82,15 +82,30 @@ is_deeply([map { $_->[0] } @{ $p->{goals}[0]{dropped} }], [qw(missing partial ab
 	'WANT drops original NEEDs and WANTs in manifest order');
 like($p->{goals}[0]{dropped}[1][1], qr/missing-dependency/, 'a missing prerequisite drops the whole file');
 ok(!exists $p->{node}{partial}, 'no incomplete rule for the dropped file');
-is_deeply(plan_of('WANT:'), plan_of('WANT:broken'), 'no name is the first goal: WANT:');
-for my $sel (',', 'NEED:') {
-	eval { plan_of($sel) };
-	like($@, qr/goal `broken' NEEDs `missing'/, "... and `$sel'");
+# How each goal was selected: [ name, as the default, as a goal of its own ]
+sub how { [ map { [ $_->{name}, $_->{default}, $_->{select} ] } @{ $_[0]{goals} } ] }
+is_deeply(how(plan_of('WANT:')), [ [ 'broken', 'WANT:', undef ] ], 'WANT: is the default goal, the first of the manifest');
+for my $sel ([], [','], [''], ["  \t "], ['NEED:'], [', small'], [',,small']) {
+	eval { plan_of(@$sel) };
+	like($@, qr/goal `broken' NEEDs `missing'/, "... and so is " . (@$sel ? "-t `$sel->[0]'" : 'no -t'));
 }
-is_deeply(names(plan_of('small', '')), ['small'], "-t '' is nothing at all");
-eval { plan_of(" \t") };
-like($@, qr/goal `broken' NEEDs `missing'/, q(... and white space alone is no -t: the first goal));
-is_deeply(names(plan_of('small', 'WANT:')), [qw(small broken)], '... wherever it is');
+is_deeply(how(plan_of(',small')), [ [ 'small', ',small', undef ] ], '-t ,small: small is the default goal, and no more');
+is_deeply(how(plan_of(',WANT:small')), [ [ 'small', ',WANT:small', undef ] ], '... WANT: too');
+is_deeply(how(plan_of(',small,small')), [ [ 'small', ',small', 'small' ] ], '-t ,small,small: and a goal of its own');
+for my $sel ([',small,,other'], [',small', ',other']) {
+	is_deeply(how(plan_of(@$sel)), [ [ 'small', ',small', undef ], [ 'other', undef, 'other' ] ],
+		"-t @{[ join ' -t ', @$sel ]}: the first default is the default");
+}
+is_deeply(how(plan_of("  small \t")), [ [ 'small', undef, 'small' ] ], '-t small (with white space): no default');
+is_deeply(names(plan_of('small', 'WANT:')), [qw(broken small)], 'the default goal comes first, wherever it is');
+is_deeply(how(plan_of('', ',small')), [ [ 'small', ',small', undef ] ], "-t '' is no field: -t '' -t ,small is small, the default");
+is_deeply(how(plan_of('  ', 'small')), [ [ 'small', undef, 'small' ] ], "... and -t ' ' -t small no default at all");
+is_deeply(how(plan_of('small', ',other')), [ [ 'other', ',other', undef ], [ 'small', undef, 'small' ] ], '-t small -t ,other: the default goal is first');
+{
+	my $sc = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ '', ' ' ], S => {});
+	eval { $sc->plan };
+	is_deeply($sc->{select_args}, [], "... and with -t '' -t ' ' alone, the header says no -t");
+}
 is_deeply(names(plan_of('other', 'WANT:broken', 'small')), [qw(other broken small)], 'selection order');
 is_deeply(names(plan_of('small', 'other', 'NEED:small')), [qw(small other)], 'duplicate goals appear once');
 ok(eval { plan_of('broken', 'WANT:broken'); 1 }, 'last mode wins: WANT') or diag $@;
@@ -132,28 +147,24 @@ for my $G (qw( make gmake )) {
 	like($out, qr/goal `broken' NEEDs `missing'/, "-G $G -t ,: the first goal, broken");
 }
 
-# The header says the goals as they were selected: each once, by name, NEED: as
-# no prefix
-($status, $out) = run('-g', '-q', '-t', 'NEED:small', '-t', 'WANT:', '-t', 'small');
-is($status, 0, '-t NEED:small -t WANT: -t small') or diag $out;
-like(slurp('Makefile'), qr/^# options: -G make -t small -t WANT:broken$/m, '... is -t small -t WANT:broken in the header');
-
-($status, $out) = run('-g', '-q', '-t', 'small,WANT:other', '-t', 'WANT:,small');
-is($status, 0, '-t small,WANT:other -t WANT:,small') or diag $out;
-like(slurp('Makefile'), qr/^# options: -G make -t small -t WANT:other -t WANT:broken$/m,
-	'... is a -t each, and an empty name is the first goal');
-
-# White space splits too, but what is empty between it is nothing; and so
-# is a field of white space alone, between commas, the first goal
-($status, $out) = run('-g', '-q', '-t', " small\tother \n", '-t', '');
-is($status, 0, '-t with white space, and -t of nothing') or diag $out;
-like(slurp('Makefile'), qr/^# options: -G make -t small -t other$/m, '... is a -t for each goal');
-($status, $out) = run(q(-g), q(-q), q(-t), "small, \t,WANT:");
-is($status, 0, q(-t "small, \t,WANT:")) or diag $out;
-like(slurp(q(Makefile)), qr/^# options: -G make -t small -t WANT:broken$/m,
-	'... a field of white space alone is the first goal (and the last mode wins)');
-($status, $out) = run('-g', '-q', '-t', '', '-t', ' ');
-like($out, qr/goal `broken' NEEDs `missing'/, "-t '' -t ' ' is no -t: the first goal");
+# The header says the goals as they were selected: the default first (,goal
+# if named, , or WANT: if the first of the manifest), then the others, each
+# once, by name, NEED: as no prefix
+my @case = (
+	[ [ 'NEED:small', '-t', 'WANT:', '-t', 'small' ], '-t WANT: -t small' ],
+	[ [ 'small,WANT:other', '-t', 'WANT:,small' ], '-t WANT: -t small -t WANT:other' ],
+	[ [ " small\tother \n" ], '-t small -t other' ],
+	[ [ "WANT:, \t,small other" ], '-t WANT: -t small -t other' ],
+	[ [ ',small' ], '-t ,small' ],
+	[ [ ',small,small', '-t', ',other' ], '-t ,small -t small -t other' ],
+);
+for my $case (@case) {
+	my ($t, $header) = @$case;
+	($status, $out) = run('-g', '-q', '-t', @$t);
+	is($status, 0, "-t @$t") or diag $out;
+	like(slurp('Makefile'), qr/^# options: \Q$header\E$/m, "... is $header in the header");
+}
+like(slurp('Makefile'), qr/^\.PHONY: [^\n]*\nsmall:/m, '... and the default goal is the first rule');
 
 # -o /dev/null: no build file, and nothing to run
 unlink "$dir/Makefile" or die $!;

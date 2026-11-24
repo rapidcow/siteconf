@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 12:53-0600\n"
+"POT-Creation-Date: 2026-11-24 15:03-0600\n"
 "PO-Revision-Date: 2026-11-18 12:00-0600\n"
 "Last-Translator: Claude (machine draft, needs review)\n"
 "Language-Team: none\n"
@@ -95,14 +95,14 @@ msgstr "找不到 %q（WwW-SiteConf 安装了吗？）"
 
 #: ../siteconf/script/siteconf:845 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1501
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:132
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:615
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:178
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:617
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:182
 msgid "cannot open file %q: %m"
 msgstr "无法打开文件 %q：%m"
 
 #: ../siteconf/script/siteconf:847 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1578
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:666
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:193
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:671
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:197
 msgid "cannot read file %q: %m"
 msgstr "无法读取文件 %q：%m"
 
@@ -230,7 +230,7 @@ msgstr ""
 #. HEY!  %#q is the file name of the faulty
 #. file and %d is its lineno.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:437
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:137
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:141
 msgid "%#q line %d"
 msgstr "%#q 行 %d"
 
@@ -441,12 +441,12 @@ msgid "%s: AUGMENT may only amend dependencies"
 msgstr "%s：AUGMENT 只能修改依赖"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1500
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:177
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:181
 msgid "%s: cannot open file %q: %m"
 msgstr "%s：无法打开文件 %q：%m"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1506
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:183
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:187
 msgid "%s: include cycle through %q"
 msgstr "%s：循环包含 %q"
 
@@ -464,7 +464,7 @@ msgstr "%s：意外的制表符"
 
 #. HEY!  the second %s is the keyword: INCLUDE or AUGMENT
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1564
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:234
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:245
 #, perl-format
 msgid "%s: %s takes at least one file"
 msgstr "%s：%s 至少需要一个文件"
@@ -687,7 +687,7 @@ msgid "%q: expected a goal name"
 msgstr "%q：应为目标名"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2234
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:313
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:331
 msgid "%#q: missing goal %q"
 msgstr "%#q：缺少目标 %q"
 
@@ -1169,31 +1169,31 @@ msgstr ""
 #. in... "you HAVE too many.  The hell are
 #. you tryin' to be, the whole universe?"
 #. Like that.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:649
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:654
 msgid "%#q line %d: You HAVE too many."
 msgstr "%#q 第 %d 行：你 HAVE 太多了。(ಠ_ಠ)"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:820
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:828
 msgid "cannot normalize %q: bad Unicode code point %s"
 msgstr "无法规范化 %q：%s 不是有效的 Unicode 码位"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:832
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:844
 msgid "cannot normalize %q: bad escape or code point in string %s"
 msgstr "无法规范化 %q：字符串 %s 中的转义或码位有误"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:839
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:851
 msgid "cannot normalize %q: bad string after ${"
 msgstr "无法规范化 %q：${ 之后的字符串有误"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:850
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:862
 msgid "cannot normalize %q: trailing $"
 msgstr "无法规范化 %q：末尾有 $"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:853
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:865
 msgid "cannot normalize %q: unterminated or empty ${"
 msgstr "无法规范化 %q：有未闭合或为空的 ${"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:855
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:867
 msgid "stray $ in %q"
 msgstr "%q 中有多余的 $"
 
@@ -1204,7 +1204,7 @@ msgstr "%q 中有多余的 $"
 #. pure decode operation... in which case a named
 #. substitution that is not an escape at all as "bad"
 #. as in, "wait.... that's illegal."
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:937
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:949
 #, perl-format
 msgid "bad substitution: %s"
 msgstr "替换有误：%s"
@@ -1213,53 +1213,53 @@ msgstr "替换有误：%s"
 #. no will to break, no voice to cry suffering..."
 #. (actually, with a verb now, it is substantially
 #. more clear.)
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:160
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:164
 msgid "%#q: no goal to make"
 msgstr "%#q：没有可制造的目标"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:173
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:177
 msgid "cannot open string: %m"
 msgstr "无法打开字符串：%m"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:190
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:194
 #, perl-format
 msgid "%s: not UTF-8"
 msgstr "%s：不是 UTF-8"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:210
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:214
 msgid "%s: %q is empty"
 msgstr "%s：%q 为空"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:212
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:216
 msgid "%s: %q has a NUL in it"
 msgstr "%s：%q 中有 NUL"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:242
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:253
 #, perl-format
 msgid "%s: MAKE takes exactly one goal name"
 msgstr "%s：MAKE 只接受一个目标名"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:245
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:260
 msgid "%s: bad goal name %q"
 msgstr "%s：目标名有误：%q"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:248
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:263
 msgid "%s: goal %q is already made"
 msgstr "%s：目标 %q 已经有了"
 
 #. HEY!  the second %s is the string "NEED" or "WANT"
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:255
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:271
 #, perl-format
 msgid "%s: %s before any MAKE"
 msgstr "%s：%s 出现在任何 MAKE 之前"
 
 #. HEY!  the second %s is the string "NEED" or "WANT"
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:258
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:275
 #, perl-format
 msgid "%s: %s takes a file (use # for comments)"
 msgstr "%s：%s 后面要跟文件名（注释请用 #）"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:267
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:285
 msgid "%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"
 msgstr "%s：应为 MAKE、NEED、WANT、JUST-NEED 或 JUST-WANT，而不是 %q"
 

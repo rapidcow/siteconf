@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WwW-SiteConf\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 12:53-0600\n"
+"POT-Creation-Date: 2026-11-24 15:03-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -97,14 +97,14 @@ msgstr ""
 
 #: ../siteconf/script/siteconf:845 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1501
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:132
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:615
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:178
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:617
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:182
 msgid "cannot open file %q: %m"
 msgstr ""
 
 #: ../siteconf/script/siteconf:847 ../siteconf/lib/RdKw/WwW/SiteConf.pm:1578
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:666
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:193
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:671
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:197
 msgid "cannot read file %q: %m"
 msgstr ""
 
@@ -230,7 +230,7 @@ msgstr ""
 #. HEY!  %#q is the file name of the faulty
 #. file and %d is its lineno.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:437
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:137
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:141
 msgid "%#q line %d"
 msgstr ""
 
@@ -439,12 +439,12 @@ msgid "%s: AUGMENT may only amend dependencies"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1500
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:177
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:181
 msgid "%s: cannot open file %q: %m"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1506
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:183
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:187
 msgid "%s: include cycle through %q"
 msgstr ""
 
@@ -462,7 +462,7 @@ msgstr ""
 
 #. HEY!  the second %s is the keyword: INCLUDE or AUGMENT
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1564
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:234
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:245
 #, perl-format
 msgid "%s: %s takes at least one file"
 msgstr ""
@@ -654,7 +654,7 @@ msgid "%q: expected a goal name"
 msgstr ""
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:2234
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:313
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:331
 msgid "%#q: missing goal %q"
 msgstr ""
 
@@ -1127,31 +1127,31 @@ msgstr ""
 #. in... "you HAVE too many.  The hell are
 #. you tryin' to be, the whole universe?"
 #. Like that.
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:649
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:654
 msgid "%#q line %d: You HAVE too many."
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:820
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:828
 msgid "cannot normalize %q: bad Unicode code point %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:832
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:844
 msgid "cannot normalize %q: bad escape or code point in string %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:839
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:851
 msgid "cannot normalize %q: bad string after ${"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:850
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:862
 msgid "cannot normalize %q: trailing $"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:853
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:865
 msgid "cannot normalize %q: unterminated or empty ${"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:855
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:867
 msgid "stray $ in %q"
 msgstr ""
 
@@ -1162,7 +1162,7 @@ msgstr ""
 #. pure decode operation... in which case a named
 #. substitution that is not an escape at all as "bad"
 #. as in, "wait.... that's illegal."
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:937
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:949
 #, perl-format
 msgid "bad substitution: %s"
 msgstr ""
@@ -1171,53 +1171,53 @@ msgstr ""
 #. no will to break, no voice to cry suffering..."
 #. (actually, with a verb now, it is substantially
 #. more clear.)
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:160
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:164
 msgid "%#q: no goal to make"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:173
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:177
 msgid "cannot open string: %m"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:190
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:194
 #, perl-format
 msgid "%s: not UTF-8"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:210
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:214
 msgid "%s: %q is empty"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:212
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:216
 msgid "%s: %q has a NUL in it"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:242
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:253
 #, perl-format
 msgid "%s: MAKE takes exactly one goal name"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:245
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:260
 msgid "%s: bad goal name %q"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:248
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:263
 msgid "%s: goal %q is already made"
 msgstr ""
 
 #. HEY!  the second %s is the string "NEED" or "WANT"
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:255
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:271
 #, perl-format
 msgid "%s: %s before any MAKE"
 msgstr ""
 
 #. HEY!  the second %s is the string "NEED" or "WANT"
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:258
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:275
 #, perl-format
 msgid "%s: %s takes a file (use # for comments)"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:267
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib/Manifest.pm:285
 msgid "%s: expected MAKE, NEED, WANT, JUST-NEED or JUST-WANT, not %q"
 msgstr ""
 

@@ -38,7 +38,7 @@ Messages are character strings, both ways.  The domain is bound to
 UTF-8 (whatever C<OUTPUT_CHARSET> or the locale's code set would say),
 the message IDs are encoded as such on their way in, and what gettext
 gives back is decoded as such; both of them strictly, as a catalog that
-is not UTF-8 is a mistake, not something to guess at.  B<$!> (and
+is not UTF-8 is an error.  B<$!> (and
 B<$^E>) are as they were after any of them, as gettext may have failed
 to open a catalog on the way, and the message may be on its way to say
 C<%m> (see L<RdKw::I18N::CodeSets/diag>).

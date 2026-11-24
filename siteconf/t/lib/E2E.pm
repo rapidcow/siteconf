@@ -9,6 +9,7 @@ use Test::More;
 
 use File::Temp qw( tempdir );
 use TestPaths qw( project_root script_path perl5lib );
+use Tools qw( make_cmd );
 
 use Exporter ();
 our @ISA = qw( Exporter );
@@ -37,11 +38,11 @@ sub setup
 	$script;
 }
 
-# `make' or whatever $MAKE says, if it can run a makefile at all.
+# `make' or whatever $MAKE says (see Tools), if it can run a makefile at all.
 # (Not `make -v': that is a different thing to bmake.)
 sub make
 {
-	my $make = $ENV{MAKE} || 'make';
+	my $make = make_cmd();
 	system("printf 'all:\\n' | $make -f - >/dev/null 2>&1") == 0
 		or plan skip_all => "no make";
 	$make;

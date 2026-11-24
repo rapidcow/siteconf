@@ -14,20 +14,12 @@ use File::Basename qw( dirname );
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib fs_surprise );
+use Tools qw( gmake_since );
 use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
 
-# The first GNU make at least as new as major.minor
-sub gmake_since
-{
-	my ($major, $minor) = @_;
-	(grep {
-		my $v = `$_ --version 2>/dev/null`;
-		$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > $major || $1 == $major && $2 >= $minor);
-	} grep { defined } $ENV{GMAKE}, 'gmake', 'make')[0];
-}
 # Any (3.81 is the oldest tested); and one that can escape a `:' in a
 # prerequisite, which came in 4.0 (`unescape_char' in read.c)
 my $gmake = gmake_since(3, 81);

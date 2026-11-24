@@ -13,18 +13,16 @@ use lib "$FindBin::Bin/lib";
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib );
+use Tools qw( make_cmd gmake_since );
 use RdKw::WwW::GenGenLib qw( write_make );
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
 
 # Whatever can run a makefile at all, as -G make; GNU make, as -G gmake
-my $make = $ENV{MAKE} || 'make';
+my $make = make_cmd();
 $make = undef if system("printf 'all:\\n' | $make -f - >/dev/null 2>&1");
-my ($gmake) = grep {
-	my $v = `$_ --version 2>/dev/null`;
-	$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > 3 || $1 == 3 && $2 >= 81);
-} grep { defined } $ENV{GMAKE}, 'gmake', 'make';
+my $gmake = gmake_since(3, 81);
 plan tests => 6;
 
 my $X = q{d$llar $(x) ${y} $$ $ '$' "$" a|b `x`};

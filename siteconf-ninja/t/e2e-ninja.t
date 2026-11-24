@@ -10,9 +10,10 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 
 use E2E;
+use Tools qw( ninja_cmd );
 
 my $script = E2E::setup();
-my $ninja = $ENV{NINJA} || 'ninja';
+my $ninja = ninja_cmd();
 system("$ninja --version >/dev/null 2>&1") == 0 or plan skip_all => "no ninja";
 plan tests => 13;
 

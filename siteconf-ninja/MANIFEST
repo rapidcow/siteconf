@@ -6,5 +6,6 @@ lib/RdKw/WwW/SiteConf/Backend/Ninja.pm
 t/00-load.t
 t/e2e-ninja.t
 t/lib/E2E.pm
+t/lib/Tools.pm
 t/names.t
 t/ninja.t

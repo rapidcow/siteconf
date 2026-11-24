@@ -14,15 +14,14 @@ use File::Basename qw( dirname );
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib );
+use Tools qw( gmake_since );
 use RdKw::WwW::GenGenLib qw( write_make );
 
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
 
-my ($gmake) = grep {
-	my $v = `$_ --version 2>/dev/null`;
-	$v =~ /\AGNU Make (\d+)\.(\d+)/ && ($1 > 3 || $1 == 3 && $2 > 81);
-} grep { defined } $ENV{GMAKE}, 'gmake', 'make';
+# (newer than 3.81)
+my $gmake = gmake_since(3, 82);
 plan tests => 10;
 
 sub run

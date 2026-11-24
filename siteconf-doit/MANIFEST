@@ -6,5 +6,6 @@ lib/RdKw/WwW/SiteConf/Backend/Doit.pm
 t/00-load.t
 t/e2e-doit.t
 t/lib/E2E.pm
+t/lib/Tools.pm
 t/doit.t
 t/modes.t

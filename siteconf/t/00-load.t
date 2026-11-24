@@ -6,6 +6,9 @@ use 5.008;
 use strict;
 use warnings;
 use Test::More tests => 5;
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use Tools qw( describe make_cmd bmake_cmd gmake_since );
 
 BEGIN {
 	my @module = qw(
@@ -20,3 +23,7 @@ BEGIN {
 	}
 }
 diag( "Testing RdKw::WwW::SiteConf $RdKw::WwW::SiteConf::VERSION, Perl $], $^X" );
+# (the programs that t/e2e-*.t run)
+diag( describe(q(make ($MAKE)), make_cmd()) );
+diag( describe(q(bmake ($BMAKE)), bmake_cmd()) );
+diag( describe(q(GNU make ($GMAKE, gmake, make)), gmake_since(3, 81), q(--version)) );

@@ -11,9 +11,10 @@ use File::Temp qw( tempdir );
 use lib "$FindBin::Bin/lib";
 
 use E2E;
+use Tools qw( redo_cmd );
 
 my $script = E2E::setup();
-my $redo = $ENV{REDO} || 'redo';
+my $redo = redo_cmd();
 # Not --version: a redo may not have it, or not say its name in it.
 # What we need of redo is that it builds a file from its .do (in a
 # directory of its own, for redo keeps its state there).

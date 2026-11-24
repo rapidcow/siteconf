@@ -10,9 +10,10 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 
 use E2E;
+use Tools qw( bmake_cmd );
 
 my $script = E2E::setup();
-my $bmake = $ENV{BMAKE} || 'bmake';
+my $bmake = bmake_cmd();
 system("$bmake -V MAKE_VERSION >/dev/null 2>&1") == 0 or plan skip_all => "no bmake";
 plan tests => 14;
 

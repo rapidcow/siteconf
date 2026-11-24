@@ -368,26 +368,31 @@ C<-t goal> and C<-t NEED:goal> keep the manifest's C<NEED> and
 C<WANT> declarations.  C<-t WANT:goal> treats every file in that goal
 as C<WANT>ed, so files that cannot be built are warned about and dropped.
 The prefix goes before the goal, unlike the filter used with C<-l>.
-Without I<goal> (C<-t WANT:>, C<-t NEED:>, C<-t ,>), it is the
-default goal, the first of the manifest, as with C<-l>.
 
 May be repeated, or be a list (C<-t 'a,b c'> is C<-t a -t b -t c>, so
-C<-t "$*"> will do).  Commas split it into fields, and a field that is
-empty (or white space alone) is a goal of no name: the default goal, as
-above.  So C<-t ,> is the default goal, and so is C<-t "${GOAL:-,}">
-if C<GOAL> is empty.  POSIX white space splits a field further, and what
-is empty between it is nothing: C<-t ''>, or C<-t> of white space alone,
-adds no goal, and if no C<-t> adds one, it is as if there were none.  A
-repeated goal
-appears once, at its first position, with the last prefix given for
-it.  The first selected goal is the default build goal.  Without
-C<-t>, only the first goal of the manifest is generated, as a bare
-L<make(1)> makes it; the others are named by C<-t>, or are needed by a
-goal at the top (C<MAKE all> that C<NEED>s them).
+C<-t "$*"> will do): commas split it into fields, and POSIX white space
+splits a field into goals.  A field that is empty, or white space alone,
+opts into the default goal, and so does a field of a prefix alone
+(C<WANT:>, C<NEED:>).  The first that does says what the default goal
+is: what the next field of the same C<-t> names, if it is one name and
+no white space (C<-t ,goal>, C<-t ,WANT:goal>); or else the first goal
+of the manifest (C<-t ,>, C<-t ''>, C<-t ', goal'>).  Any later one is
+nothing, so in C<-t ,goal,,late> and C<-t ,goal -t ,late> the goal
+C<late> is a goal of its own.  Without C<-t>, it is C<-t ,>.  So C<-t
+"${GOAL:-,}"> is C<GOAL>, or the default goal if C<GOAL> is empty.
 
-The header of the build file says the goals as they were selected: a
-C<-t> for each, in that order, the default goal by its name, and
-C<NEED:> as no prefix.
+A goal of its own appears once, at its first position, with the last
+prefix given for it.  The default goal, if there is one, is the first
+(what a bare L<make(1)> makes), and is only the default: with C<redo>,
+it is F<all.do>, and not I<goal>F<.do> unless it is a goal of its own as
+well (C<-t ,goal,goal>).  Without a default goal, the first goal of its
+own is the first.  A goal at the top (C<MAKE all>) may also need
+others, which are then generated too.
+
+The header of the build file says the goals as they were selected: the
+default goal first, as C<-t ,goal> if it was named and as C<-t ,> (or
+C<-t WANT:>) if it is the first of the manifest; then a C<-t goal> (or
+C<-t WANT:goal>) for each other, in that order.
 
 Added in 0.0300.
 

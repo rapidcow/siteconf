@@ -14,7 +14,7 @@ use E2E;
 my $script = E2E::setup();
 my $redo = $ENV{REDO} || 'redo';
 system("$redo --version >/dev/null 2>&1") == 0 or plan skip_all => "no redo";
-plan tests => 20;
+plan tests => 26;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q
 	-MRdKw::WwW::GenLib=0 ));
@@ -34,14 +34,22 @@ like(run('redo-ifchange, a source newer', "$redo-ifchange", 'build/basic'), qr/s
 run('redo all', $redo, 'build/all');
 ok(-f 'build/site/robots.txt', 'redo all');
 
-# Other goals: the same rules, so the targets' .do files are left alone
-$out = run(q(siteconf -g -G redo -t basic), $^X, $script, qw( -g -G redo -B build -t basic ));
+# Other goals: the same rules, so the targets' .do files are left alone;
+# and the default goal (-t ,: all, the first of the manifest) is all.do,
+# which was the goal all's
+$out = run(q(siteconf -g -G redo -t , -t basic), $^X, $script, qw( -g -G redo -B build -t ), q(,), qw( -t basic ));
 unlike($out, qr{site/}, q(... and only the goals are written)) or diag $out;
-like($out, qr{^(?:Writing|Updating) all\.do$}m, q(... all.do among them));
+like($out, qr{^Updating all\.do$}m, q(... all.do, now the default goal's));
+like(slurp(q(build/all.do)), qr/^# options: -G redo -t ,$/m, q(... as its header says));
+like($out, qr{To build, run: \( cd build && redo all \)$}m, q(... which is what to run));
+run(q(redo, for all.do), $redo, q(build/all));
 
 # -o: the default goal's .do; /dev/null, none
-$out = run(q(siteconf -g -G redo -o /dev/null), $^X, $script, qw( -g -G redo -B build -t basic -o /dev/null ));
-ok(-f q(build/basic.do), q(... basic.do is there (unchanged, so left alone)));
-unlike($out, qr{all\.do}, q(... and no all.do)) or diag $out;
+$out = run(q(siteconf -g -G redo -t ,basic -o top.do), $^X, $script, qw( -g -G redo -B build -t ), q(,basic), qw( -o top.do ));
+like($out, qr{^Writing top\.do$}m, q(-t ,basic -o top.do: the default goal is top.do));
+like($out, qr{To build, run: \( cd build && redo top \)$}m, q(... which is what to run));
+run(q(redo top), $redo, q(build/top));
+$out = run(q(siteconf -g -G redo -o /dev/null), $^X, $script, qw( -g -G redo -B build -t ), q(,), qw( -o /dev/null ));
+unlike($out, qr{\.do}, q(-t , -o /dev/null: no .do at all, as the targets' are as they were)) or diag $out;
 
 E2E::done();

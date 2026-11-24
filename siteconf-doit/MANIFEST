@@ -7,3 +7,4 @@ t/00-load.t
 t/e2e-doit.t
 t/lib/E2E.pm
 t/doit.t
+t/modes.t

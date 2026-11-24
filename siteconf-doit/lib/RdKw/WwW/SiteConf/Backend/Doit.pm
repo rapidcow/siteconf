@@ -25,7 +25,9 @@ printed by siteconf uses this spelling. C<doit clean> removes the default goal's
 Use C<-o name.py> to choose another module and C<doit -f name.py> to load it.
 
 The module is ASCII. Python string literals spell non-ASCII characters
-with Unicode escapes. Python uses its filesystem encoding for file names
+with Unicode escapes. When backend options are supplied, the module ends
+with an C<options> string containing their normalized C<-S> arguments.
+Python uses its filesystem encoding for file names
 and for the arguments to F</bin/sh>. By default each recipe line runs in a fresh shell.
 
 =head2 Methods
@@ -79,11 +81,17 @@ sub _status { $! = 0; $? = shift; @_; }
 sub options { qw(mode arg_prefix no_chdir clean purge) }
 sub default_output { 'dodo.py' }
 
+my %short_escape = (
+	"\a" => '\a', "\b" => '\b', "\t" => '\t', "\n" => '\n',
+	"\x0b" => '\v', "\f" => '\f', "\r" => '\r',
+);
+
 sub _literal
 {
 	my ($s) = @_;
 	$s =~ s/(['\\])/\\$1/g;
-	$s =~ s/([^\x20-\x7e])/ord($1) > 0xffff ? sprintf('\\U%08x', ord $1) : sprintf('\\u%04x', ord $1)/ge;
+	$s =~ s/([\x00-\x1f\x7f])/$short_escape{$1} || sprintf('\\x%02x', ord $1)/ge;
+	$s =~ s/([^\x00-\x7f])/ord($1) > 0xffff ? sprintf('\\U%08x', ord $1) : sprintf('\\u%04x', ord $1)/ge;
 	"'$s'";
 }
 
@@ -281,6 +289,19 @@ PY
     sys.exit(bool(warnings))
 PY
 	}
+	my %value = (%$opt, mode => $mode, no_chdir => $no_chdir ? 1 : 0);
+	$value{arg_prefix} = $prefix if $mode eq 'cmdline';
+	for my $key (qw(clean purge)) {
+		$value{$key} = $key unless defined $value{$key} && length $value{$key};
+	}
+	my @options;
+	for my $key ($class->options) {
+		next unless exists $opt->{$key};
+		my $arg = "-S$key";
+		$arg .= "=$value{$key}" if defined $value{$key};
+		push @options, RdKw::WwW::SiteConf::shell_quote($arg);
+	}
+	$out .= "\noptions = " . _literal(join ' ', @options) . "\n" if @options;
 	[ $file, $out ];
 }
 

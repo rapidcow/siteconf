@@ -16,7 +16,7 @@ use Cwd ();
 use File::Spec;
 use List::Util ();
 
-my $mo = File::Spec->rel2abs('mo');
+my $mo = File::Spec->rel2abs('../mo', $FindBin::Bin);
 plan skip_all => q[no catalogs made (re-run with `perl Makefile.PL LINGUAS="en zh"'?)]
 	unless -f "$mo/zh/LC_MESSAGES/siteconf.mo" && -f "$mo/en/LC_MESSAGES/siteconf.mo";
 plan skip_all => 'Locale::Messages required'

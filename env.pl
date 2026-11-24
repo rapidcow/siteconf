@@ -15,6 +15,7 @@ my @modules = qw(
 	genlib
 	siteconf
 	siteconf-l10n
+	siteconf-doit
 	siteconf-ninja
 	siteconf-redo
 	template-provider

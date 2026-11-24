@@ -90,11 +90,11 @@ PM
 backend(Odd_one => "1;\n");
 unshift @INC, $lib;
 
-like(gen_error('Make'), qr/unknown generator `Make'.  Choose one of: bmake, broken, gmake, make, many/, 'a name -G cannot have');
+like(gen_error('Make'), qr/unknown generator `Make'.  Choose one of: bmake, broken, (?:doit, )?gmake, make, many/, 'a name -G cannot have');
 like(gen_error('foo-2x'), qr/unknown generator `foo-2x'.  Choose one of: /, 'a part of a name begins with a letter');
-like(gen_error('nope'), qr/unknown generator `nope' \(RdKw::WwW::SiteConf::Backend::Nope is not installed\).  Choose one of: bmake, broken, gmake, make, many/,
+like(gen_error('nope'), qr/unknown generator `nope' \(RdKw::WwW::SiteConf::Backend::Nope is not installed\).  Choose one of: bmake, broken, (?:doit, )?gmake, make, many/,
 	'a generator that is not installed');
-is_deeply([ grep { !/\A(?:ninja|redo)\z/ } RdKw::WwW::SiteConf::generators() ], [qw( bmake broken gmake make many )],
+is_deeply([ grep { !/\A(?:doit|ninja|redo)\z/ } RdKw::WwW::SiteConf::generators() ], [qw( bmake broken gmake make many )],
 	'the generators are those installed that -G can name');
 like(gen_error('broken'), qr/broken here/, 'a broken generator is not said to be missing');
 like(said('many'), qr/Writing d\/e\/one\.do\n.*Writing two\.do\n.*To build, run: many$/s, 'many files, and what to run');

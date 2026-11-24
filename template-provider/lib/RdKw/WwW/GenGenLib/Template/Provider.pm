@@ -33,8 +33,8 @@ WwW::GenGenLib::Template::Provider - Template Toolkit provider for declared depe
 =head1 DESCRIPTION
 
 A L<Template::Provider> that names files as the file system spells
-them, as L<RdKw::I18N::CodeSets> says (B<filesys> of
-C<< RdKw::I18N::CodeSets->locale >>): template names are character
+them, as L<RdKw::I18N::CodeSets> says (L<RdKw::I18N::CodeSets/filesys>
+of C<< RdKw::I18N::CodeSets->locale >>): template names are character
 strings, and one that cannot be spelled there is an error, not a guess.
 
 And it knows what the source declares.  The header of I<SOURCE> (see
@@ -44,8 +44,8 @@ and those name theirs, and so on (see L<RdKw::WwW::GenGenLib/walk_deps>):
 those are its I<declared dependencies>, as the build file has them.
 (Which is which does not matter: a C<NEED> is a declaration, and it is
 not for us to check that it is there.)  A declared dependency may be
-loaded however it is named (C<ALLOW_DEPS>), and what is not declared
-need not be loaded at all (C<CHECK_DEPS>).
+loaded however it is named (L</ALLOW_DEPS>), and what is not declared
+need not be loaded at all (L</CHECK_DEPS>).
 
 What C<INCLUDE>, C<PROCESS>, C<WRAPPER> and C<INSERT> are given is
 taken as it is, and naively: a name that is absolute, or begins with
@@ -59,7 +59,7 @@ substituted.  Local C<BLOCK>s are not files.
 =head1 OPTIONS
 
 Besides those of L<Template::Provider>, whose C<ABSOLUTE> and
-C<RELATIVE> are for what is not declared (or, without C<ALLOW_DEPS>,
+C<RELATIVE> are for what is not declared (or, without L</ALLOW_DEPS>,
 for everything):
 
 =over
@@ -135,9 +135,9 @@ not follow what is built, nor what leaves the project root).
 
 =back
 
-No header is read unless C<ALLOW_DEPS>, C<CHECK_DEPS> or C<CHECK_HAVE>
-asks for it.  C<COMPILE_DIR> and C<COMPILE_EXT> are not supported:
-those write files by names this provider does not spell.
+No header is read unless L</ALLOW_DEPS>, L</CHECK_DEPS> or
+L</CHECK_HAVE> asks for it.  C<COMPILE_DIR> and C<COMPILE_EXT> are not
+supported: those write files by names this provider does not spell.
 
 =cut
 
@@ -176,7 +176,7 @@ my %default = (
 
 See L</OPTIONS>.  Dies if I<SOURCE> cannot be found, or its header
 (or what it declares, and so on) names a variable not in I<DEFINITION>, or
-(with C<CHECK_HAVE>) its C<HAVE> is not I<SOURCE>.
+(with L</CHECK_HAVE>) its C<HAVE> is not I<SOURCE>.
 
 =cut
 
@@ -390,7 +390,7 @@ sub _entry
 
 =item B<access> I<name>
 
-The file that B<fetch> and B<load> would load for I<name> (by the
+The file that L</fetch> and L</load> would load for I<name> (by the
 rules in L</DESCRIPTION>: absolute, C<./> or C<../> as it is, and any
 other the first in I<INCLUDE_PATH>), and whether they may: in list
 context, the path (absolute, as L<Cwd/abs_path> spells it) and
@@ -445,7 +445,7 @@ sub access
 =item B<load> I<name>
 
 As in L<Template::Provider>, as the options say (C<INSERT> goes
-through B<load>, the rest through B<fetch>).  A name we do not find
+through B<load>, the rest through L</fetch>).  A name we do not find
 is declined, for the next provider.
 
 =cut

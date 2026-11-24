@@ -58,20 +58,20 @@ by the system.
 =back
 
 A category that is not set is spelled as L<Encode::Locale> says:
-C<console_in> for B<stdin>, C<console_out> for B<stdout> and
-B<stderr>, C<locale_fs> for B<filesys>, and C<locale> for the rest.
+L</console_in> for L</stdin>, L</console_out> for L</stdout> and
+L</stderr>, C<locale_fs> for B<filesys>, and C<locale> for the rest.
 Setting a category to the pseudo-encoding C<locale> unsets it, so
 C<locale> alone (B<all:locale>) resets everything to a plain L</new>.
 The locale is looked up when the category is used, not when it is set.
 
-When setting, there are also the pseudo-categories B<console> (all of
-the standard files), B<console_in> (B<stdin>), B<console_out>
-(B<stdout> and B<stderr>) and B<all> (every category, and B<diag>
-follows B<stderr> again); and B<diag>, which is not a code set but a
+When setting, there are also the pseudo-categories L</console> (all of
+the standard files), L</console_in> (L</stdin>), L</console_out>
+(L</stdout> and L</stderr>) and L</all> (every category, and L</diag>
+follows L</stderr> again); and L</diag>, which is not a code set but a
 mode, C<unicode> or C<ascii>, for what we say (L</diag_mode>).  An
-B<stderr> set to ASCII (by any of its names) makes B<diag> follow it
+L</stderr> set to ASCII (by any of its names) makes L</diag> follow it
 again, and so C<ascii>, until it is told otherwise.  C<0> is short
-for C<ascii>, and C<1> for C<UTF-8> (or, for B<diag>, C<unicode>).
+for C<ascii>, and C<1> for C<UTF-8> (or, for L</diag>, C<unicode>).
 
 What cannot be spelled is an error, not mangled; but what we say is
 said so that it can be (L</diag>).
@@ -123,7 +123,7 @@ our $LOCALE;
 =item I<cs>->B<new>( I<category> => I<encoding>, ... )
 
 A new set of code sets: I<encoding> is anything L<Encode> knows by
-name, or C<locale>; B<diag> is C<unicode> or C<ascii> instead.  They
+name, or C<locale>; L</diag> is C<unicode> or C<ascii> instead.  They
 are applied in order, so that a later one overrides what came before
 (a pseudo-category, the categories it sets).  Dies if a category or
 an encoding is unknown.  Of a I<cs>, they are applied to a copy of
@@ -146,7 +146,7 @@ sub new
 
 Sets I<cs> itself from what C<-C> was told, and returns it: each
 I<spec> is a I<category>B<:>I<encoding>; a I<category> alone, which means
-C<UTF-8> (and, for B<diag>, C<unicode>); or an I<encoding> alone,
+C<UTF-8> (and, for L</diag>, C<unicode>); or an I<encoding> alone,
 which means B<all:>I<encoding>.  A I<spec> may also be several, split
 by commas or POSIX white space (space, tab, newline, vertical tab, form
 feed, carriage return); what is empty between them is nothing, so that
@@ -159,7 +159,7 @@ leaves I<cs> as it was; a I<prog> is who says so, before the error
 takes one.  There is no parse of a I<CLASS>: that is a L</new> one.
 
 A I<spec> may also be another I<cs>, or the hash that L</all> returns,
-which sets every category and B<diag> to what it says, so that one
+which sets every category and L</diag> to what it says, so that one
 I<cs> can be updated from another:
 
     $cs->parse($other);
@@ -446,15 +446,15 @@ for my $name (keys %PSEUDO) {
 
 =item I<cs>->B<all>([ I<encoding> ])
 
-Given an I<encoding>, sets every category to it and makes B<diag>
-follow B<stderr> again, as the pseudo-category B<all> does; I<cs> is
+Given an I<encoding>, sets every category to it and makes L</diag>
+follow L</stderr> again, as the pseudo-category B<all> does; I<cs> is
 left as it was if the I<encoding> is unknown.  Returns a new hash
-(by reference) of every category and B<diag>, with undef for what is
-not set.  B<diag> is undef there unless a mode was set explicitly.
+(by reference) of every category and L</diag>, with undef for what is
+not set.  L</diag> is undef there unless a mode was set explicitly.
 
 The hash is a copy, and can be given to L</parse> to make another
 I<cs> the same.  (Not to L</new> as a list: a hash has no order, and
-B<stderr> set after B<diag> may reset it.)
+L</stderr> set after L</diag> may reset it.)
 
     $other->parse($cs->all);
     my $same = $CS->new->parse($cs->all);
@@ -528,7 +528,7 @@ sub _die_plain
 
 How we say things (L</diag_name>): C<unicode>, or C<ascii>; or,
 given a I<mode>, set it (undef unsets it).  If it is not set, it is
-C<unicode>, unless B<stderr> is spelled in ASCII, in which case it is
+C<unicode>, unless L</stderr> is spelled in ASCII, in which case it is
 C<ascii>; which is only a default, as this is for whatever we say,
 wherever we say it.
 
@@ -555,7 +555,7 @@ sub diag_mode
 
 =item I<cs>->B<initstd>([ I<file> => I<fallback>, ... ][, { prog => I<prog> }])
 
-Configures the standard files (B<stdin>, B<stdout> and B<stderr>) to
+Configures the standard files (L</stdin>, L</stdout> and L</stderr>) to
 use the current code sets, in place of whatever layers they had.  A
 I<fallback> is what L<PerlIO::encoding> does with what cannot be spelled
 (C<$PerlIO::encoding::fallback>, which is left as it is for the rest).
@@ -563,7 +563,7 @@ Dies if one cannot be.
 
 =item I<cs>->B<reinitstd>([ I<file> => I<fallback>, ... ][, { prog => I<prog> }])
 
-The same as B<initstd> except that streams that are not explicitly
+The same as L</initstd> except that streams that are not explicitly
 spelled are left alone.
 
 =cut
@@ -607,7 +607,7 @@ sub _initstd
 =item I<cs>->B<un_fs>( I<bytes>, ...[, { I<option> => I<value>, ... }] )
 
 The I<name>s, character strings, as the file system spells them
-(B<filesys>), or the other way around; the first one, in scalar
+(L</filesys>), or the other way around; the first one, in scalar
 context.  Dies if one cannot be: we do not make up names for files,
 unless told to.  The options are:
 
@@ -616,7 +616,7 @@ unless told to.  The options are:
 =item B<prog> => I<prog>
 
 Who could not, said before the error (C<prog: cannot encode file
-name ...>): the method's name (C<to_fs> or C<un_fs>) unless given;
+name ...>): the method's name (L</to_fs> or L</un_fs>) unless given;
 undef or empty says no one.  The error ends with what L<Encode> said,
 but for where perl says it said it.
 
@@ -665,9 +665,9 @@ sub _fs
 
 =item I<cs>->B<to_argv>( I<arg>, ...[, { I<option> => I<value>, ... }] )
 
-The arguments, decoded (as B<argv>) or encoded; the first one, in
+The arguments, decoded (as L</argv>) or encoded; the first one, in
 scalar context.  Dies, saying which one could not be, if one cannot
-be: B<argv> I<n> is the first (C<0> unless given, as for C<$0>),
+be: L</argv> I<n> is the first (C<0> unless given, as for C<$0>),
 and so on.  The options are:
 
 =over
@@ -679,7 +679,7 @@ What the first argument is called (C<0>).
 =item B<prog> => I<prog>
 
 Who could not, said before the error (C<prog: cannot decode argv 1:
-...>): the method's name (C<un_argv> or C<to_argv>) unless given;
+...>): the method's name (L</un_argv> or L</to_argv>) unless given;
 undef or empty says no one.
 
 =item B<check> => I<check>
@@ -732,11 +732,11 @@ sub _argv
 
 =item I<cs>->B<encode_argv>({ I<option> => I<value>, ... })
 
-Decodes C<@ARGV> (as B<argv>), or encodes it, as B<un_argv> and
-B<to_argv> would from B<argv> C<1>; or dies, leaving it as it was, if
+Decodes C<@ARGV> (as L</argv>), or encodes it, as L</un_argv> and
+L</to_argv> would from L</argv> C<1>; or dies, leaving it as it was, if
 one argument cannot be.  (As L<Encode::Locale/decode_argv>.)  The
-options are theirs, but for B<start>: B<prog> (here C<decode_argv> or
-C<encode_argv> unless given) and B<check>.
+options are theirs, but for L</start>: L</prog> (here L</decode_argv> or
+L</encode_argv> unless given) and L</check>.
 
 =cut
 
@@ -766,19 +766,19 @@ sub _argv_opt
 
 =item I<cs>->B<getenv>( I<name>, ...[, { I<option> => I<value>, ... }] )
 
-The values of the environment variables (B<env>) by those names,
+The values of the environment variables (L</env>) by those names,
 undef for each that is not set; the first one, in scalar context.
 Dies if a name or a value cannot be spelled, saying which, and what
-L<Encode> said.  The options are B<prog>, who could not (said before
+L<Encode> said.  The options are L</prog>, who could not (said before
 the error: the method's name unless given; undef or empty says no
-one), and B<check>, which is for the values; a name is always spelled
+one), and L</check>, which is for the values; a name is always spelled
 as it is, or not at all.
 
 =item I<cs>->B<setenv>( I<name> => I<value>, ...[, { I<option> => I<value>, ... }] )
 
 Sets the environment variables; a I<value> of undef unsets it.  Sets
 none of them if one cannot be spelled.  The options are those of
-B<getenv>.
+L</getenv>.
 
 =item I<cs>->B<unsetenv>( I<name>, ...[, { prog => I<prog> }] )
 
@@ -894,10 +894,10 @@ sub _code
 I<name>, for diagnostics C<`name'> if it is all printable ASCII
 but for C<`> and C<'> (which would confuse the quotes), and
 quoted as Perl would otherwise, with escapes (C<\n>, C<\x{a0}>) for
-what would not show.  Under C<diag_mode> C<ascii>, that is all but
+what would not show.  Under L</diag_mode> C<ascii>, that is all but
 printable ASCII; under C<unicode>, it is only controls, separators
 and the like (C<\p{C}> and C<\p{Z}>, but for the ASCII space), and
-what B<stderr> cannot spell.
+what L</stderr> cannot spell.
 
 If C<soft> is true, whole words are interpolated verbatim without
 quoting.
@@ -946,9 +946,9 @@ C<$!> is said in the language of the locale, as perl says it in the
 scope of C<use locale> (from 5.22; before, always), and is decoded
 from the locale's code set (L<Encode::Locale>), if perl has not.
 
-What B<stderr> cannot spell, in the I<format> or in an I<arg> of
+What L</stderr> cannot spell, in the I<format> or in an I<arg> of
 C<%s>, or C<%m>, is escaped (C<\x{7092}>), as C<FB_PERLQQ> would have
-it; so that the message can be said, whatever B<stderr> was opened
+it; so that the message can be said, whatever L</stderr> was opened
 with, and the more so if it dies.
 
 =cut

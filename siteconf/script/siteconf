@@ -99,7 +99,7 @@ asks for no options (nor GenLib).
 For the generated script, see L<RdKw::WwW::SiteConf::Configure>.
 
 File names and arguments are read as L<RdKw::I18N::CodeSets> says:
-as the locale says, but for what C<SITECONF_CODESETS> and then C<-C>
+as the locale says, but for what L</SITECONF_CODESETS> and then C<-C>
 say (see L</ENVIRONMENT>).  Messages are written that way too (what cannot be
 said there is written as C<\x{...}>).  An argument or a name that
 cannot be spelled is an error.  The files we read are UTF-8.  The
@@ -114,7 +114,7 @@ are the names C<-l> writes.
 =item B<-C> I<codeset>
 
 Read arguments and file names, and write messages, in these code sets,
-after what C<SITECONF_CODESETS> says (see L</ENVIRONMENT>), whatever
+after what L</SITECONF_CODESETS> says (see L</ENVIRONMENT>), whatever
 else is done.  May be given more than once; a later one overrides what
 came before.  It must come first, before anything else (C<-C0>, glued,
 is fine; C<-iC0> is not): what comes after it is read as it says, and
@@ -346,11 +346,11 @@ listed), and each once.  They are relative to C<${a}>, and to
 C<${B}/${b}> once made.
 
 Each name is followed by a newline (or C<-0>), and is written as the
-file system spells it (as F<siteconf> would open it: B<filesys> of
-L<RdKw::I18N::CodeSets>): by default in the locale's encoding, but on
-macOS always in UTF-8, as its file names are.  A name it cannot spell
-is an error, and nothing is written; so is one with the separator in
-it.
+file system spells it (as F<siteconf> would open it:
+L<RdKw::I18N::CodeSets/filesys>): by default in the locale's encoding,
+but on macOS always in UTF-8, as its file names are.  A name it cannot
+spell is an error, and nothing is written; so is one with the separator
+in it.
 
 To list what a build made, list what F<siteconf -g> resolved, from
 which every C<WANT> that could not be made is gone:

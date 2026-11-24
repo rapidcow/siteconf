@@ -43,9 +43,8 @@ and a C<#> included.  A vertical space (a line break, CR, form feed,
 
 F<build.ninja> is bytes, as the Makefile of
 L<RdKw::WwW::SiteConf::Backend::Make> is.  Ninja reads F<build.ninja> as bytes, so every name and every recipe is
-spelled as the file system spells it: B<filesys> of
-L<RdKw::I18N::CodeSets>.  A name the file system cannot spell is an
-error.
+spelled as the file system spells it: L<RdKw::I18N::CodeSets/filesys>.
+A name the file system cannot spell is an error.
 
 =head2 Methods
 

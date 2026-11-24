@@ -78,11 +78,11 @@ script.  There is nothing to escape.  A goal is only made once.
 
 C<NEED> and C<WANT> take any number of names, which belong to the last
 C<MAKE>; each is split off at white space, and is unescaped as a spec
-of B<RdKw::WwW::GenGenLib/subs_deps> without definitions is (see
+of L<RdKw::WwW::GenGenLib/subs_deps> without definitions is (see
 L<RdKw::WwW::GenGenLib/escape_deps>, which writes one): C<${$}> or
 C<$$> is a C<$>, C<${U+>I<hex>C<}> is that character (C<${U+0020}>
 for a space, C<${U+0023}> for a C<#> that is no comment, and C<${"...">C<}>
-for a string, as in C<${"some\sbread"}>: see L<RdKw::WwW::SiteConf/scan_string>), and a
+for a string, as in C<${"some\sbread"}>: see L<RdKw::WwW::GenGenLib/scan_string>), and a
 leading C<${A}/> is the root and is dropped, as it is in a header.
 Any other variable, and any malformed C<$>, is an error, and so is a
 name that is nothing, or that has a NUL in it.  What a name I<may> be
@@ -120,7 +120,7 @@ my $GOAL = qr/\A(?!-)[^\s\p{Cc}\p{Cf}:#%\$\\]+\z/;
 
 Reads I<file> (a name, which is spelled as L<RdKw::I18N::CodeSets>
 says, or a reference to the text itself, which is then called
-F<MANIFEST>).  B<RdKw::WwW::GenGenLib::read_manifest> is the same.
+F<MANIFEST>).  L<RdKw::WwW::GenGenLib/read_manifest> is the same.
 C<\%D> is a required map of variable definitions, as for
 L<RdKw::WwW::GenGenLib/walk_deps>: it is substituted in the paths of
 C<INCLUDE>, and nowhere else.  The current directory is taken to be

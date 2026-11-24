@@ -27,7 +27,7 @@ L10N::TextDomain - UTF-8 gettext text domain
 
 =head1 DESCRIPTION
 
-Puts B<__>, B<__n> and B<N__> in the package that uses it, for the
+Puts L</__>, L</__n> and L</N__> in the package that uses it, for the
 messages of one text domain: what L<Locale::Messages> (libintl-perl)
 says of them, in the language of the locale, if it is there; and as
 they are written, if it is not, or no catalog has them.  So that what
@@ -82,7 +82,7 @@ default, I<msgid> if I<n> is 1, and I<msgid_plural> if not.
 =item B<N__>( I<msgid> )
 
 I<msgid>, as it is, but marked for B<xgettext>(1) (C<-kN__>) to know of,
-for a message that is said later, by B<__>.
+for a message that is said later, by L</__>.
 
 =back
 

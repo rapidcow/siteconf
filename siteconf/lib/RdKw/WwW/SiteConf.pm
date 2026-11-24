@@ -392,12 +392,12 @@ F<MY/MANIFEST> in the very same format, a block for each goal (all
 C<NEED>, with what was dropped left as comments).
 
 File names, here and in what we are given, are character strings:
-they are spelled as L<RdKw::I18N::CodeSets> says (B<filesys> of
-C<< RdKw::I18N::CodeSets->locale >>) on their way out to the system,
-and a name it cannot spell is an error.  F<Makefile.in>, F<MANIFEST>
-and F<MY/MANIFEST> are UTF-8.  The build file is bytes:
-L<make(1)> and L<ninja(1)> read it so, and every name in it is spelled
-as the file system spells it.  The backends say how.
+they are spelled as L<RdKw::I18N::CodeSets> says
+(L<RdKw::I18N::CodeSets/filesys> of C<< RdKw::I18N::CodeSets->locale >>)
+on their way out to the system, and a name it cannot spell is an error.
+F<Makefile.in>, F<MANIFEST> and F<MY/MANIFEST> are UTF-8.  The build
+file is bytes: L<make(1)> and L<ninja(1)> read it so, and every name in
+it is spelled as the file system spells it.  The backends say how.
 
 =head1 METHODS
 
@@ -891,7 +891,7 @@ sub fs_text { _spell_text('filesys', @_) }
 
 =item B<argv_text> I<string> [, I<where> ]
 
-Like B<fs_text>, but as an argument is spelled (the encoding of
+Like L</fs_text>, but as an argument is spelled (the encoding of
 C<argv>, which is what a person types after C<make>): the names of
 rules, which one asks of a build tool by name.
 
@@ -969,7 +969,7 @@ sub _dollars { (my $s = $_[0]) =~ s/\$/\$\$/g; $s }
 
 =item B<recipe_commands> I<bytes>
 
-Not a method.  A recipe in make's words (what B<recipe_bytes>
+Not a method.  A recipe in make's words (what L</recipe_bytes>
 returns) as the commands that make would run, for a backend that is
 not make: a list of C<[ >I<ignore>C<, >I<command>C< ]>, one for each
 line of the recipe that is not blank.  A backslash at the end of a
@@ -2398,7 +2398,7 @@ C<[ NAME, BYTES, EXEC ]>, each I<NAME> relative to the build directory.
 A true I<EXEC> makes the file executable (as C<chmod +x> would, under
 the umask), for a build tool that runs it as a program.  I<plan> is
 what L</plan> returns, with C<opt>, C<prog> and C<args>; I<file> is
-the name of the file that C<default_output> names, or C<undef> for F</dev/null>.  A file
+the name of the file that L</default_output> names, or C<undef> for F</dev/null>.  A file
 whose I<NAME> is C<undef> is not written.
 
 =item C<build_command> I<generator>, I<builddir>, I<file>, I<goal>, I<plan>

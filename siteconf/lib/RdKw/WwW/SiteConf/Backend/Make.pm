@@ -82,11 +82,11 @@ See L<RdKw::WwW::SiteConf/arg_max>.
 
 The Makefile is bytes.  L<make(1)> reads the Makefile as bytes, in
 no particular encoding.  So every name in a rule, a recipe or the
-header is spelled as the file system spells it: B<filesys> of
-L<RdKw::I18N::CodeSets>; except the name of a goal or a cleaning rule
-(which one types after C<make>), which is spelled as an argument is:
-B<argv>.  A name the file system cannot
-spell is an error.
+header is spelled as the file system spells it:
+L<RdKw::I18N::CodeSets/filesys>; except the name of a goal or a cleaning
+rule (which one types after C<make>), which is spelled as an argument
+is: L<RdKw::I18N::CodeSets/argv>.  A name the file system cannot spell
+is an error.
 
 =head2 Methods
 
@@ -97,7 +97,7 @@ They change with siteconf: they are not a stable interface.
 
 =item B<options>
 
-C<clean>, C<purge> and C<arg_max>.
+C<clean>, C<purge> and L</arg_max>.
 
 =item B<default_output>
 

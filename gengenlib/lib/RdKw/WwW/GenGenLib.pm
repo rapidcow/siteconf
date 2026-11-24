@@ -238,7 +238,7 @@ sub escape_var
 
 =item B<unescape_var> I<text>
 
-The inverse of B<escape_vars>: C<${U+XXXX}> (one to eight hexadecimal
+The inverse of L</escape_vars>: C<${U+XXXX}> (one to eight hexadecimal
 digits, and C<u+> will do) is the character of that code point, and
 C<${$}> is a C<$>.  Anything else, a C<$> that comes before a C<{>
 included, is itself.
@@ -287,7 +287,7 @@ there, so C<$> and C<}> are as they are.
 
 A string is spelled C<${"...">C<}> in a value or a name, where it is the
 same as C<${U+...}> for each of its characters, or the C<"..."> alone,
-where the caller says it is one.  B<unescape_vars> and B<norm_deps>
+where the caller says it is one.  L</unescape_vars> and L</norm_deps>
 read C<${"...">C<}>; a string that is malformed is left as it is by
 the former.  The code point of C<\x{...}> may be written
 C<\x{3b1}> as well as C<\x{03B1}>.
@@ -530,12 +530,12 @@ becomes
      NEED => '${B}/${b}/index.html',
    )
 
-But you may use B<norm_deps> and B<subs_deps> to
+But you may use L</norm_deps> and L</subs_deps> to
 interpret those.
 
 The scan for header goes on for a while (about 32 lines)
 but stops at the first line that is malformed UTF-8.
-This means that B<read_deps> is safe to call on binary
+This means that L</read_deps> is safe to call on binary
 files.  (This feature was added in 0.0001.)
 
 I<file> is a character string (see L</DESCRIPTION>); one that cannot
@@ -748,7 +748,7 @@ sub uproot
 =item B<norm_deps> I<spec>... { strict => 0, pass_thru => 0 }
 
 Symbolically normalize dependency specification,
-as read by B<read_deps>.  Variables are demarcated
+as read by L</read_deps>.  Variables are demarcated
 with braces, and the C<'${A}/'> prefix is stripped.
 
 In the case that I<spec> is literally C<'${A}'>,
@@ -765,7 +765,7 @@ but a character, by its code point: 1 to 8 hex digits, in any
 case (and so is the C<U>), up to C<FFFFFFFF> (it fits an unsigned
 32-bit int; Unicode validity is not checked); it is normalized to
 C<${U+>I<HEX>C<}>, in capitals and of at least 4 digits, and the
-character is what B<subs_deps> gives (see L</escape_deps>).  Any
+character is what L</subs_deps> gives (see L</escape_deps>).  Any
 other C<$> is malformed: a trailing one, an unterminated C<${>,
 an empty C<${}>, a C<${U+...}> that is no code point, a C<$>
 before a C<}> or a C<.>, and so on.  The optional C<strict>
@@ -906,7 +906,7 @@ a string suitable for substitution.
 
 A variable that makes up a whole path segment
 and is followed by a slash is a directory, and
-is planted like B<enroot> does: it keeps one
+is planted like L</enroot> does: it keeps one
 trailing slash, so C<${a}/x> is F<site/x> when
 C<${a}> is either C<site> or C<site/>, and a
 C<.> or empty one vanishes altogether (just
@@ -1021,9 +1021,9 @@ sub subs_dep
 =item B<escape_dep> I<name>, [ unicode => 0, unicode_space => 0 ]
 
 Quote a literal name as a spec that is read as that name and
-nothing else: C<subs_deps> (without definitions, or with any)
-gives it back, C<split_dep> finds no root in it, and
-B<read_deps> reads it as one name, whatever is in it.  The
+nothing else: L</subs_deps> (without definitions, or with any)
+gives it back, L</split_dep> finds no root in it, and
+L</read_deps> reads it as one name, whatever is in it.  The
 escaped dependency specifications are returned as a copy (in
 scalar context, the first).
 

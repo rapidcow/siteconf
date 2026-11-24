@@ -81,15 +81,15 @@ again.
 
 A target, and a goal, is named twice: as a file (its F<.do> file), and
 as an argument (to C<redo>, or C<redo-ifchange>).  So it is an error if
-the encoding of arguments (B<argv> of L<RdKw::I18N::CodeSets>) spells
-it differently from the file system (B<filesys>): the bytes, and not the
-encodings, so that an ASCII name is all right with UTF-8 file names and
-ASCII arguments.  It is an error, too,
-if a goal or a cleaning rule has the name of a file that a target makes
-or needs (redo would take the goal for that file, and not make it), if
-a F<.do> file would have the name of such a file, and if a target, a
-goal or a cleaning rule is out of the build directory (where its F<.do> file could not
-find the build directory again: a C<..> in its name, say).  The name
+the encoding of arguments (L<RdKw::I18N::CodeSets/argv>) spells it
+differently from the file system (L<RdKw::I18N::CodeSets/filesys>): the
+bytes, and not the encodings, so that an ASCII name is all right with
+UTF-8 file names and ASCII arguments.  It is an error, too, if a goal or
+a cleaning rule has the name of a file that a target makes or needs
+(redo would take the goal for that file, and not make it), if a F<.do>
+file would have the name of such a file, and if a target, a goal or a
+cleaning rule is out of the build directory (where its F<.do> file could
+not find the build directory again: a C<..> in its name, say).  The name
 of a directory is all right.  Any other name is quoted for the shell, a
 line break included.
 
@@ -133,7 +133,7 @@ They change with siteconf: they are not a stable interface.
 
 =item B<options>
 
-C<arg_prefix>, C<clean>, C<purge> and C<arg_max>.
+L</arg_prefix>, C<clean>, C<purge> and L</arg_max>.
 
 =item B<default_output>
 

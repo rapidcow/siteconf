@@ -237,7 +237,7 @@ COMM:	while () {
 
 =item B<joinpath> I<base>, I<spec>...
 
-Reverse operation of B<relapath>.  This is
+Reverse operation of L</relapath>.  This is
 typically called something like "resolve" in
 URL libraries, but I call things my way. >:)
 
@@ -332,9 +332,9 @@ sub file2uri
 
 =item B<uri2file> I<uri>[, os => 'Unix', prog => 'uri2file' ]
 
-Reverse operation of B<file2uri>: the file name, as a Unicode
+Reverse operation of L</file2uri>: the file name, as a Unicode
 string, that I<uri> names on I<os> (default C<'Unix'> like
-B<file2uri>.  Pass C<$^O> or C<undef> if you explicitly want it
+L</file2uri>.  Pass C<$^O> or C<undef> if you explicitly want it
 in your operating system's representation.)
 Escapes are decoded as UTF-8, in either case of hex digits.
 Die if I<uri> names no file on I<os> (e.g. C<a%2Fb>, a name

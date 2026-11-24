@@ -51,7 +51,7 @@ L<RdKw::I18N::CodeSets/qq_ascii>.
 =item B<qq_unicode>( I<string> [, I<encoding> ] )
 
 L<RdKw::I18N::CodeSets/qq_unicode>; without an I<encoding>, for the
-B<stderr> of the process, as B<diag_name> is.
+L<RdKw::I18N::CodeSets/stderr> of the process, as L</diag_name> is.
 
 =item B<to_fs>( I<name>, ...[, { I<option> => I<value>, ... }] )
 

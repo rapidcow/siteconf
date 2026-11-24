@@ -26,9 +26,9 @@ for my $mode (qw(exec cmdline prefix)) {
 	if ($mode eq 'exec') {
 		like($text, qr/\['cp', 'source \$', '\.\.\/target'\], '\.\/sub'/, 'direct argv and cwd');
 	} elsif ($mode eq 'prefix') {
-		like($text, qr/arg3=\$\{3\}; shift 3; cd -- "\$\{arg1\}"/, 'save arguments and shift');
+		like($text, qr/arg2=\$\{2\}; shift 2; cp "\$\{arg1\}"/, 'save arguments and shift');
 	} else {
-		like($text, qr/cd -- "\$\{1\}" && cd sub && cp "\$\{2\}" "\$\{3\}".*'sh', '\.'/,
+		like($text, qr/cp "\$\{1\}" "\$\{2\}".*'sh', 'source \$'.*'\.\/sub'/,
 			'shell positional args and argv zero');
 	}
 	SKIP: {
@@ -52,5 +52,14 @@ SKIP: {
 $plan->{opt} = { recipe_mode => 'exec' };
 my ($fallback) = $backend->emit($plan, 'dodo.py');
 like($fallback->[1], qr{\['/bin/sh', '-c', .* > target', 'sh'\]}, 'exec fallback keeps textual quoting');
+@recipe = ([text => 'cd -- '], [word => 'space dir'], [text => '/sub && cat input > target']);
+for my $mode (qw(shell exec cmdline)) {
+	$plan->{opt} = {recipe_mode => $mode};
+	my ($out) = $backend->emit($plan, 'dodo.py');
+	like($out->[1], qr/'cat input > target', 'sh'\], 'space dir\/sub'/, "cwd for redirection in $mode");
+	$plan->{opt}{no_chdir} = undef;
+	($out) = $backend->emit($plan, 'dodo.py');
+	like($out->[1], qr/'-c', 'cd -- .*cat input > target'.*\], None/, "explicit cd in $mode");
+}
 chdir $cwd or die $!;
 done_testing();

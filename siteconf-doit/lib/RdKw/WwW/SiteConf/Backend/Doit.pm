@@ -41,9 +41,14 @@ the recipe arguments as its positional parameters. C<-Sarg_prefix=arg>
 first saves them as C<arg1>, C<arg2>, etc., then shifts them away.
 Choose a prefix the recipe does not use.
 
-C<-Srecipe_mode=exec> runs a simple external command directly. Literal
-C<cd [--] dir &&> prefixes supply its working directory. Commands outside
+C<-Srecipe_mode=exec> runs a simple external command directly. Commands outside
 the supported literal-word syntax run through the default shell form.
+
+In all modes, a leading C<cd [--] dir &&> with a literal directory
+sets the working directory of the action. Adjacent literal and C<:Q>
+fragments can form the directory. C<-Sno_chdir> keeps these commands
+in the shell, for example when the recipe relies on C<CDPATH> or handles
+a failed C<cd> itself. C<-Sno_chdir=0> enables extraction again.
 
 C<-Sclean> and C<-Spurge> add tasks for the first goal. Run them with
 C<doit run clean> or C<doit run purge>. Purge includes intermediate
@@ -67,7 +72,7 @@ Return the shell words for running doit in the build directory.
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { qw(recipe_mode arg_prefix clean purge) }
+sub options { qw(recipe_mode arg_prefix no_chdir clean purge) }
 sub default_output { 'dodo.py' }
 
 sub _literal
@@ -98,45 +103,46 @@ sub _goal
 # Parse only literal shell words. Leave expansions, redirects, pipelines,
 # assignments and shell builtins to sh. A :Q run is one literal fragment,
 # including when a suffix follows it in the same shell word.
+my $literal_word = qr/(?:\0\d+\0|[a-zA-Z0-9_.,:%+\/@=\x{80}-\x{10ffff}-]|'[^'\0]*'|"[^"\\\x24\x60\0]*")+/;
+
+sub _word_value
+{
+	my ($token, $words) = @_;
+	$token =~ s/\0(\d+)\0|'([^']*)'|"([^"]*)"/defined $1 ? $words->[$1] : defined $2 ? $2 : $3/ge;
+	$token;
+}
+
 sub _exec
 {
-	my ($line, $word) = @_;
-	my (@args, @cd);
+	my ($line, $words) = @_;
+	my @args;
 	pos($line) = 0;
 	while (pos($line) < length $line) {
 		$line =~ /\G[ \t]+/gc and next;
-		if ($line =~ /\G&&/gc) {
-			@args && shift(@args) eq 'cd' or return;
-			shift @args if @args && $args[0] eq '--';
-			@args == 1 && length $args[0] && $args[0] !~ /^-/ or return;
-			# A later absolute cd could hide an earlier failed cd.
-			return if @cd && $args[0] =~ m{^/};
-			push @cd, shift @args;
-			next;
-		}
-		my $start = pos($line);
-		my $arg = '';
-		while (1) {
-			if ($line =~ /\G\0(\d+)\0/gc) { $arg .= $word->[$1] }
-			elsif ($line =~ /\G([a-zA-Z0-9_.,:%+\/@=-]+)/gc) { $arg .= $1 }
-			elsif ($line =~ /\G'([^'\0]*)'/gc) { $arg .= $1 }
-			elsif ($line =~ /\G"([^"\\\x24\x60\0]*)"/gc) { $arg .= $1 }
-			else { last }
-		}
-		return if pos($line) == $start;
-		push @args, $arg;
+		$line =~ /\G($literal_word)/gc or return;
+		push @args, _word_value($1, $words);
 	}
 	return unless @args && length $args[0];
 	# Include reserved words and builtins of common /bin/sh implementations.
 	return if $args[0] =~ /=/ || $args[0] =~ /\A(?:!|:|\.|alias|bg|bind|break|builtin|caller|case|cd|command|compgen|complete|continue|declare|dirs|disown|do|done|echo|elif|else|enable|esac|eval|exec|exit|export|false|fc|fg|fi|for|function|getopts|hash|help|history|if|in|jobs|kill|let|local|logout|mapfile|popd|printf|pushd|pwd|read|readarray|readonly|return|select|set|shift|shopt|source|suspend|test|then|time|times|trap|true|type|typeset|ulimit|umask|unalias|unset|until|wait|while|\[|\[\[)\z/;
-	(\@args, @cd ? join('/', @cd) : undef);
+	\@args;
 }
 
 sub _action
 {
-	my ($ignore, $line, $word, $mode, $prefix) = @_;
+	my ($ignore, $line, $word, $mode, $prefix, $no_chdir) = @_;
 	my ($argv, $cwd);
-	($argv, $cwd) = _exec($line, $word) if $mode eq 'exec';
+	unless ($no_chdir) {
+		while ($line =~ /\A[ \t]*cd[ \t]+(?:(--)[ \t]+)?($literal_word)[ \t]*&&[ \t]*(?=\S)/) {
+			my ($end, $dash, $token) = ($+[0], $1, $2);
+			my $dir = _word_value($token, $word);
+			last if !length($dir) || $dir eq '-' || (!$dash && $dir =~ /^-/);
+			last if defined $cwd && $dir =~ m{^/};
+			$cwd = defined $cwd ? "$cwd/$dir" : $dir;
+			substr($line, 0, $end, '');
+		}
+	}
+	$argv = _exec($line, $word) if $mode eq 'exec';
 	unless ($argv) {
 		my @args;
 		if ($mode eq 'cmdline') {
@@ -159,7 +165,7 @@ sub _action
 
 sub _commands
 {
-	my ($runs, $mode, $prefix) = @_;
+	my ($runs, $mode, $prefix, $no_chdir) = @_;
 	my ($text, @word) = ('');
 	for (@$runs) {
 		my ($kind, $s, $where) = @$_;
@@ -177,7 +183,7 @@ sub _commands
 	for (RdKw::WwW::SiteConf::recipe_commands($text)) {
 		my ($ignore, $line) = @$_;
 		$line =~ s/\$\$/\$/g;
-		push @cmd, _action($ignore, $line, \@word, $mode, $prefix);
+		push @cmd, _action($ignore, $line, \@word, $mode, $prefix, $no_chdir);
 	}
 	@cmd;
 }
@@ -192,6 +198,7 @@ sub emit
 	my $mode = exists $opt->{recipe_mode} ? ($opt->{recipe_mode} || '') : 'shell';
 	die _status 0, tagmsg(E => diag(__("unknown recipe mode %q"), $mode))
 		unless $mode =~ /\A(?:cmdline|exec|shell)\z/;
+	my $no_chdir = exists $opt->{no_chdir} && (!defined $opt->{no_chdir} || $opt->{no_chdir} ne '0');
 	my $prefix = $opt->{arg_prefix};
 	if (exists $opt->{arg_prefix}) {
 		defined $prefix && $prefix =~ /\A[A-Za-z_][A-Za-z0-9_]*\z/ && $mode eq 'cmdline'
@@ -215,7 +222,7 @@ def _file(name, target, inputs, commands):
     actions = []
     parent = os.path.dirname(target)
     if parent:
-        actions.append(CmdAction(['mkdir', '-p', '--', parent], shell=False))
+        actions.append((os.makedirs, [parent], {'exist_ok': True}))
     for ignore, argv, cwd in commands:
         action = _IgnoreFailure if ignore else CmdAction
         actions.append(action(argv, shell=False, cwd=cwd))
@@ -230,7 +237,7 @@ PY
 	for my $f (@{ $plan->{order} }) {
 		my $node = $plan->{node}{$f};
 		my $target = $node->{bpath};
-		my @cmd = _commands($node->{recipe}, $mode, defined $prefix ? $prefix : '');
+		my @cmd = _commands($node->{recipe}, $mode, defined $prefix ? $prefix : '', $no_chdir);
 		die _status 0, tagmsg(E => diag(__("%#q: no recipe to make it"), $target)) unless @cmd;
 		my @deps = grep { !$marker{$_} } @{ $node->{deps} };
 		$out .= '    yield _file(' . _literal(_task_name('file', $target)) . ', '

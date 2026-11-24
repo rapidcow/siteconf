@@ -31,9 +31,10 @@ L<URI> and L<URI::Escape>).  For the web-specific parts see
 L<RdKw::WwW::GenLib>.
 
 File names are character strings, as is everything else: they are
-spelled as L<RdKw::I18N::CodeSets> says (B<filesys> of
-C<< RdKw::I18N::CodeSets->locale >>) only on their way to the system,
-and a name that cannot be spelled there is an error, never a guess.  What is I<in> the files is always UTF-8.
+spelled as L<RdKw::I18N::CodeSets> says (L<RdKw::I18N::CodeSets/filesys>
+of C<< RdKw::I18N::CodeSets->locale >>) only on their way to the system,
+and a name that cannot be spelled there is an error.
+What is I<in> the files is always UTF-8.
 
 What we say (when we die) is said in the language of the locale, from
 the catalogs of the C<siteconf> text domain, if

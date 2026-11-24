@@ -14,12 +14,12 @@
 # To invoke this, add to your Makefile.in:
 #
 #    resource/location.html: @PATH@
-#       cd -- ${A:Q} && ${^X:Q} @PATH_Q@ -B ${B:Q} \
-#          -- ${a:Q}/${.IMPSRC:Q} ${B:Q}/${b:Q}/${.TARGET:Q}
+#       cd -- ${A:Q} && ${^X:Q} @PATH_Q@ -B ${B:Q} -- \
+#          ${a:Q}/${.IMPSRC:Q} ${B:Q}/${b:Q}/${.TARGET:Q}
 #
 # (Multiple files are okay!)
 #
-# GenLib is used solely for implementing [% locate PATH %]
+# GenLib is used solely for implementing [% locate(PATH) %]
 # (and, since GenLib 0.0300, for writing the location as a
 # URI path with file2uri).  If you prefer not to use it,
 # simply remove the module import line and exclude it from
@@ -39,8 +39,7 @@ use RdKw::I18N::CodeSets ();
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use Getopt::Long qw( GetOptions );
-use RdKw::WwW::GenGenLib 0.0100 qw(
-	read_deps load_state
+use RdKw::WwW::GenGenLib 0.0100 qw( read_deps load_state
 	norm_deps subs_deps uproot );
 @USE_GENLIB@
 use Template;

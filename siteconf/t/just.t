@@ -6,7 +6,7 @@
 use utf8;
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 14;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestDiag qw( fold );

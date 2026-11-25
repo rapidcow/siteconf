@@ -287,7 +287,7 @@ length $D{c} or die status 0, $cs->tagmsg(E => $cs->diag(__(
 File::Spec->file_name_is_absolute($D{c})
 	and die status 0, $cs->tagmsg(E => $cs->diag(__(
 	'${%s} prefix must be a relative path.'), 'c'));
-$D{e} =~ m!/! and $cs->tagmsg(E => $cs->diag(__(
+$D{e} =~ m!/! and die status 0, $cs->tagmsg(E => $cs->diag(__(
 	'${%s} may not contain a slash.'), 'e'));
 
 -d 'MY' or mkdir 'MY' or die $cs->tagmsg(E => $cs->diag(__(

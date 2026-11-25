@@ -936,13 +936,13 @@ sub do_init
 	# c is always there; the same as b means it goes where b goes
 	exists $Dd{c} or $Dd{c} = $Dd{b};
 	File::Spec->file_name_is_absolute($Dd{c})
-		and die $cs->tagmsg($prog => $cs->diag(__(
+		and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"%s must be a relative path."), '-Sc'));
 
 	# -D and -O set what defaults to have in addition.
 	for my $k (sort keys %{ $opt->{D} }) {
 		exists $opt->{S}{$k}
-			and die $cs->tagmsg($prog => $cs->diag(__(
+			and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 				"%s and %s are the same thing; pick one."),
 				"-S$k", "-D$k"));
 	}
@@ -951,7 +951,7 @@ sub do_init
 	exists $S{c} || exists $opt->{D}{c} or $Dx{c} = $Dx{b};
 	# -SA or -DA: where render goes, too
 	my $A = $Dx{A};
-	length $A or die $cs->tagmsg($prog => $cs->diag(__(
+	length $A or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 		"%s may not be empty."), '-DA'));
 	my %Ox = %{ $opt->{O} };
 
@@ -959,10 +959,10 @@ sub do_init
 	my $render;
 	if (defined $opt->{P} and $opt->{P} ne 'none') {
 		$opt->{P} =~ /\A\w+\z/
-			or die $cs->tagmsg($prog => $cs->diag(__(
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"bad preset name: %q"), $opt->{P}));
 		my $file = eval { share_file("presets/$opt->{P}.config") }
-			or die $cs->tagmsg($prog => $cs->diag(__(
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"no such preset: %q"), $opt->{P}));
 		$preset = slurp($file);
 		$preset =~ s/\n*\z/\n/;
@@ -978,12 +978,12 @@ sub do_init
 	for my $m (@spec) {
 		my ($drop, $module, $min) = $m =~ /\A(-?)([^=]*)(?:=(.*))?\z/s;
 		$module =~ /\A\w+(?:::\w+)*\z/
-			or die $cs->tagmsg($prog => $cs->diag(__(
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			# HEY!  %s is the option, as -MModule=version (here and
 			# in the next four)
 			"%s: bad module name"), "-M$m"));
 		$drop && defined $min
-			and die $cs->tagmsg($prog => $cs->diag(__(
+			and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"%s: no version for what is dropped"), "-M$m"));
 		my $said = defined $min;
 		$min = $drop ? '' : 0 unless $said;

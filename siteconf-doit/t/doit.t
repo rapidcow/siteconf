@@ -1,7 +1,7 @@
 #!perl
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 11;
 use File::Temp qw(tempdir);
 use Cwd qw(getcwd);
 use RdKw::WwW::SiteConf::Builder::Doit;

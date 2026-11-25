@@ -373,8 +373,11 @@ sub update_file
 	my $tmp = File::Spec->catfile($dir, basename($tmp_fs));
 	my $fail = sub {
 		my $msg = diag(@_);
+		# (close and unlink may change $!; die with the first error)
+		my $errno = 0 + $!;
 		close $fh;
 		unlink $tmp_fs;
+		$! = $errno;
 		die tagmsg($prog => $msg);
 	};
 	# File::Temp makes it 0600; a file we write is as open() would make it

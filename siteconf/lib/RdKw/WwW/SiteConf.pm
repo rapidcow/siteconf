@@ -656,7 +656,7 @@ sub _string
 	defined $s or do {
 		# Prefix what scan_string says with a blame line.
 		(my $why = $@) =~ s/^/$where: /gm;
-		die _status 0, tagmsg(E => $why);
+		die tagmsg(E => $why);
 	};
 	$s;
 }
@@ -1253,7 +1253,7 @@ sub _subst
 			# a `$' at the very end, or before a newline, is a `$'
 			if ($@) {   # (as Modifiers says it)
 				(my $why = $@) =~ s/^/$where: /gm;
-				die _status 0, tagmsg(E => $why);
+				die tagmsg(E => $why);
 			}
 			$put->('text', '$');
 			$pos = $i + 1;
@@ -1273,7 +1273,7 @@ sub _subst
 				($lit, $rest) = eval { RdKw::WwW::GenGenLib::scan_string($body, prog => undef) };
 				defined $lit or do {
 					(my $why = $@) =~ s/^/$where: /gm;
-					die _status 0, tagmsg(E => $why);
+					die tagmsg(E => $why);
 				};
 				$rest =~ /\A(?::(.*))?\z/s or die _status 0, tagmsg(E => diag(__(
 					# HEY!  the second %s is a string literal, as ${"..."}
@@ -1331,11 +1331,11 @@ sub _subst
 				RdKw::WwW::SiteConf::Modifiers::_apply($val, $mods,
 					quote => sub {
 						my ($v, $last) = @_;
-						$runs or die diag(__(
+						$runs or die _status 0, diag(__(
 							# HEY!  the second %s is where, as `a prerequisite'
 							":Q (shell quote) is not valid in %s"),
 							defined $self->{noquote} ? $self->{noquote} : __("a name")) . "\n";
-						$last or die __(":Q (shell quote) must be the last modifier") . "\n";
+						$last or die _status 0, __(":Q (shell quote) must be the last modifier") . "\n";
 						# the backend's, by bytes
 						return $word = $v;
 					},
@@ -1345,7 +1345,7 @@ sub _subst
 					}
 				);
 			};
-			defined $val or die _status 0, ($@ =~ /\AE: /) ? $@ : "E: $where: $@";
+			defined $val or die $@ =~ /\AE: / ? $@ : "E: $where: $@";
 		}
 		if ($val eq '.' && length $slash) {
 			# `./' is no use to anyone

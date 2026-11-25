@@ -209,7 +209,7 @@ sub _name
 		# Prefix subs_deps' error message with our name
 		# and a blame line.
 		(my $why = $@) =~ s/^/_where($pos) . ": "/gem;
-		die _status 0, tagmsg($prog => $why);
+		die tagmsg($prog => $why);
 	};
 	length $name or die _status 0, tagmsg($prog => diag(__("%s: %q is empty"),
 		_where($pos), $arg));

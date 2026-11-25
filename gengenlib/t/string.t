@@ -6,7 +6,7 @@ use utf8;
 use 5.008;
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 25;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;

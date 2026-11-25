@@ -20,6 +20,7 @@ use RdKw::WwW::SiteConf;
 use RdKw::WwW::SiteConf::Builder::Gmake;
 
 my $script = script_path();
+plan tests => 27;
 $ENV{PERL5LIB} = perl5lib();
 
 # A project with the files of `html', the MANIFEST and Makefile.in as given

@@ -10,6 +10,7 @@ use Tools qw( doit_cmd );
 my $script = E2E::setup();
 my $doit = doit_cmd();
 system("$doit --version >/dev/null 2>&1") == 0 or plan skip_all => 'no doit';
+plan tests => 18;
 run('siteconf -i', $^X, $script, qw(-i -P web -Osite_url=https://example.test
 	-SB=build -q -MRdKw::WwW::GenLib=0));
 mkdir 'build' or die $!;

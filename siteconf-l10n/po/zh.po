@@ -118,7 +118,7 @@ msgstr "绝对基础 URL"
 #: ../siteconf/script/siteconf:901
 #, perl-format
 msgid "%s: no such setting (valid: %s)"
-msgstr "%s：没有这项设置（有效的有：%s）"
+msgstr "%s：没有这项设置（有效设置为 %s）"
 
 #. HEY!  %s is an option, as -Sa (and likewise in the next few)
 #: ../siteconf/script/siteconf:907 ../siteconf/script/siteconf:931

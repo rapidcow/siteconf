@@ -55,6 +55,9 @@ use File::Spec;
 use File::Temp ();
 use IO::Handle ();
 
+# Whether File::Temp::tempfile takes PERMS (see update_file)
+use constant HAS_PERMS => eval { File::Temp->VERSION('0.2310'); };
+
 # Import locale and set up gettext.
 use RdKw::I18N::CodeSets ();
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
@@ -366,10 +369,14 @@ sub update_file
 	# must be bytes, or perl would upgrade $dir_fs when it joins them.
 	(my $template = '.' . basename($file)) =~ s/[^A-Za-z0-9._-]/_/g;
 	utf8::downgrade($template);
+	# File::Temp makes the file 0600.  A file we write should have the
+	# mode that open() gives it: 0666 less the umask.  File::Temp 0.2310
+	# and later take PERMS, which goes to sysopen (and so the umask
+	# applies); before that, we chmod it ourselves.
 	my ($fh, $tmp_fs) = eval {
 		File::Temp::tempfile("$template.XXXXXXXX",
 			DIR => $dir_fs,
-			PERMS => 0666 & ~umask,
+			(HAS_PERMS() ? (PERMS => 0666) : ()),
 			UNLINK => 0) }
 		or die tagmsg($prog => diag(__(
 		"cannot create file %q: %m"), File::Spec->catfile($dir, "$template.XXXXXXXX")));
@@ -383,6 +390,9 @@ sub update_file
 		$! = $errno;
 		die tagmsg($prog => $msg);
 	};
+	chmod 0666 & ~umask, $tmp_fs
+		or $fail->(__("cannot write file %q: %m"), $tmp)
+		unless HAS_PERMS();
 	binmode $fh, $layer
 		or $fail->(__("cannot write file %q: %m"), $tmp);
 	print $fh $text

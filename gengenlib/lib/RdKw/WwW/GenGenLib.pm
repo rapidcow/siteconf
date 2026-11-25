@@ -356,12 +356,10 @@ sub update_file
 	my ($file, $text, %opt) = @_;
 	my $prog = _getprog(\%opt, 'update_file');
 	my $layer = $opt{raw} ? ':raw' : ':encoding(UTF-8)';
-	#
 	# The temporary file is in the same directory, so that the rename
 	# is atomic.  File::Temp gives it a name that no file has (a redo
 	# file, say, which a fixed name like tmp-Makefile could be), and
 	# creates it with O_EXCL.
-	#
 	my $dir = dirname($file);
 	my $file_fs = to_fs($file, { prog => $prog });
 	my $dir_fs = to_fs($dir, { prog => $prog });
@@ -372,7 +370,9 @@ sub update_file
 	# File::Temp makes the file 0600.  A file we write should have the
 	# mode that open() gives it: 0666 less the umask.  File::Temp 0.2310
 	# and later take PERMS, which goes to sysopen (and so the umask
-	# applies); before that, we chmod it ourselves.
+	# applies); before that, we chmod it later ourselves (which, by the
+	# way, is the same solution given in RT#82516: <https://rt.cpan.org
+	# /Public/Bug/Display.html?id=82516>)
 	my ($fh, $tmp_fs) = eval {
 		File::Temp::tempfile("$template.XXXXXXXX",
 			DIR => $dir_fs,

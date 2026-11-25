@@ -33,7 +33,7 @@ RdKw::WwW::SiteConf - read the build graph of a configured source tree
 
 =head1 DESCRIPTION
 
-For the generated configure script, see L<RdKw::WwW::SiteConf::Configure>.
+For the generated F<configure> script, see L<RdKw::WwW::SiteConf::Configure>.
 
 Three inputs make up a project, all found from F<MY/config.mk>:
 
@@ -131,7 +131,7 @@ Directories are made as for C<${b}>.  We do not check that C<${a}>,
 C<${b}> and C<${c}> are different directories (C<${c}> is C<${b}>
 unless configured, and C<${a}> may be C<${b}> with explicit prefixes):
 whoever cares about that should check, using the names in
-F<MY/config.mk>.  The file must have a C<c>, as configure writes it.
+F<MY/config.mk>.  The file must have a C<c>, as F<configure> writes it.
 Only files made in C<${b}> can
 be goals of the manifest; those in the cache are made because
 something needs them.
@@ -199,7 +199,7 @@ a backslash begins one of C<\a \b \t \n \v \f \r \e> (the controls of C),
 C<\s> (a space), C<\\>, C<\">, or C<\x{>I<hex>C<}> (a code point, in
 braces, to make clear it is one); anything else is an error.  Nothing
 else is special, so C<$> and C<}> are as they are.  Modifiers go after
-it, in Makefile.in: C<${"表":Q}>.
+it, in F<Makefile.in>: C<${"表":Q}>.
 
 A string says what is said; it is I<not> quoted.  That is for C<:Q>,
 and what is quoted by bytes, last, is for the backend to say or not: a
@@ -490,11 +490,11 @@ sub _words
 =item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, S =E<gt> { ... }, quiet =E<gt> 1, strict =E<gt> 1 ]
 
 I<dir> is the build directory, as seen from the current directory.
-C<MY/config.mk> there must exist.  Warnings are not printed when
+F<MY/config.mk> there must exist.  Warnings are not printed when
 I<quiet> is true.  When I<strict> is true, a C<WANT> that cannot be
 had is an error (said even if I<quiet>), as it is for a C<NEED>,
 except that the build is still planned and written without it, and
-L</failed> says so afterwards.  I<D> overrides C<MY/config.mk> parameters.
+L</failed> says so afterwards.  I<D> overrides F<MY/config.mk> parameters.
 (C<F> and C<R>, whether from here or from there, are paths from the
 current directory, not from the project root.)  I<S> sets the options of
 the generator (C<-S> of C<siteconf -g>): a name, and a value that may be

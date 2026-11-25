@@ -162,13 +162,13 @@ that none is inside another: with explicit C<${b}/> and C<${c}/>
 targets, they may be the same.  Whoever must have them apart should
 check the names in F<MY/config.mk> and stop (or warn) if they are not.
 
-=item C<R> (default C<Makefile.in>)
+=item C<R> (default F<Makefile.in>)
 
 The transformation rulebook, relative to the directory from which you run
 C<siteconf -g>.  It is not relative to F<configure> or the project root.
 C<siteconf -g -R path> overrides it for that generation.
 
-=item C<F> (default C<MANIFEST>)
+=item C<F> (default F<MANIFEST>)
 
 The manifest, using the same path base as C<R>.
 C<siteconf -g -F path> overrides it for that generation.
@@ -193,7 +193,7 @@ C<siteconf -i -P web> adds the web preset's checks to F<configure> and
 writes a Template Toolkit renderer if one is not already present.
 The preset requires Template, URI, and RdKw::WwW::GenLib in addition to
 RdKw::WwW::GenGenLib and RdKw::I18N::CodeSets, which every generated
-configure script needs.
+F<configure> script needs.
 
 C<site_url> is required and C<base_url> defaults to C</>.  The preset uses
 L<RdKw::WwW::GenLib> to validate and normalize these URL options.  They are
@@ -251,7 +251,7 @@ its header says so.
 =item C<-h>, C<--help>, C<-?>
 
 Show help and the defaults compiled into this particular
-C<./configure> script.  This often has more up-to-date
+F<configure> script.  This often has more up-to-date
 messages, especially if the author has patched the help
 text for custom definitions and options.
 

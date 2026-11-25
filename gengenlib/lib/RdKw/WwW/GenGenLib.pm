@@ -399,7 +399,7 @@ sub update_file
 
 =item B<load_state> I<B>[, prog => 'load_state']
 
-Read C<${B}/MY/config.mk> and C<${B}/MY/option.mk> and return
+Read F<${B}/MY/config.mk> and F<${B}/MY/option.mk> and return
 an associative map of hashes, keyed by I<config> and I<option>.
 Dies kindly if you have not configured.
 

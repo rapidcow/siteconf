@@ -22,3 +22,7 @@ Revision history of WwW-SiteConf-Redo
       target makes or needs.  The .do of a target or a goal leaves
       -Sclean, -Spurge and -Sarg_max out of its header, so redo does
       not make the target again when they change.
+    * -Scmd_rm_f and -Scmd_mv_f set the commands that remove the
+      files of a cleaning rule and move a target to $3 (rm -f -- and
+      mv -f --).  -Ssh sets the #! of every .do (/bin/sh), for a
+      system with no /bin/sh, as Termux on Android.

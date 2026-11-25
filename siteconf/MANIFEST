@@ -4,9 +4,10 @@ Makefile.PL
 README
 lib/RdKw/WwW/SiteConf.pm
 lib/RdKw/WwW/SiteConf/Configure.pod
-lib/RdKw/WwW/SiteConf/Backend/Bmake.pm
-lib/RdKw/WwW/SiteConf/Backend/Gmake.pm
-lib/RdKw/WwW/SiteConf/Backend/Make.pm
+lib/RdKw/WwW/SiteConf/Builder.pod
+lib/RdKw/WwW/SiteConf/Builder/Bmake.pm
+lib/RdKw/WwW/SiteConf/Builder/Gmake.pm
+lib/RdKw/WwW/SiteConf/Builder/Make.pm
 lib/RdKw/WwW/SiteConf/Modifiers.pm
 script/siteconf
 share/configure.in

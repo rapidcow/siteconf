@@ -1,12 +1,12 @@
 #!perl
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 11;
 use File::Temp qw(tempdir);
 use Cwd qw(getcwd);
-use RdKw::WwW::SiteConf::Backend::Doit;
+use RdKw::WwW::SiteConf::Builder::Doit;
 
-my $backend = 'RdKw::WwW::SiteConf::Backend::Doit';
+my $backend = 'RdKw::WwW::SiteConf::Builder::Doit';
 my $name = "out/\x{8336} \x{1f40d} %'\$\$\n";
 my $plan = {
 	prog => 'test', dirs => [], order => ['x'],
@@ -19,7 +19,7 @@ my ($file) = $backend->emit($plan, 'dodo.py');
 like($file->[1], qr/\A# -\*- coding: utf-8 -\*-\n/, 'coding cookie');
 unlike($file->[1], qr/[^\x00-\x7f]/, 'ASCII only');
 like($file->[1], qr/\\u8336.*\\U0001f40d/, 'code point escapes');
-is(RdKw::WwW::SiteConf::Backend::Doit::_literal("\a\b\t\n\x0b\f\r\x1b\\n"),
+is(RdKw::WwW::SiteConf::Builder::Doit::_literal("\a\b\t\n\x0b\f\r\x1b\\n"),
 	q{'\a\b\t\n\v\f\r\x1b\\\\n'}, 'short escapes and literal backslash');
 unlike($file->[1], qr/^options = /m, 'no footer without options');
 for my $case (

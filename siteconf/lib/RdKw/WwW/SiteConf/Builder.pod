@@ -1,0 +1,42 @@
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+WwW::SiteConf::Builder - siteconf build script generators
+
+=head1 DESCRIPTION
+
+The C<-G> option of L<siteconf> selects a generator by name.
+Each hyphen-separated part starts with a lowercase ASCII letter and
+contains only lowercase ASCII letters and digits.  To find the module
+in C<@INC>, siteconf capitalizes the first letter of each part, drops
+the hyphens, and prefixes C<RdKw::WwW::SiteConf::Builder::>.  For
+example, C<-G plan9-mk> would look for C<RdKw::WwW::SiteConf::Builder::Plan9Mk>.
+
+Run C<siteconf -VV> to list the installed generators.  See
+L<RdKw::WwW::SiteConf/generate> for the methods a generator provides.
+
+=head1 GENERATORS
+
+The core generators write F<Makefile> for
+L<POSIX-compatible make|RdKw::WwW::SiteConf::Builder::Make>
+(C<-G make>, the default),
+L<NetBSD make|RdKw::WwW::SiteConf::Builder::Bmake> (C<-G bmake>), and
+L<GNU Make|RdKw::WwW::SiteConf::Builder::Gmake> (C<-G gmake>).
+The GNU Make generator supports file names containing spaces.
+
+The following generators ship separately.  Their default output files appear
+in parentheses.
+L<doit|RdKw::WwW::SiteConf::Builder::Doit> (F<dodo.py>),
+L<ninja|RdKw::WwW::SiteConf::Builder::Ninja> (F<build.ninja>),
+L<redo|RdKw::WwW::SiteConf::Builder::Redo> (a F<.do> file for each
+target and goal), and
+L<task|RdKw::WwW::SiteConf::Builder::Task> (F<Taskfile.yml>).
+
+=head1 SEE ALSO
+
+L<siteconf>, L<RdKw::WwW::SiteConf/generate>.
+
+=cut

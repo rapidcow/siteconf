@@ -8,7 +8,7 @@
 use utf8;
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 16;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
@@ -121,7 +121,7 @@ is($out, Encode::encode('UTF-8', "\x{8868}\x{30FC}\x{FF5E}\x{1F600}"), 'UTF-8 is
 # which is ASCII whatever the locale: what is not printable ASCII is
 # quoted as Perl would quote it
 for my $backend (qw( Make Gmake )) {
-	my $class = "RdKw::WwW::SiteConf::Backend::$backend";
+	my $class = "RdKw::WwW::SiteConf::Builder::$backend";
 	eval "require $class" or die $@;
 	my $plan = { prog => "t\x{e9}st -g",
 		args => [ '-F', "a\nb: ; evil", '-t', 'a b', '-t', "r\x{e9}sum\x{e9}" ],

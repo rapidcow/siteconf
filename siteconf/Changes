@@ -5,15 +5,16 @@ Revision history of WwW-SiteConf
     BIG Unicode (I18N) update!  Due to the sheer size of
     this patch, many items aren't written by me.
 
-    *** The generators are RdKw::WwW::SiteConf::Backend::Name, found
+    *** The generators are RdKw::WwW::SiteConf::Builder::Name, found
         by name: each part of the name (a-z and 0-9, beginning with
         a letter; parts joined by `-') capitalized, so -G gmake is
-        Backend::Gmake.  make, bmake (new: the Makefile of make, for
+        Builder::Gmake.  make, bmake (new: the Makefile of make, for
         bmake) and gmake ship here.  ninja is no longer part of
         WwW-SiteConf: it is WwW-SiteConf-Ninja, released with it at
         the same version.  -G redo (WwW-SiteConf-Redo, the same)
-        writes a .do file for each target and goal.  -G of one that
-        is not installed says so, and lists those that are.
+        writes a .do file for each target and goal.  -G task
+        (WwW-SiteConf-Task, the same) writes Taskfile.yml.  -G of
+        one that is not installed says so, and lists those that are.
     *** -g: the header of a build file says the goals as they were
         selected (the default goal first, as -t ,goal or -t ,; then
         -t goal, NEED: as no prefix, each once).
@@ -222,8 +223,15 @@ Revision history of WwW-SiteConf
     * -G make, bmake, gmake: -Sarg_max=BYTES sets how many bytes of
       file names an rm line of a cleaning rule has (16384 by
       default; 0 or empty: one line).  -Sarg_max=auto is an eighth
-      of sysconf(_SC_ARG_MAX), and no more than 131062 (Linux takes
-      no argument of sh -c longer than 128 KiB).
+      of sysconf(_SC_ARG_MAX), and no more than 131071 less the rm
+      command and a space (Linux takes no argument of sh -c longer
+      than 128 KiB).
+    * -G make, bmake, gmake: -Smkpath=1 makes no directory markers;
+      each recipe begins with mkdir -p -- DIR.  -Scmd_mkdir,
+      -Scmd_touch, -Scmd_mkdir_p and -Scmd_rm_f set the commands of
+      the rules (mkdir --, @>, mkdir -p --, rm -f --).  A @, - or +
+      in front of one goes in front of its line, and a $ in it is
+      the shell's.  A command is one line, and not blank.
     *** -Dclean is gone, and so is the clean rule unless asked for.
         -g takes -S, the options of the generator.  -Sclean makes the
         opposite of `make': the rule `clean' removes the files that the

@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 29;
+use Test::More tests => 44;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -14,8 +14,8 @@ use TestPaths qw( script_path perl5lib );
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
-use RdKw::WwW::SiteConf::Backend::Make;
-use RdKw::WwW::SiteConf::Backend::Gmake;
+use RdKw::WwW::SiteConf::Builder::Make;
+use RdKw::WwW::SiteConf::Builder::Gmake;
 
 my $script = script_path();
 
@@ -32,20 +32,53 @@ my $plan = {
 sub emit { my ($class, %opt) = @_; $class->_text({ %$plan, opt => \%opt }) }
 
 # --- -Sorder
-unlike(emit('RdKw::WwW::SiteConf::Backend::Make', order => 1), qr/ \| /, 'make has no bar, whatever is asked');
-unlike(emit('RdKw::WwW::SiteConf::Backend::Make', order => 1), qr/ORDER/, 'and no .ORDER');
-like(emit('RdKw::WwW::SiteConf::Backend::Gmake'), qr!^site/x/y: html/y site/x/\.ok$!m, 'gmake: by default a marker is a prerequisite');
+unlike(emit('RdKw::WwW::SiteConf::Builder::Make', order => 1), qr/ \| /, 'make has no bar, whatever is asked');
+unlike(emit('RdKw::WwW::SiteConf::Builder::Make', order => 1), qr/ORDER/, 'and no .ORDER');
+like(emit('RdKw::WwW::SiteConf::Builder::Gmake'), qr!^site/x/y: html/y site/x/\.ok$!m, 'gmake: by default a marker is a prerequisite');
 for my $off ([ order => 0 ], [ order => '' ], [ order => undef ]) {
 	my $v = defined $off->[1] ? "`$off->[1]'" : 'undef';
-	like(emit('RdKw::WwW::SiteConf::Backend::Gmake', @$off), qr!^site/x/y: html/y site/x/\.ok$!m, "gmake: order=$v does nothing");
+	like(emit('RdKw::WwW::SiteConf::Builder::Gmake', @$off), qr!^site/x/y: html/y site/x/\.ok$!m, "gmake: order=$v does nothing");
 }
-my $gmake = emit('RdKw::WwW::SiteConf::Backend::Gmake', order => 1);
+my $gmake = emit('RdKw::WwW::SiteConf::Builder::Gmake', order => 1);
 like($gmake, qr!^site/x/y: html/y \| site/x/\.ok$!m, 'gmake -Sorder=1: a marker is after the bar');
 like($gmake, qr!^site/x/\.ok: \| site/\.ok$!m, '... so is the marker of a parent');
 
 # --- what a generator knows
-is_deeply([ RdKw::WwW::SiteConf::Backend::Make->options ], [qw( clean purge arg_max )], 'make: clean, purge, arg_max');
-is_deeply([ sort RdKw::WwW::SiteConf::Backend::Gmake->options ], [qw( arg_max clean order purge )], 'gmake: arg_max, clean, order, purge');
+is_deeply([ RdKw::WwW::SiteConf::Builder::Make->options ],
+	[qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch )], 'make: what it knows');
+is_deeply([ sort RdKw::WwW::SiteConf::Builder::Gmake->options ],
+	[qw( arg_max clean cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch mkpath order purge )], 'gmake: the same, and order');
+
+# --- -Smkpath, and the commands of -Scmd_*
+my $make = 'RdKw::WwW::SiteConf::Builder::Make';
+like(emit($make), qr!^site/x/\.ok: site/\.ok\n\t\[ -d site/x \] \|\| mkdir -- site/x\n\t\@> site/x/\.ok\n!m,
+	'by default, a marker: mkdir --, then @>');
+for my $off ([ mkpath => 0 ], [ mkpath => '' ], [ mkpath => undef ]) {
+	my $v = defined $off->[1] ? "`$off->[1]'" : 'undef';
+	is(emit($make, @$off), emit($make), "mkpath=$v is the default");
+}
+my $mk = emit($make, mkpath => 1);
+unlike($mk, qr/\.ok/, '-Smkpath=1: no markers');
+like($mk, qr!^site/x/y: html/y\n\tmkdir -p -- site/x\n!m, '... and the recipe makes its directory');
+like(emit($make, mkpath => 1, cmd_mkdir_p => "\t-\@ mkdir -p -v -- \n"),
+	qr!^\t-\@mkdir -p -v -- site/x\n!m, '-Scmd_mkdir_p: blanks at the ends go, and the prefix is the line\'s');
+like(emit($make, cmd_mkdir => '@mkdir --', cmd_touch => 'touch --'),
+	qr!^\t\@\[ -d site \] \|\| mkdir -- site\n\ttouch -- site/\.ok\n!m, '-Scmd_mkdir, -Scmd_touch');
+like(emit($make, cmd_mkdir => q(sh -c 'mkdir -- "$1"' sh)), qr!\|\| sh -c 'mkdir -- "\$\$1"' sh site\n!,
+	'a $ is the shell\'s');
+{
+	local $plan->{clean} = [ { name => 'clean', files => [ 'site/x/y', '$z' ] } ];
+	like(emit($make, cmd_rm_f => '+rm -f'), qr!^clean:\n\t\+rm -f site/x/y '\$\$z'\n!m, '-Scmd_rm_f');
+	like(emit($make, cmd_rm_f => '@rm', arg_max => 1), qr!^clean:\n\t\@rm site/x/y\n\t\@rm '\$\$z'\n!m,
+		'... on each line');
+}
+for ([ cmd_rm_f => " \t\n", qr/^E: -Scmd_rm_f: no command to run$/m, 'blanks are no command' ],
+	[ cmd_touch => '@', qr/^E: -Scmd_touch: no command to run$/m, 'nor is a prefix alone' ],
+	[ cmd_mkdir => "mkdir\n--", qr/^E: -Scmd_mkdir: a command is one line, and this one has U\+000A in it$/m, 'a line break' ],
+	[ cmd_mkdir_p => "mkdir\r-p", qr/U\+000D/, '... or a carriage return' ]) {
+	my ($k, $v, $re, $what) = @$_;
+	like(eval { emit($make, $k => $v); '' } || $@, $re, $what);
+}
 
 # --- generate: no rule unless asked for, and what is unused is said
 my $dir = tempdir(CLEANUP => 1);
@@ -76,16 +109,16 @@ unlike(said(q(make), S => { order => 1 }, quiet => 1), qr/unused/, q(-q silences
 like(said('make', S => { frob => 1 }), qr/-Sfrob=1: unused by generator make/, 'nobody knows frob');
 unlike(said('make', S => { clean => 'purge' }), qr/unused/, 'make knows clean');
 
-# --- the generators: by name (Backend::Name), and what they may not be
+# --- the generators: by name (Builder::Name), and what they may not be
 sub gen_error { my ($G, $o) = @_; eval { RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->generate($G, $o); 1 } ? '' : $@ }
 my $lib = tempdir(CLEANUP => 1);
-make_path("$lib/RdKw/WwW/SiteConf/Backend");
-sub backend { open my $fh, '>', "$lib/RdKw/WwW/SiteConf/Backend/$_[0].pm" or die; print $fh $_[1]; close $fh or die }
+make_path("$lib/RdKw/WwW/SiteConf/Builder");
+sub backend { open my $fh, '>', "$lib/RdKw/WwW/SiteConf/Builder/$_[0].pm" or die; print $fh $_[1]; close $fh or die }
 # one that is there, but broken; one that writes many files, in
 # directories of their own; and one that -G cannot name
-backend(Broken => "package RdKw::WwW::SiteConf::Backend::Broken; die qq(broken here\\n);\n");
+backend(Broken => "package RdKw::WwW::SiteConf::Builder::Broken; die qq(broken here\\n);\n");
 backend(Many => <<'PM');
-package RdKw::WwW::SiteConf::Backend::Many;
+package RdKw::WwW::SiteConf::Builder::Many;
 sub options { () }
 sub default_output { undef }
 sub emit { ([ 'd/e/one.do', "1\n" ], [ 'two.do', "2\n" ]) }
@@ -97,14 +130,14 @@ unshift @INC, $lib;
 
 like(gen_error('Make'), qr/invalid generator name: `Make'$/, 'a name -G cannot have');
 like(gen_error('foo-2x'), qr/invalid generator name: `foo-2x'/, 'a part of a name begins with a letter');
-like(gen_error('nope'), qr/unknown generator: `nope' \(RdKw::WwW::SiteConf::Backend::Nope is not installed/,
+like(gen_error('nope'), qr/unknown generator: `nope' \(RdKw::WwW::SiteConf::Builder::Nope is not installed/,
 	'a generator that is not installed');
 # (others may be installed: ninja, redo, or one in the works)
 my @gen = RdKw::WwW::SiteConf::generators();
 is(join(' ', grep { /\A(?:bmake|broken|gmake|make|many|odd_one)\z/ } map { $_->[0] } @gen),
 	'bmake broken gmake make many', 'the generators are those installed that -G can name');
 is_deeply([ map { $_->[0] } @gen ], [ sort map { $_->[0] } @gen ], '... in order');
-is((map { $_->[1] } grep { $_->[0] eq 'many' } @gen)[0], "$lib/RdKw/WwW/SiteConf/Backend/Many.pm", '... with the file of each');
+is((map { $_->[1] } grep { $_->[0] eq 'many' } @gen)[0], "$lib/RdKw/WwW/SiteConf/Builder/Many.pm", '... with the file of each');
 like(gen_error('broken'), qr/broken here/, 'a broken generator is not said to be missing');
 like(said('many'), qr/Writing d\/e\/one\.do\n.*Writing two\.do\n.*To build, run: many$/s, 'many files, and what to run');
 ok(-f "$dir/d/e/one.do" && -f "$dir/two.do", '... are written, directories and all');
@@ -113,7 +146,7 @@ like(gen_error('many', 'x'), qr/generator many writes a file for each target, an
 # (update_file writes by way of a temporary file of its own, so a file
 # called tmp-x.do is only that)
 backend(Tmp => <<'PM');
-package RdKw::WwW::SiteConf::Backend::Tmp;
+package RdKw::WwW::SiteConf::Builder::Tmp;
 sub options { () }
 sub default_output { undef }
 sub emit { ([ 'd/tmp-x.do', "1\n" ], [ 'd/x.do', "2\n" ]) }
@@ -130,6 +163,6 @@ is(gen_error("tmp") . join('', map { open my $fh, '<', "$dir/d/$_" or die; <$fh>
 	my $vv = `"$^X" "$script" -VV 2>&1`;
 	like($vv, qr/^generator make\ngenerator many$/m, '-VV: the generators');
 	like($vv, qr/^argv:\S* env:\S* filesys:/m, '... and the codesets');
-	like(`"$^X" "$script" -VVV 2>&1`, qr/^generator many "\Q$lib\E\/RdKw\/WwW\/SiteConf\/Backend\/Many\.pm"$/m,
+	like(`"$^X" "$script" -VVV 2>&1`, qr/^generator many "\Q$lib\E\/RdKw\/WwW\/SiteConf\/Builder\/Many\.pm"$/m,
 		'-VVV: where each generator is');
 }

@@ -33,7 +33,7 @@ RdKw::WwW::SiteConf - read the build graph of a configured source tree
 
 =head1 DESCRIPTION
 
-For the generated configure script, see L<RdKw::WwW::SiteConf::Configure>.
+For the generated F<configure> script, see L<RdKw::WwW::SiteConf::Configure>.
 
 Three inputs make up a project, all found from F<MY/config.mk>:
 
@@ -131,7 +131,7 @@ Directories are made as for C<${b}>.  We do not check that C<${a}>,
 C<${b}> and C<${c}> are different directories (C<${c}> is C<${b}>
 unless configured, and C<${a}> may be C<${b}> with explicit prefixes):
 whoever cares about that should check, using the names in
-F<MY/config.mk>.  The file must have a C<c>, as configure writes it.
+F<MY/config.mk>.  The file must have a C<c>, as F<configure> writes it.
 Only files made in C<${b}> can
 be goals of the manifest; those in the cache are made because
 something needs them.
@@ -199,7 +199,7 @@ a backslash begins one of C<\a \b \t \n \v \f \r \e> (the controls of C),
 C<\s> (a space), C<\\>, C<\">, or C<\x{>I<hex>C<}> (a code point, in
 braces, to make clear it is one); anything else is an error.  Nothing
 else is special, so C<$> and C<}> are as they are.  Modifiers go after
-it, in Makefile.in: C<${"表":Q}>.
+it, in F<Makefile.in>: C<${"表":Q}>.
 
 A string says what is said; it is I<not> quoted.  That is for C<:Q>,
 and what is quoted by bytes, last, is for the backend to say or not: a
@@ -490,11 +490,11 @@ sub _words
 =item B<new> B =E<gt> I<dir>[, D =E<gt> { ... }, S =E<gt> { ... }, quiet =E<gt> 1, strict =E<gt> 1 ]
 
 I<dir> is the build directory, as seen from the current directory.
-C<MY/config.mk> there must exist.  Warnings are not printed when
+F<MY/config.mk> there must exist.  Warnings are not printed when
 I<quiet> is true.  When I<strict> is true, a C<WANT> that cannot be
 had is an error (said even if I<quiet>), as it is for a C<NEED>,
 except that the build is still planned and written without it, and
-L</failed> says so afterwards.  I<D> overrides C<MY/config.mk> parameters.
+L</failed> says so afterwards.  I<D> overrides F<MY/config.mk> parameters.
 (C<F> and C<R>, whether from here or from there, are paths from the
 current directory, not from the project root.)  I<S> sets the options of
 the generator (C<-S> of C<siteconf -g>): a name, and a value that may be
@@ -656,7 +656,7 @@ sub _string
 	defined $s or do {
 		# Prefix what scan_string says with a blame line.
 		(my $why = $@) =~ s/^/$where: /gm;
-		die _status 0, tagmsg(E => $why);
+		die tagmsg(E => $why);
 	};
 	$s;
 }
@@ -848,6 +848,45 @@ sub arg_max
 	my $n = eval { POSIX::sysconf(POSIX::_SC_ARG_MAX()) };
 	$n = defined $n && $n > 0 ? int($n / 8) : $ARG_MAX;
 	defined $cap && $n > $cap ? $cap : $n;
+}
+
+=item B<command> I<opt>, I<name>, I<default>
+
+Not a method.  The command that C<-S>I<name> in I<opt> (the options
+of the generator) says, or I<default> if there is no C<-S>I<name> or
+it has no value: a command for the shell, which a backend puts in front
+of the names it runs on, as C<-Scmd_rm_f='rm -f --'> does.  It is as
+the file system spells it (bytes, see L</fs_text>).  A space, tab, line
+feed, vertical tab, form feed or carriage return at either end is
+dropped.  It is an error if nothing is left, if a line break (any of
+those but a space or a tab) is left in it, or if the file system cannot
+spell it.  To run more than one command, a value can name a script, or
+C<sh -c '...' sh>.
+
+Nothing in it is escaped here.  A backend escapes what its build tool
+would read in it, as a variable, so that the shell gets the command
+as it is.
+
+=cut
+
+sub command
+{
+	my ($opt, $name, $default) = @_;
+	my $v = $opt ? $opt->{$name} : undef;
+	$v = $default unless defined $v;
+	(my $s = $v) =~ s/\A[$SP]+//;
+	$s =~ s/[$SP]+\z//;
+	length $s
+		or die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is the option, as -Scmd_rm_f
+			"%s: no command to run"), "-S$name"));
+	$s =~ /([\n\cK\f\r])/
+		and die _status 0, tagmsg(E => diag(__(
+			# HEY!  the first %s is the option (-Scmd_rm_f), the second
+			# a character (U+000A)
+			"%s: a command is one line, and this one has %s in it"),
+			"-S$name", sprintf('U+%04X', ord $1)));
+	fs_text($s, "-S$name");
 }
 
 =item B<header_comment> I<plan>
@@ -1214,7 +1253,7 @@ sub _subst
 			# a `$' at the very end, or before a newline, is a `$'
 			if ($@) {   # (as Modifiers says it)
 				(my $why = $@) =~ s/^/$where: /gm;
-				die _status 0, tagmsg(E => $why);
+				die tagmsg(E => $why);
 			}
 			$put->('text', '$');
 			$pos = $i + 1;
@@ -1234,7 +1273,7 @@ sub _subst
 				($lit, $rest) = eval { RdKw::WwW::GenGenLib::scan_string($body, prog => undef) };
 				defined $lit or do {
 					(my $why = $@) =~ s/^/$where: /gm;
-					die _status 0, tagmsg(E => $why);
+					die tagmsg(E => $why);
 				};
 				$rest =~ /\A(?::(.*))?\z/s or die _status 0, tagmsg(E => diag(__(
 					# HEY!  the second %s is a string literal, as ${"..."}
@@ -1292,11 +1331,11 @@ sub _subst
 				RdKw::WwW::SiteConf::Modifiers::_apply($val, $mods,
 					quote => sub {
 						my ($v, $last) = @_;
-						$runs or die diag(__(
+						$runs or die _status 0, diag(__(
 							# HEY!  the second %s is where, as `a prerequisite'
 							":Q (shell quote) is not valid in %s"),
 							defined $self->{noquote} ? $self->{noquote} : __("a name")) . "\n";
-						$last or die __(":Q (shell quote) must be the last modifier") . "\n";
+						$last or die _status 0, __(":Q (shell quote) must be the last modifier") . "\n";
 						# the backend's, by bytes
 						return $word = $v;
 					},
@@ -1306,7 +1345,7 @@ sub _subst
 					}
 				);
 			};
-			defined $val or die _status 0, ($@ =~ /\AE: /) ? $@ : "E: $where: $@";
+			defined $val or die $@ =~ /\AE: / ? $@ : "E: $where: $@";
 		}
 		if ($val eq '.' && length $slash) {
 			# `./' is no use to anyone
@@ -2360,9 +2399,9 @@ sub manifest_text
 Writes F<MY/MANIFEST> (the goals, resolved), and the build files of
 I<generator> in the build directory.  I<generator> is C<make> (the
 default), C<bmake> or C<gmake>, which come with siteconf. C<ninja>,
-C<doit> and C<redo> are distributions of their own (WwW-SiteConf-Ninja,
-WwW-SiteConf-Doit and WwW-SiteConf-Redo) and may not be installed.  I<file>, if given,
-is the name of the build file (else F<Makefile>, F<build.ninja> or F<dodo.py>);
+C<doit>, C<redo> and C<task> are distributions of their own (WwW-SiteConf-Ninja,
+WwW-SiteConf-Doit, WwW-SiteConf-Redo and WwW-SiteConf-Task) and may not be installed.  I<file>, if given,
+is the name of the build file (else F<Makefile>, F<build.ninja>, F<dodo.py> or F<Taskfile.yml>);
 to C<redo>, which writes a file for each target and goal, it is the
 name of the default goal's (else F<all.do>).  I<file> F</dev/null> is
 no file: it is not written.  The files that would not change are left
@@ -2374,7 +2413,7 @@ said to be unused, if it has a value.
 
 A generator I<name> is lowercase ASCII letters and digits, in parts
 joined by C<->, each beginning with a letter.  It is the module
-C<RdKw::WwW::SiteConf::Backend::>I<Name>: each part capitalized, and
+C<RdKw::WwW::SiteConf::Builder::>I<Name>: each part capitalized, and
 the C<-> dropped.  So C<gmake> is C<Gmake>, and C<g-make> would be
 C<GMake>.  The module has these class methods.  They are for the
 generators that come with siteconf or are released with it, and change
@@ -2420,21 +2459,21 @@ loads the one module it names.
 
 =cut
 
-# A generator is the module Backend::Name: each part of its name
+# A generator is the module Builder::Name: each part of its name
 # capitalized, without the `-' between them
 my $BACKEND_NAME = qr/\A[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)*\z/;
 
 sub _backend_module
 {
 	my ($name) = @_;
-	q(RdKw::WwW::SiteConf::Backend::) . join q(), map { ucfirst } split /-/, $name;
+	q(RdKw::WwW::SiteConf::Builder::) . join q(), map { ucfirst } split /-/, $name;
 }
 
 sub generators
 {
 	my %found;
 	for my $dir (grep { !ref } @INC) {
-		my $sub = "$dir/RdKw/WwW/SiteConf/Backend";
+		my $sub = "$dir/RdKw/WwW/SiteConf/Builder";
 		opendir my $dh, $sub or next;
 		for my $file (sort readdir $dh) {
 			my ($leaf) = $file =~ /\A((?:[A-Z][a-z0-9]*)+)\.pm\z/ or next;
@@ -2582,3 +2621,9 @@ sub _report
 =cut
 
 1;
+
+=head1 SEE ALSO
+
+L<siteconf>, L<RdKw::WwW::SiteConf::Builder>, L<RdKw::WwW::SiteConf::Configure>, L<RdKw::WwW::SiteConf::Modifiers>.
+
+=cut

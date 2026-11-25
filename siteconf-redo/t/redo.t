@@ -4,12 +4,12 @@
 
 use strict;
 use warnings;
-use Test::More tests => 72;
+use Test::More tests => 78;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
-use RdKw::WwW::SiteConf::Backend::Redo;
+use RdKw::WwW::SiteConf::Builder::Redo;
 
-my $class = 'RdKw::WwW::SiteConf::Backend::Redo';
+my $class = 'RdKw::WwW::SiteConf::Builder::Redo';
 # (the .do files by name; the default goal's is all.do, unless said)
 sub files { my ($p, @d) = @_; my %f = map { ($_->[0], $_->[1]) } $class->emit($p, @d ? $d[0] : q(all.do)); \%f }
 # A goal as -t selects it: of its own (-t goal), the default (-t ,goal, or
@@ -157,6 +157,19 @@ is($f->{'all.do'} =~ /\n(set -e\ncase .*\nexec >&2\nredo-ifchange .*\n)\z/ && $1
 	like(files($plan)->{q(clean.do)}, qr/^rm -f -- site\/x \.\/-y\nrm -f -- 'a b'\n\z/m, q(-Sarg_max=11: lines of no more than 11 bytes of names));
 	$plan->{opt} = { arg_max => 0 };
 	like(files($plan)->{q(clean.do)}, qr/^rm -f -- site\/x \.\/-y 'a b'\n\z/m, q(-Sarg_max=0: one line));
+	$plan->{opt} = { cmd_rm_f => q( sh -c 'rm -f -- "$@"' sh ), cmd_mv_f => "\tmv --\n" };
+	$f = files($plan);
+	like($f->{q(clean.do)}, qr/^sh -c 'rm -f -- "\$\@"' sh site\/x \.\/-y 'a b'\n\z/m, q(-Scmd_rm_f: as it is, without the blanks at the ends));
+	like($f->{q(site/x.do)}, qr/\nmv -- site\/x "\$o"\n\z/, q(-Scmd_mv_f));
+	$plan->{opt} = { sh => " /data/data/com.termux/files/usr/bin/sh -e\r\n" };
+	$f = files($plan);
+	ok(!grep({ !/\A#!\/data\/data\/com\.termux\/files\/usr\/bin\/sh -e\n/ } values %$f), q(-Ssh: the #! of every .do, which may have words));
+	$plan->{opt} = { sh => "/bin/sh\n-e" };
+	ok(!eval { files($plan); 1 } && $@ =~ /-Ssh: the line of #! cannot have a line break/, q(... and is one line)) or diag $@;
+	$plan->{opt} = { sh => " " };
+	ok(!eval { files($plan); 1 } && $@ =~ /-Ssh: no interpreter to run/, q(... and not blank)) or diag $@;
+	$plan->{opt} = { cmd_mv_f => "mv\n-f" };
+	ok(!eval { files($plan); 1 } && $@ =~ /-Scmd_mv_f: a command is one line/, q(... which is one line)) or diag $@;
 	$plan->{opt} = { arg_max => q(lots) };
 	ok(!eval { files($plan); 1 } && $@ =~ /-Sarg_max=lots: expected a number of bytes, or auto/, q(-Sarg_max=lots: an error));
 	$plan->{opt} = {};
@@ -175,13 +188,13 @@ is($f->{'all.do'} =~ /\n(set -e\ncase .*\nexec >&2\nredo-ifchange .*\n)\z/ && $1
 	ok(eval { files($plan); 1 }, q(... but defaults is all right)) or diag $@;
 	{
 		# The options of cleaning are said only in the cleaning .do
-		local $plan->{args} = [ qw( -t all -Sclean -Spurge=p -Sarg_max=40 -Sarg_prefix= ) ];
+		local $plan->{args} = [ qw( -t all -Sclean -Spurge=p -Sarg_max=40 -Scmd_rm_f=rm -Sarg_prefix= ) ];
 		my $g = files($plan);
 		$plan->{args} = [ qw( -t all -Sarg_prefix= ) ];
 		my $h = files($plan);
-		is($g->{q(site/x.do)}, $h->{q(site/x.do)}, q(a target's .do is the same with -Sclean -Spurge -Sarg_max));
+		is($g->{q(site/x.do)}, $h->{q(site/x.do)}, q(a target's .do is the same with -Sclean -Spurge -Sarg_max -Scmd_rm_f));
 		is($g->{q(all.do)}, $h->{q(all.do)}, q(... and a goal's));
-		like($g->{q(defaults.do)}, qr/^# options: -Sclean -Spurge=p -Sarg_max=40 -Sarg_prefix=$/m, q(... but the cleaning .do says them));
+		like($g->{q(defaults.do)}, qr/^# options: -Sclean -Spurge=p -Sarg_max=40 -Scmd_rm_f=rm -Sarg_prefix=$/m, q(... but the cleaning .do says them));
 	}
 	local $plan->{clean} = [ { name => q(top), files => [] } ];
 	ok(!eval { files($plan, q(top.do)); 1 } && $@ =~ /redo cannot name cleaning rule `top': top\.do is the default goal's/,
@@ -195,7 +208,7 @@ is($f->{'all.do'} =~ /\n(set -e\ncase .*\nexec >&2\nredo-ifchange .*\n)\z/ && $1
 		q(a .do is not written over a target)) or diag $@;
 }
 
-is_deeply([ sort $class->options ], [ qw( arg_max arg_prefix clean purge ) ], q(options));
+is_deeply([ sort $class->options ], [ qw( arg_max arg_prefix clean cmd_mv_f cmd_rm_f purge sh ) ], q(options));
 
 is_deeply([ $class->build_command('redo', 'build', undef, 'all') ], [ qw[ ( cd build && redo all ) ] ], q(to build: cd to B, then redo the goal));
 is_deeply([ $class->build_command(q(redo), q(.), undef, q(a b)) ], [ q(redo), "'a b'" ], q(... quoted, in B already));

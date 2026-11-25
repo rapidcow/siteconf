@@ -6,7 +6,7 @@ use ExtUtils::MakeMaker;
 my %WriteMakefileArgs = (
 	NAME             => 'WwW::SiteConf::Doit',
 	AUTHOR           => q{rapidcow},
-	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf/Backend/Doit.pm',
+	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf/Builder/Doit.pm',
 	ABSTRACT         => q{dodo.py generator for siteconf},
 	LICENSE          => 'gpl_3',
 	MIN_PERL_VERSION => '5.008',

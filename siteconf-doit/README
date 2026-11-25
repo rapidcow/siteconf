@@ -1,7 +1,7 @@
 WwW-SiteConf-Doit
 
 The `doit' generator of siteconf: `siteconf -g -G doit' writes
-dodo.py instead of a Makefile.  See RdKw::WwW::SiteConf::Backend::Doit.
+dodo.py instead of a Makefile.  See RdKw::WwW::SiteConf::Builder::Doit.
 
 It is released with WwW-SiteConf, at the same version, and needs
 that version.

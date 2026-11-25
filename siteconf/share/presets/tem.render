@@ -48,18 +48,20 @@ $cs->initstd(stderr => Encode::FB_PERLQQ());
 my $prog = $cs->un_argv($0, { check => Encode::FB_PERLQQ(), prog => $0 });
 @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 
+sub status { $! = 0; $? = shift; @_; }
+
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 my $B = '.';
 GetOptions(
 	'B=s' => \$B,
 	# Explicitly reject stray -C options.
-	'C:s' => sub { die $cs->tagmsg($prog => __("too late to -C now.")); },
+	'C:s' => sub { die status 0, $cs->tagmsg($prog => __("too late to -C now.")); },
 )
 # The usage may be altered, so we only translate the "usage:" part.
-	or die $cs->diag(__("usage: %s"), $cs->diag("%#q: %s\n",
+	or die status 0, $cs->diag(__("usage: %s"), $cs->diag("%#q: %s\n",
 		$prog => '[-B dir] apath bpath'));
 # HEY!  The usage is `./render apath bpath', which is two arguments.
-@ARGV == 2 or die $cs->tagmsg($prog => __("need exactly two arguments"));
+@ARGV == 2 or die status 0, $cs->tagmsg($prog => __("need exactly two arguments"));
 my ($apath, $bpath) = @ARGV;
 
 # Load configuration parameters and build options,
@@ -85,6 +87,6 @@ my $D = $S{config};
 @TT_NEW@
 $tt->process(@APATH_FS@, \%v, $cs->to_fs($bpath, { prog => 'E' }),
 	{ binmode => ':encoding(UTF-8)' })
-	or die "[TT] ", $tt->error(), "\n";
+	or die status 0, "[TT] ", $tt->error(), "\n";
 
 exit 0;  # goodbye!

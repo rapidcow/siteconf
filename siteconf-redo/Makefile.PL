@@ -6,7 +6,7 @@ use ExtUtils::MakeMaker;
 my %WriteMakefileArgs = (
 	NAME             => 'WwW::SiteConf::Redo',
 	AUTHOR           => q{rapidcow},
-	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf/Backend/Redo.pm',
+	VERSION_FROM     => 'lib/RdKw/WwW/SiteConf/Builder/Redo.pm',
 	ABSTRACT         => q{redo (.do file) generator for siteconf},
 	LICENSE          => 'gpl_3',
 	MIN_PERL_VERSION => '5.008',

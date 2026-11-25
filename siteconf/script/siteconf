@@ -47,23 +47,30 @@ siteconf - configurable incremental build script generator
 
     ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
 
-    siteconf -g [-A] [-B outdir] [-G make|bmake|gmake|ninja|redo] [-t [NEED:|WANT:]goal ...]
-                [-Sopt[=val] ...] [-q]
+    siteconf -g [-A] [-B outdir] [-G make|bmake|gmake|...]
+                [-t [NEED:|WANT:]goal ...] [-Sopt[=val] ...] [-q]
     siteconf make ...                         # same
-    cd ${B} && [make|bmake|gmake|ninja|redo] [goal]   # ninja -t clean to clean
+    cd ${B} && make [goal]   # may vary depending on your backend
 
     #
-    # -S, with -g: options of the generator (see its page)
+    # -S, with -g: options passed to the generator:
     #
-    #   -Sclean            (make, gmake, redo) a rule `clean': the opposite of `make'
+    #   -Sclean            (make, gmake) a rule `clean': the opposite of `make'
     #   -Sclean='clean-&'  a rule for each goal: clean-all, clean-small
     #   -Sclean='clean,clean-&'   both
-    #   -Spurge            (make, gmake, redo) like clean, and what is made on the way too
+    #   -Spurge            (make, gmake) like clean, and what is made on the way too
     #                      (a different option: both can be had)
-    #   -Sarg_max=8192     (make, gmake, redo) bytes of file names per rm line
+    #   -Sarg_max=8192     (make, gmake) bytes of file names per rm line
     #                      (auto: an eighth of ARG_MAX; 0 or empty: one line)
     #   -Sorder=1          (gmake) directory markers after a |
-    #   -Sarg_prefix=sc_   (redo) the shell variables of a .do: $sc_d, $sc_o
+    #   -Smkpath=1         (make, gmake, ninja, task) mkdir -p, and no markers
+    #   -Scmd_mkdir='mkdir --'       (make, gmake, ninja, task) and the like:
+    #   -Scmd_mkdir_p='mkdir -p --'  the commands the rules run, which the
+    #   -Scmd_touch='@>'             names follow (touch: make, gmake, task;
+    #   -Scmd_rm_f='rm -f --'        rm: make, gmake, redo, task;
+    #   -Scmd_mv_f='mv -f --'        mv: redo)
+    #   -Ssh=/bin/sh       (redo) the #! of every .do
+    #
 
     siteconf -l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]] [-s]
     siteconf list ...                         # same
@@ -137,9 +144,11 @@ With C<-i>, set a default standard definition, such as C<-SB=build>.
 See L<RdKw::WwW::SiteConf::Configure/PATHS> for the names and defaults.
 May be repeated.
 
-With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Backend::Make>,
-L<RdKw::WwW::SiteConf::Backend::Gmake> and L<RdKw::WwW::SiteConf::Backend::Redo>;
-C<ninja> has none).  Unlike with C<-i>,
+With C<-g>, set an option of the generator (see
+L<RdKw::WwW::SiteConf::Builder::Make>,
+L<RdKw::WwW::SiteConf::Builder::Gmake>, and other
+non-core generators such as
+L<RdKw::WwW::SiteConf::Builder::Redo>).  Unlike with C<-i>,
 the value may be left out, and then the generator takes its default:
 C<-Sclean> makes a rule called C<clean>, which removes the files that
 the first goal names (C<-Sclean=&> makes none), and C<-Sorder> alone is
@@ -159,7 +168,9 @@ Print the siteconf version and exit.  Repeat as C<-VV> for library
 versions, the generators (C<-G>) that are installed, and the codeset
 of each category; or C<-VVV> for the paths of modules, generators and
 locale files as well.
-The format and order are subject to change.
+
+The format and order are subject to change.  It is not
+advised to use this in a script.
 
 C<-V> and C<-VV> were added and implemented in 0.0100.
 C<-VVV> was extended in 0.0300.  C<-VV> started listing
@@ -237,31 +248,20 @@ Support for C<-l> was added in 0.0300.
 
 =item B<-G> I<generator>
 
-C<make> (default), writing F<Makefile>; C<bmake>, writing the same
-for bmake (and saying to run C<bmake>); C<gmake>, writing one for GNU
-make, which can name files that make cannot (with blanks, C<#>, C<:>,
-C<$>, wildcards and so on: see L<RdKw::WwW::SiteConf::Backend::Gmake>);
-C<ninja>, writing F<build.ninja>; or C<redo>, writing a F<.do> file
-for each target and each goal.  A name that the generator cannot
-spell is an error.
-
-C<ninja> and C<redo> are distributions of their own
-(WwW-SiteConf-Ninja and WwW-SiteConf-Redo).  Without one, C<-G> of
-it is an error that says what to install.
+Select the build script generator (default C<make>).  See
+L<RdKw::WwW::SiteConf::Builder> for generator names and output files.
+If the generator is missing, siteconf reports which module to install.
 
 The C<gmake> and C<bmake> generators were added in 0.0300.
-
-A generator I<name> is the module C<RdKw::WwW::SiteConf::Backend::>I<Name>
-(see L<RdKw::WwW::SiteConf/generate>): C<gmake> is C<Gmake>.
+The C<ninja> generator was moved to a non-core distribution
+in 0.0300.
 
 =item B<-o> I<file>
 
 With C<-g>, write I<file> in the build directory instead of F<Makefile>
-(or F<build.ninja>); say C<make -f Makefile.proj> to use it.  Just a
-name, not a path.  C<redo> writes a file for each target and goal: to
-it, I<file> is the default goal's (instead of F<all.do>), and ends in
-F<.do>.  C<-o /dev/null> writes no such file (with C<make>, no Makefile:
-only F<MY/MANIFEST>).
+(or F<GNUmakefile>, or something else).  C<-o /dev/null> suppresses
+script generation (which only writes F<MY/MANIFEST>, and potentially
+other side-effects such as non-default goals for the C<redo> backend.)
 
 With C<-i>, may be repeated as C<-o name:path>, where I<name> is
 C<configure> or C<render>.  Bare C<-o path> means C<-o configure:path>.
@@ -285,13 +285,6 @@ For example:
 
     siteconf init -P web -o configure:tools/configure \
         -o render:bin/render-page
-
-This does not rewrite your rulebook.  Update its renderer path in both
-the dependency and the recipe.  (The renderer's own header C<NEED>s
-F<MY/option.mk>, so option changes still rebuild its targets.)
-
-    index.html: ${A}/bin/render-page
-        cd ${A:Q} && ${^X} bin/render-page -B ${B:Q} ${a}/index.html ${B:Q}/${b}/index.html
 
 Named mappings are only for C<-i>.
 
@@ -331,7 +324,7 @@ Added in 0.0101; support for C<-l> was added in 0.0300.
 =item B<-R> I<rulebook>
 
 Specifies a different rulebook to use.
-Overrides the configured C<R>.  Like it, this is a path from the
+Overrides the configured C<R>.  This is a path from the
 current directory.
 
 Added in 0.0101.
@@ -339,22 +332,21 @@ Added in 0.0101.
 =item B<-l>, B<list>
 
 Print the names that the manifest (F<MANIFEST>, or C<-F>; nothing is
-configured for this but C<INCLUDE>, with C<-B>) gives its default goal, the first: what it
-C<NEED>s, then what it C<WANT>s, as they are written there --
-unescaped, but not resolved (a C<WANT> that would be dropped is still
-listed), and each once.  They are relative to C<${a}>, and to
-C<${B}/${b}> once made.
+configured for this but C<INCLUDE>, with C<-B>) gives its default goal,
+the first: what it C<NEED>s, then what it C<WANT>s, but not resolved
+(a C<WANT> that would be dropped is still listed), and each once.
+They are relative to C<${a}>, and to C<${B}/${b}> once made.
 
 Each name is followed by a newline (or C<-0>), and is written as the
 file system spells it (as F<siteconf> would open it:
-L<RdKw::I18N::CodeSets/filesys>): by default in the locale's encoding,
-but on macOS always in UTF-8, as its file names are.  A name it cannot
-spell is an error, and nothing is written; so is one with the separator
-in it.
+L<RdKw::I18N::CodeSets/filesys>): on POSIX systems is the locale's
+encoding, though certain systems such as macOS and Android hard-code
+this to UTF-8.  A name it cannot spell is an error, and nothing is
+written; so is one with the separator in it.
 
-To list what a build made, list what F<siteconf -g> resolved, from
-which every C<WANT> that could not be made is gone:
-C<-F MY/MANIFEST -t >I<goal> (in the build directory).  The manifest itself still has them.
+To list what a build made, list what F<siteconf -g> resolved,
+from which every C<WANT> that could not be made is gone, run
+C<-F MY/MANIFEST -t >I<goal> relative to the build directory.
 
 Added in 0.0300.
 
@@ -422,8 +414,8 @@ With C<-l>, sort the names by their path segments (split at C</>).
 A name with fewer segments comes first; two with as many are ordered by
 the first segment that differs, compared by Unicode code point (as
 the bytes of UTF-8 compare), whatever the encoding of the output.  The
-locale (C<LC_COLLATE>) is never used, so the order is the same
-everywhere.  So C<b.html> comes before C<a/x.html>, C<a/x.html> before
+locale (C<LC_COLLATE>) is never used, so the order is deterministic.
+For example, C<b.html> comes before C<a/x.html>, C<a/x.html> before
 C<b/a.html>, and C<Z.html> before C<a.html>.  Without C<-s>, the names
 are in the order of the manifest.
 
@@ -482,6 +474,8 @@ $cs->initstd( stderr => Encode::FB_PERLQQ() );
 # Now we can has real prog :]
 my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 
+sub _status { $! = 0; $? = shift; @_; }
+
 # How to invoke us: `usage: ' (or a translated
 # string under the current locale).  Each sub-
 # sequent line is indented to match its width.
@@ -524,7 +518,7 @@ sub default_setter
 	sub {
 		my ($name, $value) = split(/=/, $_[1], 2);
 		defined $name && length $name
-			or die $cs->tagmsg($prog => $cs->diag(__("%s: empty name."), "-$kind"));
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__("%s: empty name."), "-$kind"));
 		$values->{$name} = defined $value ? $value : '';
 		push @written, "-$kind$_[1]";
 	};
@@ -542,7 +536,7 @@ GetOptions(
 	'S=s'      => sub {
 		my ($name, $value) = split(/=/, $_[1], 2);
 		defined $name && length $name
-			or die $cs->tagmsg($prog => $cs->diag(__("%s: empty name."), "-S"));
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__("%s: empty name."), "-S"));
 		$opt{S}{$name} = $value;
 		push @written, "-S$_[1]";
 	},
@@ -560,8 +554,8 @@ GetOptions(
 	'A'        => \$opt{A},
 	'f|force'  => \$opt{f},
 	# Reject misplaced -C arguments
-	'C:s'      => sub { die $cs->tagmsg($prog => __("too late to -C now.")); },
-) or die $usage;
+	'C:s'      => sub { die _status 0, $cs->tagmsg($prog => __("too late to -C now.")); },
+) or die _status 0, $usage;
 
 if ($vee) {
 	# -V: ours alone; -VV: what we run on, what we found, and how we
@@ -597,7 +591,7 @@ if ($vee) {
 		my $where = $vee > 2 ? " " . pq($INC{$path}) : "";
 		# Obtain version without using symbolic ref :x
 		my $ver = $fren->VERSION();
-		print "$name$where version " . (defined $ver ? $ver : '(none)') . "\n";
+		print "module $name$where version " . (defined $ver ? $ver : '(none)') . "\n";
 	}
 
 	# The generators (-G) that are installed: found, not loaded, so a
@@ -636,12 +630,12 @@ if ($vee) {
 if (@ARGV and $ARGV[0] =~ /\A(?:init|make|list)\z/) {
 	my $word = shift @ARGV;
 	defined $opt{mode} and $opt{mode} ne $word
-		and die $cs->tagmsg($prog => $cs->diag(__(
+		and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"conflicting modes: %s and %s"), $opt{mode}, $word));
 	$opt{mode} = $word;
 }
-defined $opt{mode} or die $usage;
-@ARGV and die $cs->tagmsg($prog => __("too many arguments"));
+defined $opt{mode} or die _status 0, $usage;
+@ARGV and die _status 0, $cs->tagmsg($prog => __("too many arguments"));
 
 # Keep output routing separate from the defaults written into configure.
 for my $output (@{ $opt{outputs} }) {
@@ -649,11 +643,11 @@ for my $output (@{ $opt{outputs} }) {
 	if ($output =~ m!\A([^/:]+):(.*)\z!s) {
 		($name, $path) = ($1, $2);
 		$opt{mode} eq 'init'
-			or die $cs->tagmsg($prog => __("named outputs are only for init"));
+			or die _status 0, $cs->tagmsg($prog => __("named outputs are only for init"));
 		$name eq 'configure' || $name eq 'render'
-			or die $cs->tagmsg($prog => $cs->diag(__("unknown output name: %q"), $name));
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__("unknown output name: %q"), $name));
 	}
-	length $path or die $cs->tagmsg($prog => __("empty output path"));
+	length $path or die _status 0, $cs->tagmsg($prog => __("empty output path"));
 	$opt{mode} eq 'init' ? ($opt{output}{$name} = $path) : ($opt{o} = $path);
 }
 
@@ -661,7 +655,7 @@ for my $output (@{ $opt{outputs} }) {
 # $ tar -taf /dev/null
 # tar: Option -a is not permitted in mode -t
 sub _not_for_us {
-	die $cs->tagmsg($prog => $cs->diag(__(
+	die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 		"option %s is not permitted in mode %s"), @_));
 }
 
@@ -716,7 +710,7 @@ if ($opt{mode} eq 'init') {
 	$sc->generate($opt{G}, $opt{o});
 
 	if ($sc->failed()) {
-		die $cs->tagmsg(E => $cs->diag(__(
+		die _status 0, $cs->tagmsg(E => $cs->diag(__(
 			"missing soft dependencies and -A was requested."
 		)));
 	}
@@ -765,7 +759,7 @@ sub do_list
 	if (defined $opt->{0}) {
 		$opt->{0} =~ /\A[0-7]{0,3}\z/
 			&& (my $ord = oct($opt->{0} || 0)) <= 0377
-			or die $cs->tagmsg($prog => $cs->diag(__(
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 				"%#q: not a valid ASCII octal code point"),
 				"-0$opt->{0}"));
 		$sep = chr $ord;
@@ -795,7 +789,7 @@ sub do_list
 			my @kind = !defined $type || $type eq '' ? qw( needed wanted )
 				: $type eq 'NEED' ? 'needed'
 				: $type eq 'WANT' ? 'wanted'
-				: die $cs->tagmsg($prog => $cs->diag(__(
+				: die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 					"%q: expected NEED or WANT, not %q"),
 					"-t $t", $type));
 			push @name, grep { !$seen{$_}++ } map { $mf->$_($goal) } @kind;
@@ -805,7 +799,7 @@ sub do_list
 		my @fs;
 		for my $name (@name) {
 			my $fs = $cs->to_fs($name, { prog => $mf->file });
-			index($fs, $sep) < 0 or die $cs->diag(__(
+			index($fs, $sep) < 0 or die _status 0, $cs->diag(__(
 				# HEY!  the %s is the separator, as the option that
 				# says it: -0 for a NUL, -012 for a newline
 				"%q: %q conflicts with record separator %s"),
@@ -832,7 +826,7 @@ sub share_file
 {
 	my ($file) = @_;
 	my $path = eval { File::ShareDir::dist_file('WwW-SiteConf', $file) };
-	defined $path or die $cs->tagmsg($prog => $cs->diag(__(
+	defined $path or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"cannot find %q (is WwW-SiteConf installed?)"),
 		"share/$file"));
 	$cs->un_fs($path, { prog => $prog });
@@ -901,27 +895,30 @@ sub do_init
 		site_url => N__('Absolute base URL'),
 	);
 	for my $k (keys %S) {
-		exists $Dd{$k} || $k eq 'c' or die $cs->tagmsg($prog => $cs->diag(__(
+		exists $Dd{$k} || $k eq 'c' or die _status 0,
+			$cs->tagmsg($prog => $cs->diag(__(
 			# HEY!  %s is the option (-Sx), and then what it may be
-			"%s: no such thing (valid: %s)"), "-S$k", 'A B a b c R F e'));
+			"%s: no such setting (valid: %s)"),
+			"-S$k", 'A B a b c R F e'));
 		$Dd{$k} = $S{$k};
-		defined $Dd{$k} && length $Dd{$k} or die $cs->tagmsg($prog => $cs->diag(__(
+		defined $Dd{$k} && length $Dd{$k} or die _status 0,
+			$cs->tagmsg($prog => $cs->diag(__(
 			# HEY!  %s is an option, as -Sa (and likewise in the next few)
 			"%s may not be empty."), "-S$k"));
 	}
 	File::Spec->file_name_is_absolute($Dd{b})
-		and die $cs->tagmsg($prog => $cs->diag(__(
+		and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"%s must be a relative path."), '-Sb'));
 	# c is always there; the same as b means it goes where b goes
 	exists $Dd{c} or $Dd{c} = $Dd{b};
 	File::Spec->file_name_is_absolute($Dd{c})
-		and die $cs->tagmsg($prog => $cs->diag(__(
+		and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"%s must be a relative path."), '-Sc'));
 
 	# -D and -O set what defaults to have in addition.
 	for my $k (sort keys %{ $opt->{D} }) {
 		exists $opt->{S}{$k}
-			and die $cs->tagmsg($prog => $cs->diag(__(
+			and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 				"%s and %s are the same thing; pick one."),
 				"-S$k", "-D$k"));
 	}
@@ -930,7 +927,7 @@ sub do_init
 	exists $S{c} || exists $opt->{D}{c} or $Dx{c} = $Dx{b};
 	# -SA or -DA: where render goes, too
 	my $A = $Dx{A};
-	length $A or die $cs->tagmsg($prog => $cs->diag(__(
+	length $A or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 		"%s may not be empty."), '-DA'));
 	my %Ox = %{ $opt->{O} };
 
@@ -938,10 +935,10 @@ sub do_init
 	my $render;
 	if (defined $opt->{P} and $opt->{P} ne 'none') {
 		$opt->{P} =~ /\A\w+\z/
-			or die $cs->tagmsg($prog => $cs->diag(__(
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"bad preset name: %q"), $opt->{P}));
 		my $file = eval { share_file("presets/$opt->{P}.config") }
-			or die $cs->tagmsg($prog => $cs->diag(__(
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"no such preset: %q"), $opt->{P}));
 		$preset = slurp($file);
 		$preset =~ s/\n*\z/\n/;
@@ -957,25 +954,27 @@ sub do_init
 	for my $m (@spec) {
 		my ($drop, $module, $min) = $m =~ /\A(-?)([^=]*)(?:=(.*))?\z/s;
 		$module =~ /\A\w+(?:::\w+)*\z/
-			or die $cs->tagmsg($prog => $cs->diag(__(
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			# HEY!  %s is the option, as -MModule=version (here and
 			# in the next four)
 			"%s: bad module name"), "-M$m"));
 		$drop && defined $min
-			and die $cs->tagmsg($prog => $cs->diag(__(
+			and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 			"%s: no version for what is dropped"), "-M$m"));
 		my $said = defined $min;
 		$min = $drop ? '' : 0 unless $said;
 		$min =~ /\A(?:v?[0-9][0-9._]*|0|)\z/
-			or die $cs->tagmsg($prog => $cs->diag(__("%s: bad version"), "-M$m"));
+			or die _status 0, $cs->tagmsg($prog => $cs->diag(__("%s: bad version"), "-M$m"));
 		if ($min eq '') {
-			$module eq 'RdKw::WwW::GenGenLib' || $module eq 'RdKw::I18N::CodeSets'
-				and die $cs->tagmsg($prog => $cs->diag(__(
-					"%s: configure always needs it"), "-M$m"));
+			$module eq 'RdKw::WwW::GenGenLib'
+			|| $module eq 'RdKw::I18N::CodeSets'
+			|| $module eq 'RdKw::L10N::TextDomain'
+				and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
+					"%s: cannot drop core dependencies"), "-M$m"));
 			delete $mods{$module};
 		} elsif ($module eq 'RdKw::WwW::GenGenLib' && !version_ge($min, $GENGENLIB_MIN)) {
 			# (with no version, it is the one we ask for anyway)
-			$said and die $cs->tagmsg($prog => $cs->diag(__(
+			$said and die _status 0, $cs->tagmsg($prog => $cs->diag(__(
 					"%s: version %s or later is required"),
 				"-M$m", $GENGENLIB_MIN));
 			$mods{$module} = $GENGENLIB_MIN;
@@ -993,7 +992,7 @@ sub do_init
 	}
 	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
 	exists $opt->{output}{render} && !defined $render
-		and die $cs->tagmsg($prog => __("preset does not supply a render output"));
+		and die _status 0, $cs->tagmsg($prog => __("preset does not supply a render output"));
 	# The help of configure, as rows of its tables (see there): -D beyond
 	# B a b R F e (which configure already describes), and -O, with
 	# what we know of them (said with __ there, so N__ here)
@@ -1018,7 +1017,7 @@ sub do_init
 		OPTHELP => $help,
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} :
-		die $cs->tagmsg($prog => $cs->diag(__("%s template: unknown placeholder %q"),
+		die _status 0, $cs->tagmsg($prog => $cs->diag(__("%s template: unknown placeholder %q"),
 			'configure', "\@$1\@"))/ge;
 
 	my $out = exists $opt->{output}{configure} ? $opt->{output}{configure} : 'configure';
@@ -1153,18 +1152,18 @@ my \$provider = $PROVIDER->new({
 	ENCODING => 'UTF-8',
 	INCLUDE_PATH => [ '.', \$D->{a} ],
 })
-	or die "[TT] ", $PROVIDER->error(), "\\n";
+	or die status 0, "[TT] ", $PROVIDER->error(), "\\n";
 my \$tt = Template->new({
 	LOAD_TEMPLATES => [ \$provider ],
 })
-	or die "[TT] ", \$Template::ERROR, "\\n";
+	or die status 0, "[TT] ", \$Template::ERROR, "\\n";
 NEW
 			: <<\OLD,
 my $tt = Template->new({
 	ENCODING => 'UTF-8',
 	INCLUDE_PATH => [ '.', $cs->to_fs($D->{a}, { prog => 'E' }) ],
 })
-	or die "[TT] ", $Template::ERROR, "\n";
+	or die status 0, "[TT] ", $Template::ERROR, "\n";
 OLD
 		USE_GENLIB => $can_uri
 			? "use RdKw::WwW::GenLib $GENLIB_URI qw( locate file2uri uri2file );"
@@ -1195,14 +1194,20 @@ URI
 NEW
 			: <<\OLD,
 	locate => sub {
-		@_ == 1 or die Template::Exception->new(usage => "[% locate PATH %]");
+		@_ == 1 or die status 0, Template::Exception->new(usage => "[% locate PATH %]");
 		locate($O, $target, @_);
 	},
 	location => $target,
 OLD
 	);
 	$text =~ s/@(\w+)@/exists $sub{$1} ? $sub{$1} :
-		die $cs->tagmsg($prog => $cs->diag(__("%s template: unknown placeholder %q"),
+		die _status 0, $cs->tagmsg($prog => $cs->diag(__("%s template: unknown placeholder %q"),
 			"$opt->{P}.render", "\@$1\@"))/ge;
 	$text;
 }
+
+=head1 SEE ALSO
+
+L<RdKw::WwW::SiteConf>, L<RdKw::WwW::SiteConf::Builder>, L<RdKw::WwW::SiteConf::Configure>.
+
+=cut

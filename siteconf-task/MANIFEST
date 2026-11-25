@@ -1,0 +1,11 @@
+MANIFEST
+Changes
+Makefile.PL
+README
+lib/RdKw/WwW/SiteConf/Builder/Task.pm
+t/00-load.t
+t/e2e-task.t
+t/lib/E2E.pm
+t/lib/Tools.pm
+t/names.t
+t/task.t

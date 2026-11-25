@@ -12,7 +12,7 @@ use File::Temp qw( tempdir );
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
-use RdKw::WwW::SiteConf::Backend::Make;
+use RdKw::WwW::SiteConf::Builder::Make;
 
 # A project with the goals `all' (a.css, d/b.css) and `small' (a.css).
 sub project {
@@ -43,7 +43,7 @@ sub plan_of
 	RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => \@goal, S => { @_ })->plan;
 }
 sub names { join ' ', map { $_->{name} } @{ $_[0]{clean} } }
-sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Backend::Make->_text($_[0]) }
+sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Builder::Make->_text($_[0]) }
 
 # --- no -Sclean, no rule; a name alone is the default one
 {

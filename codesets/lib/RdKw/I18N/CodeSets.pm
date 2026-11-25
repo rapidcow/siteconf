@@ -28,7 +28,7 @@ I18N::CodeSets - character encoding context and parser
     $cs->initstd( stderr => Encode::FB_PERLQQ() );
     @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset });
     open my $fh, '<', $cs->to_fs($file)
-        or die $cs->diag("cannot open file %q: %s\n", $file, "$!");
+        or die $cs->diag("cannot open file %q: %m", $file) . "\n";
 
 =head1 DESCRIPTION
 
@@ -216,7 +216,7 @@ sub parse
 		push @pairs, $name, $enc;
 	}
 	# (to a copy first, so that we are as we were if one is bad)
-	my $new = eval { $self->new(@pairs) } or die _status 0, "$prog$@";
+	my $new = eval { $self->new(@pairs) } or die "$prog$@";
 	%$self = %$new;
 	$self;
 }
@@ -260,7 +260,7 @@ sub parse_from_env
 	my $prog = _prog_opt(parse_from_env => $self, \@opt);
 	Carp::croak('parse_from_env: undefined environment variable name') unless defined $name;
 	return $self unless exists $ENV{$name};
-	eval { $self->parse($ENV{$name}); 1 } or die _status 0, "$prog$name: $@";
+	eval { $self->parse($ENV{$name}); 1 } or die "$prog$name: $@";
 	$self;
 }
 
@@ -277,7 +277,7 @@ sub parse_from_argv
 			++$n < @$argv or die _status 0, "$prog-C (argv $n): no codeset after it\n";
 			$spec = $argv->[$n];
 		}
-		eval { $new->parse($spec); 1 } or die _status 0, "$prog-C (argv @{[ $n + 1 ]}): $@";
+		eval { $new->parse($spec); 1 } or die "$prog-C (argv @{[ $n + 1 ]}): $@";
 		$n++;
 	}
 	splice @$argv, 0, $n;
@@ -597,7 +597,8 @@ sub _initstd
 		local $PerlIO::encoding::fallback = $fallback{$name}
 			if defined $fallback{$name};
 		binmode $STD{$name}, ":raw:encoding($enc)"
-			or die "${prog}cannot configure $name to use the $enc encoding: $!\n";
+			or die $prog . $self->diag(
+				"cannot configure %s to use the %s encoding: %m", $name, $enc) . "\n";
 	}
 	return;
 }
@@ -957,6 +958,8 @@ sub diag
 {
 	my ($self, $format, @args) = @_;
 	my $errno = 0 + $!;
+	# (restored when we return, so a die after us exits with errno)
+	local ($!, $^E);
 	my $enc = $self->encoding('stderr');
 	# What sprintf is given: the format, with what we say ourselves
 	# (%m, %%) said, and every other conversion numbered, and the

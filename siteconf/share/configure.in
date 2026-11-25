@@ -23,7 +23,7 @@ use RdKw::WwW::GenGenLib 0.0100 qw( read_make write_make );
 use RdKw::I18N::CodeSets ();
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
-my ($cs, $me, $offset, $prog);
+my ($cs, $me, $offset);
 
 BEGIN {
 	$cs = RdKw::I18N::CodeSets->locale;
@@ -34,7 +34,11 @@ BEGIN {
 	$cs->initstd( stderr => Encode::FB_PERLQQ() );
 }
 
-$prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
+my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
+
+# Exit status.
+my $estat = 0;
+sub status { $! = 0; $? = shift; @_; }
 
 # Module requirements: [ module, minimum version ]
 our @NEED;
@@ -62,7 +66,7 @@ BEGIN {
 	if (@bad) {
 		print STDERR $cs->tagmsg(E => $_) for @bad;
 		my $count = @bad;
-		die $cs->tagmsg(E => $cs->diag(__n(
+		die status 0, $cs->tagmsg(E => $cs->diag(__n(
 			"%d module missing.  Looks like you got some work to do...",
 			"%d modules missing.  Looks like you got some work to do...",
 			$count), $count));
@@ -84,8 +88,12 @@ sub shell_quote
 	"'$s'";
 }
 
-# This defines the notion of "null string", so
-# defaults can work like ${var:-${var_default}}.
+# stuff that would be considered "null string"
+# by ${foo:-...}, including but not limited to
+# actually unset values ${foo-...} recognizes.
+#
+# this check is preferred to !length, since we
+# want to keep the warnings pragma happy.
 sub isnull
 {
 	!(defined $_[0]) || !(length $_[0]);
@@ -170,7 +178,7 @@ sub setter
 	my ($S, $H) = @_;
 	sub {
 		my ($k, $v) = split(/=/, $_[1], 2);
-		length $k or die $cs->tagmsg($prog =>
+		length $k or die status 0, $cs->tagmsg($prog =>
 			# HEY!  %s is the option, -D or -O.
 			$cs->diag(__("%s: empty name."), "-$S"));
 		$H->{$k} = $v;
@@ -187,9 +195,9 @@ GetOptions(
 	'D=s'      => setter(D => \%D),
 	'O=s'      => setter(O => \%O),
 	# Reject misplaced -C arguments
-	'C:s' => sub { die $cs->diag("%#q: %s\n", $prog, __("too late to -C now.")); })
-	or die +( split(/(?<=\n)\n/m, $usage) )[0];
-@ARGV and die $cs->diag("%#q: %s\n", $prog, __("too many arguments"));
+	'C:s' => sub { die status 0, $cs->diag("%#q: %s\n", $prog, __("too late to -C now.")); })
+	or die status 0, +( split(/(?<=\n)\n/m, $usage) )[0];
+@ARGV and die status 0, $cs->diag("%#q: %s\n", $prog, __("too many arguments"));
 
 # Store the starting directory: for the
 # `siteconf -g' hint after configuring.
@@ -258,14 +266,14 @@ preset_finish(\%D, \%O) if defined &preset_finish;
 
 foreach my $k (qw( a b R F )) {
 	$D{$k} =~ s!/+$!!;
-	length $D{$k} or die $cs->tagmsg(E => $cs->diag(__(
+	length $D{$k} or die status 0, $cs->tagmsg(E => $cs->diag(__(
 		'${%s} may not be empty.'), $k));
 }
 # ${b} is a directory we create rules under, one parent at a time;
 # that walk ends at `.', so it must be relative.  (${a}, on the
 # other hand, is free to be absolute for foreign source files.)
 File::Spec->file_name_is_absolute($D{b})
-	and die $cs->tagmsg(E => $cs->diag(__(
+	and die status 0, $cs->tagmsg(E => $cs->diag(__(
 	'${%s} prefix must be a relative path.'), 'b'));
 # ${c}, the cache: defaults to -Dc from the command-line, or
 # else -Sc (but *only* if it differs from -Sb), or else ${b}.
@@ -273,13 +281,13 @@ File::Spec->file_name_is_absolute($D{b})
 isnull($D{c}) and $D{c} = !isnull($Dd{c})
 	&& $Dd{c} ne $Dd{b} ? $Dd{c} : $D{b};
 $D{c} =~ s!/+$!!;
-length $D{c} or die $cs->tagmsg(E => $cs->diag(__(
+length $D{c} or die status 0, $cs->tagmsg(E => $cs->diag(__(
 	'${%s} may not be empty.'), 'c'));
 # We also create rules under ${c}, so it must be relative too.
 File::Spec->file_name_is_absolute($D{c})
-	and die $cs->tagmsg(E => $cs->diag(__(
+	and die status 0, $cs->tagmsg(E => $cs->diag(__(
 	'${%s} prefix must be a relative path.'), 'c'));
-$D{e} =~ m!/! and $cs->tagmsg(E => $cs->diag(__(
+$D{e} =~ m!/! and die status 0, $cs->tagmsg(E => $cs->diag(__(
 	'${%s} may not contain a slash.'), 'e'));
 
 -d 'MY' or mkdir 'MY' or die $cs->tagmsg(E => $cs->diag(__(
@@ -306,4 +314,10 @@ unless ($shutup) {
 		"@PROG@ -g$Bcmd"), "\n";
 }
 
-exit 0;
+exit $estat;
+
+=head1 SEE ALSO
+
+L<RdKw::WwW::SiteConf::Configure>, L<siteconf>.
+
+=cut

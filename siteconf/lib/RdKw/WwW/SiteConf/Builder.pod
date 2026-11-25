@@ -1,0 +1,15 @@
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+WwW::SiteConf::Builder - siteconf build script generators
+
+=head1 DESCRIPTION
+
+This namespace holds the build script backends.
+[Describe how names are looked up here, and direct
+the C<-G backend> option documentation to here!]
+
+=cut

@@ -14,7 +14,7 @@ use TestPaths qw( project_root script_path perl5lib );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 my $script = script_path();
-plan tests => 30;
+plan tests => 32;
 # The preset comes from the built share
 local $ENV{PERL5LIB} = join ':', project_root() . '/blib/lib', perl5lib();
 
@@ -76,9 +76,11 @@ unlike($status ? $out : slurp('configure.m'), qr/"Template"/, '-M-Template: drop
 ($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', 'configure:configure.m',
 	'-o', 'render:/dev/null', '-M-Template', '-MTemplate=2');
 like($status ? $out : slurp('configure.m'), qr/\[ "Template", (?:2|"2") \]/, '... -MTemplate=2 after it: back');
-($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null',
-	'-M-RdKw::I18N::CodeSets');
-like($out, qr/-M-RdKw::I18N::CodeSets: configure always needs it/, '... but not CodeSets');
+foreach (qw( I18N::CodeSets L10N::TextDomain WwW::GenGenLib )) {
+	($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null',
+		"-M-RdKw::$_");
+	like($out, qr/-M-RdKw::$_: cannot drop core dependencies/, "... but not $_");
+}
 ($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null', '-M-Template=2');
 like($out, qr/-M-Template=2: no version for what is dropped/, '... nor with a version');
 ($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', '/dev/null', '-M-');

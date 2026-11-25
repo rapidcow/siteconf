@@ -72,7 +72,8 @@ C<${A}/${a}/x.html>, C<$a/x.html>, and C<html/x.html> when C<a> is
 C<html>.  Other definitions may appear too, as in
 C<${a}/${sub}/x.html>.
 
-The web renderer needs a C<HAVE>, and stops without one.  The
+Both renderers need a C<HAVE> under C<${a}>, and stop without one,
+or with one that is elsewhere.  For the web renderer, the
 part of C<HAVE> below C<${a}> is the page's place in the site: a
 C<HAVE> of C<${a}/blog/post.html> gives C<blog/post.html>.  This
 place is C<target> and C<location> (see L</WEB PRESET>), and every
@@ -81,9 +82,6 @@ read the place from I<bpath>.  A page rendered by hand, to any output
 file, links as it would on the site.  If a rule makes a target with
 another name than its source, the links of that page are relative to
 the source's name.
-
-The tem renderer does not read C<HAVE>.  C<siteconf -g> still checks
-a C<HAVE> if the header has one.
 
 =head2 NEED and WANT
 
@@ -328,7 +326,8 @@ C<https://example.org/~me/blog/> for F<blog/index.html>.
 =head1 TEM PRESET
 
 The tem renderer gives templates C<D> and C<O>, and nothing else.  It
-does not read C<HAVE>, and has no C<locate>, C<location> or C<target>.
+checks C<HAVE> (see L</HAVE>), but has no C<locate>, C<location> or
+C<target>.
 Including files, and the C<NEED> and C<WANT> of L</THE HEADER>, work
 as they do for the web preset.
 

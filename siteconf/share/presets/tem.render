@@ -33,7 +33,8 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use Getopt::Long qw( GetOptions );
 use Template;
-use RdKw::WwW::GenGenLib 0.0100 qw( load_state );
+use RdKw::WwW::GenGenLib 0.0100 qw( read_deps load_state
+	norm_deps subs_deps uproot );
 @USE_PROVIDER@
 my $cs = RdKw::I18N::CodeSets->locale;
 # Command-line arguments are decoded via the
@@ -72,6 +73,30 @@ my %v = (
 	O => $S{option},
 );
 my $D = $S{config};
+
+#
+# The template must say what it is, in a HAVE under ${a}, as
+# for the web renderer (which takes the page's place in the
+# site from it; we only check it).  This pattern is purely symbolic, though we
+# also accept literal spelling, since some people like to
+# treat ${a} as a predefined constant (like how ${A} is).
+#
+my %I = read_deps($apath);
+defined $I{HAVE} or die status 0, $cs->tagmsg(E => $cs->diag(__(
+	"%q: HAVE declaration not found"), $apath));
+{
+	my ($norm, $real);
+	# Try symbolic prefix, then literal prefix
+	defined uproot('${a}', $norm = norm_deps($I{HAVE}))
+		or defined uproot($D->{a}, $real = subs_deps($D, $norm))
+		or die status 0, $cs->tagmsg(E => $real ne $I{HAVE}
+		# HEY!  The first %q is the symbolic form,
+		# and (aka %q) is expanded form.
+		? $cs->diag(__('%#q: Your HAVE %q (aka %q) is not under ${a} (aka %q)'),
+			$apath, $I{HAVE}, $real, $D->{a})
+		: $cs->diag(__('%#q: Your HAVE %q is not under ${a} (aka %q)'),
+			$apath, $I{HAVE}, $D->{a}));
+}
 
 #
 # Specify UTF-8 on both ends of Template Toolkit's I/O:

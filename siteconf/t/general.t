@@ -14,7 +14,7 @@ use TestPaths qw( project_root script_path perl5lib );
 
 eval { require Template; 1 } or plan skip_all => 'Template is not installed';
 my $script = script_path();
-plan tests => 32;
+plan tests => 36;
 # The preset comes from the built share
 local $ENV{PERL5LIB} = join ':', project_root() . '/blib/lib', perl5lib();
 
@@ -90,14 +90,25 @@ mkdir 'build' or die "mkdir: $!";
 ($status, $out) = run('configure', '-q', '-DB=build', '-Ogreeting=hello');
 is($status, 0, 'configure, with no site_url') or diag $out;
 
-spew('html/a.txt', "[% O.greeting %], [% D.b %]!\n");
+spew('html/a.txt', "[%# HAVE: \${a}/a.txt: -%]\n[% O.greeting %], [% D.b %]!\n");
 ($status, $out) = run('render', '-B', 'build', '--', 'html/a.txt', 'out.txt');
 is($status ? $out : slurp('out.txt'), "hello, site!\n", 'render: D and O');
 
 spew('html/inc.txt', "included\n");
-spew('html/b.txt', "[% INCLUDE inc.txt %]");
+spew('html/b.txt', "[%# HAVE: html/b.txt: -%]\n[% INCLUDE inc.txt %]");
 ($status, $out) = run('render', '-B', 'build', '--', 'html/b.txt', 'out.txt');
 is($status ? $out : slurp('out.txt'), "included\n", '... and what it INCLUDEs, declared or not');
+
+# The template says what it is: a HAVE, under ${a} (by either spelling,
+# as b.txt has it), as for the web renderer
+spew('html/d.txt', "no header\n");
+($status, $out) = run('render', '-B', 'build', '--', 'html/d.txt', 'out.txt');
+isnt($status, 0, 'no HAVE: fails');
+like($out, qr/HAVE declaration not found/, '... and says so');
+spew('html/d.txt', "[%# HAVE: other/d.txt: -%]\n");
+($status, $out) = run('render', '-B', 'build', '--', 'html/d.txt', 'out.txt');
+isnt($status, 0, 'a HAVE not under ${a}: fails');
+like($out, qr/Your HAVE `other\/d\.txt' is not under \$\{a\} \(aka `html'\)/, '... and says so');
 
 # Out of the tree: what is made is named absolutely, which Template
 # would not have (ABSOLUTE)
@@ -105,7 +116,7 @@ mkdir "$tmp/out" or die "mkdir: $!";
 ($status, $out) = run('configure', '-q', "-DB=$tmp/out");
 is($status, 0, 'configure, out of the tree') or diag $out;
 spew("$tmp/out/gen.txt", "made\n");
-spew('html/c.txt', "[%# NEED: \${B}/gen.txt -%]\n[% INCLUDE \"$tmp/out/gen.txt\" %]");
+spew('html/c.txt', "[%# HAVE: \${a}/c.txt: -%]\n[%# NEED: \${B}/gen.txt: -%]\n[% INCLUDE \"$tmp/out/gen.txt\" %]");
 ($status, $out) = run('render', '-B', "$tmp/out", '--', 'html/c.txt', 'out.txt');
 like($out, qr/absolute paths are not allowed/, 'by its absolute name, not even what is declared');
 
@@ -117,7 +128,7 @@ SKIP: {
 	is($status, 0, 'init -P tem, with the provider') or diag $out;
 	($status, $out) = run('render', '-B', "$tmp/out", '--', 'html/c.txt', 'out.txt');
 	is($status ? $out : slurp('out.txt'), "made\n", 'what is declared is loaded, by any name');
-	spew('html/c.txt', "[% INCLUDE \"$tmp/out/gen.txt\" %]");
+	spew('html/c.txt', "[%# HAVE: \${a}/c.txt: -%]\n[% INCLUDE \"$tmp/out/gen.txt\" %]");
 	($status, $out) = run('render', '-B', "$tmp/out", '--', 'html/c.txt', 'out.txt');
 	like($out, qr/absolute paths are not allowed/, '... and what is not, as Template would');
 	($status, $out) = run('render', '-B', "$tmp/out", '--', 'html/b.txt', 'out.txt');

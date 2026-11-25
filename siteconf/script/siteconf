@@ -47,23 +47,23 @@ siteconf - configurable incremental build script generator
 
     ./configure [-DB=outdir] [-Db=reldir] [-Ovar=val ...]
 
-    siteconf -g [-A] [-B outdir] [-G make|bmake|gmake|ninja|redo|task] [-t [NEED:|WANT:]goal ...]
-                [-Sopt[=val] ...] [-q]
+    siteconf -g [-A] [-B outdir] [-G make|bmake|gmake|...]
+                [-t [NEED:|WANT:]goal ...] [-Sopt[=val] ...] [-q]
     siteconf make ...                         # same
-    cd ${B} && [make|bmake|gmake|ninja|redo|task] [goal]   # ninja -t clean to clean
+    cd ${B} && make [goal]   # may vary depending on your backend
 
     #
-    # -S, with -g: options of the generator (see its page)
+    # -S, with -g: options passed to the generator:
     #
-    #   -Sclean            (make, gmake, redo, task) a rule `clean': the opposite of `make'
+    #   -Sclean            (make, gmake) a rule `clean': the opposite of `make'
     #   -Sclean='clean-&'  a rule for each goal: clean-all, clean-small
     #   -Sclean='clean,clean-&'   both
-    #   -Spurge            (make, gmake, redo, task) like clean, and what is made on the way too
+    #   -Spurge            (make, gmake) like clean, and what is made on the way too
     #                      (a different option: both can be had)
-    #   -Sarg_max=8192     (make, gmake, redo, task) bytes of file names per rm line
+    #   -Sarg_max=8192     (make, gmake) bytes of file names per rm line
     #                      (auto: an eighth of ARG_MAX; 0 or empty: one line)
     #   -Sorder=1          (gmake) directory markers after a |
-    #   -Sarg_prefix=sc_   (redo) the shell variables of a .do: $sc_d, $sc_o
+    #
 
     siteconf -l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]] [-s]
     siteconf list ...                         # same
@@ -137,10 +137,11 @@ With C<-i>, set a default standard definition, such as C<-SB=build>.
 See L<RdKw::WwW::SiteConf::Configure/PATHS> for the names and defaults.
 May be repeated.
 
-With C<-g>, set an option of the generator (see L<RdKw::WwW::SiteConf::Builder::Make>,
-L<RdKw::WwW::SiteConf::Builder::Gmake>, L<RdKw::WwW::SiteConf::Builder::Redo> and
-L<RdKw::WwW::SiteConf::Builder::Task>;
-C<ninja> has none).  Unlike with C<-i>,
+With C<-g>, set an option of the generator (see
+L<RdKw::WwW::SiteConf::Builder::Make>,
+L<RdKw::WwW::SiteConf::Builder::Gmake>, and other
+non-core generators such as
+L<RdKw::WwW::SiteConf::Builder::Redo>).  Unlike with C<-i>,
 the value may be left out, and then the generator takes its default:
 C<-Sclean> makes a rule called C<clean>, which removes the files that
 the first goal names (C<-Sclean=&> makes none), and C<-Sorder> alone is
@@ -160,7 +161,9 @@ Print the siteconf version and exit.  Repeat as C<-VV> for library
 versions, the generators (C<-G>) that are installed, and the codeset
 of each category; or C<-VVV> for the paths of modules, generators and
 locale files as well.
-The format and order are subject to change.
+
+The format and order are subject to change.  It is not
+advised to use this in a script.
 
 C<-V> and C<-VV> were added and implemented in 0.0100.
 C<-VVV> was extended in 0.0300.  C<-VV> started listing
@@ -238,31 +241,44 @@ Support for C<-l> was added in 0.0300.
 
 =item B<-G> I<generator>
 
-C<make> (default), writing F<Makefile>; C<bmake>, writing the same
-for bmake (and saying to run C<bmake>); C<gmake>, writing one for GNU
-make, which can name files that make cannot (with blanks, C<#>, C<:>,
-C<$>, wildcards and so on: see L<RdKw::WwW::SiteConf::Builder::Gmake>);
-C<ninja>, writing F<build.ninja>; C<redo>, writing a F<.do> file
-for each target and each goal; or C<task>, writing F<Taskfile.yml>.  A name that the generator cannot
-spell is an error.
+Specifies the name of the geneator.
+If not found, C<-G> of it is an error that says what to install.
 
-C<ninja>, C<redo> and C<task> are distributions of their own
-(WwW-SiteConf-Ninja, WwW-SiteConf-Redo and WwW-SiteConf-Task).  Without one, C<-G> of
-it is an error that says what to install.
+The core generators include
+C<make> (default), writing F<Makefile> for POSIX-compatible make;
+C<bmake>, for NetBSD make (with little modifications);
+and C<gmake>, writing one for GNU Make, which can name files
+that POSIX make typically cannot (such as file names containing
+blanks, C<#>, C<:>, C<$>, glob wildcards and so on: see
+L<RdKw::WwW::SiteConf::Builder::Gmake>).
 
-The C<gmake> and C<bmake> generators were added in 0.0300.
+Other non-core generators include
+C<doit>, writing F<doit.py>;
+C<ninja>, writing F<build.ninja>;
+C<redo>, writing a F<.do> file for each target and each goal;
+and C<task>, writing F<Taskfile.yml>.
+See
+L<RdKw::WwW::SiteConf::Builder::Doit>,
+L<RdKw::WwW::SiteConf::Builder::Ninja>,
+L<RdKw::WwW::SiteConf::Builder::Redo>,
+L<RdKw::WwW::SiteConf::Builder::Task>.
 
 A generator I<name> is the module C<RdKw::WwW::SiteConf::Builder::>I<Name>
-(see L<RdKw::WwW::SiteConf/generate>): C<gmake> is C<Gmake>.
+(see L<RdKw::WwW::SiteConf/generate>).  The module path is derived by
+capitalizing the letter at the beginning and immediately following a
+hyphen components.  For instance, C<gmake> would be F<Gmake.pm>, and
+C<plan9-mk> would be F<Plan9Mk.pm>.
+
+The C<gmake> and C<bmake> generators were added in 0.0300.
+The C<ninja> generator was moved to a non-core distribution
+in 0.0300.
 
 =item B<-o> I<file>
 
 With C<-g>, write I<file> in the build directory instead of F<Makefile>
-(or F<build.ninja>, or F<Taskfile.yml>); say C<make -f Makefile.proj> to use it.  Just a
-name, not a path.  C<redo> writes a file for each target and goal: to
-it, I<file> is the default goal's (instead of F<all.do>), and ends in
-F<.do>.  C<-o /dev/null> writes no such file (with C<make>, no Makefile:
-only F<MY/MANIFEST>).
+(or F<GNUmakefile>, or something else).  C<-o /dev/null> suppresses
+script generation (which only writes F<MY/MANIFEST>, and potentially
+other side-effects such as non-default goals for the C<redo> backend.)
 
 With C<-i>, may be repeated as C<-o name:path>, where I<name> is
 C<configure> or C<render>.  Bare C<-o path> means C<-o configure:path>.
@@ -286,13 +302,6 @@ For example:
 
     siteconf init -P web -o configure:tools/configure \
         -o render:bin/render-page
-
-This does not rewrite your rulebook.  Update its renderer path in both
-the dependency and the recipe.  (The renderer's own header C<NEED>s
-F<MY/option.mk>, so option changes still rebuild its targets.)
-
-    index.html: ${A}/bin/render-page
-        cd ${A:Q} && ${^X} bin/render-page -B ${B:Q} ${a}/index.html ${B:Q}/${b}/index.html
 
 Named mappings are only for C<-i>.
 
@@ -332,7 +341,7 @@ Added in 0.0101; support for C<-l> was added in 0.0300.
 =item B<-R> I<rulebook>
 
 Specifies a different rulebook to use.
-Overrides the configured C<R>.  Like it, this is a path from the
+Overrides the configured C<R>.  This is a path from the
 current directory.
 
 Added in 0.0101.
@@ -340,22 +349,21 @@ Added in 0.0101.
 =item B<-l>, B<list>
 
 Print the names that the manifest (F<MANIFEST>, or C<-F>; nothing is
-configured for this but C<INCLUDE>, with C<-B>) gives its default goal, the first: what it
-C<NEED>s, then what it C<WANT>s, as they are written there --
-unescaped, but not resolved (a C<WANT> that would be dropped is still
-listed), and each once.  They are relative to C<${a}>, and to
-C<${B}/${b}> once made.
+configured for this but C<INCLUDE>, with C<-B>) gives its default goal,
+the first: what it C<NEED>s, then what it C<WANT>s, but not resolved
+(a C<WANT> that would be dropped is still listed), and each once.
+They are relative to C<${a}>, and to C<${B}/${b}> once made.
 
 Each name is followed by a newline (or C<-0>), and is written as the
 file system spells it (as F<siteconf> would open it:
-L<RdKw::I18N::CodeSets/filesys>): by default in the locale's encoding,
-but on macOS always in UTF-8, as its file names are.  A name it cannot
-spell is an error, and nothing is written; so is one with the separator
-in it.
+L<RdKw::I18N::CodeSets/filesys>): on POSIX systems is the locale's
+encoding, though certain systems such as macOS and Android hard-code
+this to UTF-8.  A name it cannot spell is an error, and nothing is
+written; so is one with the separator in it.
 
-To list what a build made, list what F<siteconf -g> resolved, from
-which every C<WANT> that could not be made is gone:
-C<-F MY/MANIFEST -t >I<goal> (in the build directory).  The manifest itself still has them.
+To list what a build made, list what F<siteconf -g> resolved,
+from which every C<WANT> that could not be made is gone, run
+C<-F MY/MANIFEST -t >I<goal> relative to the build directory.
 
 Added in 0.0300.
 
@@ -423,8 +431,8 @@ With C<-l>, sort the names by their path segments (split at C</>).
 A name with fewer segments comes first; two with as many are ordered by
 the first segment that differs, compared by Unicode code point (as
 the bytes of UTF-8 compare), whatever the encoding of the output.  The
-locale (C<LC_COLLATE>) is never used, so the order is the same
-everywhere.  So C<b.html> comes before C<a/x.html>, C<a/x.html> before
+locale (C<LC_COLLATE>) is never used, so the order is deterministic.
+For example, C<b.html> comes before C<a/x.html>, C<a/x.html> before
 C<b/a.html>, and C<Z.html> before C<a.html>.  Without C<-s>, the names
 are in the order of the manifest.
 
@@ -598,7 +606,7 @@ if ($vee) {
 		my $where = $vee > 2 ? " " . pq($INC{$path}) : "";
 		# Obtain version without using symbolic ref :x
 		my $ver = $fren->VERSION();
-		print "$name$where version " . (defined $ver ? $ver : '(none)') . "\n";
+		print "module $name$where version " . (defined $ver ? $ver : '(none)') . "\n";
 	}
 
 	# The generators (-G) that are installed: found, not loaded, so a

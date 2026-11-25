@@ -35,6 +35,11 @@ subshell, as C<cd> would not carry over in make either), a backslash
 joins lines, a leading C<@> is dropped and a leading C<-> ignores
 failure.  For clean-up there is C<ninja -t clean>.
 
+Each directory has a marker (C<.ok>, as C<-Se> says), which the rule
+C<mkdir_marker> makes: C<[ -d >I<dir>C< ] || mkdir -- >I<dir>, then
+C<< > >>I<marker>.  With C<-Smkpath=1> there are no markers, and the
+command of each file begins with C<mkdir -p -- >I<dir>C< &&>.
+
 A space, C<:> or C<$> in a name is escaped (as C<$ >, C<$:> and
 C<$$>).  A C<|> has no escape, and is C<${pipe}>, a variable that
 F<build.ninja> sets to C<|>.  Any other character is as it is, a tab
@@ -55,7 +60,11 @@ They change with siteconf: they are not a stable interface.
 
 =item B<options>
 
-None: C<ninja -t clean> cleans.
+C<mkpath>, C<cmd_mkdir> and C<cmd_mkdir_p>, as for
+L<RdKw::WwW::SiteConf::Builder::Make/Options>, but a C<@>, C<-> or C<+>
+in front of a command is as it is: ninja reads nothing in front of
+a command.  A C<$> in a command is the shell's (ninja reads it as
+C<$$>).  There is no cleaning rule: C<ninja -t clean> cleans.
 
 =item B<default_output>
 
@@ -86,7 +95,7 @@ sub _fs { RdKw::WwW::SiteConf::fs_text($_[0]) }
 
 # Every string from the plan goes through _fs, so the result is bytes
 # throughout.  Make.pm says why.
-sub options { () }
+sub options { qw( mkpath cmd_mkdir cmd_mkdir_p ) }
 
 sub default_output { q(build.ninja) }
 
@@ -105,6 +114,12 @@ sub _text
 {
 	my ($class, $plan) = @_;
 	my @goal = @{ $plan->{goals} };
+	# (with -Smkpath=1, each command makes its directory, and there are no
+	# markers to make)
+	my $mkpath = $plan->{opt} && $plan->{opt}{mkpath} ? 1 : 0;
+	my @dirs = $mkpath ? () : @{ $plan->{dirs} };
+	my $mkdir = _cmd($plan->{opt}, cmd_mkdir => q(mkdir --));
+	my $mkdir_p = _cmd($plan->{opt}, cmd_mkdir_p => q(mkdir -p --));
 
 	my $out = "#\n# build.ninja!\n" . RdKw::WwW::SiteConf::header_comment($plan) . "#\n" . <<NINJA;
 ninja_required_version = 1.3
@@ -112,13 +127,15 @@ ninja_required_version = 1.3
 # (a `|' in a path would end it; \${pipe} does not)
 pipe = |
 
+NINJA
+	$out .= <<NINJA if @dirs;
 rule mkdir_marker
-  command = [ -d \$dir ] || mkdir \$dir && > \$out
+  command = [ -d \$dir ] || $mkdir \$dir && > \$out
   description = MKDIR \$dir
 
 NINJA
 
-	for my $dir (@{ $plan->{dirs} }) {
+	for my $dir (@dirs) {
 		my $line = "build " . _path($dir->{marker}) . ": mkdir_marker";
 		$line .= " || " . join ' ', map { _path($_) } @{ $dir->{deps} }
 			if @{ $dir->{deps} };
@@ -126,7 +143,7 @@ NINJA
 		$out .= "$line\n  dir = "
 			. _escape(RdKw::WwW::SiteConf::shell_quote(_fs($dir->{dir}))) . "\n";
 	}
-	$out .= "\n" if @{ $plan->{dirs} };
+	$out .= "\n" if @dirs;
 
 	my $n = 0;
 	for my $file (@{ $plan->{order} }) {
@@ -139,6 +156,12 @@ NINJA
 			or die _status 0, tagmsg(E => diag(__(
 				"%#q: no recipe to make it (and ninja has no"
 				. " way to make nothing)"), $file));
+		my ($dir) = $node->{bpath} =~ m{\A(.*)/};
+		if ($mkpath and defined $dir) {
+			_vertical($dir);
+			$command = "$mkdir_p " . _escape(RdKw::WwW::SiteConf::shell_quote(_fs($dir)))
+				. " && $command";
+		}
 		my $rule = 'rule' . ++$n;
 		$out .= "rule $rule\n  command = $command\n";
 
@@ -148,7 +171,7 @@ NINJA
 		my $input = $node->{nosrc} ? undef : shift @dep;
 		my (@need, @order);
 		for (@dep) {
-			if (m{(?:\A|/)\Q$plan->{D}{e}\E\z}) { push @order, $_ }
+			if (m{(?:\A|/)\Q$plan->{D}{e}\E\z}) { push @order, $_ unless $mkpath }
 			else { push @need, $_ }
 		}
 		my $build = "build " . _path($node->{bpath}) . ": $rule";
@@ -165,6 +188,10 @@ NINJA
 	$out .= "\ndefault " . RdKw::WwW::SiteConf::argv_text($goal[0]{name}) . "\n" if @goal;
 	$out;
 }
+
+# A command of -S (see RdKw::WwW::SiteConf/command), with a `$' as
+# `$$' (ninja expands nothing in it)
+sub _cmd { (my $b = RdKw::WwW::SiteConf::command(@_)) =~ s/\$/\$\$/g; $b }
 
 # A path, as ninja wants to read it (which is never with a line
 # break, and with a `|' as ${pipe}): bytes.

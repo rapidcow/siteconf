@@ -850,6 +850,45 @@ sub arg_max
 	defined $cap && $n > $cap ? $cap : $n;
 }
 
+=item B<command> I<opt>, I<name>, I<default>
+
+Not a method.  The command that C<-S>I<name> in I<opt> (the options
+of the generator) says, or I<default> if there is no C<-S>I<name> or
+it has no value: a command for the shell, which a backend puts in front
+of the names it runs on, as C<-Scmd_rm_f='rm -f --'> does.  It is as
+the file system spells it (bytes, see L</fs_text>).  A space, tab, line
+feed, vertical tab, form feed or carriage return at either end is
+dropped.  It is an error if nothing is left, if a line break (any of
+those but a space or a tab) is left in it, or if the file system cannot
+spell it.  To run more than one command, a value can name a script, or
+C<sh -c '...' sh>.
+
+Nothing in it is escaped here.  A backend escapes what its build tool
+would read in it, as a variable, so that the shell gets the command
+as it is.
+
+=cut
+
+sub command
+{
+	my ($opt, $name, $default) = @_;
+	my $v = $opt ? $opt->{$name} : undef;
+	$v = $default unless defined $v;
+	(my $s = $v) =~ s/\A[$SP]+//;
+	$s =~ s/[$SP]+\z//;
+	length $s
+		or die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is the option, as -Scmd_rm_f
+			"%s: no command to run"), "-S$name"));
+	$s =~ /([\n\cK\f\r])/
+		and die _status 0, tagmsg(E => diag(__(
+			# HEY!  the first %s is the option (-Scmd_rm_f), the second
+			# a character (U+000A)
+			"%s: a command is one line, and this one has %s in it"),
+			"-S$name", sprintf('U+%04X', ord $1)));
+	fs_text($s, "-S$name");
+}
+
 =item B<header_comment> I<plan>
 
 Not a method.  The lines of a build file's header that say what made

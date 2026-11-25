@@ -61,7 +61,8 @@ siteconf too, but for:
 
 =item B<options>
 
-C<clean>, C<purge>, C<arg_max> and C<order>.
+Those of L<RdKw::WwW::SiteConf::Builder::Make>, and C<order>.  With
+C<-Smkpath=1> there are no markers, and C<order> does nothing.
 
 =back
 

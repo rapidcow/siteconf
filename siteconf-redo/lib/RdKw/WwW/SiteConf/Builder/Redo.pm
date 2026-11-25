@@ -122,6 +122,26 @@ runs C<rm> with each name an argument of its own, so
 C<-Sarg_max=auto> is an eighth of C<sysconf(_SC_ARG_MAX)>, with no other
 limit.  See L<RdKw::WwW::SiteConf/arg_max>.
 
+=item C<cmd_rm_f>, C<cmd_mv_f>
+
+The command that removes the files of a cleaning rule (C<rm -f -->
+by default), and the one that moves a target into place, to C<$3>
+(C<mv -f --> by default).  The names follow it as words of their own.
+It goes in the F<.do> as it is: C<-Scmd_rm_f='rm -fv --'>.
+L<RdKw::WwW::SiteConf/command> says what it may be.
+
+=item C<sh>
+
+The interpreter on the C<#!> line of every F<.do>: F</bin/sh> without
+it, or with no value.  A redo may run a F<.do> as a program, and
+a system may not have F</bin/sh> (Termux on Android has its shell in
+F</data/data/com.termux/files/usr/bin/sh>), so
+C<-Ssh=/data/data/com.termux/files/usr/bin/sh> names it.  It may be
+several words, as C<-Ssh='/usr/bin/env sh'>; the kernel says how many
+it takes.  Blanks at either end are dropped.  It is an error if nothing
+is left, if a line feed is left in it, or if the file system cannot
+spell it.
+
 =back
 
 =head2 Methods
@@ -162,7 +182,7 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { qw( arg_prefix clean purge arg_max ) }
+sub options { qw( arg_prefix clean purge arg_max cmd_rm_f cmd_mv_f sh ) }
 
 sub default_output { q(all.do) }
 
@@ -175,16 +195,20 @@ sub emit
 	# (#! first: a redo may run a .do as a program, by execve)
 	# The options of the cleaning rules are said only in their own .do
 	# (a redo makes a target again if its .do changes)
-	my $clean_opt = qr/\A-S(?:clean|purge|arg_max)(?:=|\z)/;
+	my $clean_opt = qr/\A-S(?:clean|purge|arg_max|cmd_rm_f)(?:=|\z)/;
+	my $sh = _sh($plan->{opt});
 	my $head = sub {
 		my ($all, @goal) = @_;
-		"#!/bin/sh\n#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment(
+		"#!$sh\n#\n# redo!\n" . RdKw::WwW::SiteConf::header_comment(
 			{ %$plan, args => [ grep { $all || !/$clean_opt/ }
 				_with_goals($plan->{args} || [], @goal) ] }) . "#\n";
 	};
 	my $target_head = $head->(0);
 	my $v = _vars($plan->{opt});
 	my $marker = qr{(?:\A|/)\Q$plan->{D}{e}\E\z};
+	# (the commands of -S, as they are: a .do is a shell script)
+	my $mv = RdKw::WwW::SiteConf::command($plan->{opt}, cmd_mv_f => q(mv -f --));
+	my $rm = RdKw::WwW::SiteConf::command($plan->{opt}, cmd_rm_f => q(rm -f --));
 	my @file;
 
 	# What a goal may not be called: a file, which redo would take for
@@ -218,7 +242,7 @@ sub emit
 			$line =~ s/\$\$/\$/g;
 			$text .= $ignore ? "( $line ) || true\n" : "( $line )\n";
 		}
-		$text .= "mv -f -- " . _word($target) . " \"\$$v->{o}\"\n";
+		$text .= "$mv " . _word($target) . " \"\$$v->{o}\"\n";
 		push @file, [ "$target.do", $text, 1 ];
 	}
 
@@ -298,7 +322,7 @@ sub emit
 			my $line = shift @word;
 			$line .= ' ' . shift @word
 				while @word and (!$max || length($line) + 1 + length($word[0]) <= $max);
-			$text .= "rm -f -- $line\n";
+			$text .= "$rm $line\n";
 		}
 		push @file, [ "$name.do", $text, 1 ];
 	}
@@ -329,6 +353,27 @@ sub build_command
 	my @redo = ($prog, defined $name ? $q->($name) : ());
 	# (in a subshell, so that the shell stays where it is)
 	$B eq q(.) ? @redo : (q[(], q(cd), ($B =~ /\A-/ ? q(--) : ()), $q->($B), q(&&), @redo, q[)]);
+}
+
+# The interpreter of a .do (after its #!), as -Ssh says: /bin/sh by
+# default (and with no value).  The blanks at either end go; what is
+# left is one line, and the file system spells it.
+sub _sh
+{
+	my ($opt) = @_;
+	my $v = $opt ? $opt->{sh} : undef;
+	defined $v or return q(/bin/sh);
+	(my $s = $v) =~ s/\A[\t\n\cK\f\r ]+//;
+	$s =~ s/[\t\n\cK\f\r ]+\z//;
+	length $s
+		or die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is the option, as -Ssh
+			"%s: no interpreter to run"), "-Ssh"));
+	$s =~ /\n/
+		and die _status 0, tagmsg(E => diag(__(
+			# HEY!  %s is the option, as -Ssh; #! is the first line of a script
+			"%s: the line of #! cannot have a line break"), "-Ssh"));
+	RdKw::WwW::SiteConf::fs_text($s, "-Ssh");
 }
 
 # The arguments of the command line, with these goals for its -t (in

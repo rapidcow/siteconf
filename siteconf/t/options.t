@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 29;
+use Test::More tests => 44;
 
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
@@ -44,8 +44,41 @@ like($gmake, qr!^site/x/y: html/y \| site/x/\.ok$!m, 'gmake -Sorder=1: a marker 
 like($gmake, qr!^site/x/\.ok: \| site/\.ok$!m, '... so is the marker of a parent');
 
 # --- what a generator knows
-is_deeply([ RdKw::WwW::SiteConf::Builder::Make->options ], [qw( clean purge arg_max )], 'make: clean, purge, arg_max');
-is_deeply([ sort RdKw::WwW::SiteConf::Builder::Gmake->options ], [qw( arg_max clean order purge )], 'gmake: arg_max, clean, order, purge');
+is_deeply([ RdKw::WwW::SiteConf::Builder::Make->options ],
+	[qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch )], 'make: what it knows');
+is_deeply([ sort RdKw::WwW::SiteConf::Builder::Gmake->options ],
+	[qw( arg_max clean cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch mkpath order purge )], 'gmake: the same, and order');
+
+# --- -Smkpath, and the commands of -Scmd_*
+my $make = 'RdKw::WwW::SiteConf::Builder::Make';
+like(emit($make), qr!^site/x/\.ok: site/\.ok\n\t\[ -d site/x \] \|\| mkdir -- site/x\n\t\@> site/x/\.ok\n!m,
+	'by default, a marker: mkdir --, then @>');
+for my $off ([ mkpath => 0 ], [ mkpath => '' ], [ mkpath => undef ]) {
+	my $v = defined $off->[1] ? "`$off->[1]'" : 'undef';
+	is(emit($make, @$off), emit($make), "mkpath=$v is the default");
+}
+my $mk = emit($make, mkpath => 1);
+unlike($mk, qr/\.ok/, '-Smkpath=1: no markers');
+like($mk, qr!^site/x/y: html/y\n\tmkdir -p -- site/x\n!m, '... and the recipe makes its directory');
+like(emit($make, mkpath => 1, cmd_mkdir_p => "\t-\@ mkdir -p -v -- \n"),
+	qr!^\t-\@mkdir -p -v -- site/x\n!m, '-Scmd_mkdir_p: blanks at the ends go, and the prefix is the line\'s');
+like(emit($make, cmd_mkdir => '@mkdir --', cmd_touch => 'touch --'),
+	qr!^\t\@\[ -d site \] \|\| mkdir -- site\n\ttouch -- site/\.ok\n!m, '-Scmd_mkdir, -Scmd_touch');
+like(emit($make, cmd_mkdir => q(sh -c 'mkdir -- "$1"' sh)), qr!\|\| sh -c 'mkdir -- "\$\$1"' sh site\n!,
+	'a $ is the shell\'s');
+{
+	local $plan->{clean} = [ { name => 'clean', files => [ 'site/x/y', '$z' ] } ];
+	like(emit($make, cmd_rm_f => '+rm -f'), qr!^clean:\n\t\+rm -f site/x/y '\$\$z'\n!m, '-Scmd_rm_f');
+	like(emit($make, cmd_rm_f => '@rm', arg_max => 1), qr!^clean:\n\t\@rm site/x/y\n\t\@rm '\$\$z'\n!m,
+		'... on each line');
+}
+for ([ cmd_rm_f => " \t\n", qr/^E: -Scmd_rm_f: no command to run$/m, 'blanks are no command' ],
+	[ cmd_touch => '@', qr/^E: -Scmd_touch: no command to run$/m, 'nor is a prefix alone' ],
+	[ cmd_mkdir => "mkdir\n--", qr/^E: -Scmd_mkdir: a command is one line, and this one has U\+000A in it$/m, 'a line break' ],
+	[ cmd_mkdir_p => "mkdir\r-p", qr/U\+000D/, '... or a carriage return' ]) {
+	my ($k, $v, $re, $what) = @$_;
+	like(eval { emit($make, $k => $v); '' } || $@, $re, $what);
+}
 
 # --- generate: no rule unless asked for, and what is unused is said
 my $dir = tempdir(CLEANUP => 1);

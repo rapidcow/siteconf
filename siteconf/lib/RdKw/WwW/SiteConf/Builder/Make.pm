@@ -74,9 +74,32 @@ have; more files go on more lines.  16384 without it, or with no value.
 C<-Sarg_max=>I<bytes> says how many, and C<-Sarg_max=0> or
 C<-Sarg_max=> puts all of them on one line.  C<-Sarg_max=auto> is an
 eighth of C<sysconf(_SC_ARG_MAX)> on the machine that runs
-C<siteconf -g>, but no more than 131062: make hands a recipe line to
-C<sh -c> as one argument, and Linux takes none longer than 128 KiB.
+C<siteconf -g>, but no more than 131071 less the bytes of the C<rm>
+command and a space: make hands a recipe line to C<sh -c> as one
+argument, and Linux takes none longer than 128 KiB.
 See L<RdKw::WwW::SiteConf/arg_max>.
+
+=item C<mkpath>
+
+Without it, or with C<-Smkpath=0> or no value, each directory has
+a marker (C<.ok>, as C<-Se> says), a file that its rule makes once
+the directory is there: C<[ -d >I<dir>C< ] || mkdir -- >I<dir>, then
+C<< @> >>I<marker>.  What is made in a directory depends on its marker.
+With C<-Smkpath=1>, there are no markers, and the recipe of each file
+begins with C<mkdir -p -- >I<dir>.
+
+=item C<cmd_mkdir>, C<cmd_touch>, C<cmd_mkdir_p>, C<cmd_rm_f>
+
+The commands of the rules above, which the names follow as words of
+their own: C<mkdir --> and C<< @> >> make a directory and its marker,
+C<mkdir -p --> a directory with C<-Smkpath=1>, and C<rm -f --> removes
+the files of a cleaning rule.  L<RdKw::WwW::SiteConf/command> says
+what a command may be.  The C<@>, C<-> and C<+> in front of one are
+for make, and go in front of the line it is on:
+C<-Scmd_mkdir='@mkdir --'> writes C<@[ -d >I<dir>C< ] || mkdir -- >I<dir>.
+A C<$> in the rest is the shell's (make reads it as C<$$>), so
+C<-Scmd_rm_f='sh -c '\''rm -fv -- "$@"'\'' sh'> runs the C<sh -c>
+that it says.
 
 =back
 
@@ -97,7 +120,7 @@ They change with siteconf: they are not a stable interface.
 
 =item B<options>
 
-C<clean>, C<purge> and L</arg_max>.
+C<clean>, C<purge>, L</arg_max>, L</mkpath> and the C<cmd_> options.
 
 =item B<default_output>
 
@@ -122,8 +145,9 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 # Linux takes no argument longer than 128 KiB, its NUL included; make
 # hands each recipe line to `sh -c' as one, so -Sarg_max=auto (which
-# goes by the total) may not say more than this, with `rm -f -- '.
-use constant LINE_MAX => 131072 - 1 - length(q(rm -f -- ));
+# goes by the total) may not say more than this, less the command
+# (`rm -f -- ') and its space.
+use constant ARG_LEN => 131072 - 1;
 
 sub _status { $! = 0; $? = shift; @_; }
 
@@ -150,7 +174,11 @@ sub _text
 	# prerequisites, and an error there would say what GNU Make can do
 	# with a prerequisite (a tab, say), which is not what it can do with
 	# a target.
-	$name->($_, 'target') for (map { $_->{marker} } @{ $plan->{dirs} }),
+	# (with -Smkpath=1, each recipe makes its directory, and there are no
+	# markers to make)
+	my $mkpath = $plan->{opt} && $plan->{opt}{mkpath} ? 1 : 0;
+	my @dirs = $mkpath ? () : @{ $plan->{dirs} };
+	$name->($_, 'target') for (map { $_->{marker} } @dirs),
 		map { $plan->{node}{$_}{bpath} } @{ $plan->{order} };
 	my $out = "#\n# Makefile!\n" . RdKw::WwW::SiteConf::header_comment($plan) . "#\n"
 		. ".PHONY: " . join(' ', map { $arg->($_->{name}) } @goal, @{ $plan->{clean} }) . "\n";
@@ -159,7 +187,9 @@ sub _text
 		my @target = map { $name->($plan->{node}{$_}{bpath}) } @{ $goal->{files} };
 		$out .= $arg->($goal->{name}) . ": @target\n";
 	}
-	my $max = RdKw::WwW::SiteConf::arg_max($plan->{opt}, LINE_MAX);
+	my ($rm_at, $rm) = $class->_command($plan->{opt}, cmd_rm_f => q(rm -f --));
+	my $max = RdKw::WwW::SiteConf::arg_max($plan->{opt},
+		ARG_LEN - length(RdKw::WwW::SiteConf::command($plan->{opt}, cmd_rm_f => q(rm -f --))) - 1);
 	for my $rule (@{ $plan->{clean} }) {
 		$out .= $arg->($rule->{name}) . ":\n";
 		# So many files go on several lines (0: one line)
@@ -168,7 +198,7 @@ sub _text
 			my $line = shift @file;
 			$line .= ' ' . shift @file
 				while @file and (!$max || length($line) + 1 + length($file[0]) <= $max);
-			$out .= "\trm -f -- $line\n";
+			$out .= "\t$rm_at$rm $line\n";
 		}
 	}
 
@@ -178,16 +208,21 @@ sub _text
 	my $order = $class->_order_only($plan->{opt});
 	my %marker = map { $_->{marker} => 1 } @{ $plan->{dirs} };
 	my $deps = sub {
+		@_ = grep { !$marker{$_} } @_ if $mkpath;
 		my @dep = $order ? grep({ !$marker{$_} } @_) : @_;
 		my @mark = $order ? grep({ $marker{$_} } @_) : ();
 		join ' ', (map { $name->($_) } @dep), (@mark ? ('|', map { $name->($_, 'order') } @mark) : ());
 	};
 
-	for my $dir (@{ $plan->{dirs} }) {
+	# (each command of -S, as make reads it; see _command)
+	my ($mkdir_at, $mkdir) = $class->_command($plan->{opt}, cmd_mkdir => q(mkdir --));
+	my ($touch_at, $touch) = $class->_command($plan->{opt}, cmd_touch => q(@>));
+	my ($mkdir_p_at, $mkdir_p) = $class->_command($plan->{opt}, cmd_mkdir_p => q(mkdir -p --));
+	for my $dir (@dirs) {
 		my $d = _quote($fs->($dir->{dir}));
 		$out .= $name->($dir->{marker}, 'target') . ": " . $deps->(@{ $dir->{deps} }) . "\n";
-		$out .= "\t[ -d $d ] || mkdir -- $d\n";
-		$out .= "\t\@> " . _quote($fs->($dir->{marker})) . "\n";
+		$out .= "\t$mkdir_at\[ -d $d ] || $mkdir $d\n";
+		$out .= "\t$touch_at$touch " . _quote($fs->($dir->{marker})) . "\n";
 	}
 
 	for my $file (@{ $plan->{order} }) {
@@ -197,12 +232,15 @@ sub _text
 				# HEY!  the second %s is the value, which has a line break
 				"%s: make cannot spell a line break in %q (it ends a command)"));
 		$recipe .= "\n" if length $recipe and $recipe !~ /\n\z/;
+		my ($dir) = $node->{bpath} =~ m{\A(.*)/};
+		$recipe = "\t$mkdir_p_at$mkdir_p " . _quote($fs->($dir)) . "\n$recipe"
+			if $mkpath and defined $dir;
 		$out .= $name->($node->{bpath}, 'target') . ": " . $deps->(@{ $node->{deps} }) . "\n" . $recipe;
 	}
 	$out;
 }
 
-sub options { qw( clean purge arg_max ) }
+sub options { qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch ) }
 
 sub default_output { q(Makefile) }
 
@@ -215,6 +253,22 @@ sub build_command
 	($prog, ($B eq q(.) ? () : (q(-C), $q->($B))),
 		(defined $file ? (q(-f), $q->($file)) : ()),
 		(defined $goal ? $q->($goal) : ()));
+}
+
+# A command of -S (see RdKw::WwW::SiteConf/command), as make reads it:
+# the prefix that make reads in front of a recipe line (`@', `-', `+'),
+# which goes in front of the line it is in, and the command after it,
+# with a `$' as `$$' (make expands nothing in it)
+sub _command
+{
+	my ($class, $opt, $name, $default) = @_;
+	my ($prefix, $cmd) = RdKw::WwW::SiteConf::command($opt, $name, $default)
+		=~ /\A((?:[\@+-][ \t]*)*)(.*)\z/s;
+	length $cmd
+		or die _status 0, tagmsg(E => diag(__("%s: no command to run"), "-S$name"));
+	$prefix =~ s/[ \t]//g;
+	$cmd =~ s/\$/\$\$/g;
+	($prefix, $cmd);
 }
 
 # Whether a directory marker is an order-only prerequisite (after a `|')

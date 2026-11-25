@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 14;
+use Test::More tests => 19;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf::Builder::Ninja;
@@ -46,3 +46,17 @@ $plan->{node}{x}{deps} = [ 'a b', 'site/.ok' ];
 $text = RdKw::WwW::SiteConf::Builder::Ninja->_text($plan);
 like($text, qr/^build site\/x: rule1 \| a\$ b \|\| site\/\.ok$/m,
 	'no source, no input: the first dependency is not one');
+
+# --- -Smkpath, -Scmd_mkdir, -Scmd_mkdir_p
+$text = RdKw::WwW::SiteConf::Builder::Ninja->_text($plan);
+like($text, qr/^  command = \[ -d \$dir \] \|\| mkdir -- \$dir && > \$out$/m, 'a marker: mkdir --');
+$plan->{opt} = { cmd_mkdir => q( sh -c 'mkdir -- "$1"' sh ) };
+like(RdKw::WwW::SiteConf::Builder::Ninja->_text($plan),
+	qr/^  command = \[ -d \$dir \] \|\| sh -c 'mkdir -- "\$\$1"' sh \$dir && > \$out$/m, '-Scmd_mkdir: a $ is the shell\'s');
+$plan->{opt} = { mkpath => 1 };
+$text = RdKw::WwW::SiteConf::Builder::Ninja->_text($plan);
+unlike($text, qr/mkdir_marker|\.ok/, '-Smkpath=1: no markers');
+like($text, qr/^  command = mkdir -p -- site && \( cp \$< \$\@ \)$/m, '... and the command makes its directory');
+$plan->{opt} = { mkpath => 1, cmd_mkdir_p => '@mkdir -p $v' };
+like(RdKw::WwW::SiteConf::Builder::Ninja->_text($plan), qr/^  command = \@mkdir -p \$\$v site && /m,
+	'-Scmd_mkdir_p: as it is (ninja has no prefix to read)');

@@ -4,3 +4,8 @@ Revision history of WwW-SiteConf-Task
 0.03_00  2026-11-24  AI
     First release.  RdKw::WwW::SiteConf::Builder::Task writes
     Taskfile.yml for Task 3 (siteconf -g -G task).
+    * Each directory has a marker task, as with make; -Smkpath=1
+      makes none, and each file's task runs mkdir -p -- DIR first.
+      -Scmd_mkdir, -Scmd_touch, -Scmd_mkdir_p and -Scmd_rm_f set the
+      commands (mkdir --, touch --, mkdir -p --, rm -f --).
+    * Up-to-date checks use [ ... ], as the Makefile does.

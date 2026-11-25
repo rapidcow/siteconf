@@ -7,3 +7,8 @@ Revision history of WwW-SiteConf-Ninja
     First release on its own.  The ninja generator was
     RdKw::WwW::SiteConf::Ninja, in WwW-SiteConf; it is now
     RdKw::WwW::SiteConf::Builder::Ninja, here.
+    * A marker's directory is made with mkdir -- DIR, so a
+      directory that begins with - is made too.  -Smkpath=1 makes no
+      markers; each command begins with mkdir -p -- DIR &&.
+      -Scmd_mkdir and -Scmd_mkdir_p set those commands, as for
+      make, with a $ in them the shell's.

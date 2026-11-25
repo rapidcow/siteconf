@@ -63,6 +63,13 @@ siteconf - configurable incremental build script generator
     #   -Sarg_max=8192     (make, gmake) bytes of file names per rm line
     #                      (auto: an eighth of ARG_MAX; 0 or empty: one line)
     #   -Sorder=1          (gmake) directory markers after a |
+    #   -Smkpath=1         (make, gmake, ninja, task) mkdir -p, and no markers
+    #   -Scmd_mkdir='mkdir --'       (make, gmake, ninja, task) and the like:
+    #   -Scmd_mkdir_p='mkdir -p --'  the commands the rules run, which the
+    #   -Scmd_touch='@>'             names follow (touch: make, gmake, task;
+    #   -Scmd_rm_f='rm -f --'        rm: make, gmake, redo, task;
+    #   -Scmd_mv_f='mv -f --'        mv: redo)
+    #   -Ssh=/bin/sh       (redo) the #! of every .do
     #
 
     siteconf -l [-B builddir] [-F manifest] [-t [goal][:NEED|:WANT] ...] [-0[octal]] [-s]

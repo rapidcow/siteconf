@@ -1074,7 +1074,7 @@ out:	while (my ($name, $dest) = each %out) {
 		} elsif ($name eq 'render') {
 			$contents = render_text($opt, $render);
 		} else {
-			die _status 0, "Unreachable\n";
+			die "Unreachable\n";
 		}
 		open my $fh, '>:encoding(UTF-8)', $dest_fs
 			or die $cs->tagmsg($prog => $cs->diag(__(

@@ -35,4 +35,8 @@ L<redo|RdKw::WwW::SiteConf::Builder::Redo> (a F<.do> file for each
 target and goal), and
 L<task|RdKw::WwW::SiteConf::Builder::Task> (F<Taskfile.yml>).
 
+=head1 SEE ALSO
+
+L<siteconf>, L<RdKw::WwW::SiteConf/generate>.
+
 =cut

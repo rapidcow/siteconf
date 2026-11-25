@@ -1205,3 +1205,9 @@ OLD
 			"$opt->{P}.render", "\@$1\@"))/ge;
 	$text;
 }
+
+=head1 SEE ALSO
+
+L<RdKw::WwW::SiteConf>, L<RdKw::WwW::SiteConf::Builder>, L<RdKw::WwW::SiteConf::Configure>.
+
+=cut

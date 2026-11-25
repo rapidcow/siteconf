@@ -10,11 +10,11 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 
 use E2E;
-use Tools qw( task_cmd );
+use Tools qw( task_cmd task_check );
 
 my $script = E2E::setup();
 my $task = task_cmd();
-system("$task --version >/dev/null 2>&1") == 0 or plan skip_all => "no task";
+task_check($task);
 plan tests => 13;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q

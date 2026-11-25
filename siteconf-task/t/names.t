@@ -14,10 +14,10 @@ BEGIN { $ENV{LANGUAGE} = 'C' }
 use File::Temp qw( tempdir );
 use RdKw::I18N::CodeSets;
 use RdKw::WwW::SiteConf::Builder::Task;
-use Tools qw( task_cmd );
+use Tools qw( task_cmd task_check );
 
 my $task = task_cmd();
-system("$task --version >/dev/null 2>&1") == 0 or plan skip_all => "no task";
+task_check($task);
 local $ENV{T_CODESETS} = 'filesys:UTF-8,argv:UTF-8';
 RdKw::I18N::CodeSets->locale->parse_from_env('T_CODESETS', prog => 't');
 

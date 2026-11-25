@@ -6,12 +6,14 @@ package Tools;
 use strict;
 use warnings;
 
-use Cwd qw( abs_path );
-use File::Spec;
-
 use Exporter ();
 our @ISA = qw( Exporter );
-our @EXPORT_OK = qw( which describe task_cmd );
+our @EXPORT_OK = qw( which describe task_check task_cmd task_works );
+
+use Cwd qw( abs_path );
+use File::Spec;
+use File::Temp qw( tempdir );
+use Test::Builder;
 
 # Where a command (its first word) is: there, if it has a `/'; or else
 # the first in $PATH.  undef if it is nowhere.
@@ -49,5 +51,44 @@ sub describe
 # What $GO_TASK says; or else `go-task' (as Arch Linux names it), if it
 # is in $PATH; or else `task'.  (This is Go Task, not Taskwarrior.)
 sub task_cmd { $ENV{GO_TASK} || (which('go-task') ? 'go-task' : 'task') }
+
+# Whether $cmd is Go Task: in an empty directory, it runs a Taskfile
+# whose task touches a file named by a variable, and the file is there.
+# Taskwarrior is also `task'; for it, TASKRC and TASKDATA are in the
+# empty directory, and stdin is /dev/null, so that it cannot read or
+# change the user's tasks, or ask to make a .taskrc.
+sub task_works
+{
+	my ($cmd) = @_;
+	my $dir = tempdir(CLEANUP => 1);
+	open my $fh, '>', "$dir/Taskfile.yml" or die "Taskfile.yml: $!";
+	print $fh <<\taskfile;
+version: '3'
+
+vars:
+  NAME: probe.ok
+
+tasks:
+  default:
+    cmds:
+      - touch "{{.NAME}}"
+    silent: true
+taskfile
+	close $fh or die "Taskfile.yml: $!";
+	(my $q = $dir) =~ s/'/'\\''/g;
+	local $ENV{TASKRC} = "$dir/taskrc";
+	local $ENV{TASKDATA} = $dir;
+	system("cd '$q' && $cmd </dev/null >/dev/null 2>&1");
+	$? == 0 && -f "$dir/probe.ok";
+}
+
+sub task_check
+{
+	my ($cmd) = @_;
+	return 1 if task_works($cmd);
+	my $tb = Test::Builder->new;
+	my $itried = $cmd eq 'task' ? "" : " (tried: $cmd)";
+	$tb->plan(skip_all => ($? == 0 ? "no task" : "wrong task") . $itried);
+}
 
 1;

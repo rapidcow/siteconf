@@ -18,6 +18,12 @@ example, C<-G plan9-mk> would look for C<RdKw::WwW::SiteConf::Builder::Plan9Mk>.
 Run C<siteconf -VV> to list the installed generators.  See
 L<RdKw::WwW::SiteConf/generate> for the methods a generator provides.
 
+The interface of a generator module is not
+stable and thus deliberately omitted here.
+At present, each module only pledges to work
+with the F<SiteConf.pm> that agrees with its
+own version.
+
 =head1 GENERATORS
 
 The core generators write F<Makefile> for

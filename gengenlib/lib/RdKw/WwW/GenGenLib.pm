@@ -362,27 +362,27 @@ sub update_file
 	my $dir = dirname($file);
 	my $file_fs = to_fs($file, { prog => $prog });
 	my $dir_fs = to_fs($dir, { prog => $prog });
-	# (the template is ASCII, so the name is the same in bytes; but it
-	# must be bytes, or perl would upgrade $dir_fs when it joins them)
+	# The template is ASCII, so the name is the same in bytes; but it
+	# must be bytes, or perl would upgrade $dir_fs when it joins them.
 	(my $template = '.' . basename($file)) =~ s/[^A-Za-z0-9._-]/_/g;
 	utf8::downgrade($template);
 	my ($fh, $tmp_fs) = eval {
-		File::Temp::tempfile("$template.XXXXXXXX", DIR => $dir_fs, UNLINK => 0)
-	} or die tagmsg($prog => diag(__(
+		File::Temp::tempfile("$template.XXXXXXXX",
+			DIR => $dir_fs,
+			PERMS => 0666 & ~umask,
+			UNLINK => 0) }
+		or die tagmsg($prog => diag(__(
 		"cannot create file %q: %m"), File::Spec->catfile($dir, "$template.XXXXXXXX")));
 	my $tmp = File::Spec->catfile($dir, basename($tmp_fs));
 	my $fail = sub {
 		my $msg = diag(@_);
-		# (close and unlink may change $!; die with the first error)
+		# Preserve $! as close and unlink may alter it.
 		my $errno = 0 + $!;
 		close $fh;
 		unlink $tmp_fs;
 		$! = $errno;
 		die tagmsg($prog => $msg);
 	};
-	# File::Temp makes it 0600; a file we write is as open() would make it
-	chmod 0666 & ~umask, $tmp_fs
-		or $fail->(__("cannot write file %q: %m"), $tmp);
 	binmode $fh, $layer
 		or $fail->(__("cannot write file %q: %m"), $tmp);
 	print $fh $text

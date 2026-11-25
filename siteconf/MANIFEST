@@ -4,6 +4,7 @@ Makefile.PL
 README
 lib/RdKw/WwW/SiteConf.pm
 lib/RdKw/WwW/SiteConf/Configure.pod
+lib/RdKw/WwW/SiteConf/Render.pod
 lib/RdKw/WwW/SiteConf/Builder.pod
 lib/RdKw/WwW/SiteConf/Builder/Bmake.pm
 lib/RdKw/WwW/SiteConf/Builder/Gmake.pm

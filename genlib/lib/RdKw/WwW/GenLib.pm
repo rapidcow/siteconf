@@ -109,11 +109,63 @@ on demand.
 
 =item B<locate> \%O, I<base>, I<spec>...
 
-Implements the synonymous TT function.
+A link from the page at I<base> to I<spec>.  This is the C<locate>
+function of the web preset's renderer (see
+L<RdKw::WwW::SiteConf::Render/WEB PRESET>), which passes the options
+as C<\%O> and the page's location as I<base>.
+
+I<base> and I<spec> are URI paths, so a character that is not ASCII
+must be escaped (L</file2uri> does this).  I<base> is from the root of
+the site, such as C<blog/post.html>.  What I<spec> is from depends on
+how it begins:
+
+=over
+
+=item C<x> (none of the below)
+
+From the root of the site.  The result is relative to I<base>:
+C<locate($O, 'blog/post.html', 'index.html')> is C<../index.html>.
+
+=item C<./x> or C<../x>
+
+From I<base>, and the result is relative to I<base>: from
+C<blog/post.html>, C<./pic.png> is C<pic.png>.
+
+=item C</x>
+
+From C<base_url>, as an absolute path: with C<base_url> C</~me/>,
+C</x> is C</~me/x>.
+
+=item C<//x>
+
+From C<site_url> and C<base_url>, as a full URL: with C<site_url>
+C<https://example.org> as well, C<//x> is C<https://example.org/~me/x>,
+and C<//> is C<https://example.org/~me/>.
+
+=back
+
+A trailing slash names a directory, and none names a file, as in a web
+browser.  From C<blog/post.html>, C<blog/> is C<.>, the directory the
+page is in, while C<blog> is C<../blog>, a file named C<blog> in the root of
+the site.  Link to a directory with its slash.  The empty I<spec>
+is the root of the site: C<..> from C<blog/post.html>, and C<.> from
+C<index.html>.
+
+When I<spec> is I<base> itself, the result is the empty string.  That
+is a link to the same page, and it stays one when a query or a
+fragment follows it: C<locate($O, $here, $here) . '?page=2'> is
+C<?page=2>, which asks this page again with another query, wherever
+the page is.  A page with a form, or one made by a CGI script, can link
+to itself this way.
+
+More than one I<spec> are joined in order: each is resolved against
+the one before it, as a relative link would be.  So C<a/>, C<b> is
+C<a/b>, while C<a>, C<b> is C<b>, and C<locate($O, $base, '//',
+'blog/')> is the URL of F<blog/>.
 
 Relative specifications are preserved since 0.0202.  Variadic
-specifications, an optional options hash (defaulting C<site_url> and
-C<base_url> to C</>), and relative components following an absolute
+specifications, an optional options hash (defaulting C<site_url>
+to the empty string and C<base_url> to C</>), and relative components following an absolute
 or site-relative specification are supported since 0.0203.
 
 =cut

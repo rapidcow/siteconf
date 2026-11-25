@@ -1,0 +1,341 @@
+=encoding UTF-8
+
+=head1 NAME
+
+RdKw::WwW::SiteConf::Render - the renderers of the web and tem presets
+
+=head1 SYNOPSIS
+
+    # Makefile.in: render ${a}/FILE into ${B}/${b}/FILE
+    index.html blog/post.html: ${A}/render
+    	cd -- ${A:Q} && ${^X} render -B ${B:Q} ${a}/${.TARGET} ${B:Q}/${b}/${.TARGET}
+
+    [%# html/blog/post.html, with the web preset
+    # HAVE: ${a}/blog/post.html
+    # NEED: skel/layout.html
+    # NEED: ${a}/inc/nav.html
+    -%]
+    [% WRAPPER "skel/layout.html" title = "A post" -%]
+    [% INCLUDE "inc/nav.html" -%]
+    <p><a href="[% locate('blog/') %]">All posts</a></p>
+    [% END -%]
+
+=head1 DESCRIPTION
+
+C<siteconf -i -P web> and C<siteconf -i -P tem> write a renderer, by
+default F<render> in the project root (see
+L<RdKw::WwW::SiteConf::Configure/OUTPUT LOCATIONS>).  It is a Perl
+script for L<Template> (Template Toolkit):
+
+    render [-B dir] apath bpath
+
+It processes the template I<apath> and writes the result to I<bpath>.
+Both are read and written as UTF-8.  I<dir> is the build directory
+(default C<.>), where it reads F<MY/config.mk> and F<MY/option.mk>.
+Templates see the definitions as C<D> and the options as C<O>, as in
+C<[% D.a %]> and C<[% O.title %]>.
+
+The renderer's own header says C<NEED: ${B}/MY/option.mk>.  Every rule
+with the renderer as a prerequisite inherits that, so pages are made
+again when an option changes.  A change to F<MY/config.mk> alone does
+not make them again: definitions say where files are, and moving a
+build directory is not a change to the pages (see
+L<RdKw::WwW::SiteConf::Configure/RATIONALE>).
+
+The rule runs the renderer from the project root (C<cd -- ${A:Q}>).
+C<INCLUDE>, C<PROCESS>, C<WRAPPER> and C<INSERT> look for a name in
+the project root first, then in C<${a}>: C<"skel/layout.html"> is
+F<skel/layout.html>, and C<"inc/nav.html"> is F<${a}/inc/nav.html>
+if the root has no F<inc/nav.html>.
+
+=head1 THE HEADER
+
+A template begins with a header that says what it is and what it
+uses.  In a template the header is a Template Toolkit comment:
+
+    [%
+    # HAVE: ${a}/blog/post.html
+    # NEED: skel/layout.html
+    -%]
+
+L<RdKw::WwW::GenGenLib/read_deps> says how a header is read, and
+L<RdKw::WwW::SiteConf> says what the paths in it mean.
+
+=head2 HAVE
+
+C<HAVE> is the source's own name, from the project root.  C<siteconf
+-g> checks it against the name that the rule gives the source,
+C<${A}/${a}/FILE>, and stops if they differ.  A page that was copied or
+renamed without its header is an error when the build file is made.
+Any spelling that expands to the same name is the same: C<${a}/x.html>,
+C<${A}/${a}/x.html>, C<$a/x.html>, and C<html/x.html> when C<a> is
+C<html>.  Other definitions may appear too, as in
+C<${a}/${sub}/x.html>.
+
+The web renderer needs a C<HAVE>, and stops without one.  The
+part of C<HAVE> below C<${a}> is the page's place in the site: a
+C<HAVE> of C<${a}/blog/post.html> gives C<blog/post.html>.  This
+place is C<target> and C<location> (see L</WEB PRESET>), and every
+path that C<locate> returns is relative to it.  The renderer does not
+read the place from I<bpath>.  A page rendered by hand, to any output
+file, links as it would on the site.  If a rule makes a target with
+another name than its source, the links of that page are relative to
+the source's name.
+
+The tem renderer does not read C<HAVE>.  C<siteconf -g> still checks
+a C<HAVE> if the header has one.
+
+=head2 NEED and WANT
+
+C<NEED> and C<WANT> name the files that a template uses.  C<siteconf
+-g> makes them prerequisites of the page's rule, so the page is made
+again when one of them changes.  It reads their headers too: what
+they declare is a prerequisite of the page as well.  A C<NEED>ed file
+must exist, or have a rule; otherwise C<siteconf -g> stops.  A
+C<WANT>ed file that is not there is dropped from the rule.
+
+    [%
+    # HAVE: ${a}/blog/post.html
+    # NEED: skel/layout.html
+    # NEED: ${a}/inc/nav.html
+    -%]
+
+makes this rule in the F<Makefile>, with C<a> C<html>, C<B> C<build>
+and C<b> C<site> (the last prerequisite, cut here, is the directory
+marker):
+
+    site/blog/post.html: ../html/blog/post.html ../render \
+        ../skel/layout.html ../html/inc/nav.html MY/option.mk ...
+
+A snippet that many pages share goes in its own file, and each page
+that includes it C<NEED>s it:
+
+    [% INCLUDE "inc/nav.html" %]
+
+A layout goes in a C<WRAPPER>.  The page's text is C<content> in the
+wrapper.  The variables given to C<WRAPPER> (C<title> here) are set in
+the wrapper only, not in the page's text:
+
+    [%# skel/layout.html -%]
+    <!DOCTYPE html>
+    <title>[% title | html %]</title>
+    <link rel="canonical" href="[% locate('//' _ location) %]">
+    [% content -%]
+
+=head2 Declared dependencies only
+
+By default, the renderer loads templates with Template's own
+provider, and nothing checks that the header names every file that
+the template loads.  A missing C<NEED> builds, but the page is not
+made again when that file changes.
+
+With C<-MRdKw::WwW::GenGenLib::Template::Provider>, as in C<siteconf
+-i -P web -MRdKw::WwW::GenGenLib::Template::Provider>, either preset
+writes a renderer that loads templates through
+L<RdKw::WwW::GenGenLib::Template::Provider>.  Add C<CHECK_DEPS
+=E<gt> 1> to its options in the renderer:
+
+    my $provider = RdKw::WwW::GenGenLib::Template::Provider->new({
+    	SOURCE => $apath,
+    	DEFINITION => $D,
+    	ENCODING => 'UTF-8',
+    	INCLUDE_PATH => [ '.', $D->{a} ],
+    	CHECK_DEPS => 1,
+    })
+
+Then a template can load only what its header (or the header of
+something it declares) names.  Without the C<NEED> for
+F<${a}/inc/nav.html>, the C<INCLUDE> above fails:
+
+    [TT] file error - `inc/nav.html': undeclared dependency:
+    `html/inc/nav.html' (aka `${a}/inc/nav.html')
+
+C<CHECK_HAVE =E<gt> 1> makes the renderer check that C<HAVE> names
+I<apath>, as C<siteconf -g> does.  The provider's page lists its other options.
+
+=head2 Declared dependencies outside Template
+
+The provider's L<access|RdKw::WwW::GenGenLib::Template::Provider/access>
+method says which file a name is, and whether the template may load
+it, without loading it.  A function that the renderer gives to the
+templates can use it to read other files under the same rules.  Only
+a renderer that uses the provider (see above) has it.  This
+function gives a hash of a file that the page C<NEED>s, for a query
+string that changes when the file changes:
+
+    use Digest::SHA ();
+    use File::Spec ();
+
+    sub get_version
+    {
+    	my ($name) = @_;    # '${B}/${b}/style.css', say
+    	my $path = File::Spec->canonpath(subs_deps($D, $name, { strict => 1 }));
+    	my $error;
+    	($path, $error) = $provider->access($path);
+    	defined $error and die "get_version: $error\n";
+    	defined $path or die "get_version: $name: not found\n";
+    	open my $fh, '<:raw', $cs->to_fs($path) or die "$path: $!\n";
+    	my $hash = Digest::SHA->new(1)->addfile($fh)->b64digest;
+    	$hash =~ tr'+/='-_.';
+    	$hash;
+    }
+
+Put it in C<%v> as C<get_version =E<gt> \&get_version>, and use it in a
+template:
+
+    [%
+    # HAVE: ${a}/index.html
+    # NEED: ${B}/${b}/style.css
+    -%]
+    <link rel="stylesheet"
+      href="[% locate('style.css') %]?v=[% get_version('${B}/${b}/style.css') %]">
+
+With C<CHECK_DEPS>, the page must C<NEED> F<style.css> to hash it.
+That C<NEED> also makes the page again when F<style.css> changes, so
+the hash in the page is current.  Without the C<NEED>:
+
+    [TT] undef error - get_version: undeclared dependency:
+    `build/site/style.css' (aka `${B}/${b}/style.css')
+
+The function goes in the renderer, which already has the names it
+uses: C<$provider>, C<$D> (the definitions), C<$cs> (the
+L<RdKw::I18N::CodeSets> object that spells file names), and
+C<subs_deps> from L<RdKw::WwW::GenGenLib>, which expands the
+variables in a name (with C<strict>, an undefined one is an error).
+C<%v> is the hash of template variables that the renderer gives to
+C<process>.
+
+=head1 WEB PRESET
+
+The web renderer gives templates these variables, besides C<D> and
+C<O>:
+
+=over
+
+=item C<target>
+
+The page's place in the site, as a file name: what C<HAVE> says
+below C<${a}>, such as C<blog/post.html>.
+
+=item C<location>
+
+The same place as a URI path, from C<file2uri(target)>:
+C<blog/r%C3%A9sum%C3%A9.html> for F<blog/résumé.html>.
+
+=item C<locate(spec, ...)>
+
+A path to I<spec> from this page.  See below, and
+L<RdKw::WwW::GenLib/locate>.
+
+=item C<file2uri(file)>, C<uri2file(uri)>
+
+L<RdKw::WwW::GenLib/file2uri> and L<RdKw::WwW::GenLib/uri2file>.
+
+=back
+
+=head2 Links with locate
+
+C<locate> takes URI paths and returns a URI path.  Each example
+below is for the page F<blog/post.html>, configured with
+C<-Osite_url=https://example.org -Obase_url=/~me/>:
+
+    [% locate('index.html') %]       ../index.html
+    [% locate('blog/') %]            .
+    [% locate('blog') %]             ../blog
+    [% locate('') %]                 ..
+    [% locate(location) %]           (the empty string)
+
+A path without a leading C</>, C<./> or C<../> is from the root of the
+site.  The result is relative to the page, so the built site works at
+any C<base_url>, and from a C<file:> URL.
+
+A path that begins with C<./> or C<../> is from the page, and passes
+through as a relative path.  Use it for a file next to the page whose
+place in the site does not matter, such as an image in the same
+directory:
+
+    [% locate('./pic.png') %]        pic.png
+    [% locate('../x.css') %]         ../x.css
+
+A path that begins with C</> is from C<base_url>, and one that begins
+with C<//> is from C<site_url> and C<base_url>:
+
+    [% locate('/') %]                /~me/
+    [% locate('//') %]               https://example.org/~me/
+    [% locate('//' _ location) %]    https://example.org/~me/blog/post.html
+
+Use C<locate('//' _ location)> for a canonical URL, and C<locate('//')>
+for the URL of the site.  C<O.site_url _ O.base_url> gives the same
+string as C<locate('//')>, because L<RdKw::WwW::GenLib/parse_base>
+removes the path from C<site_url> and starts C<base_url> with a C</>.
+With C<locate>, a renderer that rewrites paths (below) rewrites
+these too.
+
+=head2 Names that are not ASCII
+
+C<locate> does not escape anything.  A name with characters that are
+not ASCII passes through as it is:
+
+    [% locate('résumé.html') %]             ../résumé.html
+
+Give it the URI path instead.  C<file2uri> writes a file name as one,
+with each character in UTF-8 escapes:
+
+    [% locate(file2uri('résumé.html')) %]   ../r%C3%A9sum%C3%A9.html
+
+or write the escapes yourself:
+
+    [% locate('r%C3%A9sum%C3%A9.html') %]   ../r%C3%A9sum%C3%A9.html
+
+C<location> is already escaped this way, so C<locate('//' _
+location)> is a URL for F<résumé.html> too.
+
+=head2 Paths for a web server
+
+Many web servers serve F<x.html> as F<x>, and F<dir/index.html> as
+F<dir/>.  The renderer can rewrite what C<locate> returns to match.
+This function does that when C<site_url> is C<http> or C<https>.  A
+build configured with a C<file:> C<site_url>, to be read from the disk,
+keeps the F<.html> names:
+
+    # Written for a web server that serves "x.html" as "x" and
+    # "dir/index.html" as "dir/": [% locate('usage.html') %]
+    # gives "usage", and from blog/post.html,
+    # [% locate('index.html') %] gives "..".
+    sub rewrite
+    {
+    	my ($uri) = @_;
+    	if ($O->{site_url} =~ m{^https?://}i) {
+    		# Go to "." only if we removed something and nothing is
+    		# left.  An empty string from locate means "this page".
+    		$uri = '.' if $uri =~ s{([^/]+)\.html$}
+    			{( $1 eq "index" ? "" : $1 )}eig && !length $uri;
+    		$uri =~ s{(?<=\A|\/)(\.\.)?/$}{$1};
+    	}
+    	$uri;
+    }
+
+To use it, change C<locate> in C<%v>:
+
+    locate => sub { rewrite(locate($O, $location, @_)); },
+
+Templates still name the files that they mean (C<usage.html>), the
+same names that their headers and the rulebook use.  C<locate('//' _ location)> then
+gives the canonical URL as the server spells it:
+C<https://example.org/~me/blog/post> for F<blog/post.html>, and
+C<https://example.org/~me/blog/> for F<blog/index.html>.
+
+=head1 TEM PRESET
+
+The tem renderer gives templates C<D> and C<O>, and nothing else.  It
+does not read C<HAVE>, and has no C<locate>, C<location> or C<target>.
+Including files, and the C<NEED> and C<WANT> of L</THE HEADER>, work
+as they do for the web preset.
+
+=head1 SEE ALSO
+
+L<siteconf>, L<RdKw::WwW::SiteConf::Configure>, L<RdKw::WwW::SiteConf>,
+L<RdKw::WwW::GenLib>, L<RdKw::WwW::GenGenLib>,
+L<RdKw::WwW::GenGenLib::Template::Provider>, L<Template>.
+
+=cut

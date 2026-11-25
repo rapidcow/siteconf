@@ -205,8 +205,8 @@ previously saved C<base_url>.
 The generated renderer exposes definitions as C<D>, options as
 C<O>, the current page's location as C<location>, and the
 C<locate> function for computing paths relative to the current
-location.  See L<RdKw::WwW::GenLib> for the implementation of
-the C<locate> function.
+location.  L<RdKw::WwW::SiteConf::Render> says what a template can
+do with them, and L<RdKw::WwW::GenLib> implements C<locate>.
 
 =head1 TEM PRESET
 
@@ -214,6 +214,7 @@ C<siteconf -i -P tem> writes a Template Toolkit renderer like the web
 preset's, but with nothing of the web: no options are required, and
 the renderer exposes definitions as C<D> and options as C<O>, and
 nothing else.  It requires Template.
+See L<RdKw::WwW::SiteConf::Render>.
 
 Added in 0.0300.
 
@@ -329,7 +330,7 @@ rewritten, preserving timestamps for incremental builds.
 
 =head1 SEE ALSO
 
-L<siteconf>, L<RdKw::WwW::SiteConf>, L<RdKw::WwW::GenGenLib>,
-L<RdKw::WwW::GenLib>, L<RdKw::I18N::CodeSets>.
+L<siteconf>, L<RdKw::WwW::SiteConf>, L<RdKw::WwW::SiteConf::Render>,
+L<RdKw::WwW::GenGenLib>, L<RdKw::WwW::GenLib>, L<RdKw::I18N::CodeSets>.
 
 =cut

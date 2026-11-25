@@ -13,7 +13,7 @@ our @ISA = qw( Exporter );
 
 =head1 NAME
 
-RdKw::WwW::GenLib - static web-site generation library
+RdKw::WwW::GenLib - static web site generation library
 
 =head1 SYNOPSIS
 

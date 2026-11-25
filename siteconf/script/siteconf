@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-siteconf - configurable incremental build script generator
+siteconf - configurable build script generator
 
 =head1 SYNOPSIS
 

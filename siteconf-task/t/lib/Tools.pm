@@ -46,7 +46,8 @@ sub describe
 	$line;
 }
 
-# `task' (Go Task, not Taskwarrior), or what $GO_TASK says
-sub task_cmd { $ENV{GO_TASK} || 'task' }
+# What $GO_TASK says; or else `go-task' (as Arch Linux names it), if it
+# is in $PATH; or else `task'.  (This is Go Task, not Taskwarrior.)
+sub task_cmd { $ENV{GO_TASK} || (which('go-task') ? 'go-task' : 'task') }
 
 1;

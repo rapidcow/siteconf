@@ -63,7 +63,7 @@ art.gif: ${A}/gone.png
 	cp ${A}/gone.png ${b}/${@}
 R
 put('html/art.gif', '');
-put('html/page.html', "# WANT: \${B}/\${b}/art.gif\n");
+put('html/page.html', "# JUST-WANT: \${B}/\${b}/art.gif\n");
 write_make("$dir/MY/config.mk", {
 	A => '.', B => '.', a => 'html', b => 'site', c => 'site', e => '.ok',
 	F => 'MANIFEST', R => 'Makefile.in',

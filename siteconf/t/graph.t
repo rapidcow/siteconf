@@ -132,8 +132,8 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css ]] ),
-		'html/b.css' => lines( HAVE => [qw[ ${A}/${a}/b.css ]], NEED => [qw[ ${B}/${b}/c.css ]] ),
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], 'JUST-NEED' => [qw[ ${B}/${b}/b.css ]] ),
+		'html/b.css' => lines( HAVE => [qw[ ${A}/${a}/b.css ]], 'JUST-NEED' => [qw[ ${B}/${b}/c.css ]] ),
 		'html/c.css' => lines( HAVE => [qw[ $A/$a/c.css ]] ),
 	});
 	my $plan = plan_of($dir);
@@ -150,7 +150,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css ]] ),
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], 'JUST-NEED' => [qw[ ${B}/${b}/b.css ]] ),
 		'html/b.css' => lines( HAVE => [qw[ ${A}/${a}/b.css ]] ),
 	}, B => 'build');
 	for my $B ("$dir/build", Cwd::abs_path("$dir/build")) {
@@ -183,8 +183,8 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED b.css\n",
-		'html/b.css' => lines( NEED => [qw[ ${B}/${b}/c.css ]] ),
-		'html/c.css' => lines( NEED => [qw[ ${B}/${b}/b.css ]] ),
+		'html/b.css' => lines( 'JUST-NEED' => [qw[ ${B}/${b}/c.css ]] ),
+		'html/c.css' => lines( 'JUST-NEED' => [qw[ ${B}/${b}/b.css ]] ),
 	});
 	ok(!eval { plan_of($dir); 1 }, 'cycle: dies');
 	like($@, qr/dependency cycle: `b\.css' -> `c\.css' -> `b\.css'/, '... showing it');
@@ -194,8 +194,8 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 {
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED a.html\n\tWANT b.css\n",
-		'html/a.html' => lines( NEED => [qw[ ${B}/${b}/c.css ]] ),
-		'html/b.css' => lines( WANT => [qw[ ${B}/${b}/c.css ]] ),
+		'html/a.html' => lines( 'JUST-NEED' => [qw[ ${B}/${b}/c.css ]] ),
+		'html/b.css' => lines( 'JUST-WANT' => [qw[ ${B}/${b}/c.css ]] ),
 		# no html/c.css
 	});
 	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
@@ -205,7 +205,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	$dir = project({
 		MANIFEST => "MAKE all\n\tNEED b.css\n\tWANT a.html\n",
 		'html/b.css' => "",
-		'html/a.html' => lines( NEED => [qw[ ${B}/${b}/c.css ]] ),
+		'html/a.html' => lines( 'JUST-NEED' => [qw[ ${B}/${b}/c.css ]] ),
 	});
 	my $plan = plan_of($dir);
 	is_deeply($plan->{goals}[0]{files}, ['b.css'], 'WANT of what needs the unmakeable: dropped');
@@ -248,13 +248,13 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css x ${B}/MY/config.mk ]] ),
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ x ${B}/MY/config.mk ]], 'JUST-NEED' => [qw[ ${B}/${b}/b.css ]] ),
 		'html/b.css' => "",
 	}, A => '..', B => 'build');
 	my $plan = plan_of($dir, "$dir/build");
 	is($plan->{node}{'a.html'}{apath}, '../html/a.html', 'apath is seen from the build dir');
 	is_deeply($plan->{node}{'a.html'}{deps},
-		[qw( ../html/a.html ../x site/b.css MY/config.mk site/.ok )],
+		[qw( ../html/a.html ../x MY/config.mk site/b.css site/.ok )],
 		'and so are the rest') or diag explain $plan->{node}{'a.html'}{deps};
 }
 
@@ -263,7 +263,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 	my $dir = project({
 		MANIFEST => $manifest,
 		'Makefile.in' => "a.html b.css: \${A}/x\n\tcp \${a}/\${\@} \${B}/\${b}/\${\@}\n",
-		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css ${B}/MY/config.mk ]] ),
+		'html/a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/MY/config.mk ]], 'JUST-NEED' => [qw[ ${B}/${b}/b.css ]] ),
 		'html/b.css' => '',
 	}, b => '.');
 	my $plan = eval { plan_of($dir) };
@@ -277,7 +277,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 {
 	my $dir = project({
 		MANIFEST => $manifest,
-		'a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], NEED => [qw[ ${B}/${b}/b.css ]] ),
+		'a.html' => lines( HAVE => [qw[ ${A}/${a}/a.html ]], 'JUST-NEED' => [qw[ ${B}/${b}/b.css ]] ),
 		'b.css' => '',
 	}, a => '.');
 	my $plan = eval { plan_of($dir) };
@@ -558,12 +558,12 @@ SKIP:	{
 # --- the cache: ${c}
 {
 	my $rules = "\${c}/x.md.html: \${a}/\${\@:R}\n\tpandoc -o \${B}/\${c}/\${\@} \${<}\n"
-		. "x.html: \${B}/\${c}/x.md.html\n\tcp \${B}/\${c}/x.md.html \${B}/\${b}/\${\@}\n";
+		. "x.html: JUST:\${B}/\${c}/x.md.html\n\tcp \${B}/\${c}/x.md.html \${B}/\${b}/\${\@}\n";
 	my %f = (
 		MANIFEST => "MAKE all\n\tNEED x.html\n",
 		'Makefile.in' => $rules,
 		'html/x.md' => '',
-		'html/x.html' => lines( NEED => [qw[ ${B}/${c}/x.md.html ]] ),
+		'html/x.html' => lines( 'JUST-NEED' => [qw[ ${B}/${c}/x.md.html ]] ),
 	);
 	my $dir = project({%f}, c => 'cache/deep');
 	my $plan = plan_of($dir);
@@ -638,7 +638,7 @@ SKIP:	{
 	};
 	my $dir = project({
 		MANIFEST => $manifest,
-		'html/a.html' => lines( WANT => [qw[ ${B}/${b}/c.css ]] ),
+		'html/a.html' => lines( 'JUST-WANT' => [qw[ ${B}/${b}/c.css ]] ),
 	});
 	is(fold($warn->($dir)), <<MSG, 'a missing WANT in a source header');
 W: target `a.html' WANTs `site/c.css' (in header of `html/a.html' line 2), but it is missing; going on without it.
@@ -662,7 +662,7 @@ MSG
 	my $dir = project({
 		MANIFEST => $manifest,
 		'html/a.html' => lines( NEED => [qw[ ${A}/html/t/outer ]] ),
-		'html/t/outer' => lines( NEED => [qw[ ${B}/${b}/b.css ${A}/html/t/inner ]],
+		'html/t/outer' => lines( NEED => [qw[ ${A}/html/t/inner ]], 'JUST-NEED' => [qw[ ${B}/${b}/b.css ]],
 			WANT => [qw[ ${A}/html/t/gone ]] ),
 		'html/t/inner' => lines( NEED => [qw[ ${A}/html/t/outer ${A}/html/t/leaf ]] ),
 		'html/t/leaf' => '',
@@ -721,7 +721,7 @@ MSG
 	is_deeply($p && $p->{node}{'a.html'}{deps}, [qw( html/a.html x y site/.ok )],
 		'NEED: is needed, WANT: kept if there, dropped if not') or diag $err;
 
-	($p, $err) = $rule->('WANT:${B}/${b}/b.css WANT:${B}/${b}/c.css');
+	($p, $err) = $rule->('JUST-WANT:${B}/${b}/b.css JUST-WANT:${B}/${b}/c.css');
 	is_deeply($p && $p->{node}{'a.html'}{deps}, [qw( html/a.html site/b.css site/.ok )],
 		'WANT: of what we make (or cannot)') or diag $err;
 	is_deeply($p && $p->{node}{'a.html'}{kids}, ['b.css'], '... is an edge when it can be made');
@@ -800,7 +800,7 @@ MSG
 	my $dir = project({
 		MANIFEST => "MAKE all\n\tNEED man/3/\${\"File::Spec\"}.html\n",
 		'Makefile.in' => "\${c}/man/3/\${\"File::Spec\"}.pod: \${a}/lib/File/Spec.pm\n\ttrue\n"
-			. "man/3/\${\"File::Spec\"}.html: \${a}/ \${B}/\${c}/\${\@:R}.pod\n\ttrue\n",
+			. "man/3/\${\"File::Spec\"}.html: \${a}/ JUST:\${B}/\${c}/\${\@:R}.pod\n\ttrue\n",
 		'html/lib/File/Spec.pm' => '',
 	});
 	my $plan = eval { plan_of($dir) };

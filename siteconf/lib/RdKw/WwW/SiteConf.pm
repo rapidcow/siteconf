@@ -101,6 +101,21 @@ C<JUST:> need not have a header, and does not have one that counts.
     pack.bin: JUST:${A}/tool.pickle
             ${A:Q}/pack ${B:Q}/${b:Q}/${@:Q}
 
+A file that a rule makes can only be a C<JUST:> or a C<JUST-WANT:>, in a
+rule and in a header alike.  Its header would be what the last build
+left there, and so the graph would change with each build, though no
+source did.  A plain C<NEED> or C<WANT> of one is an error, said for
+each place that says it, after any other:
+
+    E: cannot NEED/WANT a file we make:
+    E:  `site/style.css' (NEEDed in header of `html/index.html' line 3)
+    E:   (made by Makefile.in line 6).
+    E: Please use JUST-NEED or JUST-WANT instead.
+
+The file is still made first, by its own rule, from its own source
+and that source's header.  A file in C<${b}> that no rule makes is no
+file we make, and neither is F<MY/option.mk>.
+
 A C<;> ends the prerequisites, as it does to make, and what follows it
 is the first line of the recipe; a tab line after it is the next.  (A
 C<;> in a C<${...}>, as in C<${@:S/;/,/}>, is part of that.)
@@ -332,12 +347,13 @@ may hide in):
 
     # HAVE: ${A}/${a}/index.html
     # NEED: skel/HTML
-    # NEED: ${B}/${b}/style.css
+    # JUST: ${B}/${b}/style.css
     # WANT: ${A}/data/extra.scm
     # JUST-NEED: ${B}/${b}/pickle.bin
 
-C<JUST-NEED> and C<JUST-WANT> are the same two, for what is only a name:
-the file is a dependency, but its own header is not read.
+C<JUST-NEED> (or C<JUST>) and C<JUST-WANT> are the same two, for what
+is only a name: the file is a dependency, but its own header is not
+read.  What a rule makes can only be one of these (see above).
 
 Every path here is from the project root, spelled in full, and
 nothing is relative to anything else.  These are expanded first:
@@ -1710,6 +1726,9 @@ sub _rule_line
 			$rule->{dependency_at}{$kind}{$built} ||= $where;
 			# (JUST only if every word that says it is)
 			$rule->{ $just ? 'j' : 'nj' }{$built} = 1;
+			# (and where it is first said plainly, if it is: a file
+			# we make cannot be, see _made)
+			$rule->{plain_at}{$kind}{$built} ||= $where unless $just;
 		}
 	}
 	$self->_recipe_line($cmd, $where) if defined $cmd;
@@ -1816,6 +1835,14 @@ sub _node
 		@{ $rule->{deps} };
 	my @rwant = map { [ $_, $_, diag(__("WANT: in %s"), $at->{want}{$_}), $just_dep->($_) ] }
 		@{ $rule->{want} };
+	# (a plain prerequisite that we make: see _made)
+	for my $kind (qw( deps want )) {
+		my $plain = $rule->{plain_at}{$kind} or next;
+		for my $dep (@{ $rule->{$kind} }) {
+			my $where = $plain->{$dep} or next;
+			$self->_made($dep, $kind eq 'want' ? 'WANT' : 'NEED', $where);
+		}
+	}
 	# What the source files we NEED (or WANT) say they need, and so on:
 	# like gcc -MM, which lists the headers of headers.
 	{
@@ -1845,6 +1872,8 @@ sub _node
 		$follow->(\@hwant, 1);
 		push @hneed, @more_need;
 		push @hwant, @more_want;
+		# (what a header says plainly of a file we make: see _made)
+		$self->_made_entry($_) for @hneed, @hwant;
 		# The same file may have turned up through several others, and
 		# as both: say it once, and a NEED is not a WANT as well
 		# (it is a JUST- only if every way it is said is)
@@ -1859,6 +1888,7 @@ sub _node
 	for my $dep (@{ $rule->{deps} }) {
 		$just_dep->($dep) and next;
 		my ($need, $want) = $self->_tool($dep, $file, $at->{deps}{$dep});
+		$self->_made_entry($_) for @$need, @$want;
 		push @hneed, @$need;
 		push @hwant, @$want;
 	}
@@ -1866,6 +1896,7 @@ sub _node
 	for my $dep (@{ $rule->{want} || [] }) {
 		$just_dep->($dep) and next;
 		my ($need, $want) = $self->_tool($dep, $file, $at->{want}{$dep});
+		$self->_made_entry($_) for @$need, @$want;
 		push @hwant, @$need, @$want;
 	}
 
@@ -1875,7 +1906,11 @@ sub _node
 		my ($said, $dep, $from, $just, $soft) = @_;
 		return 1 if $tree{$dep};
 		if (defined(my $made = $self->_target($dep))) {
-			my $kid = $self->_node($made, $just);
+			# (in full, JUST or not: a file we make can only be
+			# said as a JUST- (see _made), and that is about what
+			# this file takes from its header, which is nothing;
+			# what it takes to make it is still its own business)
+			my $kid = $self->_node($made, 0);
 			unless ($kid->{ok}) {
 				return 0 if $soft;
 				# (a cause per line, each cause deeper than what it breaks)
@@ -1900,10 +1935,10 @@ sub _node
 		0;
 	};
 	for my $d (@rdep, @hneed) {
-		$check->(@$d, 0) and push @deps, $d->[1];
+		$check->(@$d[0 .. 3], 0) and push @deps, $d->[1];
 	}
 	for my $d (@rwant, @hwant) {
-		if ($check->(@$d, 1)) {
+		if ($check->(@$d[0 .. 3], 1)) {
 			push @deps, $d->[1];
 		} else {
 			# HEY!  The %s, in parentheses, is where it
@@ -1923,10 +1958,44 @@ sub _node
 	$done->();
 }
 
+# A file we make cannot be NEEDed or WANTed plainly, only as a JUST-:
+# its header (if it has one) is what the last build left there, and so
+# the graph would be made of what is made, and could change with each
+# time round.  `dep' (as the build dir sees it) is said as `kind'
+# (NEED or WANT) in `where'; if a rule makes it, that is said in the
+# end (see _finish), once for each place.
+sub _made
+{
+	my ($self, $dep, $kind, $where) = @_;
+	defined(my $made = $self->_target($dep)) or return;
+	$self->{made_seen}{"$kind\0$dep\0$where"}++ and return;
+	push @{ $self->{made} }, ($kind eq 'WANT'
+		# HEY!  The first %q is the file we make, and the %s
+		# where it is wanted (`Makefile.in' line 3).
+		? diag(__("%q (WANTed in %s)"), $dep, $where)
+		: diag(__("%q (NEEDed in %s)"), $dep, $where))
+		# HEY!  %s is where the rule for it is (`Makefile.in' line 5)
+		. "\n " . diag(__("(made by %s)"), $self->{rules}{$made}{at});
+}
+
+# The same for an entry of a header (see _entries), if it is not JUST
+sub _made_entry
+{
+	my ($self, $ent) = @_;
+	my (undef, $dep, undef, $just, $kind, $file, $line) = @$ent;
+	$just and return;
+	defined $self->_target($dep) or return;
+	$self->_made($dep, $kind,
+		# HEY!  This is the %s of the two above: %q is the
+		# file whose header says it, and %d the line.
+		diag(__("header of %q line %d"), $file, $line));
+}
+
 # What the header of `file' (read_deps' `I', and the `lines' of it,
-# `L') says of a kind, `NEED' or `WANT', as [ said, dep, from, just ]:
-# the names of it and of its JUST- (said last).  `from' is where, with
-# the line it is on.
+# `L') says of a kind, `NEED' or `WANT', as [ said, dep, from, just,
+# kind, file, line ]: the names of it and of its JUST- (said last).
+# `from' is where, with the line it is on; `kind' is what the header
+# says (whatever it comes to be for who follows it).
 sub _entries
 {
 	my ($self, $I, $L, $kind, $file) = @_;
@@ -1940,7 +2009,8 @@ sub _entries
 				# HEY!  This is where a NEED (or a WANT) was said, and is
 				# said in parentheses after what is needed: %q is the file,
 				# and %d the line in it
-				diag(__("in header of %q line %d"), $file, $line[$_]), $just ];
+				diag(__("in header of %q line %d"), $file, $line[$_]), $just,
+				$kind, $file, $line[$_] ];
 		} 0 .. $#name;
 	} [ $kind, 0 ], [ "JUST-$kind", 1 ];
 }
@@ -2068,6 +2138,8 @@ sub plan
 		$self->{stack} = [];
 		$self->{tool} = {};
 		$self->{hold} = [];
+		$self->{made} = [];
+		$self->{made_seen} = {};
 		$self->{seq} = 0;
 		($goal, $err, $order) = eval { $self->_goals(@spec) };
 		if (my $abort = $@) {
@@ -2153,8 +2225,9 @@ sub _finish
 	my @goal = @$goal;
 	my @err = @$err;
 	my @order = @$order;
-	if (@err) {
-		my $count = @err;
+	my @made = @{ $self->{made} || [] };
+	if (@err || @made) {
+		my $count = @err + @made;
 		# Weirdly enough, the same message is used even
 		# if the user selected the ninja generator....
 		# but eh, I guess we will roll with it. :v
@@ -2164,8 +2237,13 @@ sub _finish
 			# nonetheless o_o)
 			"%d problem; no Makefile for you.",
 			"%d problems; no Makefile for you.",
-			$count), $count)
-		);
+			$count), $count)),
+		# (what we make, and NEED or WANT plainly, comes last, and
+		# then what to do about it, which is last of all)
+		@made ? (tagmsg(E => __("cannot NEED/WANT a file we make:") . "\n"
+				. join(",\n", map { (my $l = $_) =~ s/^/ /mg; $l } @made) . "."),
+			tagmsg(E => __("Please use JUST-NEED or JUST-WANT instead.")))
+		: ();
 	}
 
 	# Every file hangs off the marker of its parent directory (and

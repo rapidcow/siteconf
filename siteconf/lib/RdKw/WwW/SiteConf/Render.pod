@@ -158,7 +158,7 @@ method says which file a name is, and whether the template may load
 it, without loading it.  A function that the renderer gives to the
 templates can use it to read other files under the same rules.  Only
 a renderer that uses the provider (see above) has it.  This
-function gives a hash of a file that the page C<NEED>s, for a query
+function gives a hash of a file that the page declares, for a query
 string that changes when the file changes:
 
     use Digest::SHA ();
@@ -183,14 +183,16 @@ template:
 
     [%
     # HAVE: ${a}/index.html
-    # NEED: ${B}/${b}/style.css
+    # JUST: ${B}/${b}/style.css
     -%]
     <link rel="stylesheet"
       href="[% locate('style.css') %]?v=[% get_version('${B}/${b}/style.css') %]">
 
-With C<CHECK_DEPS>, the page must C<NEED> F<style.css> to hash it.
-That C<NEED> also makes the page again when F<style.css> changes, so
-the hash in the page is current.  Without the C<NEED>:
+With C<CHECK_DEPS>, the page must declare F<style.css> to hash it.
+Since a rule makes F<style.css>, the declaration is C<JUST:> (see
+L<RdKw::WwW::SiteConf>).  It also makes the page
+again when F<style.css> changes, so the hash in the page is current.
+Without it:
 
     [TT] undef error - get_version: undeclared dependency:
     `build/site/style.css' (aka `${B}/${b}/style.css')

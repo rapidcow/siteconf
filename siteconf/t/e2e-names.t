@@ -62,12 +62,12 @@ sub spaced_project
 		'Makefile.in' => <<'RULES',
 implicit${U+0020}name.html:
 	cp ${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}
-${b}/dir${U+20}name/page${U+0020}name.html: ${a}/source${U+20}name.txt NEED:${A}/rule${U+0020}dep WANT:${A}/optional${U+20}dep ${B}/${b}/other${U+20}name.html
+${b}/dir${U+20}name/page${U+0020}name.html: ${a}/source${U+20}name.txt NEED:${A}/rule${U+0020}dep WANT:${A}/optional${U+20}dep JUST:${B}/${b}/other${U+20}name.html
 	cp ${a:Q}/${<:Q} ${B:Q}/${b:Q}/${@:Q}
 other${U+20}name.html: ${a}/
 	printf 'generated\n' > ${B:Q}/${b:Q}/${@:Q}
 RULES
-		'html/implicit name.html' => "# NEED: header\${U+20}dep\n# NEED: \${B}/\${b}/other\${U+0020}name.html\nimplicit\n",
+		'html/implicit name.html' => "# NEED: header\${U+20}dep\n# JUST-NEED: \${B}/\${b}/other\${U+0020}name.html\nimplicit\n",
 		'html/source name.txt' => "explicit\n",
 		'header dep' => '', 'rule dep' => '', 'optional dep' => '',
 	});
@@ -197,7 +197,7 @@ sub punct_project
 		'Makefile.in' => <<'RULES',
 se${U+003B}mi.html do${$}llar.html: ${a}/
 	printf '%s\n' ${@:Q} > ${B:Q}/${b:Q}/${@:Q}
-pi${"|"}pe/x.html: ${a}/ ${B}/${b}/se${U+003B}mi.html ${B}/${b}/do${U+0024}llar.html NEED:${A}/in${U+003B}${"|"}put
+pi${"|"}pe/x.html: ${a}/ JUST:${B}/${b}/se${U+003B}mi.html JUST:${B}/${b}/do${U+0024}llar.html NEED:${A}/in${U+003B}${"|"}put
 	cat ${B:Q}/${b:Q}/${"se;mi.html":Q} ${A:Q}/${"in;|put":Q} > ${B:Q}/${b:Q}/${@:Q}
 RULES
 		'in;|put' => "input\n",
@@ -246,7 +246,7 @@ sub odd_project
 		'Makefile.in' => <<'RULES',
 hello%20world.html h#sh.html back${U+005C}slash.html q${U+0022}u${U+0027}o${U+0060}te.html amp${U+0026} ${U+0028}an${U+003C}g${U+003E}${U+007B}le${U+007D}.html: ${a}/
 	printf '%s\n' ${@:Q} > ${B:Q}/${b:Q}/${@:Q}
-per%cent/x.html: ${a}/ ${B}/${b}/hello%20world.html ${B}/${b}/h#sh.html ${B}/${b}/back${U+005C}slash.html ${B}/${b}/q${U+0022}u${U+0027}o${U+0060}te.html ${B}/${b}/amp${U+0026} ${B}/${b}/${U+0028}an${U+003C}g${U+003E}${U+007B}le${U+007D}.html NEED:${A}/in%put
+per%cent/x.html: ${a}/ JUST:${B}/${b}/hello%20world.html JUST:${B}/${b}/h#sh.html JUST:${B}/${b}/back${U+005C}slash.html JUST:${B}/${b}/q${U+0022}u${U+0027}o${U+0060}te.html JUST:${B}/${b}/amp${U+0026} JUST:${B}/${b}/${U+0028}an${U+003C}g${U+003E}${U+007B}le${U+007D}.html NEED:${A}/in%put
 	cat ${B:Q}/${b:Q}/${"amp&":Q} ${A:Q}/in%put > ${B:Q}/${b:Q}/${@:Q}
 RULES
 		'in%put' => "input\n",
@@ -319,7 +319,7 @@ ${c}/man/3/${"File::Spec"}.pod: ${a}/lib/File/Spec.pm
 	cp ${a:Q}/${<:Q} ${B:Q}/${c:Q}/${@:Q}
 ${c}/man/3/File${U+003A}${U+003A}Temp.pod: ${a}/lib/File/Temp.pm
 	cp ${a:Q}/${<:Q} ${B:Q}/${c:Q}/${@:Q}
-man/3/${"File::Spec"}.html man/3/File${U+003A}${U+003A}Temp.html: ${a}/ ${B}/${c}/${@:R}.pod
+man/3/${"File::Spec"}.html man/3/File${U+003A}${U+003A}Temp.html: ${a}/ JUST:${B}/${c}/${@:R}.pod
 	cp ${B:Q}/${c:Q}/${@:R:Q}.pod ${B:Q}/${b:Q}/${@:Q}
 RULES
 		'html/lib/File/Spec.pm' => "# NEED: co\${U+003A}lon\n=head1 NAME\n\nFile::Spec\n",

@@ -6,7 +6,7 @@ use utf8;
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 138;
+use Test::More tests => 144;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -61,6 +61,28 @@ HTML
 	$f = spew('d', "# HAVE: a\n# HAVE: b\n");
 	ok(!eval { read_deps($f); 1 }, 'two HAVEs');
 	like($@, qr/HAVE too many/, '... too many');
+}
+
+# --- read_deps: JUST is JUST-NEED; PATH is one name, as HAVE is
+{
+	my %L;
+	my $f = spew('just', "# JUST: a b
+# JUST-NEED: c
+# JUST: d
+# JUST-WANT: e
+");
+	is_deeply({ read_deps($f, lines => \%L) },
+		{ 'JUST-NEED' => [qw( a b c d )], 'JUST-WANT' => ['e'] }, 'JUST is JUST-NEED');
+	is_deeply($L{'JUST-NEED'}, [ 1, 1, 2, 3 ], '... and so are its lines');
+
+	$f = spew('path', "[%# HAVE: \${a}/x: -%]\n[%# PATH: y/z: -%]\nbody\n");
+	is_deeply({ read_deps($f, lines => \%L) }, { HAVE => '${a}/x', PATH => 'y/z' },
+		'PATH, on one line');
+	is($L{PATH}, 2, '... and its line');
+	$f = spew('paths', "# PATH: a b\n");
+	ok(!eval { read_deps($f); 1 }, 'PATH of two names');
+	$f = spew('paths2', "# PATH: a\n# PATH: b\n");
+	like(eval { read_deps($f); 1 } ? '' : $@, qr/line 2: more than one PATH/, 'two PATHs');
 }
 
 # --- read_deps: BASIC and DOS

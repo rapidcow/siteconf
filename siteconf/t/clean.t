@@ -120,7 +120,7 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Builder::Make->_text($
 	my $dir = project($m);
 	open my $fh, '>', "$dir/Makefile.in" or die;
 	print $fh "a.css d/b.css: \${A}/x\n\tcp \${a}/\${\@} \${B}/\${b}/\${\@}\n"
-		. "big.css: \${B}/\${b}/a.css\n\tcat \${B}/\${b}/a.css > \${B}/\${b}/\${\@}\n";
+		. "big.css: JUST:\${B}/\${b}/a.css\n\tcat \${B}/\${b}/a.css > \${B}/\${b}/\${\@}\n";
 	close $fh or die;
 	open $fh, '>', "$dir/html/big.css" or die; close $fh;
 	my $plan = plan_of($dir, clean => 'clean-&');

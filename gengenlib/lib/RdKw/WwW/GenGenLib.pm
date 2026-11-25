@@ -485,7 +485,13 @@ B<JUST-NEED> and B<JUST-WANT> are the same two, but what they name
 is only a name: its own header is not read, and what it declares
 is not followed.  They are for files that are not text (a pickled
 binary, say), or whose header is none of our business.
-(Added in 0.0100.)
+(Added in 0.0100.)  B<JUST> is B<JUST-NEED>: it is returned as
+C<JUST-NEED>, and there is no C<JUST> key.
+
+=item *
+
+B<PATH> takes one name, as B<HAVE> does, and is returned the same
+way (a string, not a list).  More than one is an error.
 
 =back
 
@@ -513,8 +519,8 @@ you won't see my evil desires following the TT2 closing tag...
 
 A header line is a comment (in any of the styles listed in the
 source, after anything at all, as in C<x = 1  # NEED: ...>), blanks, a field
-name and a colon.  The fields are C<HAVE>, C<NEED> and C<WANT>, in
-capitals; a field of any other name (C<USE:>, C<vim:>, C<Have:>)
+name and a colon.  The fields are C<HAVE>, C<PATH>, C<NEED>, C<WANT>,
+C<JUST-NEED> (or C<JUST>) and C<JUST-WANT>, in capitals; a field of any other name (C<USE:>, C<vim:>, C<Have:>)
 is someone else's, and is skipped: it neither ends the header nor
 begins one.  The names a field lists are separated by blanks (spaces
 and tabs) and by nothing else, so a no-break space is part of a name.
@@ -533,13 +539,13 @@ and so a colon in a name is C<${U+003A}> (see L</escape_deps>).
 The names undergo no parameter expansions.  So:
 
    # HAVE: ${a}/index.html
-   # NEED: ${B}/${b}/style.css
+   # JUST: ${B}/${b}/style.css
 
 becomes
 
    (
      HAVE => '${a}/index.html',
-     NEED => '${B}/${b}/index.html',
+     'JUST-NEED' => [ '${B}/${b}/style.css' ],
    )
 
 But you may use L</norm_deps> and L</subs_deps> to
@@ -609,7 +615,8 @@ my $header_field = qr{
 				# false positives (e.g. a quoted string or
 				# part of a word, in the case of REMember.)
 	([A-Za-z._-]+)		# The field: any name, in any case (ours
-				# are HAVE, NEED, WANT, and only so)
+				# are HAVE, PATH, NEED, WANT, JUST and
+				# JUST-NEED/WANT, and only so)
 	[\t ]* : [\t ]*		# ... and then what it says.
 }x;
 
@@ -642,7 +649,7 @@ sub read_deps
 			# What is not ours (USE:, vim:, NEED-ONLY: for now,
 			# and HAVE in any other case) is skipped: it does not
 			# end the header, nor does it begin one.
-			unless ($type =~ /\A(?:HAVE|WANT|NEED|JUST-WANT|JUST-NEED)\z/) {
+			unless ($type =~ /\A(?:HAVE|PATH|WANT|NEED|JUST|JUST-WANT|JUST-NEED)\z/) {
 				last if !$onit and $. >= 32;
 				next;
 			}
@@ -655,8 +662,16 @@ sub read_deps
 				: /\G[\t ]*([^\t :]+)/gc;
 			$onit = 1;
 			next unless @list;
+			# (JUST is JUST-NEED, as it is in Makefile.in)
+			$type = 'JUST-NEED' if $type eq 'JUST';
 
-			if ($type eq 'HAVE') {
+			if ($type eq 'PATH') {
+				die _status 0, tagmsg($prog => diag(__(
+					"%#q line %d: more than one PATH"), $file, $.))
+					if @list > 1 or exists $I{$type};
+				$I{PATH} = $list[0];
+				$L->{PATH} = $.;
+			} elsif ($type eq 'HAVE') {
 				die _status 0, tagmsg($prog => diag(__(
 					# HEY!  Keep the second-person pronoun.
 					# It's mildly sarcastic (with that period

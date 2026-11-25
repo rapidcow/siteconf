@@ -6,7 +6,7 @@
 use utf8;
 use strict;
 use warnings;
-use Test::More tests => 14;
+use Test::More tests => 21;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestDiag qw( fold );
@@ -133,6 +133,73 @@ for my $order ("NEED x\n\tNEED y\n", "NEED y\n\tNEED x\n") {
 	my $p = eval { plan_of($dir, 'all') } or diag $@;
 	is_deeply($p->{node}{y}{deps}, [ 'html/y', 'html/z', 'site/.ok' ], 'a file that is JUST here and not there is read in full')
 		or diag explain $p->{node}{y};
+}
+
+# --- what we make cannot be NEEDed or WANTed plainly, from anywhere
+{
+	my $dir = project(
+		MANIFEST => "MAKE all\n\tNEED page\n",
+		'Makefile.in' => "y z: \n$cp"
+			. "page: \${A}/tool \${B}/\${b}/y WANT:\${B}/\${b}/z\n$cp",
+		'html/y' => "y\n", 'html/z' => "z\n",
+		'html/page' => "# NEED: \${a}/inc\n# WANT: \${B}/\${b}/z\n",
+		'html/inc' => "# NEED: \${B}/\${b}/y\n",
+		'tool' => "# NEED: \${B}/\${b}/y\n",
+	);
+	is(failure($dir), <<MSG, 'every plain edge to what we make, after the rest; then what to do');
+E: 5 problems; no Makefile for you.
+E: cannot NEED/WANT a file we make:
+E:  `site/y' (NEEDed in $dir/Makefile.in line 3)
+E:   (made by $dir/Makefile.in line 1),
+E:  `site/z' (WANTed in $dir/Makefile.in line 3)
+E:   (made by $dir/Makefile.in line 1),
+E:  `site/y' (NEEDed in header of `html/inc' line 1)
+E:   (made by $dir/Makefile.in line 1),
+E:  `site/z' (WANTed in header of `html/page' line 2)
+E:   (made by $dir/Makefile.in line 1),
+E:  `site/y' (NEEDed in header of `tool' line 1)
+E:   (made by $dir/Makefile.in line 1).
+E: Please use JUST-NEED or JUST-WANT instead.
+MSG
+
+	$dir = project(
+		MANIFEST => "MAKE all\n\tNEED page\n\tNEED gone\n",
+		'Makefile.in' => "y gone: \n$cp" . "page: \${B}/\${b}/y\n$cp",
+		'html/y' => "y\n", 'html/page' => '',
+	);
+	like(failure($dir), qr/\AE: goal `all' NEEDs `gone'.*\nE: 2 problems; no Makefile for you\.\nE: cannot NEED\/WANT a file we make:\n.*\nE:   \(made by .* line 1\)\.\nE: Please use JUST-NEED or JUST-WANT instead\.\n\z/s,
+		'... and what cannot be made comes first');
+
+	$dir = project(
+		MANIFEST => "MAKE all\n\tNEED page\n",
+		'Makefile.in' => "y: \n$cp" . "page: JUST:\${B}/\${b}/y \${B}/\${b}/y\n$cp",
+		'html/y' => "y\n", 'html/page' => '',
+	);
+	like(failure($dir), qr/`site\/y' \(NEEDed in \S+ line 3\)/, 'a plain mention beside a JUST: is still one');
+}
+{
+	my $dir = project(
+		MANIFEST => "MAKE all\n\tNEED page\n",
+		'Makefile.in' => "y z: \n$cp" . "page: JUST:\${B}/\${b}/y JUST-WANT:\${B}/\${b}/z\n$cp",
+		'html/y' => "# NEED: \${a}/dep\n", 'html/dep' => "d\n", 'html/z' => "z\n",
+		'html/page' => "# JUST: \${B}/\${b}/z\n# JUST-WANT: \${B}/\${b}/y\n",
+	);
+	my $p = eval { plan_of($dir) } or diag $@;
+	is_deeply($p && $p->{node}{page}{deps}, [qw( html/page site/y site/z site/.ok )],
+		'JUST:, JUST-NEED and JUST-WANT of what we make are fine') or diag explain $p && $p->{node}{page};
+	is_deeply($p && $p->{node}{page}{kids}, [qw( y z )], '... and are edges');
+	is_deeply($p && $p->{node}{y}{deps}, [qw( html/y html/dep site/.ok )],
+		'... to a file whose own header is read all the same');
+}
+{
+	# (that is for a rule, and the build dir is no rule's)
+	my $dir = project(
+		MANIFEST => "MAKE all\n\tNEED page\n",
+		'Makefile.in' => "page: \${B}/MY/option.mk \${B}/\${b}/extern\n$cp",
+		'html/page' => "# NEED: \${B}/\${b}/extern\n",
+		'MY/option.mk' => '', 'site/extern' => '',
+	);
+	is(failure($dir), '', 'what no rule makes may be NEEDed, in ${B} or ${b}');
 }
 
 done_testing;

@@ -63,7 +63,7 @@ sub lines
 	my (%what) = @_;
 	my @sb;
 	push @sb, "#\n";
-	foreach my $what (qw( HAVE NEED WANT )) {
+	foreach my $what (qw( HAVE NEED WANT JUST-NEED JUST-WANT )) {
 		foreach (@{ $what{$what} || [] }) {
 			push @sb, "# $what: $_\n";
 		}

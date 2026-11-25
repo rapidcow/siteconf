@@ -280,3 +280,9 @@ sub _apply
 }
 
 1;
+
+=head1 SEE ALSO
+
+L<RdKw::WwW::SiteConf>, L<bmake(1)>.
+
+=cut

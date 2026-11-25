@@ -248,33 +248,9 @@ Support for C<-l> was added in 0.0300.
 
 =item B<-G> I<generator>
 
-Specifies the name of the geneator.
-If not found, C<-G> of it is an error that says what to install.
-
-The core generators include
-C<make> (default), writing F<Makefile> for POSIX-compatible make;
-C<bmake>, for NetBSD make (with little modifications);
-and C<gmake>, writing one for GNU Make, which can name files
-that POSIX make typically cannot (such as file names containing
-blanks, C<#>, C<:>, C<$>, glob wildcards and so on: see
-L<RdKw::WwW::SiteConf::Builder::Gmake>).
-
-Other non-core generators include
-C<doit>, writing F<doit.py>;
-C<ninja>, writing F<build.ninja>;
-C<redo>, writing a F<.do> file for each target and each goal;
-and C<task>, writing F<Taskfile.yml>.
-See
-L<RdKw::WwW::SiteConf::Builder::Doit>,
-L<RdKw::WwW::SiteConf::Builder::Ninja>,
-L<RdKw::WwW::SiteConf::Builder::Redo>,
-L<RdKw::WwW::SiteConf::Builder::Task>.
-
-A generator I<name> is the module C<RdKw::WwW::SiteConf::Builder::>I<Name>
-(see L<RdKw::WwW::SiteConf/generate>).  The module path is derived by
-capitalizing the letter at the beginning and immediately following a
-hyphen components.  For instance, C<gmake> would be F<Gmake.pm>, and
-C<plan9-mk> would be F<Plan9Mk.pm>.
+Select the build script generator (default C<make>).  See
+L<RdKw::WwW::SiteConf::Builder> for generator names and output files.
+If the generator is missing, siteconf reports which module to install.
 
 The C<gmake> and C<bmake> generators were added in 0.0300.
 The C<ninja> generator was moved to a non-core distribution
@@ -1229,3 +1205,9 @@ OLD
 			"$opt->{P}.render", "\@$1\@"))/ge;
 	$text;
 }
+
+=head1 SEE ALSO
+
+L<RdKw::WwW::SiteConf>, L<RdKw::WwW::SiteConf::Builder>, L<RdKw::WwW::SiteConf::Configure>.
+
+=cut

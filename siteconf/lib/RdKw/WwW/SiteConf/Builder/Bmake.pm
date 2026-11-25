@@ -32,3 +32,9 @@ with siteconf too.
 =cut
 
 1;
+
+=head1 SEE ALSO
+
+L<RdKw::WwW::SiteConf::Builder>, L<RdKw::WwW::SiteConf/generate>.
+
+=cut

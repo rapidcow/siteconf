@@ -315,3 +315,9 @@ sub build_command
 }
 
 1;
+
+=head1 SEE ALSO
+
+L<RdKw::WwW::SiteConf::Builder>, L<RdKw::WwW::SiteConf/generate>.
+
+=cut

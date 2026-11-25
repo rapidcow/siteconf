@@ -15,4 +15,4 @@ is($RdKw::WwW::SiteConf::Builder::Task::VERSION, $RdKw::WwW::SiteConf::VERSION,
 	'the version of siteconf');
 diag( "Testing RdKw::WwW::SiteConf::Builder::Task $RdKw::WwW::SiteConf::Builder::Task::VERSION, Perl $], $^X" );
 # (the program that t/e2e-task.t runs)
-diag( describe(q(task ($TASK)), task_cmd(), q(--version)) );
+diag( describe(q(task ($GO_TASK)), task_cmd(), q(--version)) );

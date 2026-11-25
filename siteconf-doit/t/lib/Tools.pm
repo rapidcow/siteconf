@@ -1,7 +1,7 @@
 package Tools;
 #
-# t/lib/Tools.pm - the programs that the tests run, and where they are
-# (t/00-load.t says).
+# t/lib/Tools.pm - the programs that the tests run: which one
+# ($PY_DOIT may say), and where it is (t/00-load.t says).
 #
 use strict;
 use warnings;
@@ -46,7 +46,7 @@ sub describe
 	$line;
 }
 
-# `doit' (there is nothing to say which, but $PATH)
-sub doit_cmd { 'doit' }
+# `doit', or what $PY_DOIT says
+sub doit_cmd { $ENV{PY_DOIT} || 'doit' }
 
 1;

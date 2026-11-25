@@ -15,4 +15,4 @@ is($RdKw::WwW::SiteConf::Builder::Doit::VERSION, $RdKw::WwW::SiteConf::VERSION,
 	'the version of siteconf');
 diag( "Testing RdKw::WwW::SiteConf::Builder::Doit $RdKw::WwW::SiteConf::Builder::Doit::VERSION, Perl $], $^X" );
 # (the program that t/e2e-doit.t runs)
-diag( describe(q(doit), doit_cmd(), q(--version)) );
+diag( describe(q(doit ($PY_DOIT)), doit_cmd(), q(--version)) );

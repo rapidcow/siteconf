@@ -1,7 +1,7 @@
 package Tools;
 #
-# t/lib/Tools.pm - the programs that the tests run: which one ($TASK
-# may say), and where it is (t/00-load.t says).
+# t/lib/Tools.pm - the programs that the tests run: which one
+# ($GO_TASK may say), and where it is (t/00-load.t says).
 #
 use strict;
 use warnings;
@@ -46,7 +46,7 @@ sub describe
 	$line;
 }
 
-# `task', or what $TASK says
-sub task_cmd { $ENV{TASK} || 'task' }
+# `task' (Go Task, not Taskwarrior), or what $GO_TASK says
+sub task_cmd { $ENV{GO_TASK} || 'task' }
 
 1;

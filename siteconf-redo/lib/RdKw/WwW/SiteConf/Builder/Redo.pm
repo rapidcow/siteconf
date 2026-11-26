@@ -48,9 +48,10 @@ in its own directory), runs C<redo-ifchange> on what the target
 needs, and then runs the recipe from F<Makefile.in>, as make would
 run it from the build directory.  A F<.do> may not write the target
 itself: it writes C<$3>, and redo makes the target of that.  So in the
-recipe, C<${@}> and C<${@:Q}> (and C<${.TARGET}>) name C<$3>: the
-target's directory, as the recipe says it, and then the last part of
-the name of C<$3> (C<${o##*/}>), which is in that directory.  Its name
+recipe, C<${@}> and C<${@:Q}> (and C<${.TARGET}>) name C<$3>: they are
+C<$o> and C<"$o">, which is the target's directory, as C<${@}> says it,
+and then the last part of the name of C<$3>, which is in that
+directory.  Its name
 is redo's, and need not end as the target's does: a program that
 looks at the end of a name for the format to write (as ImageMagick
 does) should be told the format (C<png:${b}/${@}>).  With any other
@@ -71,9 +72,10 @@ Directory markers are not made: the directory of a target is made when
 its F<.do> file is written.
 
 A F<.do> file keeps two names in shell variables: the build directory,
-seen from where the F<.do> runs, in C<$d>; and the absolute name of
-C<$3>, in C<$o>.  The recipes run in the same shell (in subshells), so
-they see these too.  C<-Sarg_prefix> puts a prefix on both names (see
+seen from where the F<.do> runs, in C<$d>; and in C<$o>, what C<${@}>
+says (above), or, for a F<.do> that moves the target to C<$3>, the
+absolute name of C<$3>.  The recipes run in the same shell (in
+subshells), so they see these too.  C<-Sarg_prefix> puts a prefix on both names (see
 L</Options>).
 
 A cleaning rule of C<-Sclean> or C<-Spurge> (named as with
@@ -220,21 +222,12 @@ sub recipe_target
 	!($opt && $opt->{literal_target});
 }
 
-# ${@} (`name', the target's name in its tree; `quoted' if it was
-# ${@:Q}), as $3: the target's directory, as the recipe says it, then
-# the last part of $3, which redo puts in the same directory.  In
-# make's words, as recipe_bytes says: a `$' for the shell is $$.
+# ${@} (or ${@:Q}, `quoted'), as $3: $o, which _preamble set to it.
+# In make's words, as recipe_bytes says: a `$' for the shell is $$.
 sub _target
 {
 	my ($v, $name, $quoted) = @_;
-	my ($dir) = $name =~ m!\A(.*/)!s;
-	$dir = defined $dir ? RdKw::WwW::SiteConf::fs_text($dir) : '';
-	my $base = "\${$v->{o}##*/}";
-	my $s = $quoted
-		? (length $dir ? RdKw::WwW::SiteConf::shell_quote($dir) : '') . qq("$base")
-		: $dir . $base;
-	$s =~ s/\$/\$\$/g;
-	$s;
+	$quoted ? qq("\$\$$v->{o}") : "\$\$$v->{o}";
 }
 
 sub default_output { q(all.do) }
@@ -285,12 +278,12 @@ sub emit
 		@cmd or die _status 0, tagmsg(E => diag(__(
 			"%#q: no recipe to make it (and redo has no way to make"
 			. " nothing)"), $file));
-		my $text = $target_head . _preamble($v, $target, 'out');
+		my $text = $target_head . _preamble($v, $target, 'out', $node->{recipe_target});
 		my @need = grep { !/$marker/ } @{ $node->{deps} };
 		$text .= _ifchange($v, @need);
 		# (a redo may have made $3 already, as redo-c does, for us to
 		# write into, with a mode of its own: the recipe makes its own)
-		$text .= "rm -f -- \"\$$v->{o}\"\n" if $node->{recipe_target};
+		$text .= "rm -f -- \"\$3\"\n" if defined $node->{recipe_target};
 		# (the recipe, from the build directory)
 		$text .= _cd($v);
 		for (@cmd) {
@@ -301,7 +294,7 @@ sub emit
 		}
 		# (a recipe that said ${@} wrote $3; one that did not, the target)
 		$text .= "$mv " . _word($target) . " \"\$$v->{o}\"\n"
-			unless $node->{recipe_target};
+			unless defined $node->{recipe_target};
 		push @file, [ "$target.do", $text, 1 ];
 	}
 
@@ -464,10 +457,12 @@ sub _with_goals
 # from where redo was run; so the .do stays where it was run, and names
 # what it needs by way of $d (`d' of _vars): the build directory, seen
 # from there (empty, or ending in a `/'; not beginning with a `-').  $3
-# is kept in $o, as an absolute name, for after the recipe's `cd'.
+# is kept in $o (if `out'), as an absolute name, for after the recipe's
+# `cd'; or, given `at' (the target's name in its tree, as ${@}), $o is
+# what ${@} says: its directory, then the last part of $3 (see _target).
 sub _preamble
 {
-	my ($v, $name, $out) = @_;
+	my ($v, $name, $out, $at) = @_;
 	my ($d, $o) = @$v{qw( d o )};
 	_argv_is_fs($name);
 	my @up = split m!/!, $name, -1;
@@ -477,8 +472,13 @@ sub _preamble
 			# HEY!  %s is the name of a target, or a goal
 			"redo cannot name %q: it is not in the build directory"), $name));
 	my $text = "set -e\n";
-	$text .= "case \$3 in /*) $o=\$3 ;; *) $o=\${PWD}/\$3 ;; esac\n"
-		if $out;
+	if (defined $at) {
+		my ($dir) = $at =~ m!\A(.*/)!s;
+		$text .= "$o=" . (defined $dir ? RdKw::WwW::SiteConf::shell_quote(
+			RdKw::WwW::SiteConf::fs_text($dir)) : '') . "\${3##*/}\n";
+	} elsif ($out) {
+		$text .= "case \$3 in /*) $o=\$3 ;; *) $o=\${PWD}/\$3 ;; esac\n";
+	}
 	$text .= "case \$0 in -*/*) $d=./\${0%/*}/ ;; */*) $d=\${0%/*}/ ;; *) $d= ;; esac\n";
 	$text .= "$d=\$$d" . ('../' x @up) . "\n" if @up;
 	# Certain redo implementations redirect standard

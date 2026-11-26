@@ -260,7 +260,7 @@ sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
 		[ text => 'x ' ], [ target => 'x/y.md', 0 ], [ text => '/' ],
 		[ target => 'x/y.md', 1 ], [ text => ' x/y' ],
 	], 'recipe_target: ${@} and ${@:Q} are runs of their own');
-	ok($sc->{rule_now}{recipe_target}, '... and the rule says that it has them');
+	is($sc->{rule_now}{recipe_target}, 'x/y.md', '... and the rule says that it has them, and what ${@} is');
 	is(RdKw::WwW::SiteConf::recipe_bytes(\@runs, target => sub { "<$_[0]," . ($_[1] ? 'q' : 'u') . '>' }),
 		'x <x/y.md,u>/<x/y.md,q> x/y', '... which the backend spells');
 	@runs = ([ target => 'a b', 'test', 1 ], [ text => ' ' ], [ target => 'c', 'test', 0 ]);
@@ -289,7 +289,7 @@ sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
 	my $p = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1);
 	$p->{recipe_target} = 1;
 	my $plan = $p->plan;
-	is_deeply([ map { $plan->{node}{$_}{recipe_target} } qw( a d/b ) ], [ 1, undef ],
-		'recipe_target: the node of a recipe that has them');
+	is_deeply([ map { $plan->{node}{$_}{recipe_target} } qw( a d/b ) ], [ 'a', undef ],
+		'recipe_target: the node of a recipe that has them says what ${@} is');
 	is(rb($plan->{node}{a}{recipe}), "\tcp html/a site/a\n", '... which is the name, if the backend does not say');
 }

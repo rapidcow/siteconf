@@ -1342,7 +1342,7 @@ sub _subst
 			if ($runs && $self->{recipe_target}
 				&& (!defined $mods || $mods eq 'Q')) {
 				push @$runs, [ target => $node, $where, defined $mods ? 1 : 0 ];
-				$self->{rule_now}{recipe_target} = 1 if $self->{rule_now};
+				$self->{rule_now}{recipe_target} = $node if $self->{rule_now};
 				$put->('text', $slash);
 				next;
 			}
@@ -1831,7 +1831,7 @@ sub _node
 		return $done->();
 	}
 	$node->{recipe} = $rule->{recipe};
-	$node->{recipe_target} = 1 if $rule->{recipe_target};
+	$node->{recipe_target} = $rule->{recipe_target} if defined $rule->{recipe_target};
 
 	my %L;
 	my %I = $nosrc || $just ? () : read_deps($self->_fs($apath), lines => \%L);
@@ -2136,7 +2136,7 @@ that is C<NEED>ed cannot be had.
                       recipe => [ [ KIND, TEXT, WHERE ] ... ],
                       recipe_target } }
             (KIND is text, word, or target: see recipe_bytes.  recipe_target:
-            true if the recipe has a target run)
+            what ${@} is, if the recipe has a target run)
   order   [ FILE ... ]    all files, in order of appearance
   dirs    [ { dir, marker, deps => [ MARKER ] } ]   parents first
   clean   [ { name, files => [ BPATH ] } ]   (if S says clean, else [])
@@ -2543,7 +2543,8 @@ C<${@:Q}> (and C<${.TARGET}>) in a recipe are not text: each is a run
 C<[ target =E<gt> >I<name>C<, >I<where>C<, >I<quoted>C< ]>, which the
 generator spells with the C<target> of L</recipe_bytes>.  With any
 other modifier, C<${@}> is the target's own name.  A node whose recipe
-has such a run has a true C<recipe_target> in the plan.  (The redo
+has such a run has C<recipe_target> in the plan: what C<${@}> is (the
+target's name, relative to C<${b}> or C<${c}>).  (The redo
 generator has a recipe write C<$3>, which is redo's to name.)
 
 =item C<emit> I<plan>, I<file>

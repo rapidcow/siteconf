@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 86;
+use Test::More tests => 87;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf::Builder::Redo;
@@ -54,19 +54,23 @@ is($f->{'all.do'} =~ /\n(set -e\ncase .*\nexec >&2\nredo-ifchange .*\n)\z/ && $1
 	ok(!$class->recipe_target({ literal_target => 1 }), '... but not with -Sliteral_target=1');
 	ok(!grep({ !$class->recipe_target({ literal_target => $_ }) } 0, '', undef),
 		'... and =0, or no value, as without it');
-	local $plan->{node}{y} = { bpath => 'site/d/y.png', deps => [], recipe_target => 1, recipe => [
+	local $plan->{node}{y} = { bpath => 'site/d/y.png', deps => [], recipe_target => 'd/y.png', recipe => [
 		[ text => "\tconvert in/y png:", 'y' ], [ target => 'd/y.png', 'y', 0 ],
-		[ text => "\n\tcp in/y site/", 'y' ], [ target => 'd/y.png', 'y', 1 ],
-		[ text => " 'a b'/", 'y' ], [ target => 'a b/z', 'y', 1 ], [ text => "\n", 'y' ] ] };
-	local $plan->{order} = [ 'x', 'y' ];
-	my $do = files($plan)->{'site/d/y.png.do'};
-	like($do, qr/^rm -f -- "\$o"\ncd -- /m, '... which a redo may have made already: it is the recipe\'s to make');
-	like($do, qr/^\( convert in\/y png:d\/\$\{o##\*\/\} \)$/m, '... ${@}: its directory, and the last part of $3');
-	like($do, qr/^\( cp in\/y site\/d\/"\$\{o##\*\/\}" 'a b'\/'a b\/'"\$\{o##\*\/\}" \)\n\z/m,
-		'... ${@:Q}: so quoted, and there is no mv');
+		[ text => "\n\tcp in/y site/", 'y' ], [ target => 'd/y.png', 'y', 1 ], [ text => "\n", 'y' ] ] };
+	local $plan->{node}{z} = { bpath => 'site/a b/$z', deps => [], recipe_target => 'a b/$z', recipe => [
+		[ text => "\ttouch site/", 'z' ], [ target => 'a b/$z', 'z', 1 ], [ text => "\n", 'z' ] ] };
+	local $plan->{order} = [ 'x', 'y', 'z' ];
+	my $f = files($plan);
+	my $do = $f->{'site/d/y.png.do'};
+	like($do, qr/^set -e\no=d\/\$\{3##\*\/\}\n/m, '... $o is what ${@} says: its directory, and the last part of $3');
+	like($do, qr/^rm -f -- "\$3"\ncd -- /m, '... $3, which a redo may have made already: it is the recipe\'s to make');
+	like($do, qr/^\( convert in\/y png:\$o \)\n\( cp in\/y site\/"\$o" \)\n\z/m,
+		'... ${@} is $o, ${@:Q} is "$o", and there is no mv');
+	like($f->{'site/a b/$z.do'}, qr/^o='a b\/'\$\{3##\*\/\}\n(?:.*\n)*\( touch site\/"\$o" \)\n\z/m,
+		'... with its directory quoted');
 	local $plan->{opt} = { arg_prefix => 'sc_', cmd_mv_f => 'mv -v --' };
 	$do = files($plan)->{'site/d/y.png.do'};
-	like($do, qr/png:d\/\$\{sc_o##\*\/\}/, '... -Sarg_prefix: $sc_o');
+	like($do, qr/^sc_o=d\/\$\{3##\*\/\}\n(?:.*\n)*\( convert in\/y png:\$sc_o \)/m, '... -Sarg_prefix: $sc_o');
 	like(files($plan)->{'site/x.do'}, qr/\nmv -v -- site\/x "\$sc_o"\n\z/,
 		'... and a recipe that does not say ${@} writes the target, moved by -Scmd_mv_f');
 }

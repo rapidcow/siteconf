@@ -46,9 +46,19 @@ A goal's F<.do> file runs C<redo-ifchange> on the files of the goal.
 A target's F<.do> file goes to the build directory (a F<.do> file runs
 in its own directory), runs C<redo-ifchange> on what the target
 needs, and then runs the recipe from F<Makefile.in>, as make would
-run it from the build directory.  The recipe writes the target itself,
-which redo does not allow, so the target is then moved to C<$3>, the
-file redo makes the target of.  What the recipe writes to the standard
+run it from the build directory.  A F<.do> may not write the target
+itself: it writes C<$3>, and redo makes the target of that.  So in the
+recipe, C<${@}> and C<${@:Q}> (and C<${.TARGET}>) name C<$3>: the
+target's directory, as the recipe says it, and then the last part of
+the name of C<$3> (C<${o##*/}>), which is in that directory.  Its name
+is redo's, and need not end as the target's does: a program that
+looks at the end of a name for the format to write (as ImageMagick
+does) should be told the format (C<png:${b}/${@}>).  With any other
+modifier, as C<${@:R}> or C<${@:T}>, C<${@}> is the target's own name,
+as it is in the prerequisites.  A recipe that does not say C<${@}>
+that way writes the target, which is then moved to C<$3>.
+C<-Sliteral_target=1> says the target's own name everywhere, and moves
+the target (see L</Options>).  What the recipe writes to the standard
 output goes to the standard error, so that redo does not take it for
 the target.
 
@@ -125,10 +135,22 @@ limit.  See L<RdKw::WwW::SiteConf/arg_max>.
 =item C<cmd_rm_f>, C<cmd_mv_f>
 
 The command that removes the files of a cleaning rule (C<rm -f -->
-by default), and the one that moves a target into place, to C<$3>
-(C<mv -f --> by default).  The names follow it as words of their own.
+by default), and the one that moves the target to C<$3> (C<mv -f -->
+by default), for a recipe that writes the target (one that does not
+say C<${@}>, or with L</literal_target>).  The names follow it as words
+of their own.
 It goes in the F<.do> as it is: C<-Scmd_rm_f='rm -fv --'>.
 L<RdKw::WwW::SiteConf/command> says what it may be.
+
+=item C<literal_target>
+
+Without it, or with C<-Sliteral_target=0> or no value, C<${@}> in a
+recipe names C<$3> (see L</DESCRIPTION>).  With
+C<-Sliteral_target=1>, C<${@}> in a recipe is the target's own name,
+which the recipe writes, and which is then moved to C<$3>.  The target
+is then gone while the F<.do> runs, which not every redo allows: when what is made is the same
+as before, goredo keeps the old target in place of C<$3>, and fails,
+as it is not there.
 
 =item C<sh>
 
@@ -153,7 +175,13 @@ They change with siteconf: they are not a stable interface.
 
 =item B<options>
 
-L</arg_prefix>, C<clean>, C<purge> and L</arg_max>.
+L</arg_prefix>, C<clean>, C<purge>, L</arg_max>, C<cmd_rm_f>,
+C<cmd_mv_f>, L</sh> and L</literal_target>.
+
+=item B<recipe_target> I<options>
+
+True, for C<${@}> in a recipe to name C<$3>; false with
+L</literal_target>.
 
 =item B<default_output>
 
@@ -182,7 +210,32 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { qw( arg_prefix clean purge arg_max cmd_rm_f cmd_mv_f sh ) }
+sub options { qw( arg_prefix clean purge arg_max cmd_rm_f cmd_mv_f sh literal_target ) }
+
+# Whether ${@} in a recipe says $3 (see the DESCRIPTION, and _target):
+# unless -Sliteral_target=1 says the target itself
+sub recipe_target
+{
+	my ($class, $opt) = @_;
+	!($opt && $opt->{literal_target});
+}
+
+# ${@} (`name', the target's name in its tree; `quoted' if it was
+# ${@:Q}), as $3: the target's directory, as the recipe says it, then
+# the last part of $3, which redo puts in the same directory.  In
+# make's words, as recipe_bytes says: a `$' for the shell is $$.
+sub _target
+{
+	my ($v, $name, $quoted) = @_;
+	my ($dir) = $name =~ m!\A(.*/)!s;
+	$dir = defined $dir ? RdKw::WwW::SiteConf::fs_text($dir) : '';
+	my $base = "\${$v->{o}##*/}";
+	my $s = $quoted
+		? (length $dir ? RdKw::WwW::SiteConf::shell_quote($dir) : '') . qq("$base")
+		: $dir . $base;
+	$s =~ s/\$/\$\$/g;
+	$s;
+}
 
 sub default_output { q(all.do) }
 
@@ -225,6 +278,7 @@ sub emit
 		my $target = $node->{bpath};
 		my @cmd = RdKw::WwW::SiteConf::recipe_commands(
 			RdKw::WwW::SiteConf::recipe_bytes($node->{recipe},
+				target => sub { _target($v, @_) },
 				line_break => __(
 					# HEY!  the second %s is the value, which has a line break
 					"%s: redo cannot spell a line break in %q (it ends a command)")));
@@ -234,6 +288,9 @@ sub emit
 		my $text = $target_head . _preamble($v, $target, 'out');
 		my @need = grep { !/$marker/ } @{ $node->{deps} };
 		$text .= _ifchange($v, @need);
+		# (a redo may have made $3 already, as redo-c does, for us to
+		# write into, with a mode of its own: the recipe makes its own)
+		$text .= "rm -f -- \"\$$v->{o}\"\n" if $node->{recipe_target};
 		# (the recipe, from the build directory)
 		$text .= _cd($v);
 		for (@cmd) {
@@ -242,7 +299,9 @@ sub emit
 			$line =~ s/\$\$/\$/g;
 			$text .= $ignore ? "( $line ) || true\n" : "( $line )\n";
 		}
-		$text .= "$mv " . _word($target) . " \"\$$v->{o}\"\n";
+		# (a recipe that said ${@} wrote $3; one that did not, the target)
+		$text .= "$mv " . _word($target) . " \"\$$v->{o}\"\n"
+			unless $node->{recipe_target};
 		push @file, [ "$target.do", $text, 1 ];
 	}
 

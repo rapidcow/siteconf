@@ -997,6 +997,11 @@ byte, and with a C<$> of what the shell reads doubled.  The text and an
 unquoted variable are the author's: they say C<echo "表"> if they mean it.
 (A name in them was checked, as the name of a file, when it was read.)
 
+A C<target> run (see C<recipe_target> of L</generate>) is what the
+option C<target> (a function) returns for it, given the target's name
+and whether it was quoted: bytes in make's words, as the rest.  Without
+C<target>, it is the target's own name, as C<${@}> (or C<${@:Q}>) is.
+
 =cut
 
 sub recipe_bytes
@@ -1010,7 +1015,9 @@ sub recipe_bytes
 		# that can be said at all is for the backend (`line_break').
 		$kind ne 'text' && $s =~ /\n/ && $opt{line_break} and
 			die _status 0, tagmsg(E => diag($opt{line_break}, $where, $s));
-		if ($kind eq 'word') {
+		if ($kind eq 'target' && $opt{target}) {
+			$out .= $opt{target}->($s, $_->[3]);
+		} elsif ($kind eq 'word' || $kind eq 'target' && $_->[3]) {
 			$out .= _dollars(shell_quote(_to_fs($s)));
 		} else {
 			$out .= _to_fs($s);
@@ -1243,6 +1250,9 @@ sub read_manifest
 #   [ text => $text, $where ]    in make's words
 #   [ word => $value, $where ]   a value for the shell, to be quoted
 #                                after it is spelled in bytes
+#   [ target => $name, $where, $quoted ]
+#                                ${@} (or ${@:Q}, $quoted), if the
+#                                backend says it (recipe_target)
 # A :Q is only a mark: it must be the last modifier, in a recipe, and
 # the backend quotes the word (see recipe_bytes).  Elsewhere it is an
 # error, which says where (`noquote' is that, as in `a prerequisite').
@@ -1325,6 +1335,17 @@ sub _subst
 				"%s: %s outside of a recipe"),
 				$where, "\${$x}"));
 			$val = $node;
+			# In a recipe, the backend may say the file to write itself
+			# (see recipe_target of generate): ${@} and ${@:Q} are a run
+			# of their own, for it to spell.  With any other modifier, it
+			# is the target's own name, which says something else.
+			if ($runs && $self->{recipe_target}
+				&& (!defined $mods || $mods eq 'Q')) {
+				push @$runs, [ target => $node, $where, defined $mods ? 1 : 0 ];
+				$self->{rule_now}{recipe_target} = 1 if $self->{rule_now};
+				$put->('text', $slash);
+				next;
+			}
 		} elsif ($x eq '<' or $x eq '.IMPSRC') {
 			defined $src or die _status 0, tagmsg(E => diag(__(
 				"%s: misplaced %s (not in a recipe)"),
@@ -1527,6 +1548,8 @@ sub _read_rules
 		# The recipe is runs (see _subst) in make's words: a `$' from $$
 		# or a variable is make's, but one in what a :Q made is the shell's
 		# (the backend writes it $$).  Quoting is by bytes, so it is theirs.
+		# (_subst says on it if the backend named ${@} otherwise)
+		local $self->{rule_now} = $rule;
 		for (@{ $rule->{raw} }) {
 			# (as the variables were when the line was read)
 			local $self->{D} = $_->[2];
@@ -1808,6 +1831,7 @@ sub _node
 		return $done->();
 	}
 	$node->{recipe} = $rule->{recipe};
+	$node->{recipe_target} = 1 if $rule->{recipe_target};
 
 	my %L;
 	my %I = $nosrc || $just ? () : read_deps($self->_fs($apath), lines => \%L);
@@ -2109,7 +2133,10 @@ that is C<NEED>ed cannot be had.
             `,' or `WANT:'; select, if it is a goal of its own, as `goal'
             or `WANT:goal'.  The default goal, if any, is the first.)
   node    { FILE => { file, apath, nosrc, bpath, deps,
-                      recipe => [ [ KIND, TEXT, WHERE ] ... ] } }
+                      recipe => [ [ KIND, TEXT, WHERE ] ... ],
+                      recipe_target } }
+            (KIND is text, word, or target: see recipe_bytes.  recipe_target:
+            true if the recipe has a target run)
   order   [ FILE ... ]    all files, in order of appearance
   dirs    [ { dir, marker, deps => [ MARKER ] } ]   parents first
   clean   [ { name, files => [ BPATH ] } ]   (if S says clean, else [])
@@ -2508,6 +2535,17 @@ The names of the options (C<-S>) that it knows.
 The name of the file that I<file> names, by default, or C<undef> if
 there is none (and so there is no I<file>).
 
+=item C<recipe_target> I<options>
+
+Optional.  True if the generator says itself what file a recipe writes
+for its target; I<options> are those of C<options>.  Then C<${@}> and
+C<${@:Q}> (and C<${.TARGET}>) in a recipe are not text: each is a run
+C<[ target =E<gt> >I<name>C<, >I<where>C<, >I<quoted>C< ]>, which the
+generator spells with the C<target> of L</recipe_bytes>.  With any
+other modifier, C<${@}> is the target's own name.  A node whose recipe
+has such a run has a true C<recipe_target> in the plan.  (The redo
+generator has a recipe write C<$3>, which is redo's to name.)
+
 =item C<emit> I<plan>, I<file>
 
 The files to write: a list of C<[ NAME, BYTES ]> or
@@ -2618,6 +2656,9 @@ sub generate
 			"-S$k=$self->{S}{$k}", $G)));
 	}
 	local $self->{S} = \%S;
+	# (what the backend has the recipes write in place of the target)
+	local $self->{recipe_target} = $module->can('recipe_target')
+		? $module->recipe_target(\%S) : undef;
 	my $plan = $self->plan;
 	$plan->{opt} = \%S;
 	my $My = "$self->{B}/MY";

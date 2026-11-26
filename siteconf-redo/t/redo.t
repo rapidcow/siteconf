@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 78;
+use Test::More tests => 86;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf::Builder::Redo;
@@ -46,6 +46,30 @@ like($do, qr/^\( sed 's:a:b:' \tq \)$/m, 'a backslash joins lines');
 like($do, qr/\nmv -f -- site\/x "\$o"\n\z/, 'the target is moved to $3');
 is($f->{'all.do'} =~ /\n(set -e\ncase .*\nexec >&2\nredo-ifchange .*\n)\z/ && $1, "set -e\n$B0\nexec >&2\nredo-ifchange \"\$d\"site/x\n",
 	'the goal needs its files, from the build directory');
+
+# A recipe that says ${@} (or ${@:Q}) writes $3: see recipe_target,
+# and t/modifiers.t of siteconf for the runs that ${@} is
+{
+	ok($class->recipe_target({}), 'recipe_target: ${@} is $3');
+	ok(!$class->recipe_target({ literal_target => 1 }), '... but not with -Sliteral_target=1');
+	ok(!grep({ !$class->recipe_target({ literal_target => $_ }) } 0, '', undef),
+		'... and =0, or no value, as without it');
+	local $plan->{node}{y} = { bpath => 'site/d/y.png', deps => [], recipe_target => 1, recipe => [
+		[ text => "\tconvert in/y png:", 'y' ], [ target => 'd/y.png', 'y', 0 ],
+		[ text => "\n\tcp in/y site/", 'y' ], [ target => 'd/y.png', 'y', 1 ],
+		[ text => " 'a b'/", 'y' ], [ target => 'a b/z', 'y', 1 ], [ text => "\n", 'y' ] ] };
+	local $plan->{order} = [ 'x', 'y' ];
+	my $do = files($plan)->{'site/d/y.png.do'};
+	like($do, qr/^rm -f -- "\$o"\ncd -- /m, '... which a redo may have made already: it is the recipe\'s to make');
+	like($do, qr/^\( convert in\/y png:d\/\$\{o##\*\/\} \)$/m, '... ${@}: its directory, and the last part of $3');
+	like($do, qr/^\( cp in\/y site\/d\/"\$\{o##\*\/\}" 'a b'\/'a b\/'"\$\{o##\*\/\}" \)\n\z/m,
+		'... ${@:Q}: so quoted, and there is no mv');
+	local $plan->{opt} = { arg_prefix => 'sc_', cmd_mv_f => 'mv -v --' };
+	$do = files($plan)->{'site/d/y.png.do'};
+	like($do, qr/png:d\/\$\{sc_o##\*\/\}/, '... -Sarg_prefix: $sc_o');
+	like(files($plan)->{'site/x.do'}, qr/\nmv -v -- site\/x "\$sc_o"\n\z/,
+		'... and a recipe that does not say ${@} writes the target, moved by -Scmd_mv_f');
+}
 
 {
 	local $plan->{goals} = [ both(q(site), [q(x)]), own(q(demo/index)) ];
@@ -208,7 +232,7 @@ is($f->{'all.do'} =~ /\n(set -e\ncase .*\nexec >&2\nredo-ifchange .*\n)\z/ && $1
 		q(a .do is not written over a target)) or diag $@;
 }
 
-is_deeply([ sort $class->options ], [ qw( arg_max arg_prefix clean cmd_mv_f cmd_rm_f purge sh ) ], q(options));
+is_deeply([ sort $class->options ], [ qw( arg_max arg_prefix clean cmd_mv_f cmd_rm_f literal_target purge sh ) ], q(options));
 
 is_deeply([ $class->build_command('redo', 'build', undef, 'all') ], [ qw[ ( cd build && redo all ) ] ], q(to build: cd to B, then redo the goal));
 is_deeply([ $class->build_command(q(redo), q(.), undef, q(a b)) ], [ q(redo), "'a b'" ], q(... quoted, in B already));

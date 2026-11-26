@@ -137,7 +137,7 @@ push @ok, (
 	['${<:Q}',          "'s\tc:d.md'", 'x', "s\tc:d.md"],
 	['${A:Q}/${a:Q}',   'html'],                       # (${A} of . takes its slash)
 );
-plan tests => @ok + 15 + 1 + 3 + keys(%Q) + 1 + 1 + 1;
+plan tests => @ok + 15 + 1 + 3 + keys(%Q) + 1 + 1 + 1 + 7 + 2;
 
 for my $c (@ok) {
 	my ($in, $want, $node, $src) = @$c;
@@ -246,4 +246,50 @@ sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
 		[ text => "\tx " ], [ word => 'd$l $(x)' ], [ text => ' d$l $(x) ' ],
 		[ word => 'd$l $(x)' ], [ text => ' ' ], [ word => 'a' ], [ text => "\n" ],
 	], 'a recipe is runs of text and words');
+}
+
+# --- recipe_target: a backend may say ${@} and ${@:Q} (and ${.TARGET})
+# itself in a recipe; with any other modifier, or out of a recipe, it
+# is the target's own name
+{
+	local $sc->{recipe_target} = 1;
+	local $sc->{rule_now} = {};
+	my @runs;
+	$sc->_subst('x ${@}/${.TARGET:Q} ${@:R}', 'x/y.md', 'test', undef, \@runs);
+	is_deeply([ map { [ @$_[0, 1], @$_[3 .. $#$_] ] } @runs ], [
+		[ text => 'x ' ], [ target => 'x/y.md', 0 ], [ text => '/' ],
+		[ target => 'x/y.md', 1 ], [ text => ' x/y' ],
+	], 'recipe_target: ${@} and ${@:Q} are runs of their own');
+	ok($sc->{rule_now}{recipe_target}, '... and the rule says that it has them');
+	is(RdKw::WwW::SiteConf::recipe_bytes(\@runs, target => sub { "<$_[0]," . ($_[1] ? 'q' : 'u') . '>' }),
+		'x <x/y.md,u>/<x/y.md,q> x/y', '... which the backend spells');
+	@runs = ([ target => 'a b', 'test', 1 ], [ text => ' ' ], [ target => 'c', 'test', 0 ]);
+	is(RdKw::WwW::SiteConf::recipe_bytes(\@runs), "'a b' c", '... or, if not, the name, as ${@} would be');
+	local $sc->{rule_now} = {};
+	is(s_('${@:R} ${@:T:Q} ${@:S/y/z/} ${a}/${@:H}', 'x/y.md'),
+		"x/y y.md x/z.md html/x",
+		'... any other modifier: the target\'s own name');
+	ok(!exists $sc->{rule_now}{recipe_target}, '... which is not a run of its own');
+	is($sc->_subst('${@}', 'x/y.md', 'test'), 'x/y.md', '... and out of a recipe (a prerequisite), too');
+}
+
+# ... and in a plan, the node says that its recipe has them
+{
+	my $dir = tempdir(CLEANUP => 1);
+	make_path("$dir/html/d", "$dir/MY");
+	for (qw( a d/b )) { open my $fh, '>', "$dir/html/$_" or die; close $fh }
+	open my $fh, '>', "$dir/Makefile.in" or die;
+	print $fh "a:\n\tcp \${a}/\${<} \${B:Q}/\${b:Q}/\${\@:Q}\nd/b: \${a}/d/b\n\tcp \${a}/\${\@:T} \${b}/\${\@:R}\n";
+	close $fh or die;
+	open $fh, '>', "$dir/MANIFEST" or die;
+	print $fh "MAKE all\n\tNEED a d/b\n";
+	close $fh or die;
+	write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
+		R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, prog => 'test');
+	my $p = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1);
+	$p->{recipe_target} = 1;
+	my $plan = $p->plan;
+	is_deeply([ map { $plan->{node}{$_}{recipe_target} } qw( a d/b ) ], [ 1, undef ],
+		'recipe_target: the node of a recipe that has them');
+	is(rb($plan->{node}{a}{recipe}), "\tcp html/a site/a\n", '... which is the name, if the backend does not say');
 }

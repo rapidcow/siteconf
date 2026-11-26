@@ -2,6 +2,6 @@
 # Transformation rules from ${a}/% to ${b}/%
 #
 index.html sub/index.html extra/index.html: ${A}/render
-	cd -- ${A:Q} && ${^X} render -B ${B:Q} ${a}/${.TARGET} ${B:Q}/${b}/${.TARGET}
+	cd -- ${A:Q} && ${^X} render -B ${B:Q} ${a}/${.IMPSRC} ${B:Q}/${b}/${.TARGET}
 robots.txt style.css:
-	cd -- ${A:Q} && cp ${a}/${.TARGET} ${B:Q}/${b}/${.TARGET}
+	cd -- ${A:Q} && cp ${a}/${.IMPSRC} ${B:Q}/${b}/${.TARGET}

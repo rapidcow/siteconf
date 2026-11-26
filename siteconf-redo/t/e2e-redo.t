@@ -40,7 +40,7 @@ probe
 	defined $line && $line eq "ok\n";
 }
 redo_builds() or plan skip_all => "no redo";
-plan tests => 43;
+plan tests => 49;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q
 	-MRdKw::WwW::GenLib=0 ));
@@ -55,6 +55,9 @@ run('siteconf -g -G redo, again', $^X, $script, qw( -g -q -G redo -B build -t al
 ok(-x 'build/basic.do', '... even one that was there, and is the same');
 run('redo basic', $redo, 'build/basic');
 ok(-f 'build/site/sub/index.html', 'redo basic: sub built');
+like(slurp('build/site/sub/index.html.do'), qr{ build/site/sub/\$\{o##\*/\} \)\n\z},
+	'the recipe writes $3, and there is no mv');
+ok(!grep({ !-f && -s _ } map { "build/site/$_" } qw( index.html sub/index.html )), '... and redo makes the target of it');
 ok(!-e 'build/site/robots.txt', 'redo basic: only the subset');
 like(slurp('build/site/sub/index.html'), qr/location=sub\/index\.html/, 'redo: O.location');
 # (redo, and not redo-ifchange: JdeBP's runs only in a .do.  A goal is
@@ -94,7 +97,7 @@ unlike($out, qr{\.do}, q(-t , -o /dev/null: no .do at all, as the targets' are a
 $out = run(q(siteconf -g -G redo -Sclean -Spurge -Sarg_prefix=sc_), $^X, $script,
 	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ), @Ssh);
 ok(-x 'build/clean.do' && -x 'build/purge.do', q(-Sclean -Spurge: clean.do and purge.do));
-like(slurp('build/site/robots.txt.do'), qr/"\$sc_o"\n\z/, q(-Sarg_prefix=sc_: $sc_o));
+like(slurp('build/site/robots.txt.do'), qr/^rm -f -- "\$sc_o"\n.* build\/site\/\$\{sc_o##\*\/\} \)\n\z/ms, q(-Sarg_prefix=sc_: $sc_o));
 run('redo all', $redo, 'build/all');
 ok(-f 'build/site/robots.txt', '... redo all');
 run('redo clean', $redo, 'build/clean');
@@ -108,5 +111,13 @@ $out = run(q(siteconf -g -G redo, with them again), $^X, $script,
 	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ), @Ssh);
 run('redo purge', $redo, 'build/purge');
 ok(!-e 'build/site/robots.txt', 'redo purge: gone too');
+
+# -Sliteral_target=1: the recipe writes the target, which goes to $3
+$out = run(q(siteconf -g -G redo -Sliteral_target=1), $^X, $script,
+	qw( -g -G redo -B build -t all -Sliteral_target=1 ), @Ssh);
+like(slurp('build/site/robots.txt.do'), qr{^\( cd -- \.\. && cp html/robots\.txt build/site/robots\.txt \)\nmv -f -- site/robots\.txt "\$o"$}m,
+	'-Sliteral_target=1: the recipe writes the target');
+run('redo all, -Sliteral_target=1', $redo, 'build/all');
+ok(-f 'build/site/robots.txt' && -f 'build/site/sub/index.html', '... and redo all makes it');
 
 E2E::done();

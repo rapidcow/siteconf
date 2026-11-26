@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Cwd qw(getcwd);
 use File::Temp qw(tempdir);
-use Test::More tests => 22;
+use Test::More;
 use RdKw::WwW::SiteConf::Builder::Doit;
 my $backend = 'RdKw::WwW::SiteConf::Builder::Doit';
 my @recipe = ([text => "cd -- "], [word => '.'], [text => ' && cd sub && cp '],
@@ -61,6 +61,36 @@ for my $mode (qw(shell exec cmdline)) {
 	$plan->{opt}{no_chdir} = undef;
 	($out) = $backend->emit($plan, 'dodo.py');
 	like($out->[1], qr/'-c', '.*cd -- .*cat input > target'.*\], None/, "explicit cd in $mode");
+}
+$plan->{opt} = {mode => 'exec'};
+for my $case (
+	['cd a || exit $$? ; cp x y', qr/\['cp', 'x', 'y'\], 'a'/],
+	['cd a || exit ; cd b || exit', qr/'-c', ':', 'sh'\], 'a\/b'/],
+	['cd a && cd b || exit; cp x y', qr/\['cp', 'x', 'y'\], 'a\/b'/],
+	['cd -L -- a && cd -P b/.. || exit; cp x y', qr/\['cp', 'x', 'y'\], 'a\/b\/\.\.'/],
+	['cd link && cd -L .. || exit', qr/'-c', 'cd link && cd -L \.\. \|\| exit', 'sh'\], None/],
+	['cd a || exit 0; cp x y', qr/'-c', 'cd a \|\| exit 0; cp x y', 'sh'\], None/],
+	['{ cd a || exit; }', qr/'-c', '\{ cd a \|\| exit; \}', 'sh'\], None/],
+) {
+	@recipe = ([text => $case->[0]]);
+	my ($out) = $backend->emit($plan, 'dodo.py');
+	like($out->[1], $case->[1], $case->[0]);
+}
+SKIP: {
+	skip 'no doit', 4 unless $installed;
+	mkdir 'sub/nested' or die $!;
+	skip "cannot create directory symlink: " . ($@ || $!), 4
+		unless eval { symlink('sub/nested', 'link') };
+	for my $case ([L => 'marker-L'], [P => 'sub/marker-P']) {
+		my ($flag, $marker) = @$case;
+		@recipe = ([text => "cd link && cd -$flag .. || exit; touch marker-$flag"]);
+		my ($file) = $backend->emit($plan, "link_$flag.py");
+		open my $fh, '>', $file->[0] or die $!;
+		print $fh $file->[1];
+		close $fh or die $!;
+		is(system('doit', '-f', $file->[0], '-a'), 0, "run cd -$flag through symlink");
+		ok(-f $marker, "cd -$flag reached expected parent");
+	}
 }
 @recipe = ([text => 'set -- changed; cat '], [word => 'source $']);
 for my $opt ({}, {arg_prefix => undef}) {

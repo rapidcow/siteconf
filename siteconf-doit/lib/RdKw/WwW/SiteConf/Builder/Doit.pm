@@ -50,8 +50,13 @@ Choose a nonempty prefix the recipe does not use.
 C<-Smode=exec> runs a simple external command directly. Commands outside
 the supported literal-word syntax run through the default shell form.
 
-In all modes, a leading C<cd [--] dir &&> with a literal directory
-sets the working directory of the action. Adjacent literal and C<:Q>
+In all modes, a leading C<cd [-L|-P] [--] dir &&> with a literal directory
+sets the working directory of the action. The backend also recognizes
+C<cd dir || exit> and C<cd dir || exit $?>, optionally followed by
+a semicolon and another command. Consecutive relative directories
+are joined in order. Logical directory changes (the default or C<-L>)
+that contain a C<..> component stay in the shell to preserve symlink
+semantics. Adjacent literal and C<:Q>
 fragments can form the directory. C<-Sno_chdir> keeps these commands
 in the shell, for example when the recipe relies on C<CDPATH> or handles
 a failed C<cd> itself. C<-Sno_chdir=0> enables extraction again.
@@ -145,13 +150,22 @@ sub _action
 	my ($ignore, $line, $word, $mode, $prefix, $no_chdir) = @_;
 	my ($argv, $cwd);
 	unless ($no_chdir) {
-		while ($line =~ /\A[ \t]*cd[ \t]+(?:(--)[ \t]+)?($literal_word)[ \t]*&&[ \t]*(?=\S)/) {
-			my ($end, $dash, $token) = ($+[0], $1, $2);
+		my $original = $line;
+		while ($line =~ /\A[ \t]*cd[ \t]+((?:-[LP]+[ \t]+)*)(?:(--)[ \t]+)?($literal_word)[ \t]*
+				(?: && [ \t]*(?=\S)
+				 | \|\| [ \t]*exit (?:[ \t]+\$\?)? [ \t]*(?:;(?![;&])[ \t]*|\z)
+				)/x) {
+			my ($end, $flags, $dash, $token) = ($+[0], $1, $2, $3);
 			my $dir = _word_value($token, $word);
 			last if !length($dir) || $dir eq '-' || (!$dash && $dir =~ /^-/);
+			if ($flags !~ /P[ \t]*\z/ && $dir =~ m{(?:^|/)\.\.(?:/|$)}) {
+				($line, $cwd) = ($original, undef);
+				last;
+			}
 			last if defined $cwd && $dir =~ m{^/};
 			$cwd = defined $cwd ? "$cwd/$dir" : $dir;
 			substr($line, 0, $end, '');
+			$line = ':' unless length $line;
 		}
 	}
 	$argv = _exec($line, $word) if $mode eq 'exec';

@@ -1,17 +1,19 @@
 package Tools;
 #
 # t/lib/Tools.pm - the programs that the tests run: which one ($REDO
-# may say), and where it is (t/00-load.t says).
+# may say), and where it is (t/00-load.t says); and what runs a .do
+# ($REDO_SH may say).
 #
 use strict;
 use warnings;
 
 use Cwd qw( abs_path );
+use File::Basename qw( dirname );
 use File::Spec;
 
 use Exporter ();
 our @ISA = qw( Exporter );
-our @EXPORT_OK = qw( which describe redo_cmd );
+our @EXPORT_OK = qw( which describe redo_cmd redo_path redo_sh shq );
 
 # Where a command (its first word) is: there, if it has a `/'; or else
 # the first in $PATH.  undef if it is nowhere.
@@ -46,8 +48,29 @@ sub describe
 	$line;
 }
 
-# `redo', or what $REDO says.  (What a .do runs, as redo-ifchange, is
-# found in $PATH, whatever $REDO is.)
-sub redo_cmd { $ENV{REDO} || 'redo' }
+# `redo', or what $REDO says.  $REDO goes out of the environment: to
+# apenwarr's redo, it says that we are in a .do (it sets it there),
+# and redo at the top would not check what is out of date.
+my $REDO = delete $ENV{REDO};
+sub redo_cmd { $REDO || 'redo' }
+
+# A .do runs redo-ifchange, which it finds in $PATH.  So that it is
+# the one of the same redo, put where redo is first in $PATH.  Returns
+# that directory, or undef (and $PATH as it was) if redo is nowhere.
+sub redo_path
+{
+	my $path = which(redo_cmd());
+	defined $path or return undef;
+	my $dir = dirname($path);
+	$ENV{PATH} = join ':', $dir, grep { $_ ne $dir } File::Spec->path;
+	$dir;
+}
+
+# What $REDO_SH says (for -Ssh, and the #! of a .do), or undef.  Termux
+# has no /bin/sh: REDO_SH=/data/data/com.termux/files/usr/bin/sh
+sub redo_sh { defined $ENV{REDO_SH} && length $ENV{REDO_SH} ? $ENV{REDO_SH} : undef }
+
+# One word for sh
+sub shq { (my $s = shift) =~ s/'/'\\''/g; "'$s'" }
 
 1;

@@ -11,10 +11,17 @@ use File::Temp qw( tempdir );
 use lib "$FindBin::Bin/lib";
 
 use E2E;
-use Tools qw( redo_cmd );
+use Tools qw( redo_cmd redo_path redo_sh shq );
 
 my $script = E2E::setup();
 my $redo = redo_cmd();
+# The redo-ifchange that a .do runs is the one next to redo
+my $bin = redo_path();
+defined $bin && -x "$bin/redo-ifchange"
+	or plan skip_all => defined $bin ? "no redo-ifchange in $bin" : "no redo";
+# What runs a .do, if $REDO_SH says (as on Termux, with no /bin/sh)
+my $sh = redo_sh();
+my @Ssh = defined $sh ? shq("-Ssh=$sh") : ();
 # Not --version: a redo may not have it, or not say its name in it.
 # What we need of redo is that it builds a file from its .do (in a
 # directory of its own, for redo keeps its state there).
@@ -22,8 +29,7 @@ sub redo_builds
 {
 	my $dir = tempdir(CLEANUP => 1);
 	open my $fh, '>', "$dir/probe.do" or die "probe.do: $!";
-	print $fh <<\probe;
-#!/bin/sh
+	print $fh "#!", defined $sh ? $sh : q(/bin/sh), "\n", <<\probe;
 echo ok >"$3";
 probe
 	close $fh or die "probe.do: $!";
@@ -42,11 +48,11 @@ run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -
 mkdir 'build' or die "mkdir: $!";
 run('./configure', $^X, './configure', '-q');
 
-my $out = run('siteconf -g -G redo', $^X, $script, qw( -g -G redo -B build -t all -t basic ));
+my $out = run('siteconf -g -G redo', $^X, $script, qw( -g -G redo -B build -t all -t basic ), @Ssh);
 like($out, qr{To build, run: \( cd build && redo all \)$}m, 'says what to run');
 ok(!grep({ !-x } 'build/basic.do', 'build/all.do', glob('build/site/*.do')), 'the .do files are executable');
 chmod 0644, 'build/basic.do' or die "chmod: $!";
-run('siteconf -g -G redo, again', $^X, $script, qw( -g -q -G redo -B build -t all -t basic ));
+run('siteconf -g -G redo, again', $^X, $script, qw( -g -q -G redo -B build -t all -t basic ), @Ssh);
 ok(-x 'build/basic.do', '... even one that was there, and is the same');
 run('redo basic', $redo, 'build/basic');
 ok(-f 'build/site/sub/index.html', 'redo basic: sub built');
@@ -69,25 +75,25 @@ ok(-f 'build/site/robots.txt', 'redo all');
 # Other goals: the same rules, so the targets' .do files are left alone;
 # and the default goal (-t ,: all, the first of the manifest) is all.do,
 # which was the goal all's
-$out = run(q(siteconf -g -G redo -t , -t basic), $^X, $script, qw( -g -G redo -B build -t ), q(,), qw( -t basic ));
+$out = run(q(siteconf -g -G redo -t , -t basic), $^X, $script, qw( -g -G redo -B build -t ), q(,), qw( -t basic ), @Ssh);
 unlike($out, qr{site/}, q(... and only the goals are written)) or diag $out;
 like($out, qr{^Updating all\.do$}m, q(... all.do, now the default goal's));
-like(slurp(q(build/all.do)), qr/^# options: -t ,$/m, q(... as its header says));
+like(slurp(q(build/all.do)), qr/^# options: -t ,(?: \S*-Ssh=.*)?$/m, q(... as its header says));
 like($out, qr{To build, run: \( cd build && redo all \)$}m, q(... which is what to run));
 run(q(redo, for all.do), $redo, q(build/all));
 
 # -o: the default goal's .do; /dev/null, none
-$out = run(q(siteconf -g -G redo -t ,basic -o top.do), $^X, $script, qw( -g -G redo -B build -t ), q(,basic), qw( -o top.do ));
+$out = run(q(siteconf -g -G redo -t ,basic -o top.do), $^X, $script, qw( -g -G redo -B build -t ), q(,basic), qw( -o top.do ), @Ssh);
 like($out, qr{^Writing top\.do$}m, q(-t ,basic -o top.do: the default goal is top.do));
 like($out, qr{To build, run: \( cd build && redo top \)$}m, q(... which is what to run));
 run(q(redo top), $redo, q(build/top));
-$out = run(q(siteconf -g -G redo -o /dev/null), $^X, $script, qw( -g -G redo -B build -t ), q(,), qw( -o /dev/null ));
+$out = run(q(siteconf -g -G redo -o /dev/null), $^X, $script, qw( -g -G redo -B build -t ), q(,), qw( -o /dev/null ), @Ssh);
 unlike($out, qr{\.do}, q(-t , -o /dev/null: no .do at all, as the targets' are as they were)) or diag $out;
 
 # -Sclean: clean.do removes what all makes, and redo makes it again
 # (-Sarg_prefix: the .do files work by other names too)
 $out = run(q(siteconf -g -G redo -Sclean -Spurge -Sarg_prefix=sc_), $^X, $script,
-	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ));
+	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ), @Ssh);
 ok(-x 'build/clean.do' && -x 'build/purge.do', q(-Sclean -Spurge: clean.do and purge.do));
 like(slurp('build/site/robots.txt.do'), qr/"\$sc_o"\n\z/, q(-Sarg_prefix=sc_: $sc_o));
 run('redo all', $redo, 'build/all');
@@ -97,10 +103,10 @@ ok(!-e 'build/site/robots.txt' && !-e 'build/site/sub/index.html', 'redo clean: 
 run('redo all, after clean', $redo, 'build/all');
 ok(-f 'build/site/robots.txt' && -f 'build/site/sub/index.html', '... and redo all makes them again');
 $out = run(q(siteconf -g -G redo, without -Sclean -Spurge -Sarg_max), $^X, $script,
-	qw( -g -G redo -B build -t all -Sarg_prefix=sc_ ));
+	qw( -g -G redo -B build -t all -Sarg_prefix=sc_ ), @Ssh);
 unlike($out, qr{site/}, q(... the targets' .do files are left alone)) or diag $out;
 $out = run(q(siteconf -g -G redo, with them again), $^X, $script,
-	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ));
+	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ), @Ssh);
 run('redo purge', $redo, 'build/purge');
 ok(!-e 'build/site/robots.txt', 'redo purge: gone too');
 

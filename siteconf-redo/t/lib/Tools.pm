@@ -67,37 +67,69 @@ sub ifchange_cmd { $ENV{REDO_IFCHANGE} || 'redo-ifchange' }
 
 # A .do runs redo-ifchange, which it finds in $PATH.  So that it is the
 # one we mean, we make a directory of two links, redo and
-# redo-ifchange, and put it first in $PATH.  Without $REDO_IFCHANGE,
-# redo-ifchange is the one next to redo, or else the first in $PATH.
-# If links cannot be made, redo's own directory goes first in $PATH,
-# and redo-ifchange must be in it.
+# redo-ifchange, and put it first in $PATH.
 #
-# Returns the redo to run (in the directory of links, so that it is
-# named redo), and the directory; or nothing, and why.
+# $REDO_IFCHANGE says which redo-ifchange, and we take it as it is.
+# Without it, redo-ifchange is the one in redo's directory (as it was
+# found), or else in the directory of the file redo links to, or else
+# the first in $PATH; but only if it is of the same redo, as one of
+# them says (see _together).  If links cannot be made, the directories
+# of redo and redo-ifchange go first in $PATH, and they must be the
+# first found there.
+#
+# Returns the redo to run (named redo, as it is in the directory of
+# links), and the directory; or nothing, and why.
 sub redo_bin
 {
 	my $redo = _find(redo_cmd());
 	defined $redo or return (undef, sprintf "%s: not found", redo_cmd());
 	$redo = File::Spec->rel2abs($redo);
-	my $here = dirname($redo);
-	my $ifchange = $ENV{REDO_IFCHANGE} ? _find(ifchange_cmd())
-		: -f "$here/redo-ifchange" && -x _ ? "$here/redo-ifchange"
-		: _find(ifchange_cmd());
-	defined $ifchange or return (undef, sprintf "%s: not found", ifchange_cmd());
+	my $ifchange;
+	if ($ENV{REDO_IFCHANGE}) {
+		$ifchange = _find(ifchange_cmd());
+		defined $ifchange or return (undef, sprintf "%s: not found", ifchange_cmd());
+	} else {
+		my $real = abs_path($redo);
+		($ifchange) = grep { -f && -x _ } "@{[ dirname($redo) ]}/redo-ifchange",
+			defined $real ? "@{[ dirname($real) ]}/redo-ifchange" : ();
+		if (!defined $ifchange) {
+			$ifchange = _find('redo-ifchange');
+			defined $ifchange or return (undef, "redo-ifchange: not found");
+			_together($redo, $ifchange) or return (undef, sprintf
+				"%s is not of the same redo as %s (set REDO_IFCHANGE?)",
+				$ifchange, $redo);
+		}
+	}
 	$ifchange = File::Spec->rel2abs($ifchange);
 	my $bin = tempdir(CLEANUP => 1);
-	my $dir;
 	if (eval { symlink($redo, "$bin/redo")
 		&& symlink($ifchange, "$bin/redo-ifchange") }) {
-		$dir = $bin;
-	} else {
-		-f "$here/redo-ifchange" && -x _
-			&& File::Spec->rel2abs("$here/redo-ifchange") eq $ifchange
-			or return (undef, "no links, and redo-ifchange is not in $here");
-		$dir = $here;
+		$ENV{PATH} = join ':', $bin, File::Spec->path;
+		return ("$bin/redo", $bin);
 	}
-	$ENV{PATH} = join ':', $dir, grep { $_ ne $dir } File::Spec->path;
-	("$dir/redo", $dir);
+	my %seen;
+	my $was = $ENV{PATH};
+	$ENV{PATH} = join ':', grep { !$seen{$_}++ }
+		dirname($redo), dirname($ifchange), File::Spec->path;
+	my ($r, $i) = (_find('redo'), _find('redo-ifchange'));
+	return ($redo, dirname($redo))
+		if defined $r && $r eq $redo && defined $i && $i eq $ifchange;
+	$ENV{PATH} = $was;
+	(undef, "no links, and \$PATH would not find $redo and $ifchange");
+}
+
+# Whether redo-ifchange belongs with redo: in the same directory (as
+# found, so a directory such as /opt/homebrew/bin that links both is
+# trusted), or links into the same directory, or is the same file (a
+# program that does what its argv[0] says).
+sub _together
+{
+	my ($redo, $ifchange) = @_;
+	dirname(File::Spec->rel2abs($redo)) eq dirname(File::Spec->rel2abs($ifchange))
+		and return 1;
+	my ($r, $i) = (abs_path($redo), abs_path($ifchange));
+	defined $r && defined $i or return 0;
+	$r eq $i || dirname($r) eq dirname($i);
 }
 
 # What $REDO_SH says (for -Ssh, and the #! of a .do), or undef.  Termux

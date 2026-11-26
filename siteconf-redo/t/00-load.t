@@ -17,7 +17,7 @@ diag( "Testing RdKw::WwW::SiteConf::Builder::Redo $RdKw::WwW::SiteConf::Builder:
 # (the programs that t/e2e-redo.t runs: redo, and what a .do runs)
 my ($redo, $dir) = redo_bin();
 diag( defined $redo ? describe(q(redo ($REDO)), $redo) : "redo: $dir" );
-diag( describe(q(redo-ifchange ($REDO_IFCHANGE)), "$dir/redo-ifchange") ) if defined $redo;
+diag( describe(q(redo-ifchange ($REDO_IFCHANGE)), q(redo-ifchange)) ) if defined $redo;
 # (the #! of a .do; the kernel finds its first word)
 my $sh = redo_sh() || q(/bin/sh);
 diag( describe(q(sh ($REDO_SH)), $sh) . ($sh =~ /\s/ ? qq(, as in: $sh) : q()) );

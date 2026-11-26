@@ -1,8 +1,8 @@
 package Tools;
 #
-# t/lib/Tools.pm - the programs that the tests run: which one ($REDO
-# may say), and where it is (t/00-load.t says); and what runs a .do
-# ($REDO_SH may say).
+# t/lib/Tools.pm - the programs that the tests run: which ones ($REDO
+# and $REDO_IFCHANGE may say), and where they are (t/00-load.t says);
+# and what runs a .do ($REDO_SH may say).
 #
 use strict;
 use warnings;
@@ -10,18 +10,25 @@ use warnings;
 use Cwd qw( abs_path );
 use File::Basename qw( dirname );
 use File::Spec;
+use File::Temp qw( tempdir );
 
 use Exporter ();
 our @ISA = qw( Exporter );
-our @EXPORT_OK = qw( which describe redo_cmd redo_path redo_sh shq );
+our @EXPORT_OK = qw( which describe redo_cmd ifchange_cmd redo_bin redo_sh shq );
 
 # Where a command (its first word) is: there, if it has a `/'; or else
 # the first in $PATH.  undef if it is nowhere.
 sub which
 {
-	my ($cmd) = @_;
-	my ($word) = split ' ', $cmd;
-	defined $word or return undef;
+	my ($word) = split ' ', $_[0];
+	defined $word ? _find($word) : undef;
+}
+
+# Where a program is, as which says, but all of it is the name
+sub _find
+{
+	my ($word) = @_;
+	length $word or return undef;
 	return -f $word && -x _ ? $word : undef if $word =~ m!/!;
 	for my $dir (File::Spec->path) {
 		my $path = File::Spec->catfile(length $dir ? $dir : '.', $word);
@@ -54,16 +61,43 @@ sub describe
 my $REDO = delete $ENV{REDO};
 sub redo_cmd { $REDO || 'redo' }
 
-# A .do runs redo-ifchange, which it finds in $PATH.  So that it is
-# the one of the same redo, put where redo is first in $PATH.  Returns
-# that directory, or undef (and $PATH as it was) if redo is nowhere.
-sub redo_path
+# `redo-ifchange', or what $REDO_IFCHANGE says.  (It may be the same
+# program as $REDO, which does what its argv[0] says, as goredo does.)
+sub ifchange_cmd { $ENV{REDO_IFCHANGE} || 'redo-ifchange' }
+
+# A .do runs redo-ifchange, which it finds in $PATH.  So that it is the
+# one we mean, we make a directory of two links, redo and
+# redo-ifchange, and put it first in $PATH.  Without $REDO_IFCHANGE,
+# redo-ifchange is the one next to redo, or else the first in $PATH.
+# If links cannot be made, redo's own directory goes first in $PATH,
+# and redo-ifchange must be in it.
+#
+# Returns the redo to run (in the directory of links, so that it is
+# named redo), and the directory; or nothing, and why.
+sub redo_bin
 {
-	my $path = which(redo_cmd());
-	defined $path or return undef;
-	my $dir = dirname($path);
+	my $redo = _find(redo_cmd());
+	defined $redo or return (undef, sprintf "%s: not found", redo_cmd());
+	$redo = File::Spec->rel2abs($redo);
+	my $here = dirname($redo);
+	my $ifchange = $ENV{REDO_IFCHANGE} ? _find(ifchange_cmd())
+		: -f "$here/redo-ifchange" && -x _ ? "$here/redo-ifchange"
+		: _find(ifchange_cmd());
+	defined $ifchange or return (undef, sprintf "%s: not found", ifchange_cmd());
+	$ifchange = File::Spec->rel2abs($ifchange);
+	my $bin = tempdir(CLEANUP => 1);
+	my $dir;
+	if (eval { symlink($redo, "$bin/redo")
+		&& symlink($ifchange, "$bin/redo-ifchange") }) {
+		$dir = $bin;
+	} else {
+		-f "$here/redo-ifchange" && -x _
+			&& File::Spec->rel2abs("$here/redo-ifchange") eq $ifchange
+			or return (undef, "no links, and redo-ifchange is not in $here");
+		$dir = $here;
+	}
 	$ENV{PATH} = join ':', $dir, grep { $_ ne $dir } File::Spec->path;
-	$dir;
+	("$dir/redo", $dir);
 }
 
 # What $REDO_SH says (for -Ssh, and the #! of a .do), or undef.  Termux

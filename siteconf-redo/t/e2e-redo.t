@@ -11,14 +11,13 @@ use File::Temp qw( tempdir );
 use lib "$FindBin::Bin/lib";
 
 use E2E;
-use Tools qw( redo_cmd redo_path redo_sh shq );
+use Tools qw( redo_bin redo_sh shq );
 
 my $script = E2E::setup();
-my $redo = redo_cmd();
-# The redo-ifchange that a .do runs is the one next to redo
-my $bin = redo_path();
-defined $bin && -x "$bin/redo-ifchange"
-	or plan skip_all => defined $bin ? "no redo-ifchange in $bin" : "no redo";
+# redo and redo-ifchange, first in $PATH (see t/lib/Tools.pm)
+my ($redo, $why) = redo_bin();
+defined $redo or plan skip_all => $why;
+$redo = shq($redo);	# (run says it to sh)
 # What runs a .do, if $REDO_SH says (as on Termux, with no /bin/sh)
 my $sh = redo_sh();
 my @Ssh = defined $sh ? shq("-Ssh=$sh") : ();

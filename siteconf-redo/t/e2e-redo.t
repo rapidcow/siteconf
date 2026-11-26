@@ -63,13 +63,14 @@ like(slurp('build/site/sub/index.html'), qr/location=sub\/index\.html/, 'redo: O
 # (redo, and not redo-ifchange: JdeBP's runs only in a .do.  A goal is
 # made every time, and makes what it needs only if that is out of date)
 unlike(run('redo basic again', $redo, 'build/basic'), qr/site\/index\.html/, 'redo: incremental');
-# (what it says and when: JdeBP's redo looks at what is in a file, but
-# only if its time is not the second it was built in, as it may be here)
+# (what it says and when: a redo may look at what is in a file only if
+# its time is not the second that it was seen in, as JdeBP's does with
+# the mtime, and redo-c with the ctime, which utime cannot move; so the
+# change is in a second after the build's)
+next_second();
 open my $fh, '>>', 'html/index.html' or die "html/index.html: $!";
 print $fh "<!-- newer -->\n";
 close $fh or die "html/index.html: $!";
-my $t = time + 10;
-utime $t, $t, 'html/index.html' or die "html/index.html: $!";
 like(run('redo basic, a source changed', $redo, 'build/basic'), qr/site\/index\.html/, '... and out of date');
 run('redo all', $redo, 'build/all');
 ok(-f 'build/site/robots.txt', 'redo all');
@@ -121,3 +122,11 @@ run('redo all, -Sliteral_target=1', $redo, 'build/all');
 ok(-f 'build/site/robots.txt' && -f 'build/site/sub/index.html', '... and redo all makes it');
 
 E2E::done();
+
+# Wait for the clock to be in the next second (a file's times are in
+# whole seconds, to a redo that reads only st_mtime or st_ctime)
+sub next_second
+{
+	my $t = time;
+	select undef, undef, undef, 0.05 while time <= $t;
+}

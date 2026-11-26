@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 87;
+use Test::More tests => 88;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
 BEGIN { $ENV{LANGUAGE} = 'C' }
 use RdKw::WwW::SiteConf::Builder::Redo;
@@ -62,15 +62,16 @@ is($f->{'all.do'} =~ /\n(set -e\ncase .*\nexec >&2\nredo-ifchange .*\n)\z/ && $1
 	local $plan->{order} = [ 'x', 'y', 'z' ];
 	my $f = files($plan);
 	my $do = $f->{'site/d/y.png.do'};
-	like($do, qr/^set -e\no=d\/\$\{3##\*\/\}\n/m, '... $o is what ${@} says: its directory, and the last part of $3');
+	like($do, qr/^set -e\nO=d\/\$\{3##\*\/\}\n/m, '... $O is what ${@} says: its directory, and the last part of $3');
+	unlike($do, qr/\bo=/, '... and there is no $o');
 	like($do, qr/^rm -f -- "\$3"\ncd -- /m, '... $3, which a redo may have made already: it is the recipe\'s to make');
-	like($do, qr/^\( convert in\/y png:\$o \)\n\( cp in\/y site\/"\$o" \)\n\z/m,
-		'... ${@} is $o, ${@:Q} is "$o", and there is no mv');
-	like($f->{'site/a b/$z.do'}, qr/^o='a b\/'\$\{3##\*\/\}\n(?:.*\n)*\( touch site\/"\$o" \)\n\z/m,
+	like($do, qr/^\( convert in\/y png:\$O \)\n\( cp in\/y site\/"\$O" \)\n\z/m,
+		'... ${@} is $O, ${@:Q} is "$O", and there is no mv');
+	like($f->{'site/a b/$z.do'}, qr/^O='a b\/'\$\{3##\*\/\}\n(?:.*\n)*\( touch site\/"\$O" \)\n\z/m,
 		'... with its directory quoted');
 	local $plan->{opt} = { arg_prefix => 'sc_', cmd_mv_f => 'mv -v --' };
 	$do = files($plan)->{'site/d/y.png.do'};
-	like($do, qr/^sc_o=d\/\$\{3##\*\/\}\n(?:.*\n)*\( convert in\/y png:\$sc_o \)/m, '... -Sarg_prefix: $sc_o');
+	like($do, qr/^sc_O=d\/\$\{3##\*\/\}\n(?:.*\n)*\( convert in\/y png:\$sc_O \)/m, '... -Sarg_prefix: $sc_O');
 	like(files($plan)->{'site/x.do'}, qr/\nmv -v -- site\/x "\$sc_o"\n\z/,
 		'... and a recipe that does not say ${@} writes the target, moved by -Scmd_mv_f');
 }

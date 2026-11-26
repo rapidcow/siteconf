@@ -49,7 +49,7 @@ needs, and then runs the recipe from F<Makefile.in>, as make would
 run it from the build directory.  A F<.do> may not write the target
 itself: it writes C<$3>, and redo makes the target of that.  So in the
 recipe, C<${@}> and C<${@:Q}> (and C<${.TARGET}>) name C<$3>: they are
-C<$o> and C<"$o">, which is the target's directory, as C<${@}> says it,
+C<$O> and C<"$O">, which is the target's directory, as C<${@}> says it,
 and then the last part of the name of C<$3>, which is in that
 directory.  Its name
 is redo's, and need not end as the target's does: a program that
@@ -71,12 +71,12 @@ C<@> is dropped, a leading C<-> ignores failure, and a C<$$> is a C<$>.
 Directory markers are not made: the directory of a target is made when
 its F<.do> file is written.
 
-A F<.do> file keeps two names in shell variables: the build directory,
-seen from where the F<.do> runs, in C<$d>; and in C<$o>, what C<${@}>
-says (above), or, for a F<.do> that moves the target to C<$3>, the
-absolute name of C<$3>.  The recipes run in the same shell (in
-subshells), so they see these too.  C<-Sarg_prefix> puts a prefix on both names (see
-L</Options>).
+A F<.do> file keeps names in shell variables: the build directory,
+seen from where the F<.do> runs, in C<$d>; and what C<${@}> says
+(above), in C<$O>, or, if the F<.do> moves the target to C<$3>, the
+absolute name of C<$3>, in C<$o>.  The recipes run in the same shell
+(in subshells), so they see these too.  C<-Sarg_prefix> puts a prefix
+on the names (see L</Options>).
 
 A cleaning rule of C<-Sclean> or C<-Spurge> (named as with
 L<RdKw::WwW::SiteConf::Builder::Make/Options>) is I<name>F<.do> in the
@@ -116,8 +116,8 @@ Those of C<-S> of C<siteconf -g>:
 =item C<arg_prefix>
 
 The prefix of the shell variables of a F<.do> file: C<-Sarg_prefix=sc_>
-names them C<$sc_d> and C<$sc_o>.  The default is no prefix (C<$d> and
-C<$o>), and so is C<-Sarg_prefix> with no value, or an empty one.  A
+names them C<$sc_d>, C<$sc_O> and C<$sc_o>.  The default is no prefix
+(C<$d>, C<$O> and C<$o>), and so is C<-Sarg_prefix> with no value, or an empty one.  A
 prefix is a letter or C<_>, and then letters, digits and C<_>.  Choose
 one that the recipes do not use.
 
@@ -222,12 +222,12 @@ sub recipe_target
 	!($opt && $opt->{literal_target});
 }
 
-# ${@} (or ${@:Q}, `quoted'), as $3: $o, which _preamble set to it.
+# ${@} (or ${@:Q}, `quoted'), as $3: $O, which _preamble set to it.
 # In make's words, as recipe_bytes says: a `$' for the shell is $$.
 sub _target
 {
 	my ($v, $name, $quoted) = @_;
-	$quoted ? qq("\$\$$v->{o}") : "\$\$$v->{o}";
+	$quoted ? qq("\$\$$v->{O}") : "\$\$$v->{O}";
 }
 
 sub default_output { q(all.do) }
@@ -457,13 +457,14 @@ sub _with_goals
 # from where redo was run; so the .do stays where it was run, and names
 # what it needs by way of $d (`d' of _vars): the build directory, seen
 # from there (empty, or ending in a `/'; not beginning with a `-').  $3
-# is kept in $o (if `out'), as an absolute name, for after the recipe's
-# `cd'; or, given `at' (the target's name in its tree, as ${@}), $o is
-# what ${@} says: its directory, then the last part of $3 (see _target).
+# is kept in $o (if `out'), as an absolute name, for the mv after the
+# recipe's `cd'; or, given `at' (the target's name in its tree, as ${@}),
+# $O is what ${@} says: its directory, then the last part of $3 (see
+# _target), and there is no mv, nor $o.
 sub _preamble
 {
 	my ($v, $name, $out, $at) = @_;
-	my ($d, $o) = @$v{qw( d o )};
+	my ($d, $o, $O) = @$v{qw( d o O )};
 	_argv_is_fs($name);
 	my @up = split m!/!, $name, -1;
 	pop @up;
@@ -474,7 +475,7 @@ sub _preamble
 	my $text = "set -e\n";
 	if (defined $at) {
 		my ($dir) = $at =~ m!\A(.*/)!s;
-		$text .= "$o=" . (defined $dir ? RdKw::WwW::SiteConf::shell_quote(
+		$text .= "$O=" . (defined $dir ? RdKw::WwW::SiteConf::shell_quote(
 			RdKw::WwW::SiteConf::fs_text($dir)) : '') . "\${3##*/}\n";
 	} elsif ($out) {
 		$text .= "case \$3 in /*) $o=\$3 ;; *) $o=\${PWD}/\$3 ;; esac\n";
@@ -512,7 +513,7 @@ sub _vars
 			# HEY!  %s is the option, as -Sarg_prefix=1x
 			"%s: a prefix is a letter or `_', then letters, digits and `_'"),
 			"-Sarg_prefix=$p"));
-	+{ d => "${p}d", o => "${p}o" };
+	+{ d => "${p}d", o => "${p}o", O => "${p}O" };
 }
 
 # A name, as one word of the shell, as the file system spells it (and

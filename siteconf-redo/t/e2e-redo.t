@@ -55,7 +55,7 @@ run('siteconf -g -G redo, again', $^X, $script, qw( -g -q -G redo -B build -t al
 ok(-x 'build/basic.do', '... even one that was there, and is the same');
 run('redo basic', $redo, 'build/basic');
 ok(-f 'build/site/sub/index.html', 'redo basic: sub built');
-like(slurp('build/site/sub/index.html.do'), qr{^o=sub/\$\{3##\*/\}\n(?:.*\n)*.* build/site/\$o \)\n\z}m,
+like(slurp('build/site/sub/index.html.do'), qr{^O=sub/\$\{3##\*/\}\n(?:.*\n)*.* build/site/\$O \)\n\z}m,
 	'the recipe writes $3, and there is no mv');
 ok(!grep({ !-f && -s _ } map { "build/site/$_" } qw( index.html sub/index.html )), '... and redo makes the target of it');
 ok(!-e 'build/site/robots.txt', 'redo basic: only the subset');
@@ -97,7 +97,7 @@ unlike($out, qr{\.do}, q(-t , -o /dev/null: no .do at all, as the targets' are a
 $out = run(q(siteconf -g -G redo -Sclean -Spurge -Sarg_prefix=sc_), $^X, $script,
 	qw( -g -G redo -B build -t all -Sclean -Spurge -Sarg_prefix=sc_ -Sarg_max=40 ), @Ssh);
 ok(-x 'build/clean.do' && -x 'build/purge.do', q(-Sclean -Spurge: clean.do and purge.do));
-like(slurp('build/site/robots.txt.do'), qr/^sc_o=\$\{3##\*\/\}\n.*^rm -f -- "\$3"\n.* build\/site\/\$sc_o \)\n\z/ms, q(-Sarg_prefix=sc_: $sc_o));
+like(slurp('build/site/robots.txt.do'), qr/^sc_O=\$\{3##\*\/\}\n.*^rm -f -- "\$3"\n.* build\/site\/\$sc_O \)\n\z/ms, q(-Sarg_prefix=sc_: $sc_O));
 run('redo all', $redo, 'build/all');
 ok(-f 'build/site/robots.txt', '... redo all');
 run('redo clean', $redo, 'build/clean');

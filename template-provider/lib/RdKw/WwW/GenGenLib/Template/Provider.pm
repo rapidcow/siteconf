@@ -64,6 +64,10 @@ for everything):
 
 =over
 
+=item C<PROG>
+
+The program name used in diagnostics. Defaults to C<E>.
+
 =item C<SOURCE>
 
 The name of the template that is processed, as it is given to
@@ -150,15 +154,15 @@ use RdKw::WwW::GenGenLib 0.0100 qw(
 	norm_deps subs_deps split_dep
 	escape_dep uproot );
 
-use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs );
+use RdKw::I18N::CodeSets::Functions qw( diag tagmsg to_fs un_fs );
 # Use the same gettext domain as our (distant) parent GenGenLib.pm.
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
 
 # A name as the file system spells it, and back; or an error from us
-sub _to_fs { to_fs($_[0], { prog => __PACKAGE__ }) }
-sub _un_fs { un_fs($_[0], { prog => __PACKAGE__ }) }
+sub _to_fs { to_fs($_[1], { prog => $_[0]->{PROG} }) }
+sub _un_fs { un_fs($_[1], { prog => $_[0]->{PROG} }) }
 
 my %default = (
 	ALLOW_DEPS => 1,
@@ -184,19 +188,17 @@ sub new
 {
 	my ($class, $args) = @_;
 	$args = { %{ $args || {} } };
+	my $prog = defined $args->{PROG} ? $args->{PROG} : 'E';
 	for my $k (qw( COMPILE_DIR COMPILE_EXT )) {
 		defined $args->{$k}
-			and die _status 0, "$class: " .
-			# HEY!  the first %s is the class name (in every message
-			# that starts so), and the second is an option name
-			diag(__("%s is not supported"), $k)
-			. "\n";
+			and die _status 0, tagmsg($prog, diag(__("%s is not supported"), $k));
 	}
 	defined $args->{SOURCE}
-		or die _status 0, "$class: " . __("SOURCE (the template to process) is required") . "\n";
+		or die _status 0, tagmsg($prog, __("SOURCE (the template to process) is required"));
 	# We give Template::Provider whole paths, once we have said yes;
 	# its own ABSOLUTE and RELATIVE are ours to say.
 	my $self = $class->SUPER::new({ %$args, ABSOLUTE => 1, RELATIVE => 1 }) or return;
+	$self->{PROG} = $prog;
 	$self->{TT_ABSOLUTE} = $args->{ABSOLUTE};
 	$self->{TT_RELATIVE} = $args->{RELATIVE};
 	$self->{SOURCE} = $args->{SOURCE};
@@ -207,9 +209,8 @@ sub new
 		for (@{ $args->{ALLOW_PREFIXES} }) {
 			my ($root, $rest) = split_dep($_);
 			$rest =~ m{\A/*\z}
-				or die _status 0, "$class: " . diag(__(
-				"ALLOW_PREFIXES: %q is not a symbolic root"), $_)
-				. "\n";
+				or die _status 0, tagmsg($prog, diag(__(
+				"ALLOW_PREFIXES: %q is not a symbolic root"), $_));
 			$self->{ALLOW_PREFIXES}{$root} = 1;
 		}
 	}
@@ -221,20 +222,17 @@ sub new
 
 	my $source = $self->_entry;
 	defined $source
-		or die _status 0, "$class: " . diag(__(
-		"source %q not found"), $args->{SOURCE})
-		. "\n";
-	my %I = read_deps($source);
+		or die _status 0, tagmsg($prog, diag(__(
+		"source %q not found"), $args->{SOURCE}));
+	my %I = read_deps($source, prog => $prog);
 	if ($self->{CHECK_HAVE}) {
 		defined $I{HAVE}
-			or die _status 0, "$class: " . diag(__(
-			"%#q: missing HAVE"), $source)
-			. "\n";
+			or die _status 0, tagmsg($prog, diag(__(
+			"%#q: missing HAVE"), $source));
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
-			or die _status 0, "$class: " . diag(__(
+			or die _status 0, tagmsg($prog, diag(__(
 			"%#q: You HAVE %q, but it is actually %s"),
-			$source, $I{HAVE}, $self->_named($source))
-			. "\n";
+			$source, $I{HAVE}, $self->_named($source)));
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;
 
@@ -242,17 +240,17 @@ sub new
 	# variable that we do not have, which would lead somewhere else.
 	my $follow = $args->{FOLLOW} || \&follow_ok;
 	my @all = walk_deps($self->{DEFINITION},
-		map { $self->_vars($_); $_ } @{ $I{NEED} || [] }, @{ $I{WANT} || [] },
+		@{ $I{NEED} || [] }, @{ $I{WANT} || [] },
 		{
+			prog => $prog,
 			graph => $args->{GRAPH} || {},
 			follow => sub {
-				$self->_vars($_[1]);
+				$self->_norm($_[1]);
 				$self->_allowed_root($_[1]) && $follow->(@_);
 			},
 		});
 	# A JUST-NEED or JUST-WANT is declared as well, but is not read.
-	push @all, norm_deps(map { $self->_vars($_); $_ }
-		@{ $I{'JUST-NEED'} || [] }, @{ $I{'JUST-WANT'} || [] });
+	push @all, norm_deps(@{ $I{'JUST-NEED'} || [] }, @{ $I{'JUST-WANT'} || [] });
 	$self->{DECLARED}{ File::Spec->canonpath($source) } = 1;
 	for my $spec (@all) {
 		my $path = $self->_norm($spec);
@@ -265,27 +263,16 @@ sub new
 	$self;
 }
 
-# Dies if `spec' names a variable we do not have (a ${$} or a
-# ${U+...} is a character, not a variable).
-sub _vars
-{
-	my ($self, $spec) = @_;
-	for (norm_deps($spec) =~ /\$\{([^}]+)\}/g) {
-		$_ eq '$' || /\AU\+/ || defined $self->{DEFINITION}{$_}
-			or die _status 0, __PACKAGE__ . ": " . diag(__(
-			# HEY!  the last %s is the variable, as ${name}.
-			"%q: no such variable %s"), $spec, "\${$_}")
-			. "\n";
-	}
-	1;
-}
-
 # A declaration, as the path that it names
 sub _norm
 {
 	my ($self, $spec) = @_;
-	$self->_vars($spec);
-	File::Spec->canonpath(subs_deps($self->{DEFINITION}, $spec));
+	File::Spec->canonpath(subs_deps($self->{DEFINITION}, $spec, {
+		on_missing => sub {
+			die _status 0, tagmsg($self->{PROG}, diag(__(
+				"%q: no such variable %s"), $spec, "\${$_[0]}"));
+		},
+	}));
 }
 
 # Whether `spec' has a symbolic root that ALLOW_PREFIXES allows
@@ -361,7 +348,7 @@ sub _resolve
 	my $paths = $self->paths or return;
 	for my $dir (@$paths) {
 		my $path = "$dir/$name";
-		return $path if -f _to_fs($path);
+		return $path if -f $self->_to_fs($path);
 	}
 	return;
 }
@@ -379,7 +366,7 @@ sub _find
 {
 	my ($self, $name) = @_;
 	_kind($name) or return $self->_resolve($name);
-	-f _to_fs($name) ? $name : undef;
+	-f $self->_to_fs($name) ? $name : undef;
 }
 
 sub _entry
@@ -433,11 +420,11 @@ sub access
 				? __("absolute paths are not allowed (ABSOLUTE is unset)")
 				: __("relative paths are not allowed (RELATIVE is unset)"));
 		}
-		-f _to_fs($path) or return;
+		-f $self->_to_fs($path) or return;
 	}
-	my $abs = Cwd::abs_path(_to_fs($path));
+	my $abs = Cwd::abs_path($self->_to_fs($path));
 	defined $abs or return (undef, diag('%q: %m', $path));
-	(_un_fs($abs), undef);
+	($self->_un_fs($abs), undef);
 }
 
 =item B<fetch> I<name>
@@ -479,7 +466,7 @@ sub _template_modified
 {
 	my ($self, $path) = @_;
 	defined $path && length $path or return;
-	(stat(_to_fs($path)))[9];
+	(stat($self->_to_fs($path)))[9];
 }
 
 sub _template_content
@@ -487,7 +474,7 @@ sub _template_content
 	my ($self, $path) = @_;
 	defined $path && length $path
 		or return (undef, "No path specified to fetch content from ");
-	my $fs = _to_fs($path);
+	my $fs = $self->_to_fs($path);
 	my ($data, $error, $mod_date);
 	if (-d $fs) {
 		$error = diag(__("%#q: not a file"), $path);

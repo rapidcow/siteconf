@@ -1142,6 +1142,8 @@ sub split_dep
 
 =item B<walk_deps> \%D, I<spec>... { graph => \%G, follow => \&ok, mandatory => 0, terminal => 0 }
 
+An optional C<prog> names the program in file and header diagnostics.
+
 Enumerate all dependencies of a path specification.
 C<\%D> is a required map of variable definitions.
 C<\%G> is an optional map for normalized path
@@ -1264,8 +1266,8 @@ sub walk_deps
 				# Only a regular file has a header to read: a directory
 				# opens fine but cannot be read, and a FIFO would hang
 				my $file = subs_deps($D, $spec);
-				$G->{$spec} = -f to_fs($file, { prog => 'walk_deps' })
-					? { read_deps($file, forgive_missing => 1) }
+				$G->{$spec} = -f to_fs($file, { prog => _getprog($kwds, 'walk_deps') })
+					? { read_deps($file, forgive_missing => 1, prog => _getprog($kwds, 'read_deps')) }
 					: {};
 			} else {
 				$G->{$spec} = undef;

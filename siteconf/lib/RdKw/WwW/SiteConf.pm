@@ -1842,11 +1842,12 @@ sub _node
 		my $have = $self->_expand($I{HAVE}, $where);
 		my $want = File::Spec->canonpath("$D->{a}/$src");
 		$have eq $want or die _status 0, tagmsg(E => $have ne $I{HAVE}
-			# HEY!  Keep the question mark: we are as puzzled as
-			# anyone.  The (aka %q) is what the HAVE says, expanded
-			? diag(__("%#q: You HAVE %q (aka %q),\nbut I need %q?"),
+			? diag(__(
+				# HEY!  Keep the question mark: we are as puzzled as
+				# anyone.  The (aka %q) is what the HAVE says, expanded
+				"%#q: You HAVE %q (aka %q),\nbut I got %q?"),
 				$apath, $I{HAVE}, $have, $want)
-			: diag(__("%#q: You HAVE %q,\nbut I need %q?"), $apath, $I{HAVE}, $want));
+			: diag(__("%#q: You HAVE %q,\nbut I got %q?"), $apath, $I{HAVE}, $want));
 	}
 
 	# What the headers say they need, and what the rules do
@@ -2105,13 +2106,14 @@ sub _tool
 			my $have = $self->_dep($I{HAVE}, diag('%#q: HAVE', $dep));
 			$self->_same($have, $dep)
 				or die _status 0, tagmsg(E => $have ne $I{HAVE}
-					# HEY!  As above, for a tool of the rule; the last %s
-					# is where the rule is (`file' line 3)
-					? diag(__("%#q: You HAVE %q (aka %q),\n"
-						. "but I need %q for the rule for %q (%s)?"),
+					? diag(__(
+						# HEY!  As above, for a tool of the rule; the last %s
+						# is where the rule is (`file' line 3)
+						"%#q: You HAVE %q (aka %q),\n"
+						. "but I got %q from the rule for %q (%s)?"),
 						$dep, $I{HAVE}, $have, $dep, $file, $at)
 					: diag(__("%#q: You HAVE %q,\n"
-						. "but I need %q for the rule for %q (%s)?"),
+						. "but I got %q from the rule for %q (%s)?"),
 						$dep, $I{HAVE}, $dep, $file, $at));
 		}
 		{

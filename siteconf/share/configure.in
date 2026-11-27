@@ -15,6 +15,36 @@ use File::Spec;
 use FindBin;
 use Getopt::Long qw( GetOptions );
 
+sub status { $! = 0; $? = shift; @_; }
+
+# Bootstrap code.
+our @CORE;
+BEGIN {
+	@CORE = (
+		[ "RdKw::I18N::CodeSets" => '0' ],
+		[ "RdKw::L10N::TextDomain" => '0' ],
+		[ "RdKw::WwW::GenGenLib" => '0.0100' ],
+	);
+	my @bad;
+	foreach my $core (@CORE) {
+		my ($module, $min) = @$core;
+		(my $file = "$module.pm") =~ s!::!/!g;
+		unless (eval { require $file; 1; }) {
+			push @bad, sprintf "missing module %s", $module;
+			next;
+		}
+		unless (!$min || eval { $module->VERSION($min); 1; }) {
+			push @bad, sprintf "%s: version %s required (this is %s)",
+				$module, $min,
+				defined $module->VERSION ? $module->VERSION : '?';
+		}
+	}
+	if (@bad) {
+		for (@bad) { s/^/E: /gm; print STDERR "$_\n"; }
+		die status 0, "E: Core modules missing; cannot continue.\n";
+	}
+}
+
 # siteconf 0.03 does not support Unicode-less
 # GenGenLib.pm, so this is a hard requirement.
 use RdKw::WwW::GenGenLib 0.0100 qw( read_make write_make );
@@ -38,7 +68,6 @@ my $prog = basename($cs->un_argv($0, { check => Encode::FB_PERLQQ() }));
 
 # Exit status.
 my $estat = 0;
-sub status { $! = 0; $? = shift; @_; }
 
 # Module requirements: [ module, minimum version ]
 our @NEED;
@@ -53,8 +82,8 @@ BEGIN {
 	foreach my $need (@NEED) {
 		my ($module, $min) = @$need;
 		(my $file = "$module.pm") =~ s!::!/!g;
-		unless (eval { require $file; 1 }) {
-			push @bad, $cs->diag(__("missing %s"), $module);
+		unless (eval { require $file; 1; }) {
+			push @bad, $cs->diag(__("missing module %s"), $module);
 			next;
 		}
 		unless (!$min || eval { $module->VERSION($min); 1; }) {

@@ -46,8 +46,8 @@ write_make("$dir/MY/config.mk", {
 	A => '.', B => '.', a => 'html', b => 'site', c => 'site', e => '.ok',
 	F => "$dir/MANIFEST", R => "$dir/Makefile.in",
 }, prog => 'test');
-sub plan_of { RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ @_ ], S => { clean => 'clean-&' })->plan }
-sub names { [ map { $_->{name} } @{ $_[0]{goals} } ] }
+sub plan_of { RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ @_ ], S => { clean => 'clean-&' })->plan; }
+sub names { [ map { $_->{name} } @{ $_[0]{goals} } ]; }
 sub run {
 	open my $fh, '-|' or do {
 		chdir $dir or die $!;
@@ -60,7 +60,7 @@ sub run {
 	($? >> 8, $out);
 }
 
-eval { plan_of() };
+eval { plan_of(); };
 like($@, qr/goal `broken' NEEDs `missing'/, 'without -t the first goal retains its requirements');
 is_deeply(names(plan_of('small', 'other')), ['small', 'other'], 'without -t, the others are not made; with it they are');
 {
@@ -83,10 +83,10 @@ is_deeply([map { $_->[0] } @{ $p->{goals}[0]{dropped} }], [qw(missing partial ab
 like($p->{goals}[0]{dropped}[1][1], qr/missing-dependency/, 'a missing prerequisite drops the whole file');
 ok(!exists $p->{node}{partial}, 'no incomplete rule for the dropped file');
 # How each goal was selected: [ name, as the default, as a goal of its own ]
-sub how { [ map { [ $_->{name}, $_->{default}, $_->{select} ] } @{ $_[0]{goals} } ] }
+sub how { [ map { [ $_->{name}, $_->{default}, $_->{select} ] } @{ $_[0]{goals} } ]; }
 is_deeply(how(plan_of('WANT:')), [ [ 'broken', 'WANT:', undef ] ], 'WANT: is the default goal, the first of the manifest');
 for my $sel ([], [','], [''], ["  \t "], ['NEED:'], [', small'], [',,small']) {
-	eval { plan_of(@$sel) };
+	eval { plan_of(@$sel); };
 	like($@, qr/goal `broken' NEEDs `missing'/, "... and so is " . (@$sel ? "-t `$sel->[0]'" : 'no -t'));
 }
 is_deeply(how(plan_of(',small')), [ [ 'small', ',small', undef ] ], '-t ,small: small is the default goal, and no more');
@@ -103,15 +103,15 @@ is_deeply(how(plan_of('  ', 'small')), [ [ 'small', undef, 'small' ] ], "... and
 is_deeply(how(plan_of('small', ',other')), [ [ 'other', ',other', undef ], [ 'small', undef, 'small' ] ], '-t small -t ,other: the default goal is first');
 {
 	my $sc = RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ '', ' ' ], S => {});
-	eval { $sc->plan };
+	eval { $sc->plan; };
 	is_deeply($sc->{select_args}, [], "... and with -t '' -t ' ' alone, the header says no -t");
 }
 is_deeply(names(plan_of('other', 'WANT:broken', 'small')), [qw(other broken small)], 'selection order');
 is_deeply(names(plan_of('small', 'other', 'NEED:small')), [qw(small other)], 'duplicate goals appear once');
 ok(eval { plan_of('broken', 'WANT:broken'); 1; }, 'last mode wins: WANT') or diag $@;
-eval { plan_of('WANT:broken', 'NEED:broken') };
+eval { plan_of('WANT:broken', 'NEED:broken'); };
 like($@, qr/goal `broken' NEEDs `missing'/, 'last mode wins: NEED');
-eval { plan_of('WANT:broken', 'NEED:other', 'broken') };
+eval { plan_of('WANT:broken', 'NEED:other', 'broken'); };
 like($@, qr/goal `broken' NEEDs `missing'/, 'an unprefixed goal restores normal requirements');
 
 for my $case (
@@ -120,7 +120,7 @@ for my $case (
 	['want:small', qr/expected NEED or WANT/],
 	['small:WANT', qr/expected NEED or WANT/],
 ) {
-	eval { plan_of($case->[0]) };
+	eval { plan_of($case->[0]); };
 	like($@, $case->[1], "bad selector: $case->[0]");
 }
 

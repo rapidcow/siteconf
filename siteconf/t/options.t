@@ -11,7 +11,7 @@ use File::Temp qw( tempdir );
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestPaths qw( script_path perl5lib );
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
 use RdKw::WwW::SiteConf::Builder::Make;

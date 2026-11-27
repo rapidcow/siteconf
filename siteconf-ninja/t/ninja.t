@@ -6,10 +6,10 @@ use strict;
 use warnings;
 use Test::More tests => 19;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use RdKw::WwW::SiteConf::Builder::Ninja;
 
-sub cmd { RdKw::WwW::SiteConf::Builder::Ninja::_command($_[0]) }
+sub cmd { RdKw::WwW::SiteConf::Builder::Ninja::_command($_[0]); }
 
 is(cmd("\tcp a b\n"), '( cp a b )', 'one line');
 is(cmd("\tcd x\n\tls\n"), '( cd x ) && ( ls )',

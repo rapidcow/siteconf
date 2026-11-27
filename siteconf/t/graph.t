@@ -21,7 +21,7 @@ use RdKw::WwW::SiteConf;
 
 # A recipe (runs) as bytes, which is all of it for a UTF-8 file system and
 # nothing but ASCII
-sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
+sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]); }
 
 # A project in a directory of its own.  %f is name => contents.
 sub project {
@@ -123,7 +123,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		["# rules\na.html: \\\n", qr/line 2: unfinished line continuation/],
 	) {
 		my $bad = project({ MANIFEST => $manifest, 'Makefile.in' => $case->[0] });
-		eval { plan_of($bad) };
+		eval { plan_of($bad); };
 		like($@, $case->[1], 'continued-rule error identifies the starting line');
 	}
 }
@@ -309,11 +309,11 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 	my %g = %f;
 	delete $g{'gen/lib/Mod.pm'};
 	$dir = project(\%g);
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like(fold($@), qr/NEEDs `gen\/lib\/Mod\.pm' \(in header of `gen\/tool' line 3\), which we don't seem to have/, 'tools: a missing NEED is fatal');
 
 	$dir = project({ %f, 'gen/tool' => lines( HAVE => [qw[ gen/other ]] ) });
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/gen\/tool: You HAVE `gen\/other'.*\nE: but I got `gen\/tool' from the rule for `a\.html' \(\S*Makefile\.in'? line 1\)\?/, 'tools: HAVE must agree');
 
 	$dir = project({ %f, 'gen/tool' => "\x00\x01\x02# NEED: nowhere\n" x 4 });
@@ -439,7 +439,7 @@ SKIP:	{
 		'Makefile.in' => "s.css: \${a}/s.scss\n\ttrue\n",
 		'html/s.scss' => lines( HAVE => [qw[ ${A}/${a}/s.css ]] ),
 	});
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/You HAVE .*s\.css.*but I got `html\/s\.scss'/s, 'a HAVE of another');
 
 	# the source is missing
@@ -447,7 +447,7 @@ SKIP:	{
 		MANIFEST => "MAKE all\n\tNEED s.css\n",
 		'Makefile.in' => "s.css: \${a}/s.scss\n\ttrue\n",
 	});
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/source `html\/s\.scss' is missing/, 'missing source is named');
 
 	# ... as CodeSets says names: "quoted" if not ASCII, and with
@@ -463,13 +463,13 @@ SKIP:	{
 		my $cs = RdKw::I18N::CodeSets->locale->new(filesys => 'UTF-8', stderr => 'UTF-8');
 		{
 			local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'unicode');
-			eval { plan_of($dir) };
+			eval { plan_of($dir); };
 			like($@, qr/source "html\/r\x{e9}sum\x{e9}\.scss" is missing/,
 				'a name that is not ASCII is "quoted"');
 		}
 		{
 			local $RdKw::I18N::CodeSets::LOCALE = $cs->new(diag => 'ascii');
-			eval { plan_of($dir) };
+			eval { plan_of($dir); };
 			like($@, qr/source "html\/r\\x\{e9\}sum\\x\{e9\}\.scss" is missing/,
 				'... and said in ASCII under diag ascii');
 			like($@, qr/\A[\x00-\x7f]*\z/, '... as is everything else');
@@ -477,12 +477,12 @@ SKIP:	{
 	}
 	# (a quote in it would confuse `the quotes')
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED /it's.css\n" });
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/file name "\/it's\.css" must be relative/, 'a name with a quote is "quoted"');
 
 	# ${<} cannot be in a prerequisite
 	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${<}\n\ttrue\n" });
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/line 1: misplaced \$\{<\} \(not in a recipe\)/, '${<} in prerequisites');
 }
 
@@ -507,7 +507,7 @@ SKIP:	{
 		'Makefile.in' => "p.html: \${A}//\${a}/q.html\n\ttrue\n",
 		'html/p.html' => '', 'html/q.html' => '',
 	});
-	eval { plan_of($abs) };
+	eval { plan_of($abs); };
 	like($@, qr{NEEDs `/html/q\.html'}, '${A}//${a}/ is not a source');
 
 	# not first: the directory, as a prerequisite, like before
@@ -524,7 +524,7 @@ SKIP:	{
 		MANIFEST => "MAKE all\n\tNEED stamp\n",
 		'Makefile.in' => "stamp: \${a}/\n\ttouch \${<}\n",
 	});
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/line 2: undefined \$\{<\} \(explicitly suppressed by \$\{a\}\)/, '${<} without a source');
 
 	# what follows ${a}/ is read as it was written, any slashes between
@@ -551,7 +551,7 @@ SKIP:	{
 		'Makefile.in' => "\${A}/x.html:\n\ttrue\n",
 		'html/x.html' => '',
 	});
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/target is not preceded by a legal prefix/, 'a target in ${A} is still not a target');
 }
 
@@ -599,18 +599,18 @@ SKIP:	{
 	# nowhere else under ${B}
 	for my $bad ('${B}/other/a.html', 'other/${@}', '${a}/a.html') {
 		$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "$bad: \${A}/x\n\ttrue\n" });
-		eval { plan_of($dir) };
+		eval { plan_of($dir); };
 		like($@, qr/target is not preceded by a legal prefix/, "target $bad is refused");
 	}
 
 	# the manifest cannot name what is in the cache alone
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED x.md.html\n",
 		'Makefile.in' => $rules, 'html/x.md' => '', 'html/x.html' => '' }, c => 'cache');
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like(fold($@), qr/NEEDs `x\.md\.html' .*, but cannot be made:\nE:   no rule to make it \(/, 'cache files are not goals');
 
 	$dir = project({%f}, c => '/abs');
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/`c' prefix must be a relative path/, 'c is relative');
 }
 
@@ -621,7 +621,7 @@ SKIP:	{
 	my $t = do { local $/; <$fh>; }; close $fh;
 	$t =~ s/^c=.*\n//m;
 	open $fh, '>', "$dir/MY/config.mk" or die; print $fh $t; close $fh;
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/config\.mk': `c' is missing\.  Try reconfiguring/, 'no c, no plan');
 }
 
@@ -632,7 +632,7 @@ SKIP:	{
 		my $err = '';
 		open my $save, '>&', \*STDERR or die;
 		close STDERR; open STDERR, '>', \$err or die;
-		eval { RdKw::WwW::SiteConf->new(B => $dir)->plan };
+		eval { RdKw::WwW::SiteConf->new(B => $dir)->plan; };
 		close STDERR; open STDERR, '>&', $save or die;
 		$err;
 	};
@@ -895,11 +895,11 @@ SKIP: {
 		'a variable with a space is one source, not a list') or diag $@;
 	$dir = project({ MANIFEST => $manifest,
 		'Makefile.in' => "a.html: \${a}/a.src \${X}\n\ttrue\n" }, X => '');
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/expands to nothing/, 'a name that is empty is not a file');
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED a\${U+20}b.html\n",
 		'Makefile.in' => "a\${U+20}b.html: \${a}/../escape\${U+20}name\n\ttrue\n" });
-	eval { plan_of($dir) };
+	eval { plan_of($dir); };
 	like($@, qr/out of tree/, 'a spaced source cannot escape the source tree');
 }
 

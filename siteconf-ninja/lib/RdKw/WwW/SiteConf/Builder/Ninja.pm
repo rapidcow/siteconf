@@ -90,13 +90,13 @@ sub _status { $! = 0; $? = shift; @_; }
 
 # A name as the file system spells it, or an error prefixed `E:' (see
 # RdKw::WwW::SiteConf::fs_text for what that is).
-sub _fs { RdKw::WwW::SiteConf::fs_text($_[0]) }
+sub _fs { RdKw::WwW::SiteConf::fs_text($_[0]); }
 
 # Every string from the plan goes through _fs, so the result is bytes
 # throughout.  Make.pm says why.
-sub options { qw( mkpath cmd_mkdir cmd_mkdir_p ) }
+sub options { qw( mkpath cmd_mkdir cmd_mkdir_p ); }
 
-sub default_output { q(build.ninja) }
+sub default_output { q(build.ninja); }
 
 sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ]; }
 

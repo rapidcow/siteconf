@@ -11,7 +11,7 @@ use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib );
@@ -55,9 +55,9 @@ sub failure
 	eval { plan_of($dir, @goal); 1; } ? '' : $@;
 }
 # the runs of the recipe that makes `file'
-sub recipe { [ map { [ @$_[0, 1] ] } @{ $_[0]{node}{$_[1]}{recipe} } ] }
+sub recipe { [ map { [ @$_[0, 1] ] } @{ $_[0]{node}{$_[1]}{recipe} } ]; }
 # its :Q words
-sub words { [ map { $_->[1] } grep { $_->[0] eq 'word' } @{ $_[0]{node}{$_[1]}{recipe} } ] }
+sub words { [ map { $_->[1] } grep { $_->[0] eq 'word' } @{ $_[0]{node}{$_[1]}{recipe} } ]; }
 
 my $mk = "# comment\n";
 

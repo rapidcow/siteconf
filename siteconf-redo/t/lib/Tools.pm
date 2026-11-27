@@ -59,11 +59,11 @@ sub describe
 # apenwarr's redo, it says that we are in a .do (it sets it there),
 # and redo at the top would not check what is out of date.
 my $REDO = delete $ENV{REDO};
-sub redo_cmd { $REDO || 'redo' }
+sub redo_cmd { $REDO || 'redo'; }
 
 # `redo-ifchange', or what $REDO_IFCHANGE says.  (It may be the same
 # program as $REDO, which does what its argv[0] says, as goredo does.)
-sub ifchange_cmd { $ENV{REDO_IFCHANGE} || 'redo-ifchange' }
+sub ifchange_cmd { $ENV{REDO_IFCHANGE} || 'redo-ifchange'; }
 
 # A .do runs redo-ifchange, which it finds in $PATH.  So that it is the
 # one we mean, we make a directory of two links, redo and
@@ -134,7 +134,7 @@ sub _together
 
 # What $REDO_SH says (for -Ssh, and the #! of a .do), or undef.  Termux
 # has no /bin/sh: REDO_SH=/data/data/com.termux/files/usr/bin/sh
-sub redo_sh { defined $ENV{REDO_SH} && length $ENV{REDO_SH} ? $ENV{REDO_SH} : undef }
+sub redo_sh { defined $ENV{REDO_SH} && length $ENV{REDO_SH} ? $ENV{REDO_SH} : undef; }
 
 # Whether `#!$sh' runs: as the kernel runs it, the first word is the
 # program, and the rest is one argument; then -c 'exit 0'.  (Not which:

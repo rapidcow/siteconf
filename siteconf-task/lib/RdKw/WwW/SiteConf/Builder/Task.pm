@@ -141,9 +141,9 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch ) }
+sub options { qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch ); }
 
-sub default_output { q(Taskfile.yml) }
+sub default_output { q(Taskfile.yml); }
 
 sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ]; }
 
@@ -202,12 +202,12 @@ sub _file_task
 sub _template { (my $s = $_[0]) =~ s/\{\{/{{"{{"}}/g; $s; }
 
 # A shell word for a name
-sub _quote { RdKw::WwW::SiteConf::shell_quote($_[0]) }
+sub _quote { RdKw::WwW::SiteConf::shell_quote($_[0]); }
 
 # A shell word for a name as an operand of `[': Task's `[' reads
 # `[ ! -n -nt x ]' and `[ ! ! -nt x ]' as other tests, so a name that
 # could be an operator is ./name
-sub _operand { _quote($_[0] =~ m{\A[^A-Za-z0-9_./]} ? "./$_[0]" : $_[0]) }
+sub _operand { _quote($_[0] =~ m{\A[^A-Za-z0-9_./]} ? "./$_[0]" : $_[0]); }
 
 # A YAML scalar: always double-quoted, so that none of it reads as
 # anything but a string (a plain NULL is null to Task, and crashes it)
@@ -231,7 +231,7 @@ sub _cmd
 	$c;
 }
 
-sub _list { '[' . join(', ', map { _yaml($_) } @_) . ']' }
+sub _list { '[' . join(', ', map { _yaml($_) } @_) . ']'; }
 
 sub _text
 {

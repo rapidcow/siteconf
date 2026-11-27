@@ -5,7 +5,7 @@
 use strict;
 use warnings;
 use Test::More tests => 5;
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use RdKw::WwW::GenGenLib qw( escape_dep );
 use RdKw::WwW::SiteConf::Builder::Ninja;
 

@@ -161,8 +161,8 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 sub _status { $! = 0; $? = shift; @_; }
 
 # A name as the file system spells it, and back; or an error from us
-sub _to_fs { to_fs($_[1], { prog => $_[0]->{PROG} }) }
-sub _un_fs { un_fs($_[1], { prog => $_[0]->{PROG} }) }
+sub _to_fs { to_fs($_[1], { prog => $_[0]->{PROG} }); }
+sub _un_fs { un_fs($_[1], { prog => $_[0]->{PROG} }); }
 
 my %default = (
 	ALLOW_DEPS => 1,

@@ -47,6 +47,6 @@ sub describe
 }
 
 # `ninja', or what $NINJA says
-sub ninja_cmd { $ENV{NINJA} || 'ninja' }
+sub ninja_cmd { $ENV{NINJA} || 'ninja'; }
 
 1;

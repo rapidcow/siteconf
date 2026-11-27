@@ -142,7 +142,7 @@ sub _blame
 }
 
 # Where a line is: `input' (the name of a file) and `line'
-sub _where { _blame($_[0]{input}, $_[0]{line}) }
+sub _where { _blame($_[0]{input}, $_[0]{line}); }
 
 sub read
 {
@@ -292,7 +292,7 @@ The name of the file that was read.
 
 =cut
 
-sub file { $_[0]{file} }
+sub file { $_[0]{file}; }
 
 =item B<target>
 
@@ -307,9 +307,9 @@ The same, whatever the context.
 
 =cut
 
-sub target { wantarray ? $_[0]->targets : $_[0]->default_target }
+sub target { wantarray ? $_[0]->targets : $_[0]->default_target; }
 
-sub default_target { $_[0]{goals}[0]{name} }
+sub default_target { $_[0]{goals}[0]{name}; }
 
 sub targets { map { $_->{name} } @{ $_[0]{goals} } }
 

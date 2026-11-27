@@ -363,7 +363,7 @@ Added in 0.03_00.
 # The code sets of URIs (file names in UTF-8, whatever the file system
 # says), for file2uri and uri2file only; made when first needed
 my $cs_utf8;
-sub _cs_utf8 { $cs_utf8 ||= RdKw::I18N::CodeSets->new(filesys => 'UTF-8') }
+sub _cs_utf8 { $cs_utf8 ||= RdKw::I18N::CodeSets->new(filesys => 'UTF-8'); }
 
 sub file2uri
 {

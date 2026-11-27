@@ -55,7 +55,7 @@ spew('proj/leaf', "plain\n");
 spew('proj/wleaf', "plain\n");
 spew('proj/never', "plain\n");
 my %D = ( A => '.' );
-sub walk { [ walk_deps(\%D, @_) ] }
+sub walk { [ walk_deps(\%D, @_) ]; }
 
 my $G = {};
 is_deeply(walk('proj/root', { graph => $G }),

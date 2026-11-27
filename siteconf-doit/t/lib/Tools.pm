@@ -47,6 +47,6 @@ sub describe
 }
 
 # `doit', or what $PY_DOIT says
-sub doit_cmd { $ENV{PY_DOIT} || 'doit' }
+sub doit_cmd { $ENV{PY_DOIT} || 'doit'; }
 
 1;

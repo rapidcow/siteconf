@@ -31,7 +31,7 @@ for my $name (@names) {
 }
 plan tests => 7;
 
-sub fs { Encode::encode(locale_fs => $_[0]) }
+sub fs { Encode::encode(locale_fs => $_[0]); }
 sub spew
 {
 	my ($path, $text) = @_;

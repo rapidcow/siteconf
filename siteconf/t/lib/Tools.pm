@@ -47,10 +47,10 @@ sub describe
 }
 
 # `make', or what $MAKE says
-sub make_cmd { $ENV{MAKE} || 'make' }
+sub make_cmd { $ENV{MAKE} || 'make'; }
 
 # `bmake', or what $BMAKE says
-sub bmake_cmd { $ENV{BMAKE} || 'bmake' }
+sub bmake_cmd { $ENV{BMAKE} || 'bmake'; }
 
 # The first GNU make at least as new as major.minor: what $GMAKE says,
 # `gmake', or `make'.  undef if none is.

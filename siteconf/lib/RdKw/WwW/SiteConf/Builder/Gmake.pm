@@ -74,11 +74,11 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { ( $_[0]->SUPER::options, q(order) ) }
+sub options { ( $_[0]->SUPER::options, q(order) ); }
 
 # GNU make: with -Sorder=1, the directory markers are after a `|'
 # (-Sorder=0, -Sorder= and -Sorder alone do not)
-sub _order_only { $_[1] && $_[1]{order} ? 1 : 0 }
+sub _order_only { $_[1] && $_[1]{order} ? 1 : 0; }
 
 # A name, as GNU make reads it where it is: a `target', an `order'-only
 # prerequisite, or (if neither) a prerequisite before those

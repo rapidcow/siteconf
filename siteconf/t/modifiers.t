@@ -11,7 +11,7 @@ use lib "$FindBin::Bin/lib";
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use RdKw::WwW::GenGenLib qw( write_make );
 use RdKw::WwW::SiteConf;
 
@@ -170,7 +170,7 @@ for my $k (sort keys %Q) {
 		'a whole recipe, as the shell reads it') or diag $line;
 }
 
-eval { $sc->_subst_name('${W:Q}', undef, 'test') };
+eval { $sc->_subst_name('${W:Q}', undef, 'test'); };
 like($@, qr/:Q \(shell quote\) is not valid in a prerequisite/, ':Q in a prerequisite is an error');
 
 for my $c (
@@ -191,7 +191,7 @@ for my $c (
 	['${Ya:S/a/b$}',   qr/unterminated :S/],
 ) {
 	my ($in, $re) = @$c;
-	eval { s_($in) };
+	eval { s_($in); };
 	like($@, $re, "error: $in");
 }
 
@@ -220,7 +220,7 @@ for my $c (
 }
 
 # A recipe (runs) as bytes
-sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
+sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]); }
 
 # --- a recipe is in make's words: what :Q made is the shell's, and its
 # `$' is $$; one from a variable is make's

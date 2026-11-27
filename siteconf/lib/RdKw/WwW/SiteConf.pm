@@ -942,7 +942,7 @@ be escaped, so nothing here tries.
 
 # (what has been found safe, for each of the spellings: `filesys', `argv')
 my %SAFE;
-sub fs_text { _spell_text('filesys', @_) }
+sub fs_text { _spell_text('filesys', @_); }
 
 =item B<argv_text> I<string> [, I<where> ]
 
@@ -952,7 +952,7 @@ rules, which one asks of a build tool by name.
 
 =cut
 
-sub argv_text { _spell_text('argv', @_) }
+sub argv_text { _spell_text('argv', @_); }
 
 sub _spell_text
 {

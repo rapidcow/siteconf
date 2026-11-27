@@ -83,8 +83,8 @@ Return the shell words for running doit in the build directory.
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { qw(mode arg_prefix no_chdir clean purge) }
-sub default_output { 'dodo.py' }
+sub options { qw(mode arg_prefix no_chdir clean purge); }
+sub default_output { 'dodo.py'; }
 
 my %short_escape = (
 	"\a" => '\a', "\b" => '\b', "\t" => '\t', "\n" => '\n',
@@ -100,7 +100,7 @@ sub _literal
 	"'$s'";
 }
 
-sub _list { '[' . join(', ', map { _literal($_) } @_) . ']' }
+sub _list { '[' . join(', ', map { _literal($_) } @_) . ']'; }
 
 # A colon is unavailable in a siteconf goal. Escape doit's wildcard and
 # assignment syntax in private task names, keeping common paths readable.

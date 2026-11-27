@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use Test::More tests => 88;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use RdKw::WwW::SiteConf::Builder::Redo;
 
 my $class = 'RdKw::WwW::SiteConf::Builder::Redo';
@@ -14,9 +14,9 @@ my $class = 'RdKw::WwW::SiteConf::Builder::Redo';
 sub files { my ($p, @d) = @_; my %f = map { ($_->[0], $_->[1]) } $class->emit($p, @d ? $d[0] : q(all.do)); \%f; }
 # A goal as -t selects it: of its own (-t goal), the default (-t ,goal, or
 # -t , for the first), or both
-sub own { { name => $_[0], select => $_[0], files => $_[1] || [] } }
-sub dflt { { name => $_[0], default => $_[1], files => $_[2] || [] } }
-sub both { { name => $_[0], default => ",$_[0]", select => $_[0], files => $_[1] || [] } }
+sub own { { name => $_[0], select => $_[0], files => $_[1] || [] }; }
+sub dflt { { name => $_[0], default => $_[1], files => $_[2] || [] }; }
+sub both { { name => $_[0], default => ",$_[0]", select => $_[0], files => $_[1] || [] }; }
 # (a .do without its header)
 sub body { (my $t = $_[0]) =~ s/\A(?:#.*\n)*//; $t; }
 

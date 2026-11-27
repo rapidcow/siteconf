@@ -24,9 +24,20 @@ catalogs are tested.
 ## Style
 
 End statements inside Perl blocks with semicolons, including the final
-statement. Blocks for `grep`, `map`, `sort`, `sub`, `eval`, and `exec`
-may omit the final semicolon if they contain exactly one statement.
-Preserve existing semicolons in those blocks.
+statement. The following blocks may omit the final semicolon only when
+they contain exactly one statement:
+
+* `do` and `eval` whose value is used. Void-context blocks, including
+  `A or do { ... }`, require the semicolon. The exception includes
+  `do { ... } or A` and `do` used in a do-while loop.
+* Blocks passed to higher-order functions that transform, search, or act
+  on their operands, including `map`, `grep`, `sort`, `exec`, and functions
+  with `&` prototypes. Examples include `any`/`all` from `List::Util` and
+  `lower_bound`/`upper_bound`/`equal_range` binary searches. This exception
+  does not apply to `try`/`catch` or ordinary subroutine definitions.
+
+Preserve existing semicolons in exempt blocks. Count empty statements too:
+`map {; { %$_ }; }` contains two statements and requires the final semicolon.
 
 Use `eval { danger; 1; }` for operations that may fail and we do not
 need the return value of, even if we are fairly confident that danger

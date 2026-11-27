@@ -10,7 +10,7 @@ use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use File::Temp qw( tempdir );
 use RdKw::I18N::CodeSets;
 use RdKw::WwW::SiteConf::Builder::Task;

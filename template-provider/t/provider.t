@@ -268,7 +268,7 @@ spew('site/entry', "[%#\n# NEED: \${inc}/hidden\n-%]\n");
 ok(!eval { provider(PROG => 'builder') }, '... further down, too');
 like($@, qr/^builder: .*no such variable/, 'nested dependency error uses PROG');
 spew('include/hidden', "# HAVE: one two\n");
-eval { provider(PROG => 'builder') };
+eval { provider(PROG => 'builder'); };
 like($@, qr/^builder: .*You HAVE too many/, 'nested header error uses PROG');
 ok(!eval { $P->new({ SOURCE => 'entry', COMPILE_DIR => 'c' }) }, 'COMPILE_DIR is refused');
 ok(!eval { $P->new({ INCLUDE_PATH => ['site'] }) }, 'SOURCE is required');

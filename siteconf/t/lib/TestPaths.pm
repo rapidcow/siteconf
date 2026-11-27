@@ -37,7 +37,7 @@ delete $ENV{SITECONF_CODESETS};
 # Resolve while loading, before a test changes to its temporary directory.
 my $root = abs_path(File::Spec->catdir(dirname(__FILE__), '..', '..'));
 
-sub project_root { $root }
+sub project_root { $root; }
 
 sub script_path
 {

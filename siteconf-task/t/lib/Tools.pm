@@ -50,7 +50,7 @@ sub describe
 
 # What $GO_TASK says; or else `go-task' (as Arch Linux names it), if it
 # is in $PATH; or else `task'.  (This is Go Task, not Taskwarrior.)
-sub task_cmd { $ENV{GO_TASK} || (which('go-task') ? 'go-task' : 'task') }
+sub task_cmd { $ENV{GO_TASK} || (which('go-task') ? 'go-task' : 'task'); }
 
 # Whether $cmd is Go Task: in an empty directory, it runs a Taskfile
 # whose task touches a file named by a variable, and the file is there.

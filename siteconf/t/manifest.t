@@ -8,13 +8,13 @@ use Test::More tests => 36;
 
 use File::Temp qw( tempdir );
 # (what is said is said as it is written, whatever the locale)
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use RdKw::WwW::SiteConf;
 
 # read_manifest does not look at the configuration; fake an object.
 my $sc = bless {}, 'RdKw::WwW::SiteConf';
 sub parse { my $t = shift; $sc->read_manifest(\$t); }
-sub files { [ map { $_->{file} } @{ $_[0] } ] }
+sub files { [ map { $_->{file} } @{ $_[0] } ]; }
 
 my @g = parse(<<'M');
 # comment

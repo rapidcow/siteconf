@@ -7,7 +7,7 @@ use strict;
 use warnings;
 use Test::More tests => 40;
 # Pin LANGUAGE to C so gettext does not translate the messages matched below.
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use RdKw::I18N::CodeSets;
 use RdKw::WwW::SiteConf::Builder::Task;
 
@@ -25,7 +25,7 @@ is(RdKw::WwW::SiteConf::Builder::Task::_yaml($_), $yaml{$_}, "YAML: " . join(' '
 	for sort keys %yaml;
 
 # --- task names
-sub tn { RdKw::WwW::SiteConf::Builder::Task::_task_name(@_) }
+sub tn { RdKw::WwW::SiteConf::Builder::Task::_task_name(@_); }
 is(tn('all', 1), 'all', 'a goal is its name');
 is(tn('a=b'), 'goal:a%3db', '= is an assignment to Task');
 is(tn('a*'), 'goal:a%2a', '* is a wildcard');

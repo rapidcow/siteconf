@@ -33,7 +33,7 @@ plan tests => 14;
 
 my $dir = tempdir(CLEANUP => 1);
 my $udir = Encode::decode(locale_fs => $dir);
-sub fs { Encode::encode(locale_fs => $_[0]) }
+sub fs { Encode::encode(locale_fs => $_[0]); }
 my $bad = "x\x{D800}";
 
 # --- names are spelled as CodeSets says, and who could not says so

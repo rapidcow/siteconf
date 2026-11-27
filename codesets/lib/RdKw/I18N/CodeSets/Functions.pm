@@ -114,25 +114,25 @@ our @CARP_NOT = ('RdKw::I18N::CodeSets');
 # Each is a method of locale; the call is the last thing we do, so
 # that it knows the context (and, for diag, $! is as we got it:
 # locale saves it).
-sub diag        { RdKw::I18N::CodeSets->locale->diag(@_) }
-sub diag_name   { RdKw::I18N::CodeSets->locale->diag_name(@_) }
-sub tagmsg      { RdKw::I18N::CodeSets->locale->tagmsg(@_) }
-sub qq_ascii    { RdKw::I18N::CodeSets::qq_ascii(@_) }
+sub diag        { RdKw::I18N::CodeSets->locale->diag(@_); }
+sub diag_name   { RdKw::I18N::CodeSets->locale->diag_name(@_); }
+sub tagmsg      { RdKw::I18N::CodeSets->locale->tagmsg(@_); }
+sub qq_ascii    { RdKw::I18N::CodeSets::qq_ascii(@_); }
 sub qq_unicode  {
 	@_ > 1 ? RdKw::I18N::CodeSets::qq_unicode(@_)
-		: RdKw::I18N::CodeSets::qq_unicode($_[0], RdKw::I18N::CodeSets->locale->encoding('stderr'))
+		: RdKw::I18N::CodeSets::qq_unicode($_[0], RdKw::I18N::CodeSets->locale->encoding('stderr'));
 }
-sub to_fs       { RdKw::I18N::CodeSets->locale->to_fs(@_) }
-sub un_fs       { RdKw::I18N::CodeSets->locale->un_fs(@_) }
-sub to_argv     { RdKw::I18N::CodeSets->locale->to_argv(@_) }
-sub un_argv     { RdKw::I18N::CodeSets->locale->un_argv(@_) }
-sub encode_argv { RdKw::I18N::CodeSets->locale->encode_argv(@_) }
-sub decode_argv { RdKw::I18N::CodeSets->locale->decode_argv(@_) }
-sub getenv      { RdKw::I18N::CodeSets->locale->getenv(@_) }
-sub setenv      { RdKw::I18N::CodeSets->locale->setenv(@_) }
-sub unsetenv    { RdKw::I18N::CodeSets->locale->unsetenv(@_) }
-sub initstd     { RdKw::I18N::CodeSets->locale->initstd(@_) }
-sub reinitstd   { RdKw::I18N::CodeSets->locale->reinitstd(@_) }
+sub to_fs       { RdKw::I18N::CodeSets->locale->to_fs(@_); }
+sub un_fs       { RdKw::I18N::CodeSets->locale->un_fs(@_); }
+sub to_argv     { RdKw::I18N::CodeSets->locale->to_argv(@_); }
+sub un_argv     { RdKw::I18N::CodeSets->locale->un_argv(@_); }
+sub encode_argv { RdKw::I18N::CodeSets->locale->encode_argv(@_); }
+sub decode_argv { RdKw::I18N::CodeSets->locale->decode_argv(@_); }
+sub getenv      { RdKw::I18N::CodeSets->locale->getenv(@_); }
+sub setenv      { RdKw::I18N::CodeSets->locale->setenv(@_); }
+sub unsetenv    { RdKw::I18N::CodeSets->locale->unsetenv(@_); }
+sub initstd     { RdKw::I18N::CodeSets->locale->initstd(@_); }
+sub reinitstd   { RdKw::I18N::CodeSets->locale->reinitstd(@_); }
 
 =head1 SEE ALSO
 

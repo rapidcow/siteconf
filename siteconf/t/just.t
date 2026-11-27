@@ -11,7 +11,7 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestDiag qw( fold );
 
-BEGIN { $ENV{LANGUAGE} = 'C' }
+BEGIN { $ENV{LANGUAGE} = 'C'; }
 use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( write_make );

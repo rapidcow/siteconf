@@ -27,7 +27,7 @@ sub spell
 	my ($enc, $s) = @_;
 	Encode::encode($enc => $s, Encode::FB_CROAK() | Encode::LEAVE_SRC());
 }
-sub fs { spell(locale_fs => $_[0]) }
+sub fs { spell(locale_fs => $_[0]); }
 sub unfs
 {
 	my $s = eval { Encode::decode(locale_fs => $_[0],
@@ -105,7 +105,7 @@ sub spew_raw
 	print $fh $text;
 	close $fh or die;
 }
-sub slurp_fs { unfs(slurp_raw(fs($_[0]))) }
+sub slurp_fs { unfs(slurp_raw(fs($_[0]))); }
 
 # --- a project in a directory not named in ASCII, built somewhere else
 # that is not either: what configure finds (A) and what it is told (B)

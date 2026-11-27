@@ -153,7 +153,7 @@ sub _status { $! = 0; $? = shift; @_; }
 
 # A string as the file system spells it, so that make finds the file;
 # or an error prefixed `E:'.
-sub _fs { RdKw::WwW::SiteConf::fs_text($_[1]) }
+sub _fs { RdKw::WwW::SiteConf::fs_text($_[1]); }
 
 # Every string from the plan goes through _fs.  The result is bytes
 # throughout: a byte string joined to a character string would be
@@ -240,9 +240,9 @@ sub _text
 	$out;
 }
 
-sub options { qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch ) }
+sub options { qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_touch ); }
 
-sub default_output { q(Makefile) }
+sub default_output { q(Makefile); }
 
 sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ]; }
 
@@ -272,7 +272,7 @@ sub _command
 }
 
 # Whether a directory marker is an order-only prerequisite (after a `|')
-sub _order_only { 0 }
+sub _order_only { 0; }
 
 # A name, as any make reads it: as it is, or not at all
 sub _name

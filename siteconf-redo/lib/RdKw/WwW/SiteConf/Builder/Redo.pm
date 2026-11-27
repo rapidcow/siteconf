@@ -211,7 +211,7 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
 
-sub options { qw( arg_prefix clean purge arg_max cmd_rm_f cmd_mv_f sh literal_target ) }
+sub options { qw( arg_prefix clean purge arg_max cmd_rm_f cmd_mv_f sh literal_target ); }
 
 # Whether ${@} in a recipe says $3 (see the DESCRIPTION, and _target):
 # unless -Sliteral_target=1 says the target itself
@@ -229,7 +229,7 @@ sub _target
 	$quoted ? qq("\$\$$v->{O}") : "\$\$$v->{O}";
 }
 
-sub default_output { q(all.do) }
+sub default_output { q(all.do); }
 
 sub emit
 {
@@ -498,7 +498,7 @@ sub _ifchange
 }
 
 # To the build directory (see _preamble)
-sub _cd { "cd -- \"\${$_[0]{d}:-.}\"\n" }
+sub _cd { "cd -- \"\${$_[0]{d}:-.}\"\n"; }
 
 # The names of the shell variables (see _preamble): `d' and `o', after
 # -Sarg_prefix (none by default; -Sarg_prefix alone, or empty, is none)

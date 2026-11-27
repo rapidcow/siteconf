@@ -16,7 +16,7 @@ use Encode::Locale ();
 use RdKw::I18N::CodeSets;
 my $CS = 'RdKw::I18N::CodeSets';
 
-sub canon { Encode::find_encoding($_[0])->name }
+sub canon { Encode::find_encoding($_[0])->name; }
 
 # --- unset is undef
 {

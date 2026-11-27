@@ -32,7 +32,7 @@ sub in_enc
 	$out;
 }
 
-sub hex_of { join ' ', map { sprintf '%02x', ord } split //, $_[0] }
+sub hex_of { join ' ', map { sprintf '%02x', ord } split //, $_[0]; }
 
 # Characters, in cp932: 表 is 95 5c, ー is 81 5b, ～ is 81 60, あ is 82 a0
 my %chr = (

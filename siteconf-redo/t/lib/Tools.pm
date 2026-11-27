@@ -14,7 +14,7 @@ use File::Temp qw( tempdir );
 
 use Exporter ();
 our @ISA = qw( Exporter );
-our @EXPORT_OK = qw( which describe redo_cmd ifchange_cmd redo_bin redo_sh shq );
+our @EXPORT_OK = qw( which describe redo_cmd ifchange_cmd redo_bin redo_sh sh_runs shq );
 
 # Where a command (its first word) is: there, if it has a `/'; or else
 # the first in $PATH.  undef if it is nowhere.
@@ -135,6 +135,20 @@ sub _together
 # What $REDO_SH says (for -Ssh, and the #! of a .do), or undef.  Termux
 # has no /bin/sh: REDO_SH=/data/data/com.termux/files/usr/bin/sh
 sub redo_sh { defined $ENV{REDO_SH} && length $ENV{REDO_SH} ? $ENV{REDO_SH} : undef }
+
+# Whether `#!$sh' runs: as the kernel runs it, the first word is the
+# program, and the rest is one argument; then -c 'exit 0'.  (Not which:
+# on Termux, termux-exec makes exec find /usr/bin/env, but not stat.)
+sub sh_runs
+{
+	my ($prog, $arg) = split ' ', $_[0], 2;
+	defined $prog or return 0;
+	open my $err, '>&', \*STDERR or return 0;
+	open STDERR, '>', File::Spec->devnull or return 0;
+	my $status = system { $prog } $prog, defined $arg ? $arg : (), '-c', 'exit 0';
+	open STDERR, '>&', $err;
+	$status == 0;
+}
 
 # One word for sh
 sub shq { (my $s = shift) =~ s/'/'\\''/g; "'$s'" }

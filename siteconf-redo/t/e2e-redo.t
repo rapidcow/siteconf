@@ -23,23 +23,31 @@ my $sh = redo_sh();
 my @Ssh = defined $sh ? shq("-Ssh=$sh") : ();
 # Not --version: a redo may not have it, or not say its name in it.
 # What we need of redo is that it builds a file from its .do (in a
-# directory of its own, for redo keeps its state there).
+# directory of its own, for redo keeps its state there).  Returns
+# undef if it does, or else why not; and diag says what redo said.
 sub redo_builds
 {
 	my $dir = tempdir(CLEANUP => 1);
+	my $shebang = "#!" . (defined $sh ? $sh : q(/bin/sh));
 	open my $fh, '>', "$dir/probe.do" or die "probe.do: $!";
-	print $fh "#!", defined $sh ? $sh : q(/bin/sh), "\n", <<\probe;
+	print $fh $shebang, "\n", <<\probe;
 echo ok >"$3";
 probe
 	close $fh or die "probe.do: $!";
 	chmod 0777 & ~umask, "$dir/probe.do" or die "probe.do: $!";
 	(my $q = $dir) =~ s/'/'\\''/g;
-	system("cd '$q' && $redo probe >/dev/null 2>&1") == 0 or return 0;
-	open $fh, '<', "$dir/probe" or return 0;
+	my $err = `cd '$q' && $redo probe 2>&1 >/dev/null`;
+	my $status = $?;
+	my $why = "redo could not build probe.do ($shebang)";
+	if ($status != 0) {
+		diag("redo probe: $_") for grep { /\S/ } split /\n/, $err;
+		return sprintf '%s: exit %d', $why, $status >> 8;
+	}
+	open $fh, '<', "$dir/probe" or return "$why: no probe";
 	my $line = <$fh>;
-	defined $line && $line eq "ok\n";
+	defined $line && $line eq "ok\n" ? undef : "$why: probe is not ok";
 }
-redo_builds() or plan skip_all => "no redo";
+if (defined(my $why = redo_builds())) { plan skip_all => $why }
 plan tests => 49;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build -q

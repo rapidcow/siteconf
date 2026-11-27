@@ -60,6 +60,8 @@ sub task_cmd { $ENV{GO_TASK} || (which('go-task') ? 'go-task' : 'task') }
 sub task_works
 {
 	my ($cmd) = @_;
+	$! = 0; $? = 0;
+	defined which($cmd) or return;
 	my $dir = tempdir(CLEANUP => 1);
 	open my $fh, '>', "$dir/Taskfile.yml" or die "Taskfile.yml: $!";
 	print $fh <<\taskfile;

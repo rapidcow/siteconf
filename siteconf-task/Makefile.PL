@@ -30,17 +30,17 @@ my %WriteMakefileArgs = (
 );
 
 # Compatibility with old versions of ExtUtils::MakeMaker
-unless (eval { ExtUtils::MakeMaker->VERSION('6.64'); 1 }) {
+unless (eval { ExtUtils::MakeMaker->VERSION('6.64'); 1; }) {
     my $test_requires = delete $WriteMakefileArgs{TEST_REQUIRES} || {};
     @{$WriteMakefileArgs{PREREQ_PM}}{keys %$test_requires} = values %$test_requires;
 }
 
 delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
-    unless eval { ExtUtils::MakeMaker->VERSION('6.52'); 1 };
+    unless eval { ExtUtils::MakeMaker->VERSION('6.52'); 1; };
 delete $WriteMakefileArgs{MIN_PERL_VERSION}
-    unless eval { ExtUtils::MakeMaker->VERSION('6.48'); 1 };
+    unless eval { ExtUtils::MakeMaker->VERSION('6.48'); 1; };
 delete $WriteMakefileArgs{LICENSE}
-    unless eval { ExtUtils::MakeMaker->VERSION('6.31'); 1 };
+    unless eval { ExtUtils::MakeMaker->VERSION('6.31'); 1; };
 
 WriteMakefile(%WriteMakefileArgs);
 

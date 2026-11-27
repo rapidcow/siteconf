@@ -57,7 +57,7 @@ BEGIN {
 			push @bad, $cs->diag(__("missing %s"), $module);
 			next;
 		}
-		unless (!$min || eval { $module->VERSION($min); 1 }) {
+		unless (!$min || eval { $module->VERSION($min); 1; }) {
 			push @bad, $cs->diag(__("%s: version %s required (this is %s)"),
 				$module, $min,
 				defined $module->VERSION ? $module->VERSION : '?');

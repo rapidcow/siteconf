@@ -56,7 +56,7 @@ use File::Temp ();
 use IO::Handle ();
 
 # Whether File::Temp::tempfile takes PERMS (see update_file)
-use constant HAS_PERMS => eval { File::Temp->VERSION('0.2310'); };
+use constant HAS_PERMS => eval { File::Temp->VERSION('0.2310'); 1; };
 
 # Import locale and set up gettext.
 use RdKw::I18N::CodeSets ();

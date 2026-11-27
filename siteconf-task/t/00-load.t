@@ -11,7 +11,7 @@ use lib "$FindBin::Bin/lib";
 use Tools qw( describe task_cmd );
 
 BEGIN { use_ok('RdKw::WwW::SiteConf::Builder::Task') or BAIL_OUT }
-ok(eval { RdKw::WwW::SiteConf->VERSION(q(0.03_00)); 1 }, q(siteconf 0.03_00 or later))
+ok(eval { RdKw::WwW::SiteConf->VERSION(q(0.03_00)); 1; }, q(siteconf 0.03_00 or later))
 	or diag($@);
 diag( "Testing RdKw::WwW::SiteConf::Builder::Task $RdKw::WwW::SiteConf::Builder::Task::VERSION, Perl $], $^X" );
 # (the program that t/e2e-task.t runs)

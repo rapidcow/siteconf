@@ -7,7 +7,6 @@ use warnings;
 use version;
 use RdKw::WwW::SiteConf 0.03_00 ();
 
-# (released with siteconf, at its version)
 our $VERSION = '0.03_00';
 $VERSION = version->parse( $VERSION );
 

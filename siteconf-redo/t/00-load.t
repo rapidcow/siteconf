@@ -11,8 +11,8 @@ use lib "$FindBin::Bin/lib";
 use Tools qw( which describe redo_bin redo_sh sh_runs );
 
 BEGIN { use_ok('RdKw::WwW::SiteConf::Builder::Redo') or BAIL_OUT }
-is($RdKw::WwW::SiteConf::Builder::Redo::VERSION, $RdKw::WwW::SiteConf::VERSION,
-	'the version of siteconf');
+ok(eval { RdKw::WwW::SiteConf->VERSION(q(0.03_00)); 1 }, q(siteconf 0.03_00 or later))
+	or diag($@);
 diag( "Testing RdKw::WwW::SiteConf::Builder::Redo $RdKw::WwW::SiteConf::Builder::Redo::VERSION, Perl $], $^X" );
 # (the programs that t/e2e-redo.t runs: redo, and what a .do runs)
 my ($redo, $dir) = redo_bin();

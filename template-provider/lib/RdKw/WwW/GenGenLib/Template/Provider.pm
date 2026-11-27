@@ -231,7 +231,7 @@ sub new
 			"%#q: missing HAVE"), $source));
 		$self->_norm($I{HAVE}) eq File::Spec->canonpath($source)
 			or die _status 0, tagmsg($prog, diag(__(
-			"%#q: You HAVE %q, but it is actually %s"),
+			"%#q: You HAVE %q, but I got %s"),
 			$source, $I{HAVE}, $self->_named($source)));
 	}
 	$self->{ALLOW_DEPS} || $self->{CHECK_DEPS} or return $self;

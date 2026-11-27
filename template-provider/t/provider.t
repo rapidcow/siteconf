@@ -254,7 +254,7 @@ is($out, 'secret', '... and it is a Template::Provider') or diag $err;
 spew('site/entry', "[%#\n# HAVE: elsewhere\n-%]\n");
 ok(eval { provider() }, 'HAVE is not ours to check') or diag $@;
 ok(!eval { provider(CHECK_HAVE => 1) }, '... unless CHECK_HAVE');
-like($@, qr/You HAVE `elsewhere', but it is actually `site\/entry' \(aka `\$\{a\}\/entry'\)$/, '... which says so (and as a header would)');
+like($@, qr/You HAVE `elsewhere', but I got `site\/entry' \(aka `\$\{a\}\/entry'\)$/, '... which says so (and as a header would)');
 ok(!eval { provider(CHECK_HAVE => 1, ALLOW_DEPS => 0) }, '... with nothing else, too');
 spew('site/entry', "[%#\n# HAVE: \${A}/site/entry\n-%]\n");
 ok(eval { provider(CHECK_HAVE => 1) }, '... by any spelling') or diag $@;

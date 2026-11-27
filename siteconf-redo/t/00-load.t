@@ -23,6 +23,6 @@ diag( describe(q(redo-ifchange ($REDO_IFCHANGE)), q(redo-ifchange)) ) if defined
 # termux-exec says, but stat does not.)
 my $sh = redo_sh() || q(/bin/sh);
 my $label = q(sh ($REDO_SH));
-diag( !sh_runs($sh) ? qq($label: $sh: does not run)
-	: defined which($sh) ? describe($label, $sh) . ($sh =~ /\s/ ? qq(, as in: $sh) : q())
-	: qq($label: $sh (exec finds it; stat does not)) );
+diag( !sh_runs($sh) ? "$label: $sh: does not run (exec fails)"
+	: defined which($sh) ? describe($label, $sh) . ($sh =~ /\s/ ? ", as in: $sh" : q())
+	: "$label: $sh: exec ok (though stat fails)" );

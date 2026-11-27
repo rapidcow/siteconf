@@ -41,7 +41,7 @@ is($again, $text, 'configure is generated deterministically');
 	local $ENV{PERL5LIB} = "$stub:$ENV{PERL5LIB}";
 	my $out = `$^X ./configure 2>&1`;
 	isnt($?, 0, 'configure without Template fails');
-	like($out, qr/E: missing Template\nE: 1 module missing/, '... and says so');
+	like($out, qr/E: failed to load Template: not here.*\nE: 1 module missing/, '... and says so');
 }
 
 mkdir 'build' or die "mkdir: $!";

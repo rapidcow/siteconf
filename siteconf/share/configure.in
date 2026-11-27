@@ -30,7 +30,10 @@ BEGIN {
 		my ($module, $min) = @$core;
 		(my $file = "$module.pm") =~ s!::!/!g;
 		unless (eval { require $file; 1; }) {
-			push @bad, sprintf "missing module %s", $module;
+			push @bad, ($@ =~ /\@INC/)
+				? sprintf("missing module %s", $module)
+				: sprintf("failed to load %s: %s",
+					$module, ($@ =~ /\A(.*)/));
 			next;
 		}
 		unless (!$min || eval { $module->VERSION($min); 1; }) {
@@ -83,7 +86,10 @@ BEGIN {
 		my ($module, $min) = @$need;
 		(my $file = "$module.pm") =~ s!::!/!g;
 		unless (eval { require $file; 1; }) {
-			push @bad, $cs->diag(__("missing module %s"), $module);
+			push @bad, ($@ =~ /\@INC/)
+				? $cs->diag(__("missing module %s"), $module)
+				: $cs->diag(__("failed to load %s: %s"),
+					$module, ($@ =~ /\A(.*)/));
 			next;
 		}
 		unless (!$min || eval { $module->VERSION($min); 1; }) {

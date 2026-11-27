@@ -71,7 +71,7 @@ sub lines
 	join "", @sb;
 }
 
-sub slurp { open my $fh, '<:utf8', $_[0] or return; local $/; <$fh> }
+sub slurp { open my $fh, '<:utf8', $_[0] or return; local $/; <$fh>; }
 
 # the end: out of the directory that is about to go
 sub done

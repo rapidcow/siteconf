@@ -38,8 +38,8 @@ sub project
 		e => '.ok', F => "$dir/MANIFEST", R => "$dir/Makefile.in" }, prog => 'test');
 	$dir;
 }
-sub plan_of { my ($dir, @g) = @_; RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ @g ])->plan }
-sub failure { my $dir = shift; eval { plan_of($dir, @_); 1 } ? '' : $@ }
+sub plan_of { my ($dir, @g) = @_; RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => [ @g ])->plan; }
+sub failure { my $dir = shift; eval { plan_of($dir, @_); 1; } ? '' : $@; }
 
 my $cp = "\tcp \${a}/\${\@:Q} \${b}/\${\@:Q}\n";
 
@@ -56,7 +56,7 @@ my $cp = "\tcp \${a}/\${\@:Q} \${b}/\${\@:Q}\n";
 	my $p = eval { plan_of($dir) } or diag $@;
 	is_deeply($p->{node}{page}{deps}, [ qw( html/page html/a html/b html/c site/.ok ) ],
 		'a header: NEED is followed, JUST-NEED is a dep and nothing more') or diag explain $p->{node}{page}{deps};
-	ok(!grep({ $_ eq 'html/nope' } @{ $p->{node}{page}{deps} }), 'what a JUST-NEED declares is not followed');
+	ok(!grep({ $_ eq 'html/nope'; } @{ $p->{node}{page}{deps} }), 'what a JUST-NEED declares is not followed');
 }
 {
 	my $dir = project(

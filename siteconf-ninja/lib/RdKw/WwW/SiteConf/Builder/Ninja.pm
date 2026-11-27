@@ -98,7 +98,7 @@ sub options { qw( mkpath cmd_mkdir cmd_mkdir_p ) }
 
 sub default_output { q(build.ninja) }
 
-sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ] }
+sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ]; }
 
 sub build_command
 {
@@ -170,8 +170,8 @@ NINJA
 		my $input = $node->{nosrc} ? undef : shift @dep;
 		my (@need, @order);
 		for (@dep) {
-			if (m{(?:\A|/)\Q$plan->{D}{e}\E\z}) { push @order, $_ unless $mkpath }
-			else { push @need, $_ }
+			if (m{(?:\A|/)\Q$plan->{D}{e}\E\z}) { push @order, $_ unless $mkpath; }
+			else { push @need, $_; }
 		}
 		my $build = "build " . _path($node->{bpath}) . ": $rule";
 		$build .= " " . _path($input) if defined $input;
@@ -190,7 +190,7 @@ NINJA
 
 # A command of -S (see RdKw::WwW::SiteConf/command), with a `$' as
 # `$$' (ninja expands nothing in it)
-sub _cmd { (my $b = RdKw::WwW::SiteConf::command(@_)) =~ s/\$/\$\$/g; $b }
+sub _cmd { (my $b = RdKw::WwW::SiteConf::command(@_)) =~ s/\$/\$\$/g; $b; }
 
 # A path, as ninja wants to read it (which is never with a line
 # break, and with a `|' as ${pipe}): bytes.
@@ -214,7 +214,7 @@ sub _vertical
 }
 
 # What ninja reads as a space, a colon or a variable in bytes, escaped
-sub _escape { (my $b = $_[0]) =~ s/([ :\$])/\$$1/g; $b }
+sub _escape { (my $b = $_[0]) =~ s/([ :\$])/\$$1/g; $b; }
 
 # make's recipe, in make's words, as one command in ninja's.  A lone
 # `$' in it is for make, and we do not have any (`$$' stays `$$': it is

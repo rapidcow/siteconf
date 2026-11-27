@@ -12,7 +12,7 @@ use RdKw::I18N::CodeSets;
 use RdKw::WwW::SiteConf::Builder::Task;
 
 my $class = 'RdKw::WwW::SiteConf::Builder::Task';
-sub codesets { local $ENV{T_CODESETS} = $_[0]; RdKw::I18N::CodeSets->locale->parse_from_env('T_CODESETS', prog => 't') }
+sub codesets { local $ENV{T_CODESETS} = $_[0]; RdKw::I18N::CodeSets->locale->parse_from_env('T_CODESETS', prog => 't'); }
 codesets('filesys:UTF-8,argv:UTF-8');
 
 # --- YAML scalars: always double-quoted
@@ -95,7 +95,7 @@ is(join(' ', $class->build_command('task', 'build', undef, undef)), 'task -d bui
 
 # --- what cannot be said
 $plan->{node}{x}{recipe} = [];
-ok(!eval { $class->_text($plan); 1 }, 'no recipe, no task');
+ok(!eval { $class->_text($plan); 1; }, 'no recipe, no task');
 like($@, qr/no recipe/, '... says so');
 codesets('filesys:ISO-8859-1,argv:UTF-8');
 $plan->{node}{x}{recipe} = [ [ text => "\ttouch ", 'x' ], [ word => "caf\x{e9}", 'x' ] ];

@@ -29,7 +29,7 @@ my $text = slurp('configure');
 my $again = do { run('siteconf -i again', $^X, $script,
 	qw( -i -P web -Osite_url=https://example.test -SB=build
 	-MRdKw::WwW::GenLib=0 -o configure.2 ));
-	slurp('configure.2') };
+	slurp('configure.2'); };
 is($again, $text, 'configure is generated deterministically');
 
 # a missing Template (not core) is reported by configure, not later

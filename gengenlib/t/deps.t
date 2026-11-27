@@ -59,7 +59,7 @@ HTML
 	}
 
 	$f = spew('d', "# HAVE: a\n# HAVE: b\n");
-	ok(!eval { read_deps($f); 1 }, 'two HAVEs');
+	ok(!eval { read_deps($f); 1; }, 'two HAVEs');
 	like($@, qr/HAVE too many/, '... too many');
 }
 
@@ -80,9 +80,9 @@ HTML
 		'PATH, on one line');
 	is($L{PATH}, 2, '... and its line');
 	$f = spew('paths', "# PATH: a b\n");
-	ok(!eval { read_deps($f); 1 }, 'PATH of two names');
+	ok(!eval { read_deps($f); 1; }, 'PATH of two names');
 	$f = spew('paths2', "# PATH: a\n# PATH: b\n");
-	like(eval { read_deps($f); 1 } ? '' : $@, qr/line 2: more than one PATH/, 'two PATHs');
+	like(eval { read_deps($f); 1; } ? '' : $@, qr/line 2: more than one PATH/, 'two PATHs');
 }
 
 # --- read_deps: BASIC and DOS
@@ -155,19 +155,19 @@ is(norm_deps('$B/$b/z'), '${B}/${b}/z', 'more than once');
 is(norm_deps('$A//surprise'), '/surprise', 'lazy strip');
 
 # --- norm_deps: malformed
-ok(!eval { norm_deps('a$', { strict => 1 }); 1 }, 'trailing $ croaks');
+ok(!eval { norm_deps('a$', { strict => 1 }); 1; }, 'trailing $ croaks');
 like($@, qr/trailing/, '... says so');
-ok(!eval { norm_deps('${a', { strict => 1 }); 1 }, 'unterminated ${ croaks');
+ok(!eval { norm_deps('${a', { strict => 1 }); 1; }, 'unterminated ${ croaks');
 like($@, qr/unterminated/, '... says so');
 is(norm_deps('a$', { strict => 0 }), 'a${$}', 'trailing $ replaced');
 is(norm_deps('${a/b', { strict => 0 }), '${$}{a/b', 'unterminated ${ replaced');
 is(norm_deps('$$', { strict => 0 }), '${$}', '$$ is fine');
-ok(!eval { norm_deps('a${}b', { strict => 1 }); 1 }, 'empty ${} croaks');
-ok(!eval { norm_deps('a$}b', { strict => 1 }); 1 }, '$ before } croaks');
+ok(!eval { norm_deps('a${}b', { strict => 1 }); 1; }, 'empty ${} croaks');
+ok(!eval { norm_deps('a$}b', { strict => 1 }); 1; }, '$ before } croaks');
 is(norm_deps('a${}b'), 'a${$}{}b', 'empty ${} replaced');
 is(norm_deps('a$}b'), 'a${$}}b', '$ before } replaced');
 is(norm_deps(norm_deps('${}$}$')), norm_deps('${}$}$'), 'replacement is idempotent');
-ok(!eval { norm_deps('x$.y', { strict => 1 }); 1 }, '$ before a non-word croaks');
+ok(!eval { norm_deps('x$.y', { strict => 1 }); 1; }, '$ before a non-word croaks');
 like($@, qr/stray/, '... says so');
 is(norm_deps('${a-b}', { strict => 1 }), '${a-b}', 'anything goes inside braces');
 is(norm_deps('x$.y'), 'x${$}.y', '$ before a non-word replaced');
@@ -181,7 +181,7 @@ is(norm_deps('$_/${a1}/$9', { strict => 1 }), '${_}/${a1}/${9}', 'word character
 		is(norm_deps($spec, { strict => 0, pass_thru => 1 }), $spec,
 			"explicitly lenient pass through $spec");
 		for my $pass_thru (0, 1) {
-			ok(!eval { norm_deps($spec, { strict => 1, pass_thru => $pass_thru }); 1 },
+			ok(!eval { norm_deps($spec, { strict => 1, pass_thru => $pass_thru }); 1; },
 				"strict rejects $spec with pass_thru=$pass_thru");
 		}
 	}
@@ -318,6 +318,6 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 # --- flat options for missing files
 is_deeply({ read_deps("$dir/missing", forgive_missing => 1, prog => 'deps-test') },
 	{}, 'read_deps: missing file forgiven');
-ok(!eval { read_deps("$dir/missing", forgive_missing => 0, prog => 'deps-test'); 1 },
+ok(!eval { read_deps("$dir/missing", forgive_missing => 0, prog => 'deps-test'); 1; },
 	'read_deps: missing file refused');
 like($@, qr/^deps-test:/, 'read_deps: chosen prefix');

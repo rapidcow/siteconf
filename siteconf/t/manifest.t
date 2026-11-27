@@ -13,7 +13,7 @@ use RdKw::WwW::SiteConf;
 
 # read_manifest does not look at the configuration; fake an object.
 my $sc = bless {}, 'RdKw::WwW::SiteConf';
-sub parse { my $t = shift; $sc->read_manifest(\$t) }
+sub parse { my $t = shift; $sc->read_manifest(\$t); }
 sub files { [ map { $_->{file} } @{ $_[0] } ] }
 
 my @g = parse(<<'M');
@@ -35,7 +35,7 @@ is($g[0]{need}[1]{line}, 5, 'line numbers kept');
 
 sub bad {
 	my ($text, $re, $what) = @_;
-	ok(!eval { parse($text); 1 }, "$what: dies");
+	ok(!eval { parse($text); 1; }, "$what: dies");
 	like($@, $re, "$what: says why");
 }
 bad("NEED x\n", qr/NEED before any MAKE/, 'orphan');

@@ -108,8 +108,8 @@ BEGIN {
 	}
 }
 
-sub to_fs { $cs->to_fs(@_, { prog => $prog }) }
-sub un_fs { $cs->un_fs(@_, { prog => $prog }) }
+sub to_fs { $cs->to_fs(@_, { prog => $prog }); }
+sub un_fs { $cs->un_fs(@_, { prog => $prog }); }
 
 # Quotes for POSIX shell (/bin/sh).
 # Ported from SiteConf.pm.
@@ -224,8 +224,8 @@ my (%D, %O, $reset, $shutup);
 @ARGV = $cs->un_argv(@ARGV, { start => 1 + $offset, prog => $prog });
 Getopt::Long::Configure(qw( bundling no_ignore_case ));
 GetOptions(
-	'h|help|?' => sub { print $usage; exit 0 },
-	'reset'    => sub { %D = (); %O = (); $reset = 1 },
+	'h|help|?' => sub { print $usage; exit 0; },
+	'reset'    => sub { %D = (); %O = (); $reset = 1; },
 	'q|quiet'  => \$shutup,
 	'D=s'      => setter(D => \%D),
 	'O=s'      => setter(O => \%O),

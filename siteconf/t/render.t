@@ -53,7 +53,7 @@ sub spew {
 			'-M', "RdKw::WwW::GenLib=$RdKw::WwW::GenLib::VERSION";
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	ok($? == 0 && -f 'project/bin/render-page', 'siteconf init writes the renderer')
 		or BAIL_OUT("init failed:\n$out");
@@ -78,7 +78,7 @@ sub render {
 		exec $^X, 'bin/render-page', '-B', "$tmp/B", $file, 'out.html';
 		die "exec: $!";
 	};
-	my $err = do { local $/; <$fh> };
+	my $err = do { local $/; <$fh>; };
 	close $fh;
 	my $status = $? >> 8;
 	return ($status, $status ? $err : slurp('project/out.html'));
@@ -165,7 +165,7 @@ for my $case (
 # -MRdKw::WwW::GenGenLib::Template::Provider: what a page loads is what
 # it declares
 SKIP: {
-	eval { require RdKw::WwW::GenGenLib::Template::Provider; 1 }
+	eval { require RdKw::WwW::GenGenLib::Template::Provider; 1; }
 		or skip 'RdKw::WwW::GenGenLib::Template::Provider is not installed', 3;
 	my $run = sub {
 		open my $fh, '-|' or do {
@@ -174,7 +174,7 @@ SKIP: {
 			exec $^X, @_;
 			die "exec: $!";
 		};
-		my $out = do { local $/; <$fh> };
+		my $out = do { local $/; <$fh>; };
 		close $fh;
 		($? >> 8, $out);
 	};

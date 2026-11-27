@@ -152,7 +152,7 @@ sub sh_args
 	$line =~ s/\$\$/\$/g;	# (make reads $$ as $)
 	my $fns = join '', map { "$_() { printf '$_\\0'; printf '%s\\0' \"\$@\"; }; " } @cmd;
 	open my $fh, '-|', '/bin/sh', '-c', $fns . $line or die "sh: $!";
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	my @w = split /\0/, $out, -1;
 	pop @w;	# (after the last NUL)
@@ -277,7 +277,7 @@ sub rb { RdKw::WwW::SiteConf::recipe_bytes($_[0]) }
 {
 	my $dir = tempdir(CLEANUP => 1);
 	make_path("$dir/html/d", "$dir/MY");
-	for (qw( a d/b )) { open my $fh, '>', "$dir/html/$_" or die; close $fh }
+	for (qw( a d/b )) { open my $fh, '>', "$dir/html/$_" or die; close $fh; }
 	open my $fh, '>', "$dir/Makefile.in" or die;
 	print $fh "a:\n\tcp \${a}/\${<} \${B:Q}/\${b:Q}/\${\@:Q}\nd/b: \${a}/d/b\n\tcp \${a}/\${\@:T} \${b}/\${\@:R}\n";
 	close $fh or die;

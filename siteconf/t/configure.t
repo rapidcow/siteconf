@@ -13,7 +13,7 @@ use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib fs_surprise );
 
 my $script = script_path();
-eval { require File::ShareDir; 1 }
+eval { require File::ShareDir; 1; }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
 plan tests => 42;
 local $ENV{PERL5LIB} = perl5lib();
@@ -26,7 +26,7 @@ sub run {
 		exec $^X, @_;
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	($? >> 8, $out);
 }
@@ -123,7 +123,7 @@ sub cof {
 	mkdir 'esc' or die; chdir 'esc' or die;
 	($status, $out) = run($script, 'init');
 	is($status, 0, 'init (escapes)') or diag $out;
-	sub slurp { open my $fh, '<:encoding(UTF-8)', $_[0] or die "$_[0]: $!"; local $/; <$fh> }
+	sub slurp { open my $fh, '<:encoding(UTF-8)', $_[0] or die "$_[0]: $!"; local $/; <$fh>; }
 
 	($status, $out) = run('configure', '-q', '-Dx=a b', '-Dy=my dir/sub dir', '-Dz=a${U+20}b',
 		"-Dnl=a\nb", '-Dlead= x', "-Oo=t\tab");

@@ -23,8 +23,17 @@ catalogs are tested.
 
 ## Style
 
-One-line blocks should not omit its semicolon:
+End statements inside Perl blocks with semicolons, including the final
+statement. Blocks for `grep`, `map`, `sort`, `sub`, `eval`, and `exec`
+may omit the final semicolon if they contain exactly one statement.
+Preserve existing semicolons in those blocks.
 
-    eval { $mod->VERSION(0.01); 1; }  # good
-    eval { $mod->VERSION(0.01); }     # ok (though prefer the above)
-    eval { $mod->VERSION(0.01); 1 }   # BAD.
+Use `eval { danger; 1; }` for operations that may fail and we do not
+need the return value of, even if we are fairly confident that danger
+returns a true value on success.
+
+    eval { require $file; 1; }        # good
+    eval { $mod->VERSION(0.01); 1; }  # likewise
+    eval { $mod->VERSION(0.01); 1 }   # no!
+    map { $_->name } @items           # good (single-statement exception)
+    $pid = eval { open2(...) }        # likewise

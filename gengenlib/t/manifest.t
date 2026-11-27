@@ -17,7 +17,7 @@ use File::Temp qw( tempdir );
 use RdKw::WwW::GenGenLib qw( read_manifest escape_dep );
 
 # (the text as it is in a file: UTF-8)
-sub parse { my $t = Encode::encode('UTF-8', shift); read_manifest({}, \$t) }
+sub parse { my $t = Encode::encode('UTF-8', shift); read_manifest({}, \$t); }
 
 my $mf = parse(<<'M');
 # comment
@@ -45,7 +45,7 @@ is_deeply([ $mf->needed('third') ], ['a/b.c'], 'NEED after WANT');
 is_deeply([ $mf->wanted('third') ], ['sunshine'], 'WANT');
 is_deeply([ map $mf->needed($_), $mf->target ], [qw( sunshine rainbow a/b.c )], 'all NEEDs');
 is_deeply([ map $mf->wanted($_), $mf->target ], [qw( disco_ball sunshine )], 'all WANTs');
-ok(!eval { $mf->needed('nope'); 1 }, 'needed: no such goal');
+ok(!eval { $mf->needed('nope'); 1; }, 'needed: no such goal');
 like($@, qr/\Aread_manifest: MANIFEST: missing goal `nope'$/, '... says so');
 
 my @g = $mf->goals;
@@ -76,7 +76,7 @@ is_deeply([ parse("MAKE all\r\nNEED a\r\n")->needed ], ['a'], 'CRLF');
 
 sub bad {
 	my ($text, $re, $what) = @_;
-	ok(!eval { parse($text); 1 }, "$what: dies");
+	ok(!eval { parse($text); 1; }, "$what: dies");
 	like($@, $re, "$what: says why");
 }
 bad("NEED x\n", qr/\Aread_manifest: MANIFEST line 1: NEED before any MAKE$/, 'orphan');
@@ -99,7 +99,7 @@ bad("MAKE a\nNEED \${A}\n", qr/`\$\{A\}' is empty/, 'the root alone');
 bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 {
 	my $t = "MAKE a\nNEED \xff\n";
-	ok(!eval { read_manifest({}, \$t); 1 }, 'not UTF-8: dies');
+	ok(!eval { read_manifest({}, \$t); 1; }, 'not UTF-8: dies');
 	like($@, qr/line 2: not UTF-8/, 'not UTF-8: says why');
 }
 
@@ -112,7 +112,7 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	my $mf = read_manifest({}, "$dir/MANIFEST");
 	is($mf->file, "$dir/MANIFEST", 'file: as it was named');
 	is_deeply([ $mf->needed ], ['x'], 'read from a file');
-	ok(!eval { read_manifest({}, "$dir/nope"); 1 }, 'missing: dies');
+	ok(!eval { read_manifest({}, "$dir/nope"); 1; }, 'missing: dies');
 	like($@, qr/\Aread_manifest: cannot open file `\Q$dir\E\/nope': /, 'missing: says why');
 }
 
@@ -146,10 +146,10 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	is_deeply([ $mf->needed('more') ], ['c'], '... and we with its');
 	my ($b) = @{ ($mf->goals)[0]{need} }[1];
 	is_deeply([ @$b{qw( input line order )} ], [ 'part/one', 1, 4 ], '... and says where a line is');
-	ok(!eval { read_manifest({}, 'MANIFEST'); 1 }, 'INCLUDE: an undefined variable dies');
+	ok(!eval { read_manifest({}, 'MANIFEST'); 1; }, 'INCLUDE: an undefined variable dies');
 	like($@, qr/\Aread_manifest: MANIFEST line 3: bad substitution: \$\{p\}$/, '... says where');
 	$put->('part/one', "INCLUDE ./MANIFEST\n");
-	ok(!eval { read_manifest({ p => 'part' }, 'MANIFEST'); 1 }, 'INCLUDE: a cycle dies');
+	ok(!eval { read_manifest({ p => 'part' }, 'MANIFEST'); 1; }, 'INCLUDE: a cycle dies');
 	like($@, qr/\Aread_manifest: part\/one line 1: include cycle through `\.\/MANIFEST'$/, '... says where');
 	chdir '/' or die;
 }
@@ -160,9 +160,9 @@ bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 	is_deeply([ $mf->needed ], [ 'a b # c', 'd' ], 'a string may have blanks and a #; a comment still ends the line');
 	is_deeply([ $mf->wanted ], ['xy z'], '... next to other characters');
 	is_deeply([ parse("MAKE \${\"all\"}\nNEED a\n")->targets ], ['all'], 'a string as a goal name');
-	ok(!eval { parse("MAKE \${\"a b\"}\nNEED a\n"); 1 }, 'a goal with a blank in it is refused');
-	ok(!eval { parse("MAKE \${\"a\"} b\nNEED a\n"); 1 }, 'so are two words');
-	ok(!eval { parse("MAKE \${\"a#b\"}\nNEED a\n"); 1 }, '... and a # or a $');
+	ok(!eval { parse("MAKE \${\"a b\"}\nNEED a\n"); 1; }, 'a goal with a blank in it is refused');
+	ok(!eval { parse("MAKE \${\"a\"} b\nNEED a\n"); 1; }, 'so are two words');
+	ok(!eval { parse("MAKE \${\"a#b\"}\nNEED a\n"); 1; }, '... and a # or a $');
 }
 
 done_testing;

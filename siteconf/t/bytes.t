@@ -27,7 +27,7 @@ sub in_enc
 		use RdKw::I18N::CodeSets; use RdKw::WwW::SiteConf;
 		RdKw::I18N::CodeSets->locale->parse_from_env('SITECONF_CODESETS', prog => 't');
 		\n$code" or die "$!";
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	$out;
 }
@@ -79,7 +79,7 @@ is(hex_of($out), hex_of("'\x95\x5c'\\''\x82\xa0' 'a\$\$b\x81\x5b'"),
 	(my $sh = $out) =~ s/\$\$/\$/g;	# (make reads $$ as $)
 	open my $fh, '-|', 'sh', '-c', "printf %s $sh" or die $!;
 	binmode $fh;
-	my $got = do { local $/; <$fh> };
+	my $got = do { local $/; <$fh>; };
 	close $fh;
 	is(hex_of($got), hex_of("\x95\x5c'\x82\xa0a\$b\x81\x5b"), 'the shell gets the bytes, a trail byte of \\ too');
 }
@@ -96,7 +96,7 @@ CODE
 	(my $sh = $out) =~ s/\$\$/\$/g;
 	open my $fh, '-|', 'sh', '-c', "printf %s $sh" or die $!;
 	binmode $fh;
-	my $got = do { local $/; <$fh> };
+	my $got = do { local $/; <$fh>; };
 	close $fh;
 	my $want = Encode::encode('iso-2022-jp', "\x{3042}'\x{4e9c}");
 	is(hex_of($got), hex_of($want), 'iso-2022-jp: a word comes back as it was, with its ESC and $');

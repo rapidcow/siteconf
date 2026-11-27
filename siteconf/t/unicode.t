@@ -20,7 +20,7 @@ use File::Temp qw( tempdir );
 use TestPaths qw( script_path perl5lib fs_surprise );
 use RdKw::WwW::GenGenLib qw( read_deps read_make subs_dep );
 
-eval { require File::ShareDir; 1 }
+eval { require File::ShareDir; 1; }
 	or plan skip_all => 'File::ShareDir required, as by siteconf';
 sub spell
 {
@@ -49,12 +49,12 @@ my @files = ( $P, $Bdir, 'résumé.html', 'ないもの.html', "no\x{a0}break.ht
 my @args = ( $script, "-DB=$Bdir", $Bdir, 'html/résumé.html', 'résumé.out.html',
 	"render:no\x{a0}render" );
 for (@files) {
-	eval { spell(locale_fs => $_); 1 }
+	eval { spell(locale_fs => $_); 1; }
 		or plan skip_all => "locale_fs ($Encode::Locale::ENCODING_LOCALE_FS)"
 			. " cannot spell our file names";
 }
 for (@args) {
-	eval { spell(locale => $_); 1 }
+	eval { spell(locale => $_); 1; }
 		or plan skip_all => "the locale ($Encode::Locale::ENCODING_LOCALE)"
 			. " cannot spell our arguments";
 }
@@ -75,7 +75,7 @@ sub run
 		exec $^X, @argv;
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	($? >> 8, $out);
 }

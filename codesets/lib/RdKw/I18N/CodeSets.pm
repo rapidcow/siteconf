@@ -260,7 +260,7 @@ sub parse_from_env
 	my $prog = _prog_opt(parse_from_env => $self, \@opt);
 	Carp::croak('parse_from_env: undefined environment variable name') unless defined $name;
 	return $self unless exists $ENV{$name};
-	eval { $self->parse($ENV{$name}); 1 } or die "$prog$name: $@";
+	eval { $self->parse($ENV{$name}); 1; } or die "$prog$name: $@";
 	$self;
 }
 
@@ -277,7 +277,7 @@ sub parse_from_argv
 			++$n < @$argv or die _status 0, "$prog-C (argv $n): no codeset after it\n";
 			$spec = $argv->[$n];
 		}
-		eval { $new->parse($spec); 1 } or die "$prog-C (argv @{[ $n + 1 ]}): $@";
+		eval { $new->parse($spec); 1; } or die "$prog-C (argv @{[ $n + 1 ]}): $@";
 		$n++;
 	}
 	splice @$argv, 0, $n;
@@ -828,8 +828,8 @@ sub setenv
 	}
 	# All or none
 	while (my ($key, $value) = each %set) {
-		if (defined $value) { $ENV{$key} = $value }
-		else { delete $ENV{$key} }
+		if (defined $value) { $ENV{$key} = $value; }
+		else { delete $ENV{$key}; }
 	}
 	return;
 }
@@ -1031,7 +1031,7 @@ sub _strerror
 {
 	my ($errno) = @_;
 	local $! = $errno;
-	my $msg = do { use if $] >= 5.022, locale => ':messages'; "$!" };
+	my $msg = do { use if $] >= 5.022, locale => ':messages'; "$!"; };
 	return $msg if Encode::is_utf8($msg) || $msg !~ /[^\x00-\x7f]/;
 	my ($s) = _code(\&Encode::decode, 'locale', $msg);
 	defined $s ? $s : Encode::decode('locale', $msg, Encode::FB_PERLQQ());

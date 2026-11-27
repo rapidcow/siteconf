@@ -145,7 +145,7 @@ sub options { qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_
 
 sub default_output { q(Taskfile.yml) }
 
-sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ] }
+sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ]; }
 
 sub build_command
 {
@@ -199,7 +199,7 @@ sub _file_task
 }
 
 # A command, with what Task would read as a template escaped
-sub _template { (my $s = $_[0]) =~ s/\{\{/{{"{{"}}/g; $s }
+sub _template { (my $s = $_[0]) =~ s/\{\{/{{"{{"}}/g; $s; }
 
 # A shell word for a name
 sub _quote { RdKw::WwW::SiteConf::shell_quote($_[0]) }

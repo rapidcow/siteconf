@@ -36,7 +36,7 @@ sub list
 	my $out = `cd '$dir' && '$^X' '$script' @arg 2>err`;
 	my $ok = $? == 0;
 	open my $fh, '<', "$dir/err" or die;
-	my $err = do { local $/; <$fh> };
+	my $err = do { local $/; <$fh>; };
 	($out, $err, $ok);
 }
 

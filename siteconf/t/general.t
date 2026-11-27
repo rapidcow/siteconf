@@ -12,7 +12,7 @@ use File::Path qw( make_path );
 use File::Temp qw( tempdir );
 use TestPaths qw( project_root script_path perl5lib );
 
-eval { require Template; 1 } or plan skip_all => 'Template is not installed';
+eval { require Template; 1; } or plan skip_all => 'Template is not installed';
 my $script = script_path();
 plan tests => 36;
 # The preset comes from the built share
@@ -29,11 +29,11 @@ sub run
 		exec $^X, @_;
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	($? >> 8, $out);
 }
-sub slurp { open my $fh, '<:encoding(UTF-8)', $_[0] or return ''; local $/; <$fh> }
+sub slurp { open my $fh, '<:encoding(UTF-8)', $_[0] or return ''; local $/; <$fh>; }
 sub spew
 {
 	my ($name, $text) = @_;
@@ -121,7 +121,7 @@ spew('html/c.txt', "[%# HAVE: \${a}/c.txt: -%]\n[%# NEED: \${B}/gen.txt: -%]\n[%
 like($out, qr/absolute paths are not allowed/, 'by its absolute name, not even what is declared');
 
 SKIP: {
-	eval { require RdKw::WwW::GenGenLib::Template::Provider; 1 }
+	eval { require RdKw::WwW::GenGenLib::Template::Provider; 1; }
 		or skip 'RdKw::WwW::GenGenLib::Template::Provider is not installed', 4;
 	($status, $out) = run($script, 'init', '-q', '-f', '-P', 'tem', '-o', 'configure:/dev/null',
 		'-MRdKw::WwW::GenGenLib::Template::Provider');

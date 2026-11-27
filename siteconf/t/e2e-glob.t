@@ -33,12 +33,12 @@ sub run
 		exec @cmd;
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	($? >> 8, $out);
 }
 
-sub contents { open my $fh, '<', $_[0] or return; local $/; <$fh> }
+sub contents { open my $fh, '<', $_[0] or return; local $/; <$fh>; }
 
 # The source, and files that [year] and [id] would match (y, e, a, r; i, d)
 sub project

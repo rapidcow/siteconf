@@ -640,7 +640,7 @@ sub read_deps
 		# Not UTF-8 is not text, and so has no header: give up on the
 		# spot, and quietly (the :encoding layer would warn per line).
 		# A line break is never inside a character, so this is safe.
-		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1 }
+		eval { $_ = Encode::decode('UTF-8', $_, Encode::FB_CROAK()); 1; }
 			or last;
 		# (a CR of a CRLF is not part of the last name)
 		s/\r?\n\z//;
@@ -1283,7 +1283,7 @@ sub walk_deps
 		}
 	}
 
-	$kwds->{terminal} ? grep({ !$inner{$_} } @pool) : @pool;
+	$kwds->{terminal} ? grep({ !$inner{$_}; } @pool) : @pool;
 }
 
 # `${"..."}' as one unit, with whatever is in it

@@ -54,7 +54,7 @@ sub spew {
 	print $fh $text;
 	close $fh or die;
 }
-sub hdr { my %h = @_; join '', "[%\n", (map { " # $_: $h{$_}\n" } sort keys %h), "-%]\n" }
+sub hdr { my %h = @_; join '', "[%\n", (map { " # $_: $h{$_}\n" } sort keys %h), "-%]\n"; }
 
 make_path("$top/proj");
 spew("$top/secret", hdr(NEED => 'leaked'));
@@ -98,7 +98,7 @@ spew('must-not-be-read', '');
 		my @got = walk_deps(\%D, '${a}/evil.html', { graph => \%G });
 		is_deeply(\@got, [ '${a}/evil.html', $norm ], "listed: $spec");
 		ok(exists $G{$norm} && !defined $G{$norm}, "not read: $spec");
-		ok(!grep({ $_ eq 'leaked' } @got), "nothing it leads to: $spec");
+		ok(!grep({ $_ eq 'leaked'; } @got), "nothing it leads to: $spec");
 	};
 	$bad->($_) for (
 		'../secret',
@@ -117,7 +117,7 @@ spew('must-not-be-read', '');
 	my %G;
 	my @got = walk_deps(\%D, '../secret', { graph => \%G });
 	is_deeply(\@got, ['../secret'], 'the entry itself may not be traversal');
-	ok(!grep({ defined } values %G), '... and is not read');
+	ok(!grep({ defined; } values %G), '... and is not read');
 }
 
 # --- spellings are one node; a directory is not a header to read

@@ -130,7 +130,7 @@ sub _of_module
 	my @warn;
 	my $ok = do {
 		local $SIG{__WARN__} = sub { push @warn, @_ };
-		eval { require $file; 1 };
+		eval { require $file; 1; };
 	};
 	$ok or return;
 	warn @warn if @warn;

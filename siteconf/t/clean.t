@@ -39,16 +39,16 @@ sub plan_of
 {
 	my $dir = shift;
 	open my $fh, '<', "$dir/MANIFEST" or die;
-	my @goal = do { local $/; <$fh> } =~ /^MAKE (\S+)/mg;
+	my @goal = do { local $/; <$fh>; } =~ /^MAKE (\S+)/mg;
 	RdKw::WwW::SiteConf->new(B => $dir, quiet => 1, goals => \@goal, S => { @_ })->plan;
 }
 sub names { join ' ', map { $_->{name} } @{ $_[0]{clean} } }
-sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Builder::Make->_text($_[0]) }
+sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Builder::Make->_text($_[0]); }
 
 # --- no -Sclean, no rule; a name alone is the default one
 {
 	is(names(plan_of(project($manifest))), '', 'none unless asked for');
-	ok(eval { plan_of(project("MAKE clean\n\tNEED a.css\n")); 1 }, 'and then clean is no reserved name') or diag $@;
+	ok(eval { plan_of(project("MAKE clean\n\tNEED a.css\n")); 1; }, 'and then clean is no reserved name') or diag $@;
 	my $plan = plan_of(project($manifest), clean => undef);
 	is(names($plan), 'clean', 'default: one rule, clean');
 	my $mk = makefile($plan);
@@ -85,31 +85,31 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Builder::Make->_text($
 	unlike(makefile($plan), qr/clean/, 'nothing in the Makefile');
 	my $plan2 = eval { plan_of(project("MAKE clean\n\tNEED a.css\n"), clean => '&') };
 	ok($plan2, 'a goal called clean') or diag $@;
-	ok(eval { plan_of(project("MAKE clean\n\tNEED a.css\n"), clean => 'purge'); 1 }, 'ditto for another name') or diag $@;
-	ok(!eval { plan_of(project("MAKE purge\n\tNEED a.css\n"), clean => 'purge'); 1 }
+	ok(eval { plan_of(project("MAKE clean\n\tNEED a.css\n"), clean => 'purge'); 1; }, 'ditto for another name') or diag $@;
+	ok(!eval { plan_of(project("MAKE purge\n\tNEED a.css\n"), clean => 'purge'); 1; }
 		&& $@ =~ /reserved/, 'but not the name itself');
-	ok(!eval { plan_of(project("MAKE clean\n\tNEED a.css\n"), clean => undef); 1 }
+	ok(!eval { plan_of(project("MAKE clean\n\tNEED a.css\n"), clean => undef); 1; }
 		&& $@ =~ /reserved/, 'clean is reserved once there is such a rule');
 }
 
 # --- collisions and bad names
 {
 	my $m = "MAKE a\n\tNEED a.css\nMAKE a-x\n\tNEED a.css\n";
-	ok(!eval { plan_of(project($m), clean => '&-x'); 1 }
+	ok(!eval { plan_of(project($m), clean => '&-x'); 1; }
 		&& $@ =~ /`a-x' is also the name of a goal/, 'a rule named like a goal');
-	ok(!eval { plan_of(project($manifest), clean => 'MY'); 1 }
+	ok(!eval { plan_of(project($manifest), clean => 'MY'); 1; }
 		&& $@ =~ /`MY'/, 'a rule named like MY');
-	ok(!eval { plan_of(project($manifest), clean => 'a b'); 1 }
+	ok(!eval { plan_of(project($manifest), clean => 'a b'); 1; }
 		&& $@ =~ /`a b' cannot be the name of a rule/, 'a bad name');
-	ok(!eval { plan_of(project($manifest), clean => 'a:b'); 1 }
+	ok(!eval { plan_of(project($manifest), clean => 'a:b'); 1; }
 		&& $@ =~ /`a:b' cannot be the name/, 'a colon');
-	ok(!eval { plan_of(project($manifest), clean => 'clean,,x'); 1 }
+	ok(!eval { plan_of(project($manifest), clean => 'clean,,x'); 1; }
 		&& $@ =~ /may not be empty/, 'an empty entry');
-	ok(!eval { plan_of(project($manifest), clean => 'clean,'); 1 }
+	ok(!eval { plan_of(project($manifest), clean => 'clean,'); 1; }
 		&& $@ =~ /may not be empty/, 'an empty entry at the end');
 	is(names(plan_of(project($manifest), clean => 'purge,clean-&')), 'purge clean-all clean-small', 'a list');
 	is(names(plan_of(project($manifest), clean => 'clean,&')), 'clean', 'a lone & in a list is none');
-	ok(!eval { plan_of(project($manifest), clean => 'clean,clean'); 1 }
+	ok(!eval { plan_of(project($manifest), clean => 'clean,clean'); 1; }
 		&& $@ =~ /also the name of a goal or another rule/, 'a name twice');
 	is(names(plan_of(project($manifest), clean => 'è,表-&')), 'è 表-all 表-small', 'any character') or diag $@;
 }
@@ -132,14 +132,14 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Builder::Make->_text($
 	is_deeply($plan->{clean}[0]{files}, ['site/a.css', 'site/big.css'], '-Spurge=: and what is on the way');
 	is_deeply(plan_of($dir, clean => 'clean-&', purge => 'purge-&')->{clean}[0]{files}, ['site/big.css'], 'and -Sclean is as shallow as before');
 	is(join(' ', map { $_->{name} } @{ plan_of($dir, clean => 'clean-&', purge => 'purge-&')->{clean} }), 'clean-all clean-small clean-both purge-all purge-small purge-both', 'both at once');
-	ok(!eval { plan_of($dir, clean => 'x', purge => 'x'); 1 } && $@ =~ /-Spurge=x: `x' is also the name of a goal or another rule/, 'they cannot share a name');
-	is(join(' ', map { $_->{name} } @{ plan_of($dir, purge => undef)->{clean} }), 'purge', 'a name alone is purge')
+	ok(!eval { plan_of($dir, clean => 'x', purge => 'x'); 1; } && $@ =~ /-Spurge=x: `x' is also the name of a goal or another rule/, 'they cannot share a name');
+	is(join(' ', map { $_->{name} } @{ plan_of($dir, purge => undef)->{clean} }), 'purge', 'a name alone is purge');
 }
 
 # --- a rule may be the name of a directory (of what it makes, say)
 {
-	ok(eval { plan_of(project("MAKE site\n\tNEED d/b.css\n"), clean => 'd'); 1 }, 'a rule called d, which is a directory') or diag $@;
-	ok(eval { plan_of(project("MAKE site\n\tNEED a.css\n")); 1 }, 'a goal called site, which is a directory') or diag $@;
+	ok(eval { plan_of(project("MAKE site\n\tNEED d/b.css\n"), clean => 'd'); 1; }, 'a rule called d, which is a directory') or diag $@;
+	ok(eval { plan_of(project("MAKE site\n\tNEED a.css\n")); 1; }, 'a goal called site, which is a directory') or diag $@;
 }
 
 # --- many files: several rm lines, none too long, each file once
@@ -170,6 +170,6 @@ sub makefile { $_[0]{prog} = "test"; RdKw::WwW::SiteConf::Builder::Make->_text($
 	my $auto = RdKw::WwW::SiteConf::arg_max({ arg_max => 'auto' }, 131062);
 	ok($auto > 0 && $auto <= 131062, "-Sarg_max=auto: $auto, within what Linux takes of one argument");
 	is(RdKw::WwW::SiteConf::arg_max({ arg_max => '007' }), 7, '-Sarg_max=007: 7');
-	ok(!eval { $rm->(arg_max => '-1'); 1 } && $@ =~ /-Sarg_max=-1: expected a number of bytes, or auto/,
+	ok(!eval { $rm->(arg_max => '-1'); 1; } && $@ =~ /-Sarg_max=-1: expected a number of bytes, or auto/,
 		'-Sarg_max=-1: an error');
 }

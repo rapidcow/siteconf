@@ -120,7 +120,7 @@ sub _expr_end
 				my $j = $i + 2;
 				while ($j < $len) {
 					my $d = substr($str, $j, 1);
-					if ($d eq '\\') { $j += 2; next }
+					if ($d eq '\\') { $j += 2; next; }
 					last if $d eq '"';
 					$j++;
 				}
@@ -172,7 +172,7 @@ sub _part
 			my $n = $pos + 1 < $len ? substr($str, $pos + 1, 1) : '';
 			if ($n eq $delim or $pos + 1 >= $len) {
 				# An anchor in old, but only a dollar in new
-				if ($is_new) { $lit .= $c } else { $eol = 1 }
+				if ($is_new) { $lit .= $c; } else { $eol = 1; }
 				$pos++;
 			} else {
 				my $end = _expr_end($str, $pos);

@@ -95,10 +95,10 @@ is_deeply(walk('proj/two', { terminal => 1 }), [ 'proj/behind' ], '... and is no
 	is_deeply([ map { $_->{just} } @{ ($mf->goals)[0]{need} } ], [ 1, 1, 1, 0 ], 'which are said to be JUST');
 	is_deeply([ map { $_->{just} } @{ ($mf->goals)[0]{want} } ], [ 0, 1 ], '... or not');
 	$t = "MAKE a\nJUST-NEED\n";
-	ok(!eval { read_manifest({}, \$t); 1 }, 'JUST-NEED of nothing: dies');
+	ok(!eval { read_manifest({}, \$t); 1; }, 'JUST-NEED of nothing: dies');
 	like($@, qr/line 2: JUST-NEED takes a file/, '... says so');
 	$t = "MAKE a\nJUST x\n";
-	ok(!eval { read_manifest({}, \$t); 1 }, 'JUST alone is not a keyword');
+	ok(!eval { read_manifest({}, \$t); 1; }, 'JUST alone is not a keyword');
 }
 
 chdir '/' or die;

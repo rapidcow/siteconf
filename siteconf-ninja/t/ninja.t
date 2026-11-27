@@ -29,7 +29,7 @@ my $plan = {
 	order => ['x'], dirs => [],
 	node => { x => { bpath => 'site/x', recipe => [], deps => ['in/x'] } },
 };
-ok(!eval { RdKw::WwW::SiteConf::Builder::Ninja->_text($plan); 1 }, 'no recipe, no build');
+ok(!eval { RdKw::WwW::SiteConf::Builder::Ninja->_text($plan); 1; }, 'no recipe, no build');
 like($@, qr/no recipe/, '... says so');
 
 $plan->{node}{x}{recipe} = [ [ text => "\tcp \$< \$\@\n", 'x' ] ];

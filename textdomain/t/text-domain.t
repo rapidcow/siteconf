@@ -14,7 +14,7 @@ use File::Temp qw( tempdir );
 
 use RdKw::L10N::TextDomain ();
 my $TD = 'RdKw::L10N::TextDomain';
-my $HAVE_GETTEXT = eval { require Locale::Messages; 1 };
+my $HAVE_GETTEXT = eval { require Locale::Messages; 1; };
 
 # `use' it in package `pkg', with @args
 sub install
@@ -86,8 +86,8 @@ SKIP: {
 	# gettext may set $! (as libintl does, failing to open the catalogs
 	# that are not there), but $! is as it was after, for a %m
 	no warnings qw( redefine once );
-	local *Locale::Messages::dgettext = sub { $! = ENOENT; $_[1] };
-	local *Locale::Messages::dngettext = sub { $! = ENOENT; $_[3] == 1 ? $_[1] : $_[2] };
+	local *Locale::Messages::dgettext = sub { $! = ENOENT; $_[1]; };
+	local *Locale::Messages::dngettext = sub { $! = ENOENT; $_[3] == 1 ? $_[1] : $_[2]; };
 	$! = EACCES;
 	T::None::__('x');
 	is(0 + $!, EACCES, '__: $! as it was');
@@ -102,7 +102,7 @@ SKIP: {
 	skip 'msgfmt (GNU gettext) required', 6 unless $msgfmt;
 	skip 'Locale::Messages required', 6 unless $HAVE_GETTEXT;
 	skip 'POSIX::LC_MESSAGES required', 6
-		unless eval { require POSIX; defined POSIX::LC_MESSAGES() };
+		unless eval { require POSIX; defined POSIX::LC_MESSAGES(); };
 	my $dir = File::Spec->catdir($mo, 'zh', 'LC_MESSAGES');
 	require File::Path;
 	File::Path::mkpath($dir);
@@ -136,12 +136,12 @@ PO
 		my @try;
 		no warnings 'exec';
 		if (open my $ph, '-|', 'locale', '-a') {
-			@try = grep { /$XPG/ } map { chomp; $_ } <$ph>;
+			@try = grep { /$XPG/ } map { chomp; $_; } <$ph>;
 			close $ph;
 		}
 		push @try, qw( en_US.UTF-8 en_GB.UTF-8 );
 		undef $locale;
-		for (@try) { $locale = $_, last if POSIX::setlocale(POSIX::LC_MESSAGES(), $_) }
+		for (@try) { $locale = $_, last if POSIX::setlocale(POSIX::LC_MESSAGES(), $_); }
 		skip 'no non-C locale found', 6 unless defined $locale;
 	}
 	# (the pure Perl one reads the catalog, whatever locales are installed)

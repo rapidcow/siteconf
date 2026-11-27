@@ -34,9 +34,9 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs->encoding('filesys'), canon('locale_fs'), '... and is spelled as locale_fs');
 	$cs->argv(undef);
 	is($cs->argv, undef, 'undef unsets');
-	ok(!eval { $CS->new(argv => 'no-such-thing'); 1 }, 'unknown encoding');
+	ok(!eval { $CS->new(argv => 'no-such-thing'); 1; }, 'unknown encoding');
 	like($@, qr/\Aunknown encoding "no-such-thing" for argv\n\z/, '... says so');
-	ok(!eval { $CS->new(argh => 'UTF-8'); 1 }, 'unknown category');
+	ok(!eval { $CS->new(argh => 'UTF-8'); 1; }, 'unknown category');
 	like($@, qr/\Aunknown category "argh"\n\z/, '... says so');
 }
 
@@ -66,16 +66,16 @@ sub canon { Encode::find_encoding($_[0])->name }
 	$other = $CS->new(env => 'latin1', filesys => 'latin1');
 	is_deeply($other->parse($cs)->all, $cs->all, 'parse: of another, the same');
 	is_deeply($CS->new(env => 'latin1')->parse($cs, { prog => 'me' })->all, $cs->all, '... with options');
-	ok(!eval { $other->parse([]); 1 } && $@ =~ /\Anot a codeset: ARRAY/, 'parse: not of any other reference');
+	ok(!eval { $other->parse([]); 1; } && $@ =~ /\Anot a codeset: ARRAY/, 'parse: not of any other reference');
 	$other->parse('env:latin1', $cs->all, 'argv:ascii', { prog => 'me' });
 	is_deeply([ $other->env, $other->argv ], [ undef, 'ascii' ], 'parse: all among specs, in order, with options');
-	ok(!eval { $other->parse({ argv => 'UTF-8', argh => 'UTF-8' }, { prog => 'me' }); 1 }, 'parse: a hash with an unknown category');
+	ok(!eval { $other->parse({ argv => 'UTF-8', argh => 'UTF-8' }, { prog => 'me' }); 1; }, 'parse: a hash with an unknown category');
 	is($@, qq{me: unknown category "argh"\n}, '... says so');
-	ok(!eval { $other->parse({ console => 'UTF-8' }); 1 }, 'parse: a hash that is not options, nor from all');
+	ok(!eval { $other->parse({ console => 'UTF-8' }); 1; }, 'parse: a hash that is not options, nor from all');
 	like($@, qr/\Aparse: unknown option console at /, '... is options still');
 	is_deeply($cs->all('latin1'), { (map { $_ => 'iso-8859-1' } qw( stdin stdout stderr argv env filesys )), diag => undef },
 		'all: sets every category, and diag follows stderr again');
-	ok(!eval { $cs->all('no-such-thing'); 1 }, 'all: unknown encoding');
+	ok(!eval { $cs->all('no-such-thing'); 1; }, 'all: unknown encoding');
 	like($@, qr/\Aunknown encoding "no-such-thing" for stdin\n\z/, '... says so');
 	is($cs->argv, 'iso-8859-1', '... leaving it as it was');
 	is_deeply({ %{ $cs->all('locale') && $cs } }, {}, 'all: locale resets to new');
@@ -97,7 +97,7 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs->stdin, 'iso-8859-1', '... console_in left alone');
 	$cs->console('UTF-8');
 	is($cs->console, 'utf-8-strict', 'console: sets them all');
-	ok(!eval { $CS->new('argv'); 1 }, 'new: odd number of arguments');
+	ok(!eval { $CS->new('argv'); 1; }, 'new: odd number of arguments');
 }
 
 # --- parse: in order, UTF-8 if omitted
@@ -111,7 +111,7 @@ sub canon { Encode::find_encoding($_[0])->name }
 	$cs = $CS->new->parse(qw( stderr:ascii console:latin1 ));
 	is($cs->stderr, 'iso-8859-1', 'parse: console overrides what came before');
 	is($CS->new->parse('diag')->diag_mode, 'unicode', 'parse: diag alone is unicode');
-	ok(!eval { $CS->new->parse(':UTF-8'); 1 }, 'parse: no category');
+	ok(!eval { $CS->new->parse(':UTF-8'); 1; }, 'parse: no category');
 	like($@, qr/\Ano category in codeset ":UTF-8"\n\z/, '... says so');
 }
 
@@ -132,7 +132,7 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($CS->new(diag => 1, stderr => 'ascii', diag => 1)->diag_mode, 'unicode', 'new: diag 1');
 	is_deeply({ %{ $CS->new->parse('') } }, {}, 'parse: nothing');
 	is_deeply({ %{ $CS->new->parse('argv,') } }, { argv => 'utf-8-strict' }, 'parse: a comma at the end');
-	ok(!eval { $CS->new->parse('nope'); 1 }, 'parse: neither');
+	ok(!eval { $CS->new->parse('nope'); 1; }, 'parse: neither');
 	like($@, qr/\Aunknown category or encoding "nope"\n\z/, '... says so');
 	is_deeply({ %{ $CS->new->parse(q(argv,,env)) } }, { argv => q(utf-8-strict), env => q(utf-8-strict) },
 		q(parse: nothing between commas is nothing));
@@ -160,13 +160,13 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs, $base, 'parse: the object itself');
 	is($cs->argv, 'ascii', '... with what it had');
 	is($cs->filesys, 'iso-8859-1', '... and what it was told');
-	ok(!eval { $base->parse('env:UTF-8,nope'); 1 }, 'parse: one bad spec');
+	ok(!eval { $base->parse('env:UTF-8,nope'); 1; }, 'parse: one bad spec');
 	is($base->env, undef, '... the object left as it was');
-	ok(!eval { $base->parse('nope', { prog => 'me' }); 1 }, 'parse: prog');
+	ok(!eval { $base->parse('nope', { prog => 'me' }); 1; }, 'parse: prog');
 	is($@, qq{me: unknown category or encoding "nope"\n}, '... says who first');
-	ok(!eval { $base->parse('argv:nope', { prog => 'me' }); 1 }, '... an unknown encoding');
+	ok(!eval { $base->parse('argv:nope', { prog => 'me' }); 1; }, '... an unknown encoding');
 	like($@, qr/\Ame: /, '... too');
-	ok(!eval { $CS->parse('argv'); 1 }, 'parse: not of a class');
+	ok(!eval { $CS->parse('argv'); 1; }, 'parse: not of a class');
 	$cs = $base->new(argv => 'UTF-8');
 	is($cs->argv, 'utf-8-strict', 'new of an object: overrides');
 	is($base->argv, 'ascii', '... the object left alone');
@@ -186,12 +186,12 @@ sub canon { Encode::find_encoding($_[0])->name }
 	is($cs->stdout, 'ascii', '... split by commas');
 	is($cs->argv, 'ascii', '... over what it had');
 	$ENV{CS_TEST} = 'stdin:UTF-8,nope';
-	ok(!eval { $cs->parse_from_env('CS_TEST', prog => 'E'); 1 }, 'parse_from_env: nonsense');
+	ok(!eval { $cs->parse_from_env('CS_TEST', prog => 'E'); 1; }, 'parse_from_env: nonsense');
 	is($@, qq{E: CS_TEST: unknown category or encoding "nope"\n}, '... said, by prog and name');
 	is($cs->stdin, undef, '... and nothing applied');
-	ok(!eval { $cs->parse_from_env('CS_TEST'); 1 }, 'parse_from_env: no prog');
+	ok(!eval { $cs->parse_from_env('CS_TEST'); 1; }, 'parse_from_env: no prog');
 	is($@, qq{CS_TEST: unknown category or encoding "nope"\n}, '... said by name');
-	ok(!eval { $cs->parse_from_env('CS_TEST', nope => 1); 1 }, 'parse_from_env: unknown option');
+	ok(!eval { $cs->parse_from_env('CS_TEST', nope => 1); 1; }, 'parse_from_env: unknown option');
 }
 
 # --- parse_from_argv: the -C at the front, and how many
@@ -212,14 +212,14 @@ sub canon { Encode::find_encoding($_[0])->name }
 
 	$cs = $CS->new(argv => 'ascii');
 	@argv = ('-C1', '-C', 'nope', 'x');
-	ok(!eval { $cs->parse_from_argv(\@argv, prog => 'E'); 1 }, 'parse_from_argv: nonsense');
+	ok(!eval { $cs->parse_from_argv(\@argv, prog => 'E'); 1; }, 'parse_from_argv: nonsense');
 	is($@, qq{E: -C (argv 3): unknown category or encoding "nope"\n}, '... said, by prog and where');
 	is_deeply([ $cs->argv, scalar @argv ], ['ascii', 4], '... and nothing applied or taken');
 	@argv = ('-C1', '-C');
-	ok(!eval { $cs->parse_from_argv(\@argv); 1 }, 'parse_from_argv: -C last');
+	ok(!eval { $cs->parse_from_argv(\@argv); 1; }, 'parse_from_argv: -C last');
 	is($@, "-C (argv 2): no codeset after it\n", '... said, where');
-	ok(!eval { $cs->parse_from_argv('-C0'); 1 }, 'parse_from_argv: not an array');
-	ok(!eval { $CS->parse_from_argv([]); 1 }, '... nor of the class');
+	ok(!eval { $cs->parse_from_argv('-C0'); 1; }, 'parse_from_argv: not an array');
+	ok(!eval { $CS->parse_from_argv([]); 1; }, '... nor of the class');
 }
 
 # --- the process's own

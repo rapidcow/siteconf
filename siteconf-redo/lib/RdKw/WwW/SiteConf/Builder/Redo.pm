@@ -438,7 +438,7 @@ sub _with_goals
 	# (-t is followed by its value; -S has its own glued on, as -Sname=value)
 	while (@arg) {
 		my $opt = shift @arg;
-		if ($opt eq '-t') { shift @arg; push @keep, splice(@t); next }
+		if ($opt eq '-t') { shift @arg; push @keep, splice(@t); next; }
 		push @keep, splice(@t) if $opt =~ /\A-S/;
 		push @keep, $opt;
 	}

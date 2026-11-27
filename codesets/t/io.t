@@ -23,29 +23,29 @@ my $asc = $CS->new(filesys => 'ascii', argv => 'ascii', env => 'ascii');
 is($lat->to_fs('résumé'), "r\xe9sum\xe9", 'to_fs: as filesys spells it');
 is($lat->un_fs("r\xe9sum\xe9"), 'résumé', 'un_fs: and back');
 my $bad = 'résumé';
-ok(!eval { $asc->to_fs($bad, { prog => 'here' }); 1 }, 'to_fs: cannot spell it');
+ok(!eval { $asc->to_fs($bad, { prog => 'here' }); 1; }, 'to_fs: cannot spell it');
 like($@, qr/\Ahere: cannot encode file name "r\\x\{e9\}sum\\x\{e9\}" in US-ASCII: .*\bascii\b.*\n\z/,
 	'... and says who could not, and what Encode said');
 like($@, qr/"\\x\{00e9\}" does not map to ascii\n\z/, '... without where Encode said it');
 {
 	open my $fh, '<', $0 or die "$0: $!";
 	my $line = <$fh>;
-	ok(!eval { $asc->to_fs($bad); 1 }, 'to_fs: after a read');
+	ok(!eval { $asc->to_fs($bad); 1; }, 'to_fs: after a read');
 	like($@, qr/does not map to ascii\n\z/, '... nor the line of the read');
 }
-ok(!eval { $asc->to_fs($bad, { prog => '' }); 1 }, 'to_fs: prog empty');
+ok(!eval { $asc->to_fs($bad, { prog => '' }); 1; }, 'to_fs: prog empty');
 like($@, qr/\Acannot encode file name /, '... says no one');
-ok(!eval { $asc->to_fs($bad, { prog => undef }); 1 }, 'to_fs: prog undef');
+ok(!eval { $asc->to_fs($bad, { prog => undef }); 1; }, 'to_fs: prog undef');
 like($@, qr/\Acannot encode file name /, '... says no one too');
 is($bad, 'résumé', '... leaving the name be');
-ok(!eval { $asc->un_fs("\xe9"); 1 }, 'un_fs: cannot read it');
+ok(!eval { $asc->un_fs("\xe9"); 1; }, 'un_fs: cannot read it');
 like($@, qr/\Aun_fs: cannot decode file name "\\x\{e9\}" in US-ASCII: .+\n\z/,
 	'... and says so, as un_fs by default');
 is_deeply([ $lat->to_fs('résumé', 'é') ], ["r\xe9sum\xe9", "\xe9"], 'to_fs: a list');
 is_deeply([ $lat->un_fs("r\xe9sum\xe9", "\xe9") ], ['résumé', 'é'], 'un_fs: a list');
 is(scalar $lat->un_fs("\xe9", 'x'), 'é', '... the first in scalar context');
 is_deeply([ $lat->to_fs ], [], 'to_fs: nothing');
-ok(!eval { $asc->to_fs('ok', 'é'); 1 }, 'to_fs: one cannot be spelled');
+ok(!eval { $asc->to_fs('ok', 'é'); 1; }, 'to_fs: one cannot be spelled');
 like($@, qr/\Ato_fs: cannot encode file name "\\x\{e9\}"/, '... says which');
 
 # --- un_argv, to_argv
@@ -57,17 +57,17 @@ like($@, qr/\Ato_fs: cannot encode file name "\\x\{e9\}"/, '... says which');
 	is(scalar $lat->un_argv("r\xe9sum\xe9", 'x'), 'résumé', 'un_argv: the first in scalar context');
 	is(scalar $lat->to_argv("r\x{e9}sum\x{e9}", 'x'), "r\xe9sum\xe9", 'to_argv: the first in scalar context');
 	is_deeply([ $lat->un_argv ], [], 'un_argv: nothing');
-	ok(!eval { $asc->un_argv('x', @args); 1 }, 'un_argv: cannot read one');
+	ok(!eval { $asc->un_argv('x', @args); 1; }, 'un_argv: cannot read one');
 	like($@, qr/\Aun_argv: cannot decode argv 1: .+\n\z/, '... says which, from 0');
-	ok(!eval { $asc->un_argv(@args, { start => 1 }); 1 }, 'un_argv: start');
+	ok(!eval { $asc->un_argv(@args, { start => 1 }); 1; }, 'un_argv: start');
 	like($@, qr/\Aun_argv: cannot decode argv 1: .+\n\z/, '... from there');
-	ok(!eval { $asc->un_argv(@args, { start => 1, prog => 'me' }); 1 }, 'un_argv: prog');
+	ok(!eval { $asc->un_argv(@args, { start => 1, prog => 'me' }); 1; }, 'un_argv: prog');
 	like($@, qr/\Ame: cannot decode argv 1: .+\n\z/, '... says who first');
-	ok(!eval { $asc->to_argv('é', { prog => 'me' }); 1 }, 'to_argv: prog');
+	ok(!eval { $asc->to_argv('é', { prog => 'me' }); 1; }, 'to_argv: prog');
 	like($@, qr/\Ame: cannot encode argv 0: .+\n\z/, '... likewise');
-	ok(!eval { $asc->to_argv('é'); 1 }, 'to_argv: cannot spell one');
+	ok(!eval { $asc->to_argv('é'); 1; }, 'to_argv: cannot spell one');
 	like($@, qr/\Ato_argv: cannot encode argv 0: .+\n\z/, '... says which');
-	ok(!eval { $lat->un_argv('x', { begin => 1 }); 1 }, 'un_argv: unknown option');
+	ok(!eval { $lat->un_argv('x', { begin => 1 }); 1; }, 'un_argv: unknown option');
 }
 
 # --- decode_argv, encode_argv
@@ -77,16 +77,16 @@ like($@, qr/\Ato_fs: cannot encode file name "\\x\{e9\}"/, '... says which');
 	is_deeply(\@ARGV, ['résumé', 'x'], '... in @ARGV');
 	$lat->encode_argv;
 	is_deeply(\@ARGV, ["r\xe9sum\xe9", 'x'], 'encode_argv: and back');
-	ok(!eval { $asc->decode_argv; 1 }, 'decode_argv: cannot read one');
+	ok(!eval { $asc->decode_argv; 1; }, 'decode_argv: cannot read one');
 	like($@, qr/\Adecode_argv: cannot decode argv 1: .+\n\z/, '... says which, from 1');
 	is_deeply(\@ARGV, ["r\xe9sum\xe9", 'x'], '... leaving @ARGV be');
-	ok(!eval { $asc->decode_argv({ prog => 'me' }); 1 }, 'decode_argv: prog');
+	ok(!eval { $asc->decode_argv({ prog => 'me' }); 1; }, 'decode_argv: prog');
 	like($@, qr/\Ame: cannot decode argv 1: .+\n\z/, '... says who first');
 	$asc->decode_argv({ check => Encode::FB_DEFAULT() });
 	is_deeply(\@ARGV, ["r\x{fffd}sum\x{fffd}", 'x'], 'decode_argv: check, as an option');
-	ok(!eval { $asc->encode_argv({ prog => 'me' }); 1 }, 'encode_argv: prog');
+	ok(!eval { $asc->encode_argv({ prog => 'me' }); 1; }, 'encode_argv: prog');
 	like($@, qr/\Ame: cannot encode argv 1: .+\n\z/, '... says who first');
-	ok(!eval { $lat->decode_argv({ start => 2 }); 1 }, 'decode_argv: start is not ours to say');
+	ok(!eval { $lat->decode_argv({ start => 2 }); 1; }, 'decode_argv: start is not ours to say');
 }
 
 # --- check: FB_CROAK, unless told otherwise
@@ -96,7 +96,7 @@ like($@, qr/\Ato_fs: cannot encode file name "\\x\{e9\}"/, '... says which');
 		'un_argv: check');
 	is(scalar $asc->to_argv('é', { check => Encode::FB_PERLQQ() }), '\x{00e9}',
 		'to_argv: check');
-	ok(!eval { $asc->un_argv($s, { check => Encode::FB_QUIET() | Encode::DIE_ON_ERR() }); 1 },
+	ok(!eval { $asc->un_argv($s, { check => Encode::FB_QUIET() | Encode::DIE_ON_ERR() }); 1; },
 		'un_argv: check without LEAVE_SRC');
 	is($s, "r\xe9", '... leaving the source be all the same');
 	scalar $asc->un_argv($s, { check => Encode::FB_QUIET() });
@@ -110,26 +110,26 @@ like($@, qr/\Ato_fs: cannot encode file name "\\x\{e9\}"/, '... says which');
 	is($asc->un_fs("r\xe9", { check => Encode::FB_DEFAULT() }), "r\x{fffd}", 'un_fs: check');
 	is($asc->to_fs('é', { prog => 'here', check => Encode::FB_PERLQQ() }), '\x{00e9}',
 		'to_fs: check, with prog');
-	ok(!eval { $asc->to_fs('é', { prog => 'here', check => Encode::FB_CROAK() }); 1 },
+	ok(!eval { $asc->to_fs('é', { prog => 'here', check => Encode::FB_CROAK() }); 1; },
 		'to_fs: FB_CROAK');
 	like($@, qr/\Ahere: cannot encode/, '... still says who');
-	ok(!eval { $asc->to_fs('é', { chekc => 0 }); 1 }, 'to_fs: unknown option');
+	ok(!eval { $asc->to_fs('é', { chekc => 0 }); 1; }, 'to_fs: unknown option');
 	local %ENV = %ENV;
 	$lat->setenv(CS_ONE => 'é');
 	is(scalar $asc->getenv('CS_ONE', { check => Encode::FB_DEFAULT() }), "\x{fffd}",
 		'getenv: check');
 	$asc->setenv(CS_ONE => 'é', { check => Encode::FB_PERLQQ() });
 	is($ENV{CS_ONE}, '\x{00e9}', 'setenv: check');
-	ok(!eval { $asc->getenv('CS_é', { check => Encode::FB_DEFAULT() }); 1 },
+	ok(!eval { $asc->getenv('CS_é', { check => Encode::FB_DEFAULT() }); 1; },
 		'getenv: names, never checked otherwise');
-	ok(!eval { $asc->getenv('CS_é', { prog => 'me' }); 1 }, 'getenv: prog');
+	ok(!eval { $asc->getenv('CS_é', { prog => 'me' }); 1; }, 'getenv: prog');
 	like($@, qr/\Ame: cannot encode environment variable name /, '... says who first');
 	$ENV{CS_TWO} = "\xe9";
-	ok(!eval { $asc->getenv('CS_TWO', { prog => 'me' }); 1 }, '... for a value');
+	ok(!eval { $asc->getenv('CS_TWO', { prog => 'me' }); 1; }, '... for a value');
 	like($@, qr/\Ame: cannot decode environment variable /, '... too');
-	ok(!eval { $asc->setenv(CS_TWO => 'é', { prog => 'me' }); 1 }, 'setenv: prog');
+	ok(!eval { $asc->setenv(CS_TWO => 'é', { prog => 'me' }); 1; }, 'setenv: prog');
 	like($@, qr/\Ame: cannot encode the value of /, '... says who first');
-	ok(!eval { $asc->unsetenv('CS_é', { prog => 'me' }); 1 }, 'unsetenv: prog');
+	ok(!eval { $asc->unsetenv('CS_é', { prog => 'me' }); 1; }, 'unsetenv: prog');
 	like($@, qr/\Ame: cannot encode environment variable name /, '... says who first');
 }
 
@@ -143,12 +143,12 @@ like($@, qr/\Ato_fs: cannot encode file name "\\x\{e9\}"/, '... says which');
 	is_deeply([ $lat->getenv(qw( CS_ONE CS_TWO ), "CS_\x{e9}") ], ['é', undef, 'x'],
 		'getenv: by names, undef if not set');
 	is(scalar $lat->getenv(qw( CS_ONE CS_TWO )), 'é', '... the first in scalar context');
-	ok(!eval { $asc->getenv('CS_ONE'); 1 }, 'getenv: cannot read it');
+	ok(!eval { $asc->getenv('CS_ONE'); 1; }, 'getenv: cannot read it');
 	like($@, qr/\Agetenv: cannot decode environment variable "CS_ONE" in US-ASCII: .+\n\z/,
 		'... says so');
-	ok(!eval { $asc->unsetenv("CS_\x{e9}"); 1 }, 'unsetenv: cannot spell the name');
+	ok(!eval { $asc->unsetenv("CS_\x{e9}"); 1; }, 'unsetenv: cannot spell the name');
 	like($@, qr/\Aunsetenv: cannot encode environment variable name /, '... as unsetenv');
-	ok(!eval { $asc->setenv(CS_TWO => 'ok', CS_THREE => 'é'); 1 }, 'setenv: cannot spell it');
+	ok(!eval { $asc->setenv(CS_TWO => 'ok', CS_THREE => 'é'); 1; }, 'setenv: cannot spell it');
 	ok(!exists $ENV{CS_TWO}, '... setting none');
 	$lat->setenv(CS_ONE => undef);
 	ok(!exists $ENV{CS_ONE}, 'setenv: undef unsets');
@@ -171,7 +171,7 @@ binmode STDOUT, ':raw';
 print join ',', grep /encoding/, PerlIO::get_layers(STDERR);
 EOP
 	open my $fh, '-|', $^X, "-I$lib", '-e', $prog or die "cannot run $^X: $!";
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	is($?, 0, 'initstd: ran');
 	like($out, qr/\A\xe9\\x\{263a\}/, 'initstd: once, however often, and with fallback');

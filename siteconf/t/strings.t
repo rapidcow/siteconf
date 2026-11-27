@@ -52,7 +52,7 @@ sub plan_of
 sub failure
 {
 	my ($dir, @goal) = @_;
-	eval { plan_of($dir, @goal); 1 } ? '' : $@;
+	eval { plan_of($dir, @goal); 1; } ? '' : $@;
 }
 # the runs of the recipe that makes `file'
 sub recipe { [ map { [ @$_[0, 1] ] } @{ $_[0]{node}{$_[1]}{recipe} } ] }
@@ -120,12 +120,12 @@ for my $tool (qw( Gmake )) {
 	my $dir = project('Makefile.in' => "x: \${a}/x\n\techo \${\"a\\nb\":Q}\n");
 	my $p = plan_of($dir);
 	$p->{prog} = 'test';
-	ok(!eval { $class->_text($p); 1 }, "$tool: a line break cannot be said");
+	ok(!eval { $class->_text($p); 1; }, "$tool: a line break cannot be said");
 	like($@, qr/Makefile\.in line 2: \w+ cannot spell a line break in `a\\nb'|line break/, '... it says so');
 	$dir = project('Makefile.in' => "x: \${a}/x\n\techo \${\"Icon\\r\":Q}\n");
 	$p = plan_of($dir);
 	$p->{prog} = 'test';
-	ok(eval { $class->_text($p); 1 }, "$tool: a carriage return can") or diag $@;
+	ok(eval { $class->_text($p); 1; }, "$tool: a carriage return can") or diag $@;
 }
 
 # --- the MANIFEST

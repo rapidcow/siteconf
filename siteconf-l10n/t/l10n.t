@@ -20,7 +20,7 @@ my $mo = File::Spec->rel2abs('../mo', $FindBin::Bin);
 plan skip_all => q[no catalogs made (re-run with `perl Makefile.PL LINGUAS="en zh"'?)]
 	unless -f "$mo/zh/LC_MESSAGES/siteconf.mo" && -f "$mo/en/LC_MESSAGES/siteconf.mo";
 plan skip_all => 'Locale::Messages required'
-	unless eval { require Locale::Messages; 1 };
+	unless eval { require Locale::Messages; 1; };
 plan skip_all => 'POSIX::LC_MESSAGES required'
 	unless eval { require POSIX; defined POSIX::LC_MESSAGES(); };
 
@@ -32,7 +32,7 @@ require RdKw::WwW::SiteConf::L10N;
 # (the pure Perl one reads the catalog, whatever locales are installed)
 Locale::Messages::select_package('gettext_pp');
 plan skip_all => 'RdKw::WwW::SiteConf (and what it needs) required'
-	unless eval { require RdKw::WwW::SiteConf; 1 };
+	unless eval { require RdKw::WwW::SiteConf; 1; };
 # A locale that is not C, by an XPG name (language[_TERRITORY
 # [.codeset]][@modifier], as gettext_pp has it): LANGUAGE is not heard
 # in C, and some gettext_pp take C.UTF-8 for C.  Its codeset does not
@@ -49,13 +49,13 @@ else {
 	undef $locale;
 	no warnings 'exec';
 	if (open my $fh, '-|', 'locale', '-a') {
-		@try = grep { /$XPG/ } map { chomp; $_ } <$fh>;
+		@try = grep { /$XPG/ } map { chomp; $_; } <$fh>;
 		close $fh;
 	}
 	# being conservative here unless i know it is used.
 	# en_US is on Termux, en_GB is stock Raspberry Pi...
 	push @try, qw( en_US.UTF-8 en_GB.UTF-8 );
-	$locale = List::Util::first { POSIX::setlocale(POSIX::LC_MESSAGES(), $_) } @try;
+	$locale = List::Util::first { POSIX::setlocale(POSIX::LC_MESSAGES(), $_); } @try;
 	plan skip_all => 'no non-C locale found :(' unless defined $locale;
 	diag "Using non-C locale: $locale";
 }
@@ -81,7 +81,7 @@ sub says
 {
 	my ($language) = @_;
 	in($language, sub {
-		eval { RdKw::WwW::SiteConf->new(B => "nope\x{e9}"); 1 } and return;
+		eval { RdKw::WwW::SiteConf->new(B => "nope\x{e9}"); 1; } and return;
 		$@;
 	});
 }
@@ -115,7 +115,7 @@ sub gengenlib_says
 {
 	my ($language) = @_;
 	in($language, sub {
-		eval { RdKw::WwW::GenGenLib::read_deps("nope\x{e9}"); 1 } and return;
+		eval { RdKw::WwW::GenGenLib::read_deps("nope\x{e9}"); 1; } and return;
 		$@;
 	});
 }
@@ -128,8 +128,8 @@ like(gengenlib_says('en'), qr/\Aread_deps: cannot open file "nope\x{e9}": /, 'Ge
 {
 	use Errno qw( EACCES ENOENT );
 	no warnings 'once', 'redefine';
-	local *Locale::Messages::dgettext = sub { $! = ENOENT; $_[1] };
-	local *Locale::Messages::dngettext = sub { $! = ENOENT; $_[3] == 1 ? $_[1] : $_[2] };
+	local *Locale::Messages::dgettext = sub { $! = ENOENT; $_[1]; };
+	local *Locale::Messages::dngettext = sub { $! = ENOENT; $_[3] == 1 ? $_[1] : $_[2]; };
 	$! = EACCES;
 	RdKw::WwW::SiteConf::__('x');
 	is(0 + $!, EACCES, '__: $! as it was');

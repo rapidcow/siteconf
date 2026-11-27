@@ -25,7 +25,7 @@ sub put {
 	print $fh $text;
 	close $fh or die $!;
 }
-sub slurp { open my $fh, '<', "$dir/$_[0]" or return ''; local $/; <$fh> }
+sub slurp { open my $fh, '<', "$dir/$_[0]" or return ''; local $/; <$fh>; }
 put('MANIFEST', <<'M');
 MAKE broken
     NEED missing
@@ -55,7 +55,7 @@ sub run {
 		exec $^X, $script, @_;
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	($? >> 8, $out);
 }
@@ -108,7 +108,7 @@ is_deeply(how(plan_of('small', ',other')), [ [ 'other', ',other', undef ], [ 'sm
 }
 is_deeply(names(plan_of('other', 'WANT:broken', 'small')), [qw(other broken small)], 'selection order');
 is_deeply(names(plan_of('small', 'other', 'NEED:small')), [qw(small other)], 'duplicate goals appear once');
-ok(eval { plan_of('broken', 'WANT:broken'); 1 }, 'last mode wins: WANT') or diag $@;
+ok(eval { plan_of('broken', 'WANT:broken'); 1; }, 'last mode wins: WANT') or diag $@;
 eval { plan_of('WANT:broken', 'NEED:broken') };
 like($@, qr/goal `broken' NEEDs `missing'/, 'last mode wins: NEED');
 eval { plan_of('WANT:broken', 'NEED:other', 'broken') };

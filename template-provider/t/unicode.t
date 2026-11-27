@@ -16,7 +16,7 @@ use Encode ();
 use Encode::Locale ();
 use File::Temp qw( tempdir );
 
-eval { require Template; 1 } or plan skip_all => 'Template is not installed';
+eval { require Template; 1; } or plan skip_all => 'Template is not installed';
 require RdKw::WwW::GenGenLib::Template::Provider;
 my $P = 'RdKw::WwW::GenGenLib::Template::Provider';
 
@@ -25,7 +25,7 @@ my $P = 'RdKw::WwW::GenGenLib::Template::Provider';
 my @names = ( 'サイト', 'サイト/入口', 'ヘッダー.html', 'résumé' );
 for my $name (@names) {
 	eval { Encode::encode(locale_fs => $name,
-		Encode::FB_CROAK() | Encode::LEAVE_SRC()); 1 }
+		Encode::FB_CROAK() | Encode::LEAVE_SRC()); 1; }
 		or plan skip_all => "locale_fs ($Encode::Locale::ENCODING_LOCALE_FS)"
 			. " cannot spell our file names";
 }

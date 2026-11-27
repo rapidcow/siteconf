@@ -43,17 +43,17 @@ my $plan = {
 	goals => [ { name => 'all', files => [ @order ] } ], order => \@order, node => \%node,
 };
 my $dir = tempdir(CLEANUP => 1);
-sub fs { my $s = $_[0]; utf8::encode($s); "$dir/$s" }
-sub put { mkdir fs($_[0] =~ m{(.*)/} ? $1 : '.'); open my $fh, '>', fs($_[0]) or die "$_[0]: $!"; print $fh $_[1]; close $fh }
+sub fs { my $s = $_[0]; utf8::encode($s); "$dir/$s"; }
+sub put { mkdir fs($_[0] =~ m{(.*)/} ? $1 : '.'); open my $fh, '>', fs($_[0]) or die "$_[0]: $!"; print $fh $_[1]; close $fh; }
 put($_, "1 $_") for @name;
 put('Taskfile.yml', RdKw::WwW::SiteConf::Builder::Task->_text($plan));
 
-sub run_task { my $out = `cd '$dir' && $task 2>&1`; $? == 0 or diag $out; diag $out if $ENV{T_SHOW}; $out }
+sub run_task { my $out = `cd '$dir' && $task 2>&1`; $? == 0 or diag $out; diag $out if $ENV{T_SHOW}; $out; }
 run_task();
 is(scalar(() = run_task() =~ /up to date/g), @name + 2, 'built, then up to date (the markers too)')
 	or diag `cat '$dir/Taskfile.yml'`;
 for (@name) {
-	open my $fh, '<', fs("out/$_") or do { fail("out/$_: $!"); next };
+	open my $fh, '<', fs("out/$_") or do { fail("out/$_: $!"); next; };
 	is(scalar(<$fh>), "1 $_", "built: " . join(' ', map { /[!-~]/ ? $_ : sprintf 'U+%04X', ord } split //, $_));
 }
 sleep 1;

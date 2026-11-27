@@ -190,7 +190,7 @@ sub _read_file
 	my $n = 0;
 	while (defined(my $text = <$fh>)) {
 		my $pos = { input => $name, line => ++$n, order => ++$st->{order} };
-		eval { $text = Encode::decode('UTF-8', $text, Encode::FB_CROAK()); 1 }
+		eval { $text = Encode::decode('UTF-8', $text, Encode::FB_CROAK()); 1; }
 			or die _status 0, tagmsg($prog => diag(__("%s: not UTF-8"), _where($pos)));
 		_read_line($st, $text, $pos);
 	}

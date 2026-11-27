@@ -25,7 +25,7 @@ my $CS = 'RdKw::I18N::CodeSets';
 	is($CS->new(stderr => 'ascii', diag => 'unicode')->diag_mode, 'unicode',
 		'... unless set');
 	is($CS->new(stderr => 'UTF-8', diag => 'ascii')->diag_mode, 'ascii', '... either way');
-	ok(!eval { $CS->new(diag => 'UTF-8'); 1 }, 'diag_mode: unicode or ascii');
+	ok(!eval { $CS->new(diag => 'UTF-8'); 1; }, 'diag_mode: unicode or ascii');
 	like($@, qr/\Aunknown diag mode "UTF-8"/, '... says so');
 }
 
@@ -63,10 +63,10 @@ is($u->diag('%2$s %1$q', 'a', 'b'), "b `a'", 'diag: in another order (%1$q)');
 is($a->diag('%1$q is %1$s', '炒'), '"\x{7092}" is 炒', '... the same argument twice');
 is($u->diag('%2$s, then %s', 'a', 'b'), 'b, then a', '... and in order, as sprintf does');
 for my $bad ('%n', '%v d', '%*d', '%c', '%5%', '%0$s', '%1$m', '%') {
-	ok(!eval { $u->diag($bad, 1, 2); 1 }, "diag: no $bad");
+	ok(!eval { $u->diag($bad, 1, 2); 1; }, "diag: no $bad");
 }
-ok(!eval { $u->diag('%q'); 1 }, 'diag: no missing argument');
-ok(!eval { $u->diag('%2$s', 'a'); 1 }, '... not even by number');
+ok(!eval { $u->diag('%q'); 1; }, 'diag: no missing argument');
+ok(!eval { $u->diag('%2$s', 'a'); 1; }, '... not even by number');
 
 # --- %m
 {
@@ -74,7 +74,7 @@ ok(!eval { $u->diag('%2$s', 'a'); 1 }, '... not even by number');
 	# $! as libc says it in the locale (which is English but where libc
 	# translates it, as glibc does: try LC_ALL=zh_CN.UTF-8, and a locale
 	# that is not UTF-8, LC_ALL=zh_CN.GB18030), as characters
-	my $raw = do { use if $] >= 5.022, locale => ':messages'; local $! = ENOENT; "$!" };
+	my $raw = do { use if $] >= 5.022, locale => ':messages'; local $! = ENOENT; "$!"; };
 	my $enoent = RdKw::I18N::CodeSets::_strerror(ENOENT);
 	Test::More::note("ENOENT: $enoent (perl said it "
 		. (Encode::is_utf8($raw) ? 'as characters' : 'in bytes') . ')');

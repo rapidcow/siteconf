@@ -36,7 +36,7 @@ sub run
 		exec @cmd;
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	($? >> 8, $out);
 }
@@ -64,7 +64,7 @@ sub builds
 	($status, $out) = run($dir, @tool);
 	is($status, 0, "$tool[0] builds it") or return diag $out;
 	open my $fh, '<', "$dir/site/a" or return fail("$G: site/a: $!");
-	my $got = do { local $/; <$fh> };
+	my $got = do { local $/; <$fh>; };
 	is($got, "$X\n", "$G: the shell is given what :Q quoted");
 }
 

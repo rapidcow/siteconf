@@ -29,7 +29,7 @@ my $plan = {
 	order => [ 'site/x/y' ],
 	node => { 'site/x/y' => { bpath => 'site/x/y', deps => [ 'html/y', 'site/x/.ok' ], recipe => [] } },
 };
-sub emit { my ($class, %opt) = @_; $class->_text({ %$plan, opt => \%opt }) }
+sub emit { my ($class, %opt) = @_; $class->_text({ %$plan, opt => \%opt }); }
 
 # --- -Sorder
 unlike(emit('RdKw::WwW::SiteConf::Builder::Make', order => 1), qr/ \| /, 'make has no bar, whatever is asked');
@@ -77,13 +77,13 @@ for ([ cmd_rm_f => " \t\n", qr/^E: -Scmd_rm_f: no command to run$/m, 'blanks are
 	[ cmd_mkdir => "mkdir\n--", qr/^E: -Scmd_mkdir: a command is one line, and this one has U\+000A in it$/m, 'a line break' ],
 	[ cmd_mkdir_p => "mkdir\r-p", qr/U\+000D/, '... or a carriage return' ]) {
 	my ($k, $v, $re, $what) = @$_;
-	like(eval { emit($make, $k => $v); '' } || $@, $re, $what);
+	like(eval { emit($make, $k => $v); ''; } || $@, $re, $what);
 }
 
 # --- generate: no rule unless asked for, and what is unused is said
 my $dir = tempdir(CLEANUP => 1);
 make_path("$dir/html", "$dir/MY");
-for my $f (qw( x html/a.css )) { open my $fh, '>', "$dir/$f" or die; close $fh }
+for my $f (qw( x html/a.css )) { open my $fh, '>', "$dir/$f" or die; close $fh; }
 open my $fh, '>', "$dir/Makefile.in" or die;
 print $fh "a.css: \${A}/x\n\tcp \${a}/\${\@} \${B}/\${b}/\${\@}\n";
 close $fh or die;
@@ -110,10 +110,10 @@ like(said('make', S => { frob => 1 }), qr/-Sfrob=1: unused by generator make/, '
 unlike(said('make', S => { clean => 'purge' }), qr/unused/, 'make knows clean');
 
 # --- the generators: by name (Builder::Name), and what they may not be
-sub gen_error { my ($G, $o) = @_; eval { RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->generate($G, $o); 1 } ? '' : $@ }
+sub gen_error { my ($G, $o) = @_; eval { RdKw::WwW::SiteConf->new(B => $dir, quiet => 1)->generate($G, $o); 1; } ? '' : $@; }
 my $lib = tempdir(CLEANUP => 1);
 make_path("$lib/RdKw/WwW/SiteConf/Builder");
-sub backend { open my $fh, '>', "$lib/RdKw/WwW/SiteConf/Builder/$_[0].pm" or die; print $fh $_[1]; close $fh or die }
+sub backend { open my $fh, '>', "$lib/RdKw/WwW/SiteConf/Builder/$_[0].pm" or die; print $fh $_[1]; close $fh or die; }
 # one that is there, but broken; one that writes many files, in
 # directories of their own; and one that -G cannot name
 backend(Broken => "package RdKw::WwW::SiteConf::Builder::Broken; die qq(broken here\\n);\n");
@@ -153,7 +153,7 @@ sub emit { ([ 'd/tmp-x.do', "1\n" ], [ 'd/x.do', "2\n" ]) }
 sub build_command { ('tmp') }
 1;
 PM
-is(gen_error("tmp") . join('', map { open my $fh, '<', "$dir/d/$_" or die; <$fh> } qw( tmp-x.do x.do )),
+is(gen_error("tmp") . join('', map { open my $fh, '<', "$dir/d/$_" or die; <$fh>; } qw( tmp-x.do x.do )),
 	"1\n2\n", 'x.do and tmp-x.do are each written');
 
 # --- siteconf -VV lists the generators and the codesets; -VVV where

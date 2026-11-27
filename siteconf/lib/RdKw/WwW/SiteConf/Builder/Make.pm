@@ -209,8 +209,8 @@ sub _text
 	my %marker = map { $_->{marker} => 1 } @{ $plan->{dirs} };
 	my $deps = sub {
 		@_ = grep { !$marker{$_} } @_ if $mkpath;
-		my @dep = $order ? grep({ !$marker{$_} } @_) : @_;
-		my @mark = $order ? grep({ $marker{$_} } @_) : ();
+		my @dep = $order ? grep({ !$marker{$_}; } @_) : @_;
+		my @mark = $order ? grep({ $marker{$_}; } @_) : ();
 		join ' ', (map { $name->($_) } @dep), (@mark ? ('|', map { $name->($_, 'order') } @mark) : ());
 	};
 
@@ -244,7 +244,7 @@ sub options { qw( clean purge arg_max mkpath cmd_mkdir cmd_mkdir_p cmd_rm_f cmd_
 
 sub default_output { q(Makefile) }
 
-sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ] }
+sub emit { my ($class, $plan, $file) = @_; [ $file, $class->_text($plan) ]; }
 
 sub build_command
 {
@@ -284,7 +284,7 @@ sub _name
 		or return $class->_fs($s);
 	my $c = $1;
 	require RdKw::WwW::SiteConf::Builder::Gmake;
-	my $gnu_can = eval { RdKw::WwW::SiteConf::Builder::Gmake->_name($s, $where); 1 };
+	my $gnu_can = eval { RdKw::WwW::SiteConf::Builder::Gmake->_name($s, $where); 1; };
 	die _status 0, tagmsg(E => diag($gnu_can
 		# HEY!  the %s is a character, as `$' or U+0020.
 		# You don't need to keep the ";)"; it's just

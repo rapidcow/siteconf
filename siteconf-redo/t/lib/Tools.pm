@@ -145,12 +145,12 @@ sub sh_runs
 	defined $prog or return 0;
 	open my $err, '>&', \*STDERR or return 0;
 	open STDERR, '>', File::Spec->devnull or return 0;
-	my $status = system { $prog } $prog, defined $arg ? $arg : (), '-c', 'exit 0';
+	my $status = system { $prog; } $prog, defined $arg ? $arg : (), '-c', 'exit 0';
 	open STDERR, '>&', $err;
 	$status == 0;
 }
 
 # One word for sh
-sub shq { (my $s = shift) =~ s/'/'\\''/g; "'$s'" }
+sub shq { (my $s = shift) =~ s/'/'\\''/g; "'$s'"; }
 
 1;

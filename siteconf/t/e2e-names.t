@@ -134,7 +134,7 @@ sub run
 		exec @cmd;
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	($? >> 8, $out);
 }
@@ -270,7 +270,7 @@ sub odd_builds
 	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', $G, '-Spurge', @opt, '-F', 'MY/MANIFEST', '-t', 'all');
 	is($status, 0, '... and the resolved manifest can be read back') or diag $out;
 	($status, $out) = run($dir, $tool, q(purge));
-	ok($status == 0 && !grep({ -e "$dir/site/$_" } @odd, 'per%cent/x.html'),
+	ok($status == 0 && !grep({ -e "$dir/site/$_"; } @odd, 'per%cent/x.html'),
 		"$G: clean them") or diag $out;
 }
 

@@ -32,7 +32,7 @@ my $dir = tempdir(CLEANUP => 1);
 		'==', 2, 'write_make creates');
 	is_deeply({ read_make($f) }, { b => 'site', aa => 'a b', c => 'é' },
 		'read_make reads it back');
-	like(do { open my $fh, '<', $f; local $/; <$fh> }, qr/^b=\tsite\nc=.*\naa=/m,
+	like(do { open my $fh, '<', $f; local $/; <$fh>; }, qr/^b=\tsite\nc=.*\naa=/m,
 		'short keys first');
 
 	# Preserve the mtime of an unchanged file.
@@ -44,9 +44,9 @@ my $dir = tempdir(CLEANUP => 1);
 		'==', 1, 'changed');
 	opendir my $dh, $dir or die $!;
 	is_deeply([sort grep { !/\A\.\.?\z/ } readdir $dh], ['tmp-x.mk', 'x.mk'], 'no temporary left behind');
-	is(do { open my $fh, '<', "$dir/tmp-x.mk"; local $/; <$fh> }, "mine\n", '... and tmp-x.mk is as it was');
+	is(do { open my $fh, '<', "$dir/tmp-x.mk"; local $/; <$fh>; }, "mine\n", '... and tmp-x.mk is as it was');
 	is((stat $f)[2] & 07777, 0666 & ~umask, '... and the mode is as umask says');
-	ok(!eval { write_make($f, { 'a=b' => 1 }, prog => 'test'); 1 }, 'bad name refused');
+	ok(!eval { write_make($f, { 'a=b' => 1 }, prog => 'test'); 1; }, 'bad name refused');
 }
 
 # --- values say what a line cannot hold
@@ -73,7 +73,7 @@ my $dir = tempdir(CLEANUP => 1);
 	);
 	cmp_ok(write_make($f, \%v, prog => 'test'), '==', 2, 'write_make: any value');
 	is_deeply({ read_make($f) }, \%v, 'read_make: all of them back');
-	my $text = do { open my $fh, '<:encoding(UTF-8)', $f or die; local $/; <$fh> };
+	my $text = do { open my $fh, '<:encoding(UTF-8)', $f or die; local $/; <$fh>; };
 	my %line = $text =~ /^(\w+)=\t(.*)$/mg;
 	is($line{inner}, 'my dir/sub dir', 'one space is a space');
 	is($line{lead} . '|' . $line{trail}, '${U+0020}x|x${U+0020}', 'spaces at the ends are not');
@@ -97,17 +97,17 @@ my $dir = tempdir(CLEANUP => 1);
 	open $fh, '>:encoding(UTF-8)', $f or die;
 	print $fh "a=\tx\${U+110000}\n";
 	close $fh;
-	ok(eval { read_make($f); 1 }, 'read_make: pass through');
-	ok(!eval { read_make("$dir/nonesuch.mk", prog => 'configure'); 1 }, 'read_make: no file');
+	ok(eval { read_make($f); 1; }, 'read_make: pass through');
+	ok(!eval { read_make("$dir/nonesuch.mk", prog => 'configure'); 1; }, 'read_make: no file');
 }
 is(escape_vars(undef), undef, 'escape_vars: undef is undef');
 is(unescape_vars('a${U+0020}b${$}{x}'), 'a b${x}', 'unescape_vars');
-ok(eval { unescape_vars('${U+FFFFFFFF}'); 1 }, 'unescape_vars: pass through');
+ok(eval { unescape_vars('${U+FFFFFFFF}'); 1; }, 'unescape_vars: pass through');
 
 # --- load_state
 {
 	mkdir "$dir/MY" or die;
-	ok(!eval { load_state($dir); 1 }, 'unconfigured');
+	ok(!eval { load_state($dir); 1; }, 'unconfigured');
 	like($@, qr/not configured/, '... says so');
 	write_make("$dir/MY/config.mk", { a => 'html' }, prog => 't');
 	write_make("$dir/MY/option.mk", { base_url => '/' }, prog => 't');
@@ -119,17 +119,17 @@ ok(eval { unescape_vars('${U+FFFFFFFF}'); 1 }, 'unescape_vars: pass through');
 
 # --- flat options: prefixes, forwarding, and byte output
 {
-	ok(!eval { load_state("$dir/missing", prog => 'state-test'); 1 },
+	ok(!eval { load_state("$dir/missing", prog => 'state-test'); 1; },
 		'load_state: flat prog option');
 	like($@, qr/^state-test:/, 'load_state: chosen prefix');
 	my $f = "$dir/raw";
 	cmp_ok(update_file($f, "\xFF", raw => 1, prog => 'raw-test'), '==', 2,
 		'update_file: flat raw and prog options');
 	open my $fh, '<:raw', $f or die $!;
-	is(do { local $/; <$fh> }, "\xFF", 'update_file: bytes unchanged');
+	is(do { local $/; <$fh>; }, "\xFF", 'update_file: bytes unchanged');
 	close $fh;
-	ok(eval { load_state($dir, prog => 'state-test'); 1 },
+	ok(eval { load_state($dir, prog => 'state-test'); 1; },
 		'load_state: flat options with configured state');
-	ok(!eval { read_make("$dir/missing.mk", prog => 'read-test'); 1 }
+	ok(!eval { read_make("$dir/missing.mk", prog => 'read-test'); 1; }
 		&& $@ =~ /^read-test:/, 'read_make: chosen prefix');
 }

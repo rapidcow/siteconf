@@ -1027,7 +1027,7 @@ sub recipe_bytes
 }
 
 # `$' for make is $$; for what the shell reads, which make must not
-sub _dollars { (my $s = $_[0]) =~ s/\$/\$\$/g; $s }
+sub _dollars { (my $s = $_[0]) =~ s/\$/\$\$/g; $s; }
 
 =item B<recipe_commands> I<bytes>
 
@@ -1051,7 +1051,7 @@ sub recipe_commands
 	for my $line (split /\n/, $recipe) {
 		# (make drops the tab of a continuation line too)
 		$line =~ s/^\t//;
-		if ($joining) { $logical[-1] .= $line } else { push @logical, $line }
+		if ($joining) { $logical[-1] .= $line; } else { push @logical, $line; }
 		$joining = $logical[-1] =~ s/\\\z//;
 	}
 
@@ -1266,10 +1266,10 @@ sub _subst
 		my ($kind, $s) = @_;
 		# (a word that is empty is still one: it is quoted to '')
 		return unless length $s or $kind eq 'word';
-		if (!$runs) { $out .= $s }
+		if (!$runs) { $out .= $s; }
 		elsif ($kind eq 'text' && @$runs && $runs->[-1][0] eq 'text'
-			&& $runs->[-1][2] eq $where) { $runs->[-1][1] .= $s }
-		else { push @$runs, [ $kind, $s, $where ] }
+			&& $runs->[-1][2] eq $where) { $runs->[-1][1] .= $s; }
+		else { push @$runs, [ $kind, $s, $where ]; }
 	};
 	my $pos = 0;
 	while ((my $i = index($line, '$', $pos)) >= 0) {
@@ -1817,7 +1817,7 @@ sub _node
 	};
 	push @{ $self->{stack} }, $file;
 	my $fail = sub { $node->{ok} = 0; push @{ $node->{why} }, @_; };
-	my $done = sub { $node->{seq} = ++$self->{seq}; delete $node->{visiting}; pop @{ $self->{stack} }; $node };
+	my $done = sub { $node->{seq} = ++$self->{seq}; delete $node->{visiting}; pop @{ $self->{stack} }; $node; };
 
 	unless ($rule) {
 		$fail->(diag(__("no rule to make it\n (%q)."), $D->{R}));
@@ -1942,7 +1942,7 @@ sub _node
 				# HEY!  %s is where it was needed (in header of `file').
 				# The same goes for the next two marked strings.
 				$fail->(diag(__("NEEDs %q\n (%s),\n  but cannot be made:"), $dep, $from),
-					map { (my $l = $_) =~ s/^/  /mg; $l } @{ $kid->{why} });
+					map { (my $l = $_) =~ s/^/  /mg; $l; } @{ $kid->{why} });
 				return 0;
 			}
 			push @{ $node->{kids} }, $made unless grep { $_ eq $made } @{ $node->{kids} };
@@ -2214,8 +2214,8 @@ sub _goals
 					next;
 				}
 				# (one line for the manifest, which has one; else a line each)
-				my $why = join ' ', map { (my $l = $_) =~ s/\A\s+//; $l } map { split /\n/ } @{ $node->{why} };
-				my $causes = sub { my $p = shift; join '', map { (my $l = $_) =~ s/^/  /mg; tagmsg($p => $l) } @{ $node->{why} } };
+				my $why = join ' ', map { (my $l = $_) =~ s/\A\s+//; $l; } map { split /\n/ } @{ $node->{why} };
+				my $causes = sub { my $p = shift; join '', map { (my $l = $_) =~ s/^/  /mg; tagmsg($p => $l); } @{ $node->{why} }; };
 				my $at = _blame($ent->{input}, $ent->{line});
 				# HEY!  These three are where a goal says what it NEEDs (or
 				# WANTs), in parentheses after it: %s is `file' line 3, and
@@ -2270,7 +2270,7 @@ sub _finish
 		# (what we make, and NEED or WANT plainly, comes last, and
 		# then what to do about it, which is last of all)
 		@made ? (tagmsg(E => __("cannot NEED/WANT a file we make:") . "\n"
-				. join(",\n", map { (my $l = $_) =~ s/^/ /mg; $l } @made) . "."),
+				. join(",\n", map { (my $l = $_) =~ s/^/ /mg; $l; } @made) . "."),
 			tagmsg(E => __("Please use JUST-NEED or JUST-WANT instead.")))
 		: ();
 	}
@@ -2308,7 +2308,7 @@ sub _finish
 			my $b = eval { to_argv($_, { prog => 'E' }) };
 			$rule_arg{$b} = $_ if defined $b;
 		}
-		for my $file (map({ $_->{bpath} } @{ $self->{node} }{@order}),
+		for my $file (map({ $_->{bpath}; } @{ $self->{node} }{@order}),
 				map { $_->{marker} } @dir) {
 			my $b = eval { _to_fs($file) };
 			my $clash = $rule{$file} ? $file : defined $b ? $rule_arg{$b} : undef;
@@ -2612,7 +2612,7 @@ sub generate
 		"invalid generator name: %q"), $G));
 	my $module = _backend_module($G);
 	(my $pm = "$module.pm") =~ s!::!/!g;
-	unless (eval { require $pm; 1 }) {
+	unless (eval { require $pm; 1; }) {
 		# (a backend that is there but broken says why)
 		$@ =~ /\ACan't locate \Q$pm\E in \@INC/ or die $@;
 		die _status 0, tagmsg(E => diag(__(

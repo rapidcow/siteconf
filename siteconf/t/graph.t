@@ -143,7 +143,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 	is_deeply($plan->{node}{'a.html'}{deps}, [qw( html/a.html x site/b.css site/.ok )],
 		'a.html needs site/b.css') or diag explain $plan->{node}{'a.html'}{deps};
 	is_deeply($plan->{node}{'b.css'}{deps}[2], 'site/c.css', 'and so on');
-	ok(!grep({ /^MY\// } @{ $plan->{node}{'a.html'}{deps} }), 'no MY/ in it');
+	ok(!grep({ /^MY\//; } @{ $plan->{node}{'a.html'}{deps} }), 'no MY/ in it');
 }
 
 # --- an absolute B: ${B}/${b}/x is still something we make
@@ -186,7 +186,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		'html/b.css' => lines( 'JUST-NEED' => [qw[ ${B}/${b}/c.css ]] ),
 		'html/c.css' => lines( 'JUST-NEED' => [qw[ ${B}/${b}/b.css ]] ),
 	});
-	ok(!eval { plan_of($dir); 1 }, 'cycle: dies');
+	ok(!eval { plan_of($dir); 1; }, 'cycle: dies');
 	like($@, qr/dependency cycle: `b\.css' -> `c\.css' -> `b\.css'/, '... showing it');
 }
 
@@ -198,7 +198,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 		'html/b.css' => lines( 'JUST-WANT' => [qw[ ${B}/${b}/c.css ]] ),
 		# no html/c.css
 	});
-	ok(!eval { plan_of($dir); 1 }, 'NEED of the unmakeable: dies');
+	ok(!eval { plan_of($dir); 1; }, 'NEED of the unmakeable: dies');
 	like(fold($@), qr/^E: goal `all' NEEDs `a\.html' \(in \S*MANIFEST'? line 2\), but cannot be made:\nE:   NEEDs `site\/c\.css' \(in header of `html\/a\.html' line 2\), but cannot be made:\nE:     source `html\/c\.css' is missing \(rule at \S*Makefile\.in'? line 1\)\.\n/m,
 		'... and why, a cause per line, deeper as it goes');
 
@@ -215,7 +215,7 @@ my $manifest = "MAKE all\n\tNEED a.html\n";
 sub bad {
 	my ($header, $re, $what) = @_;
 	my $dir = project({ MANIFEST => $manifest, 'html/a.html' => $header });
-	ok(!eval { plan_of($dir); 1 }, "$what: dies");
+	ok(!eval { plan_of($dir); 1; }, "$what: dies");
 	like($@, $re, "$what: says why");
 }
 bad(lines( HAVE => [qw[ a.html ]] ), qr/You HAVE `a\.html'.*\nE: but I got `html\/a\.html'/, 'HAVE is the path from the root');
@@ -230,7 +230,7 @@ bad(lines( NEED => [qw[ ${z}/b.css ]] ), qr/no such variable \$\{z\}/, 'no such 
 		'temple/base/head.html' => '',
 	}, tem => 'temple');
 	my $plan = eval { plan_of($dir) };
-	ok($plan && grep({ $_ eq 'temple/base/head.html' } @{ $plan->{node}{'a.html'}{deps} }),
+	ok($plan && grep({ $_ eq 'temple/base/head.html'; } @{ $plan->{node}{'a.html'}{deps} }),
 		'any configured variable: ${tem}') or diag $@;
 }
 bad(lines( NEED => [qw[ x$/y ]] ), qr/stray \$/, 'stray dollar');
@@ -241,7 +241,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 		MANIFEST => $manifest,
 		'html/a.html' => lines( HAVE => [qw[ $A/$a/a.html ]], NEED => [qw[ ${A}/x ${B}/MY/config.mk x ]] ),
 	});
-	ok(eval { plan_of($dir); 1 }, '${A}, ${B}/MY, and plain names are fine') or diag $@;
+	ok(eval { plan_of($dir); 1; }, '${A}, ${B}/MY, and plain names are fine') or diag $@;
 }
 
 # --- out of tree: the root is not where the build is
@@ -318,7 +318,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 
 	$dir = project({ %f, 'gen/tool' => "\x00\x01\x02# NEED: nowhere\n" x 4 });
 	$plan = eval { plan_of($dir) };
-	ok($plan && !grep({ $_ eq 'nowhere' } @{ $plan->{node}{'a.html'}{deps} }),
+	ok($plan && !grep({ $_ eq 'nowhere'; } @{ $plan->{node}{'a.html'}{deps} }),
 		'tools: a binary is not read') or diag $@;
 }
 
@@ -344,7 +344,7 @@ bad(lines( NEED => [qw[ MY/option.mk ]] ), qr/\(is it `\$\{B\}\/MY\/option\.mk'\
 	# Absolute A, logically: a symlink under the root (say, to an annex)
 	# is not followed, and neither is a root reached through one.
 SKIP:	{
-		eval { symlink("",""); 1 } or skip "No symlink", 2;
+		eval { symlink("",""); 1; } or skip "No symlink", 2;
 
 		my $ext = tempdir(CLEANUP => 1);
 		my $link = tempdir(CLEANUP => 1) . '/root';
@@ -376,7 +376,7 @@ SKIP:	{
 	my $dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html:\n\tcp\n" }, a => $src);
 	my $plan = eval { plan_of($dir) };
 	ok($plan, 'absolute a: HAVE with or without ${A}') or diag $@;
-	ok($plan && grep({ $_ eq "$src/b.css" } @{ $plan->{node}{'a.html'}{deps} }),
+	ok($plan && grep({ $_ eq "$src/b.css"; } @{ $plan->{node}{'a.html'}{deps} }),
 		'absolute a: ${A}/${a}/x NEEDs the right file') or diag explain $plan->{node}{'a.html'}{deps};
 }
 
@@ -618,7 +618,7 @@ SKIP:	{
 {
 	my $dir = project({ MANIFEST => $manifest, 'html/a.html' => '' });
 	open my $fh, '<', "$dir/MY/config.mk" or die;
-	my $t = do { local $/; <$fh> }; close $fh;
+	my $t = do { local $/; <$fh>; }; close $fh;
 	$t =~ s/^c=.*\n//m;
 	open $fh, '>', "$dir/MY/config.mk" or die; print $fh $t; close $fh;
 	eval { plan_of($dir) };
@@ -840,7 +840,7 @@ SKIP: {
 	}
 	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
 	# _text spells names as the file system does.  Here that is UTF-8.
-	my $emit = sub { my $t = eval { $_[0]->_text(\%emit) }; defined $t ? Encode::decode('UTF-8', $t) : undef };
+	my $emit = sub { my $t = eval { $_[0]->_text(\%emit) }; defined $t ? Encode::decode('UTF-8', $t) : undef; };
 	like($emit->('RdKw::WwW::SiteConf::Builder::Gmake'),
 		qr/^site\/a\.html: html\/a\.html x d\\ x d\\#h d\x{1F600} d\/y site\/\.ok$/m,
 		'GNU Make: escaped') or diag $@;

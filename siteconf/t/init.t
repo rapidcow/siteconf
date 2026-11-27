@@ -31,7 +31,7 @@ sub invoke {
 		exec $^X, $script, @_;
 		die "exec: $!";
 	};
-	my $out = do { local $/; <$fh> };
+	my $out = do { local $/; <$fh>; };
 	close $fh;
 	return ($? >> 8, $out);
 }

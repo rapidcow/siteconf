@@ -22,7 +22,7 @@ is((scan_string('"$}{"'))[0], '$}{', 'nothing else is special');
 is_deeply([ scan_string('abc') ], [], 'not a string: nothing');
 is_deeply([ scan_string('""') ], [ '', '' ], 'an empty string');
 for my $bad ('"abc', '"\q"', '"\x{110000}"', '"\x{}"', '"a\\"') {
-	ok(!eval { scan_string($bad); 1 }, "scan_string: $bad is an error");
+	ok(!eval { scan_string($bad); 1; }, "scan_string: $bad is an error");
 	like($@, qr/\Ascan_string: /, '... said by name');
 }
 
@@ -33,8 +33,8 @@ is(norm_dep('x/${"a b"}'), 'x/a${U+0020}b', 'norm_dep: what is safe is kept');
 is(subs_dep(undef, 'x/${"a\sb}"}y', on_missing => 'croak'), 'x/a b}y', 'subs_dep: braces in it');
 is(subs_dep({ a => 'A' }, '${a}/${"\s"}'), 'A/ ', 'next to a variable');
 is(norm_dep('${""}'), '', 'an empty string is nothing');
-ok(!eval { norm_dep('${"\q"}', strict => 1); 1 }, 'strict: bad escape is an error');
-ok(!eval { norm_dep('${"abc', strict => 1); 1 }, 'strict: not closed is an error');
+ok(!eval { norm_dep('${"\q"}', strict => 1); 1; }, 'strict: bad escape is an error');
+ok(!eval { norm_dep('${"abc', strict => 1); 1; }, 'strict: not closed is an error');
 like(norm_dep('${"abc'), qr/\A\$\{\$\}\{"abc\z/, 'not strict: spelled out');
 
 done_testing;

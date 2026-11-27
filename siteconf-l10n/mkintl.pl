@@ -35,7 +35,7 @@ sub take_args
 {
 	my ($argv) = @_;
 	my %arg;
-	@$argv = grep { /\A(LINGUAS|LOCALEDIR)=(.*)\z/s ? do { $arg{$1} = $2; 0 } : 1 } @$argv;
+	@$argv = grep { /\A(LINGUAS|LOCALEDIR)=(.*)\z/s ? do { $arg{$1} = $2; 0; } : 1 } @$argv;
 	%arg;
 }
 
@@ -69,7 +69,7 @@ sub find_msgfmt
 	return make_quote(qq{"$bin"}) if defined $bin;
 	# (-o is left over, and that is fine)
 	return '$(PERL) -MLocale::Msgfmt -e "msgfmt({ in => pop, out => pop })" --'
-		if eval { require Locale::Msgfmt; 1 };
+		if eval { require Locale::Msgfmt; 1; };
 	die "cannot make message catalogs: neither msgfmt (GNU gettext)"
 		. " nor Locale::Msgfmt is installed\n";
 }
@@ -154,7 +154,7 @@ sub main
 		or die "$Me: where should they go?  LOCALEDIR=... is required\n$usage";
 	File::Spec->file_name_is_absolute($localedir)
 		or die "$Me: LOCALEDIR=$localedir is not absolute\n";
-	eval { make_path($localedir); 1 } or die "$Me: LOCALEDIR=$@";
+	eval { make_path($localedir); 1; } or die "$Me: LOCALEDIR=$@";
 
 	-d $build or die "$Me: no build directory $build (make it first)\n";
 	my $real = Cwd::realpath($build);

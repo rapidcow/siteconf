@@ -25,7 +25,7 @@ use RdKw::WwW::GenGenLib qw(
 my @names = ( 'résumé.html', 'ディレクトリ', 'ディレクトリ/索引.html', 'ß.mk' );
 for my $name (@names) {
 	eval { Encode::encode(locale_fs => $name,
-		Encode::FB_CROAK() | Encode::LEAVE_SRC()); 1 }
+		Encode::FB_CROAK() | Encode::LEAVE_SRC()); 1; }
 		or plan skip_all => "locale_fs ($Encode::Locale::ENCODING_LOCALE_FS)"
 			. " cannot spell our file names";
 }
@@ -39,11 +39,11 @@ my $bad = "x\x{D800}";
 # --- names are spelled as CodeSets says, and who could not says so
 {
 	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->new(filesys => 'ascii');
-	ok(!eval { read_make("$udir/ß.mk"); 1 }, 'read_make: filesys of CodeSets');
+	ok(!eval { read_make("$udir/ß.mk"); 1; }, 'read_make: filesys of CodeSets');
 	like($@, qr/\Aread_make: cannot encode file name "[^"]*\\x\{df\}\.mk" in US-ASCII: .+\n\z/,
 		'... and says who could not');
 }
-ok(!eval { read_make("$udir/$bad"); 1 }, 'read_make: no surrogates');
+ok(!eval { read_make("$udir/$bad"); 1; }, 'read_make: no surrogates');
 is($bad, "x\x{D800}", '... leaving the name be');
 
 # --- update_file, write_make, read_make: the name on disk is the locale's
@@ -79,7 +79,7 @@ is($bad, "x\x{D800}", '... leaving the name be');
 	my %I = read_deps("$udir/résumé.html");
 	is_deeply(\%I, { HAVE => '${A}/résumé.html', NEED => [ 'ディレクトリ/索引.html' ] },
 		'read_deps: by character name');
-	ok(!eval { read_deps("$udir/$bad", forgive_missing => 1); 1 },
+	ok(!eval { read_deps("$udir/$bad", forgive_missing => 1); 1; },
 		'read_deps: a name we cannot spell is not forgiven');
 
 	chdir fs($udir) or die $!;
@@ -89,7 +89,7 @@ is($bad, "x\x{D800}", '... leaving the name be');
 	is_deeply(\@got, [ 'résumé.html', 'ディレクトリ/索引.html', 'ß.mk' ],
 		'walk_deps: follows names of any kind');
 	is_deeply($G{'ディレクトリ/索引.html'}, { NEED => [ 'ß.mk' ] }, '... and reads them');
-	ok(!eval { walk_deps({}, $bad, { follow => sub { 1 } }); 1 },
+	ok(!eval { walk_deps({}, $bad, { follow => sub { 1 } }); 1; },
 		'walk_deps: but not the unspellable');
 	chdir '/';
 }

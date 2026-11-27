@@ -527,9 +527,9 @@ GetOptions(
 	'i|init'   => sub { $opt{mode} = 'init' },
 	'g|make'   => sub { $opt{mode} = 'make' },
 	'l|list'   => sub { $opt{mode} = 'list' },
-	'P=s'      => sub { $opt{P} = $_[1]; push @written, "-P", $_[1] },
+	'P=s'      => sub { $opt{P} = $_[1]; push @written, "-P", $_[1]; },
 	'o=s'      => sub { push @{ $opt{outputs} }, $_[1] },
-	'M=s'      => sub { push @{ $opt{M} }, $_[1]; push @written, "-M$_[1]" },
+	'M=s'      => sub { push @{ $opt{M} }, $_[1]; push @written, "-M$_[1]"; },
 	'B=s'      => \$opt{B},
 	'G=s'      => \$opt{G},
 	# (a name alone has no value, as it would with -g; -i takes it as empty)
@@ -548,7 +548,7 @@ GetOptions(
 	# (-0 alone is a NUL, -072 a colon: an octal number, as perl's -0 takes)
 	'0:s'      => \$opt{0},
 	's|sort'   => \$opt{s},
-	'h|help'   => sub { print $usage; exit 0 },
+	'h|help'   => sub { print $usage; exit 0; },
 	'V|version+' => \( my $vee ),
 	'q|quiet'  => \$opt{q},
 	'A'        => \$opt{A},
@@ -585,7 +585,7 @@ if ($vee) {
 		RdKw::WwW::SiteConf::L10N
 	)) {
 		(my $path = "$fren.pm") =~ s!::!/!g;
-		eval { require $path; 1 } or next;
+		eval { require $path; 1; } or next;
 		my $name = $fren eq 'RdKw::WwW::SiteConf' ? $prog : $fren;
 		$name =~ s/^RdKw:://;
 		my $where = $vee > 2 ? " " . pq($INC{$path}) : "";
@@ -837,7 +837,7 @@ sub slurp
 	my ($file) = @_;
 	open my $fh, '<:encoding(UTF-8)', $cs->to_fs($file, { prog => $prog })
 		or die $cs->tagmsg($prog => $cs->diag(__("cannot open file %q: %m"), $file));
-	my $text = do { local $/; readline $fh };
+	my $text = do { local $/; readline $fh; };
 	close $fh or die $cs->tagmsg($prog => $cs->diag(__("cannot read file %q: %m"), $file));
 	$text;
 }

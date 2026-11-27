@@ -20,3 +20,11 @@ obsolete share directory (which holds the template files).
 Before testing `siteconf-l10n`, run
 `perl Makefile.PL LINGUAS='en zh'` in that directory so both language
 catalogs are tested.
+
+## Style
+
+One-line blocks should not omit its semicolon:
+
+    eval { $mod->VERSION(0.01); 1; }  # good
+    eval { $mod->VERSION(0.01); }     # ok (though prefer the above)
+    eval { $mod->VERSION(0.01); 1 }   # BAD.

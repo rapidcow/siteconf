@@ -156,7 +156,7 @@ sub sh_args
 	my $out = do { local $/; <$fh>; };
 	close $fh;
 	my @w = split /\0/, $out, -1;
-	pop @w;	# what comes after the last NUL
+	pop @w;	# pop NULL terminator
 	\@w;
 }
 for my $k (sort keys %Q) {

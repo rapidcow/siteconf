@@ -6,7 +6,7 @@ use utf8;
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 15 + 19 + 6;
+use Test::More tests => 15 + 21 + 6;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -97,12 +97,14 @@ my $dir = tempdir(CLEANUP => 1);
 	open $fh, '>:encoding(UTF-8)', $f or die;
 	print $fh "a=\tx\${U+110000}\n";
 	close $fh;
-	ok(eval { read_make($f); 1; }, 'read_make: pass through');
+	ok(!eval { read_make($f); 1; }, 'read_make: no such code point');
+	like($@, qr/\$\{U\+110000\}.*: illegal code point: .*\n\z/, '... says which');
 	ok(!eval { read_make("$dir/nonesuch.mk", prog => 'configure'); 1; }, 'read_make: no file');
 }
 is(escape_vars(undef), undef, 'escape_vars: undef is undef');
 is(unescape_vars('a${U+0020}b${$}{x}'), 'a b${x}', 'unescape_vars');
-ok(eval { unescape_vars('${U+FFFFFFFF}'); 1; }, 'unescape_vars: pass through');
+ok(!eval { unescape_vars('${U+FFFFFFFF}'); 1; }, 'unescape_vars: no such code point');
+like($@, qr/\Aunescape_vars: .*\$\{U\+FFFFFFFF\}.*: illegal code point: .*\n\z/, '... says which');
 
 # --- load_state
 {

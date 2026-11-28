@@ -6,7 +6,7 @@ use utf8;
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 29;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -24,6 +24,14 @@ is_deeply([ scan_string('""') ], [ '', '' ], 'an empty string');
 for my $bad ('"abc', '"\q"', '"\x{110000}"', '"\x{}"', '"a\\"') {
 	ok(!eval { scan_string($bad); 1; }, "scan_string: $bad is an error");
 	like($@, qr/\Ascan_string: /, '... said by name');
+}
+for (['"\q"', '\q', 'illegal escape'],
+	['"a\x{110000}b"', '\x{110000}', 'illegal code point'])
+{
+	my ($bad, $sub, $what) = @$_;
+	eval { scan_string($bad); 1; };
+	like($@, qr/: .*\Q$sub\E.*: \Q$what\E: .*\n\z/, "scan_string: $sub says $what");
+	unlike($@, qr/ at \S+ line \d+/, '... and not where in perl');
 }
 
 is(unescape_var('a${"\s"}b${"表"}${""}'), "a b表", 'unescape_var: a string');

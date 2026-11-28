@@ -109,7 +109,7 @@ M
 	$dir = project('Makefile.in' => "x: \${a}/x\n\techo \${v}\nv=1\n");
 	like(failure($dir), qr/line 2: undefined variable: \$\{v\}/, 'a variable is not known before its line');
 	$dir = project('Makefile.in' => "v=\${\"\\q\"}\n");
-	like(failure($dir), qr/line 1: bad escape/, 'a string that has no such escape');
+	like(failure($dir), qr/line 1: .*\\q.*: illegal escape/, 'a string that has no such escape');
 	$dir = project('Makefile.in' => "v=\${\"abc\n");
 	like(failure($dir), qr/line 1: unterminated/, 'a string that is not closed');
 }

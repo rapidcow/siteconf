@@ -273,9 +273,9 @@ sub unescape_var
 		elsif (defined $2) {
 			my $cp = hex $2;
 			$cp <= MAX_RUNE() or
-				die _status 0, tagmsg($prog => diag(__(
-					'illegal code point: ${U+%04X}'),
-					$cp));
+				die _status 0, tagmsg($prog => tagmsg($all =>
+					diag(__('illegal code point: ${U+%04X}'),
+					$cp)));
 			chr $cp;
 		}
 		else {
@@ -321,20 +321,21 @@ sub _decode_string
 {
 	my ($body) = @_;
 	eval { $body =~ s{\\(?:x\{([0-9A-Fa-f]{1,8})\}|(.))}{
+		my $all = $&;
 		if (defined $1) {
 			my $cp = hex $1;
 			$cp <= MAX_RUNE()
 				? chr $cp
-				: die diag(__(
+				: die tagmsg($all => diag(__(
 					'illegal code point: ${U+%04X}'),
-					$cp);
+					$cp));
 		}
 		else {
 			$ESCAPE{$2}
 				? $ESCAPE{$2}
-				: die diag(__(
+				: die tagmsg($all => diag(__(
 					'illegal escape: %Q'),
-					$2);
+					$2));
 		}
 	}gesx; };
 	$@ ? return : $body;

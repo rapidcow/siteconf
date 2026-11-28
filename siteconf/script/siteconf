@@ -1001,11 +1001,14 @@ sub do_init
 	# what we know of them (said with __ there, so N__ here)
 	my @Dextra = grep { !exists $Dd{$_} && $_ ne 'c' } sort keys %Dx;
 	my $dhelp = join '', map {
-		"\t[ " . pq("-D$_") . ', "", sub { $Dd{' . pK($_) . "} } ],\n"
+		my $Dv = '$Dd{' . pK($_) . '}';
+		"\t[ " . pq("-D$_") . ', ""' . ", sub { defined $Dv ? ('%#Q', $Dv) : (); } ],\n";
 	} @Dextra;
 	my $help = join '', map {
-		"\t[ " . pq("-O$_") . ', ' . (exists $OD{$_} ? 'N__(' . pq($OD{$_}) . ')' : '""')
-			. ', sub { $Od{' . pK($_) . "} } ],\n"
+		# "option string", as in help string?
+		my $Os = exists $OD{$_} ? 'N__(' . pq($OD{$_}) . ')' : '""';
+		my $Ov = '$Od{' . pK($_) . '}';
+		"\t[ " . pq("-O$_") . ", $Os" . ", sub { defined $Ov ? ('%#Q', $Ov) : (); } ],\n"
 	} sort keys %Ox;
 	my $text = slurp(share_file('configure.in'));
 	my %sub = (

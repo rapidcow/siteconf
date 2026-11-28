@@ -147,15 +147,22 @@ our %Od = (
 # Help text: [ flag, description, default ]
 # The default is deferred in a lambda for some reason.
 our @VARHELP = (
-	[ '-DA', N__('Project root, seen from current directory'), sub { $Dd{A} } ],
-	[ '-DB', N__('Build directory, seen from the source tree'), sub { $Dd{B} } ],
-	[ '-Da', N__('Source directory, seen from the source tree'), sub { $Dd{a} } ],
-	[ '-Db', N__('Target directory, seen from the build directory'), sub { $Dd{b} } ],
+	[ '-DA', N__('Project root, seen from current directory'),
+		sub { ('%#Q', $Dd{A}); } ],
+	[ '-DB', N__('Build directory, seen from the source tree'),
+		sub { ('%#Q', $Dd{B}); } ],
+	[ '-Da', N__('Source directory, seen from the source tree'),
+		sub { ('%#Q', $Dd{a}); } ],
+	[ '-Db', N__('Target directory, seen from the build directory'),
+		sub { ('%#Q', $Dd{b}); } ],
 	[ '-Dc', N__('Cache directory, seen from the build directory'),
-		sub { $Dd{c} ne $Dd{b} ? $Dd{c} : '-Db' } ],
-	[ '-DR', N__('Transformation rules, from current directory'), sub { $Dd{R} } ],
-	[ '-DF', N__('Manifest, from current directory'), sub { $Dd{F} } ],
-	[ '-De', N__('Directory marker'), sub { $Dd{e} } ],
+		sub { $Dd{c} ne $Dd{b} ? ('%#Q', $Dd{c}) : ('%s', '-Db'); } ],
+	[ '-DR', N__('Transformation rules, from current directory'),
+		sub { ('%#Q', $Dd{R}); } ],
+	[ '-DF', N__('Manifest, from current directory'),
+		sub { ('%#Q', $Dd{F}); } ],
+	[ '-De', N__('Directory marker'),
+		sub { ('%#Q', $Dd{e}); } ],
 @DEFHELP@);
 our @OPTHELP = (
 @OPTHELP@);
@@ -176,13 +183,14 @@ sub section
 		@line or @line = ('');
 		if ($default) {
 			my $last = pop @line;
-			my $value = $default->();
-			unless (defined $value) {
+			my @value = $default->();
+			unless (@value) {
 				push @line, $last;
 			} else {
+				my $value = $cs->diag(@value);
 				push @line, length $last
-					? $cs->diag(__("%s (default: %#Q)"), $last, $default->())
-					: $cs->diag(__("(default: %#Q)"), $default->());
+					? $cs->diag(__("%s (default: %s)"), $last, $value)
+					: $cs->diag(__("(default: %s)"), $value);
 			}
 		}
 		if (defined $alias) {

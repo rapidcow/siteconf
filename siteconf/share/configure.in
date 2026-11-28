@@ -315,7 +315,7 @@ foreach (keys %Od) {
 preset_finish(\%D, \%O) if defined &preset_finish;
 
 foreach (qw( a b R F )) {
-	$D{$_} =~ s{(?!<\A)/+$}{};
+	$D{$_} =~ s{(?<!\A)/+$}{};
 	length $D{$_} or die status 0, $cs->tagmsg(E => $cs->diag(__(
 		'${%s} may not be empty.'), $_));
 }

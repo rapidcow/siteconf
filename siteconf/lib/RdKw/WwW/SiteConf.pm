@@ -1168,8 +1168,8 @@ sub read_manifest
 		die "E: $why";
 	};
 
-	# Take every goal the manifest lists, and die at the first reserved
-	# goal name.
+	# Take every goal the manifest lists,
+	# and die at the first reserved goal name.
 	my @goal = $mf->goals;
 	my %goal;
 	for my $goal (@goal) {
@@ -1898,8 +1898,8 @@ sub _node
 		$follow->(\@hwant, 1);
 		push @hneed, @more_need;
 		push @hwant, @more_want;
-		# Each file we make that a header lists without JUST goes to
-		# _made.
+		# Each file we make that a header lists
+		# without JUST goes to _made.
 		$self->_made_entry($_) for @hneed, @hwant;
 		# The same file may have turned up through several others, and
 		# as both: say it once, and a NEED is not a WANT as well
@@ -2690,11 +2690,8 @@ sub generate
 		my ($name, $text, $exec) = @$file;
 		my $path = "$self->{B}/$name";
 		_make_dir(dirname($path));
-		$self->_report($name, write_file($path, $text, raw => 1));
-		# chmod each time: write_file leaves a file alone if its content is
-		# the same.
-		$exec and (chmod 0777 & ~umask, _to_fs($path)
-			or die tagmsg(E => diag(__("cannot chmod %q: %m"), $path)));
+		$self->_report($name, write_file($path, $text, raw => 1,
+			($exec ? (mode => 0777) : ())));
 	}
 
 	# What to type next (the backend says, from the first goal of the

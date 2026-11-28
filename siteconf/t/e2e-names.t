@@ -295,8 +295,8 @@ SKIP: {
 		($status, $out) = run($dir, -x '/usr/bin/make' ? '/usr/bin/make' : $gmake);
 		ok($status == 0 && -f "$dir/site/a.html", '... and make builds it') or diag $out;
 	}
-	# GNU Make cannot escape a tab in a target; a tab in a prerequisite
-	# is escaped.
+	# GNU Make cannot escape a tab in a target;
+	# a tab in a prerequisite is escaped.
 	$dir = project({ MANIFEST => "MAKE all\n\tNEED ta\${U+0009}b\n",
 		'Makefile.in' => "ta\${U+0009}b: \${a}/\n\ttouch \${B:Q}/\${b:Q}/\${\@:Q}\n" });
 	($status, $out) = run($dir, $^X, $script, '-g', '-q', '-G', 'gmake');

@@ -246,8 +246,8 @@ sub _apply
 		if ($WORD{$c}) {
 			$val = $WORD{$c}->($val) if length $val;
 		} elsif ($c eq 'Q') {
-			# quote also takes whether it is the last modifier, which a
-			# recipe quotes later.
+			# quote also takes whether it is the last modifier,
+			# which a recipe quotes later.
 			$val = $o{quote}->($val, $pos >= $len);
 		} elsif ($c eq 'S') {
 			$pos < $len or die _status 0, __("unterminated :S modifier") . "\n";

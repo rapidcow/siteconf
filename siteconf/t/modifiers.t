@@ -17,8 +17,8 @@ use RdKw::WwW::SiteConf;
 
 my %D = ( A => '.', B => '.', a => 'html', b => 'site', c => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Ya => 'xa$', Yb => 'xa$$', Yc => 'xa', md => '.md', html => '.html', F => 'b.md.md', G => 'c.mdx', Sp => 'my dir/sub dir', Empty => '' );
 my $sc = bless { D => \%D }, 'RdKw::WwW::SiteConf';
-# s_ returns what a recipe expands it to, as bytes: a :Q is quoted
-# last, by the backend.
+# s_ returns what a recipe expands it to, as bytes:
+# a :Q is quoted last, by the backend.
 sub s_
 {
 	my @runs;

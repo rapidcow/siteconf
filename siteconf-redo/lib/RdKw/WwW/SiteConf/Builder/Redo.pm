@@ -359,8 +359,8 @@ sub emit
 				# HEY!  %s is the name of a cleaning rule (-Sclean), which a
 				# .do file is named after
 				"redo cannot name cleaning rule %q: a file has that name"), $name));
-		# redo would run default.do or default.EXT.do for other names, in
-		# that directory and below.
+		# redo would run default.do or default.EXT.do for other names,
+		# in that directory and below.
 		$name =~ m{(?:\A|/)default(?:\.[^/]*)?\z}
 			and die _status 0, tagmsg(E => diag(__(
 				# HEY!  %s is the name of a cleaning rule; default.do is what
@@ -540,9 +540,9 @@ sub _argv_is_fs
 			"redo cannot name %q: arguments cannot spell it"), $name));
 	$fs eq $argv
 		or die _status 0, tagmsg(E => diag(__(
-			# HEY!  %s is a target name.  The encoding of arguments and the encoding
-			# of file names give it different bytes.  Arguments are what is
-			# typed after redo.
+			# HEY!  %s is a target name.  The encoding of arguments and the
+			# encoding of file names give it different bytes.
+			# Arguments are what is typed after redo.
 			"redo cannot name %q: arguments and file names spell it"
 			. " differently"), $name));
 	1;

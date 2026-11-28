@@ -63,8 +63,8 @@ sub run
 my ($ok, $out, $err) = run('ヘッダー.html');
 is($out, 'résumé', 'a source and an INCLUDE of any name') or diag $err;
 {
-	# Names are printed as -C stderr:UTF-8 would encode them, whatever
-	# the locale is.
+	# Names are printed as -C stderr:UTF-8 would encode them,
+	# whatever the locale is.
 	no warnings 'once';
 	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->locale->new(stderr => 'UTF-8', diag => 'unicode');
 	($ok, $out, $err) = run('秘密');

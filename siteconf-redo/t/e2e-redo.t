@@ -68,14 +68,14 @@ like(slurp('build/site/sub/index.html.do'), qr{^O=sub/\$\{3##\*/\}\n(?:.*\n)*.* 
 ok(!grep({ !-f && -s _; } map { "build/site/$_" } qw( index.html sub/index.html )), '... and redo makes the target of it');
 ok(!-e 'build/site/robots.txt', 'redo basic: only the subset');
 like(slurp('build/site/sub/index.html'), qr/location=sub\/index\.html/, 'redo: O.location');
-# This runs redo, and not redo-ifchange: JdeBP's runs only in a .do.  A
-# goal is made every time, and makes what it needs only if that is out
-# of date.
+# This runs redo, and not redo-ifchange: JdeBP's runs only in a .do.
+# A goal is made every time,
+# and makes what it needs only if that is out of date.
 unlike(run('redo basic again', $redo, 'build/basic'), qr/site\/index\.html/, 'redo: incremental');
-# The change is in a second after the build's: a redo may look at what
-# is in a file only if its time is not the second that it was seen in,
-# as JdeBP's does with the mtime, and redo-c with the ctime, which utime
-# cannot move.
+# The change is in a second after the build's:
+# a redo may look at what is in a file only if its time is not the
+# second that it was seen in, as JdeBP's does with the mtime, and
+# redo-c with the ctime, which utime cannot move.
 next_second();
 open my $fh, '>>', 'html/index.html' or die "html/index.html: $!";
 print $fh "<!-- newer -->\n";

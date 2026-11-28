@@ -346,14 +346,16 @@ sub scan_string
 =item B<write_file> I<file>, I<text>[, prog => I<prog>, encoding => "UTF-8", mode => 0666, raw => 1]
 
 Replace I<file> with I<text> (characters, written as UTF-8) -- but
-only if that would change anything.  Preserving the mtime means a
-reconfiguration that changes nothing will not rebuild the world.
+only if that would change its content or its mode.  Preserving the
+mtime means a reconfiguration that changes nothing will not rebuild
+the world.
 Return 2 if the file is created, 1 if updated, and 0 if not modified.
 
 The I<encoding> option sets the Perl IO layer to that encoding.
 The I<mode> option sets the file mode via L<perlfunc/chmod>,
 after applying the current process's umask.  For File::Temp 0.2310
-or newer, this is passed to L<perlfunc/sysopen> directly.
+or newer, this is passed to L<perlfunc/sysopen> directly.  A file
+with the same content but another mode is replaced too.
 
 With C<< raw => 1 >>, I<text> is bytes.  They are written as they are.
 Use this for a Makefile: its names are spelled by
@@ -410,7 +412,7 @@ sub write_file
 		die tagmsg($prog => $msg);
 	};
 	chmod $mode & ~umask, $tmp_fs
-		or $fail->(__("cannot write file %q: %m"), $tmp)
+		or $fail->(__("cannot chmod file %q: %m"), $tmp)
 		unless HAS_PERMS();
 	binmode $fh, $layer
 		or $fail->(__("cannot write file %q: %m"), $tmp);
@@ -420,13 +422,23 @@ sub write_file
 		or $fail->(__("cannot write file %q: %m"), $tmp);
 
 	my $exists = -e $file_fs;
-	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0) {
+	# The modes come from fresh stat calls on both files, so the mode
+	# that the umask left on the temporary file is what is compared.
+	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0
+		&& _file_mode($tmp_fs) == _file_mode($file_fs)) {
 		unlink $tmp_fs;
 		return 0;  # make it numeric so `>' isn't upset
 	}
 	rename $tmp_fs, $file_fs
 		or $fail->(__("cannot rename %q to %q: %m"), $tmp, $file);
 	$exists ? 1 : 2;
+}
+
+# The permission bits of a file, or -1 if stat fails
+sub _file_mode
+{
+	my @st = stat $_[0];
+	@st ? $st[2] & 07777 : -1;
 }
 
 =item B<load_state> I<B>[, prog => 'load_state']

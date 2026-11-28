@@ -10,8 +10,8 @@ BEGIN { $ENV{LANGUAGE} = 'C'; }
 use RdKw::WwW::SiteConf::Builder::Redo;
 
 my $class = 'RdKw::WwW::SiteConf::Builder::Redo';
-# files returns the .do files, keyed by file name; the default goal's
-# is all.do unless given.
+# files returns the .do files, keyed by file name;
+# the default goal's is all.do unless given.
 sub files { my ($p, @d) = @_; my %f = map { ($_->[0], $_->[1]) } $class->emit($p, @d ? $d[0] : q(all.do)); \%f; }
 # A goal as -t selects it: of its own (-t goal), the default (-t ,goal, or
 # -t , for the first), or both
@@ -28,8 +28,8 @@ my $plan = {
 	node => { x => { bpath => 'site/x', deps => [ 'in/x', 'a b', '-o', 'site/.ok' ],
 		recipe => [ [ text => "\t\@cd .. && cp in/x site/x\n\t-rm junk \$\$HOME\n\tsed 's:a:b:' \\\n\t\tq\n", 'x' ] ] } },
 };
-# $B0 finds where the .do is, from $0: the build directory, if it is
-# there.
+# $B0 finds where the .do is, from $0:
+# the build directory, if it is there.
 my $B0 = 'case $0 in -*/*) d=./${0%/*}/ ;; */*) d=${0%/*}/ ;; *) d= ;; esac';
 my $f = files($plan);
 is_deeply([ sort keys %$f ], [ 'all.do', 'site/x.do' ], 'a .do for the target, and all.do for the default goal');

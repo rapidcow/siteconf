@@ -195,8 +195,8 @@ msgid "cannot write file %q: %m"
 msgstr "无法写入文件 %q：%m"
 
 #: ../siteconf/script/siteconf:1063 ../siteconf/lib/RdKw/WwW/SiteConf.pm:2572
-msgid "cannot chmod %q: %m"
-msgstr "无法修改 %q 的权限：%m"
+msgid "cannot chmod file %q: %m"
+msgstr "无法修改文件 %q 的权限：%m"
 
 #. HEY!  "Overwrote" clobbers a file the user
 #. explicitly lets us with -f, and "wrote" means
@@ -947,9 +947,9 @@ msgstr "%s：前缀以字母或 `_' 开头，后面是字母、数字和 `_'"
 msgid "redo cannot name %q: arguments cannot spell it"
 msgstr "redo 无法命名 %q：参数的编码无法表示它"
 
-#. HEY!  %s is a target name.  The encoding of arguments and the encoding
-#. of file names give it different bytes.  Arguments are what is
-#. typed after redo.
+#. HEY!  %s is a target name.  The encoding of arguments and the
+#. encoding of file names give it different bytes.
+#. Arguments are what is typed after redo.
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:486
 msgid "redo cannot name %q: arguments and file names spell it differently"
 msgstr "redo 无法命名 %q：参数和文件名对它的拼写不同"

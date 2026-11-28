@@ -34,8 +34,8 @@ sub project {
 }
 my $manifest = "MAKE all\n\tNEED a.css\n\tNEED d/b.css\nMAKE small\n\tNEED a.css\n";
 # The options of the generator, if any, follow the project.
-# plan_of selects every goal of the manifest: without -t, only the
-# first is selected.
+# plan_of selects every goal of the manifest:
+# without -t, only the first is selected.
 sub plan_of
 {
 	my $dir = shift;

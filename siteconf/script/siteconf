@@ -988,8 +988,8 @@ sub do_init
 	}
 	# Test how far we could go, with user overrides taken into account.
 	if (defined $render) {
-		# genlib_min is the version the preset asks for, if any: -P tem
-		# asks for none.
+		# genlib_min is the version the preset asks for,
+		# if any: -P tem asks for none.
 		$opt->{genlib_min} = $mods{'RdKw::WwW::GenLib'};
 		# provider is true only when -M asks for it: no preset does.
 		$opt->{provider} = $user{$PROVIDER} && exists $mods{$PROVIDER};
@@ -1067,7 +1067,7 @@ out:	while (my ($name, $dest) = each %out) {
 				"cannot write file %q: %m"), $dest));
 		unless (chmod 0777 & ~umask, $dest_fs) {
 			print STDERR $cs->tagmsg($prog => $cs->diag(__(
-				"cannot chmod %q: %m"), $dest))
+				"cannot chmod file %q: %m"), $dest))
 				unless $opt->{q};
 		}
 		$written{$name} = 1;

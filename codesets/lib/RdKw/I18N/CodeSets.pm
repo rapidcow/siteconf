@@ -962,8 +962,8 @@ sub diag
 {
 	my ($self, $format, @args) = @_;
 	my $errno = 0 + $!;
-	# local restores $! and $^E when we return, so a die after us exits with
-	# errno.
+	# local restores $! and $^E when we return,
+	# so a die after us exits with errno.
 	local ($!, $^E);
 	my $enc = $self->encoding('stderr');
 	# What sprintf is given: the format, with what we say ourselves

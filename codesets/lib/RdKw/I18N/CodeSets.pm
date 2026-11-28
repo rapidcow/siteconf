@@ -4,8 +4,12 @@ use 5.008;
 use strict;
 use warnings;
 
+use version;
 our $VERSION = '0.00_00';
 $VERSION = version->parse( $VERSION );
+
+use Exporter ();
+our @ISA = qw( Exporter );
 
 =head1 NAME
 
@@ -85,7 +89,7 @@ use PerlIO::encoding ();
 
 sub _status { $! = 0; $? = shift; @_; }
 
-# category => the Encode::Locale alias that `locale' means for it
+# category => Encode::Locale name
 my %LOCALE = (
 	stdin   => 'console_in',
 	stdout  => 'console_out',
@@ -96,7 +100,7 @@ my %LOCALE = (
 );
 my @CATEGORIES = qw( stdin stdout stderr argv env filesys );
 
-# pseudo-category => what it sets
+# pseudo-category => members
 my %PSEUDO = (
 	console     => [qw( stdin stdout stderr )],
 	console_in  => [qw( stdin )],
@@ -105,14 +109,18 @@ my %PSEUDO = (
 
 my %STD = ( stdin => \*STDIN, stdout => \*STDOUT, stderr => \*STDERR );
 
-# What 0 and 1 are short for
+# -C 0 and -C 1 each means...
 my %NUMBER = ( 0 => 'ascii', 1 => 'UTF-8' );
 my %DIAG_NUMBER = ( 0 => 'ascii', 1 => 'unicode' );
 
 my $CHECK = Encode::FB_CROAK() | Encode::LEAVE_SRC();
 
-# (our, so that it may be local()ized: local $RdKw::I18N::CodeSets::LOCALE)
+# Global singleton (lazily initialized)
 our $LOCALE;
+# Maximum Unicode code point before UTF-16 go die
+use constant MAX_RUNE => 0x10FFFF;
+
+our @EXPORT_OK = qw( $LOCALE MAX_RUNE );
 
 =head1 METHODS
 
@@ -189,14 +197,13 @@ sub parse
 	my $prog = _who(_opt(parse => \@spec, 'prog'));
 	push @spec, @last;
 	my @pairs;
-	# (split by commas and POSIX white space; what is empty between them is
-	# nothing)
+	# Split by commas and POSIX white space
 	for my $spec (map { defined $_ && !ref $_ ? grep { length } split(/[,\t\n\cK\f\r ]+/, $_) : $_ } @spec) {
 		defined $spec or die _status 0, "${prog}undefined codeset\n";
 		if (ref $spec) {
 			ref $spec eq 'HASH' or die _status 0, "${prog}not a codeset: $spec\n";
 			my %all = %$spec;
-			# (diag last: setting stderr to ASCII would reset it)
+			# Set diag last; setting stderr to ASCII would reset it
 			for my $name (@CATEGORIES, 'diag') {
 				push @pairs, $name, delete $all{$name} if exists $all{$name};
 			}
@@ -215,7 +222,7 @@ sub parse
 		$enc = $name eq 'diag' ? 'unicode' : 'UTF-8' unless defined $enc;
 		push @pairs, $name, $enc;
 	}
-	# (to a copy first, so that we are as we were if one is bad)
+	# Do not clobber ourselves for the sake of atomicity
 	my $new = eval { $self->new(@pairs) } or die "$prog$@";
 	%$self = %$new;
 	$self;
@@ -269,7 +276,7 @@ sub parse_from_argv
 	my ($self, $argv, @opt) = @_;
 	my $prog = _prog_opt(parse_from_argv => $self, \@opt);
 	Carp::croak('parse_from_argv: not an array reference') unless ref $argv eq 'ARRAY';
-	# (a copy, so that we are as we were if a later one is bad)
+	# atomicity here likewise.
 	my ($new, $n) = ($self->new, 0);
 	while ($n < @$argv && defined $argv->[$n] && $argv->[$n] =~ /\A-C(.*)\z/s) {
 		my $spec = $1;
@@ -335,7 +342,7 @@ sub _set
 	elsif ($LOCALE{$name}) {
 		$enc = $NUMBER{$enc} if defined $enc && exists $NUMBER{$enc};
 		$self->$name($enc);
-		# (what is said in ASCII, we say in ASCII: diag follows it)
+		# Save for atomicity.
 		$self->diag_mode(undef) if $name eq 'stderr' && _is_ascii($self->{stderr});
 	}
 	else {
@@ -343,11 +350,12 @@ sub _set
 	}
 }
 
-# Whether an encoding, by its canonical name, is ASCII (as every name
-# of it is in Encode: US-ASCII, ANSI_X3.4-1968, 646, ...)
+# Whether an encoding, by its canonical name, is ASCII.
 sub _is_ascii
 {
 	my ($enc) = @_;
+	# Names like US-ASCII, ANSI_X3.4-1968, 646, ... should
+	# normalize to this single value by Encode::find_encoding.
 	defined $enc && $enc eq 'ascii';
 }
 
@@ -364,9 +372,10 @@ while, and no longer:
 
 sub locale
 {
-	my $class = shift;
-	# (as we are asked for on the way to a diag, which may say %m)
+	# Save error status, since we get called a
+	# lot for error messages (diag(), namely).
 	local ($!, $^E);
+	my $class = shift;
 	if (@_) {
 		my ($cs) = @_;
 		Carp::croak('locale: not a ' . __PACKAGE__)
@@ -466,7 +475,6 @@ sub all
 	my $self = shift;
 	if (@_) {
 		my ($enc) = @_;
-		# (to a copy first, so that we are as we were if it is bad)
 		my $new = $self->new(all => $enc);
 		%$self = %$new;
 	}
@@ -489,21 +497,12 @@ sub encoding
 		: Encode::find_encoding($LOCALE{$name})->name;
 }
 
-# ... as people know it
+# ... as Encode knows it
 sub _say_encoding
 {
 	my ($self, $name) = @_;
 	my $obj = Encode::find_encoding($self->encoding($name));
 	$obj->mime_name || $obj->name;
-}
-
-# What Encode said went wrong, on one line (_code has taken off where,
-# if it could tell)
-sub _encode_error
-{
-	my ($err) = @_;
-	chomp $err;
-	$err;
 }
 
 # A $SIG{__DIE__} that takes off the ` at FILE line N.' that perl puts
@@ -875,8 +874,7 @@ sub _who
 	defined $prog && length $prog ? "$prog: " : '';
 }
 
-# What Encode makes of the source (which it is not given to modify),
-# or undef and why not
+# Encode call wrapper (since croak is beyond our control...)
 sub _code
 {
 	my ($code, $enc, $src, $check) = @_;
@@ -887,7 +885,12 @@ sub _code
 		$code->($enc, $copy, $check);
 	};
 	return ($res) if defined $res;
-	(undef, $@ ne '' ? _encode_error($@) : 'undefined');
+	if ($@ eq '') {
+		(undef, 'undefined');
+	} else {
+		chomp (my $err = $@);
+		(undef, $err);
+	}
 }
 
 =item I<cs>->B<diag_name>( I<name>, soft => 0, perl => 0 )

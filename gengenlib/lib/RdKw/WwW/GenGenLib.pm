@@ -58,7 +58,7 @@ use IO::Handle ();
 use constant HAS_PERMS => eval { File::Temp->VERSION('0.2310'); 1; };
 
 # Import locale and set up gettext.
-use RdKw::I18N::CodeSets ();
+use RdKw::I18N::CodeSets qw(MAX_RUNE);
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
@@ -257,18 +257,28 @@ Added in 0.0100.
 sub unescape_vars
 {
 	# Ignore up to one trailing HASH.  (See escape_vars)
-	my %opt = @_ && ref($_[-1]) eq 'HASH' ? %{+pop} : ();
-	wantarray ? map { unescape_var($_, %opt) } @_ : unescape_var($_[0], %opt);
+	my $opt = _getkwds(\@_);
+	wantarray ? map { unescape_var($_, %$opt) } @_ : unescape_var($_[0], %$opt);
 }
 
 sub unescape_var
 {
-	my ($text) = @_;
+	my ($text, %opt) = @_;
+	my $prog = _getprog(\%opt, 'unescape_vars');
 	$text =~ s{\$\{(?:(\$)|[Uu]\+([0-9A-Fa-f]{1,8})|"((?:[^"\\]|\\.)*)")\}}{
 		my $all = $&;
-		defined $1 ? '$'
-		: defined $2 ? chr hex $2
-		: do { my $s = _decode_string($3); defined $s ? $s : $all }
+		if (defined $1) {
+			'$';
+		} elsif (defined $2) {
+			my $cp = hex $2;
+			$cp <= MAX_RUNE() or
+				die _status 0, tagmsg($prog => diag(__(
+					"illegal code point: U+%04X"), $cp));
+			chr $cp;
+		} else {
+			my $s = _decode_string($3);
+			defined $s ? $s : $all;
+		}
 	}gesx;
 	$text;
 }
@@ -304,16 +314,17 @@ my %ESCAPE = (
 	r => "\r", e => "\e", s => ' ', '\\' => '\\', '"' => '"',
 );
 
-# The characters of the inside of a string literal, or undef if it
-# has an escape that is not one
 sub _decode_string
 {
 	my ($body) = @_;
 	my $bad;
 	$body =~ s{\\(?:x\{([0-9A-Fa-f]{1,8})\}|(.))}{
-		defined $1 ? (hex($1) <= 0x10FFFF ? chr hex $1 : ($bad = 1, ''))
-		: exists $ESCAPE{$2} ? $ESCAPE{$2}
-		: ($bad = 1, '')
+		if (defined $1) {
+			my $cp = hex $1;
+			$cp <= MAX_RUNE() ? chr $cp : ($bad = 1, '');
+		} else {
+			$ESCAPE{$2} ? $ESCAPE{$2} : ($bad = 1, '');
+		}
 	}gesx;
 	$bad ? undef : $body;
 }
@@ -455,9 +466,17 @@ sub load_state
 	%S;
 }
 
+sub parse_defs
+{
+	my ($D, %opt) = @_;
+	my $prog = _getprog(\%opt, 'parse_deps');
+	...;
+}
+
 sub write_mdir
 {
 	my ($mdir, $nvar, $pick, $ovar, %opt) = @_;
+	my $prog = _getprog(\%opt, 'write_mdir');
 	...;
 }
 

@@ -4,6 +4,7 @@ use 5.008;
 use strict;
 use warnings;
 
+use version;
 # We are going to use the same version since this module
 # has to update whenever translation strings change anyways.
 our $VERSION = '0.03_00';
@@ -48,7 +49,7 @@ I<LOCALEDIR>; see there).
 
 our $DOMAIN = 'siteconf';
 
-# (filled in by pm_filter.pl; this is no Perl until it is built)
+# pm_filter.pl inserts the configured locale directory during the build.
 our $LOCALEDIR = @localedir@;
 
 =head1 SEE ALSO

@@ -109,15 +109,15 @@ my %PSEUDO = (
 
 my %STD = ( stdin => \*STDIN, stdout => \*STDOUT, stderr => \*STDERR );
 
-# -C 0 and -C 1 each means...
+# Numeric codeset options select ASCII or Unicode.
 my %NUMBER = ( 0 => 'ascii', 1 => 'UTF-8' );
 my %DIAG_NUMBER = ( 0 => 'ascii', 1 => 'unicode' );
 
 my $CHECK = Encode::FB_CROAK() | Encode::LEAVE_SRC();
 
-# Global singleton (lazily initialized)
+# The locale context is initialized on first use and can be localized.
 our $LOCALE;
-# Maximum Unicode code point before UTF-16 go die
+# Unicode code points end at U+10FFFF.
 use constant MAX_RUNE => 0x10FFFF;
 
 our @EXPORT_OK = qw( $LOCALE MAX_RUNE );
@@ -197,7 +197,6 @@ sub parse
 	my $prog = _who(_opt(parse => \@spec, 'prog'));
 	push @spec, @last;
 	my @pairs;
-	# Split by commas and POSIX white space
 	for my $spec (map { defined $_ && !ref $_ ? grep { length } split(/[,\t\n\cK\f\r ]+/, $_) : $_ } @spec) {
 		defined $spec or die _status 0, "${prog}undefined codeset\n";
 		if (ref $spec) {
@@ -222,7 +221,7 @@ sub parse
 		$enc = $name eq 'diag' ? 'unicode' : 'UTF-8' unless defined $enc;
 		push @pairs, $name, $enc;
 	}
-	# Do not clobber ourselves for the sake of atomicity
+	# Leave the context unchanged if any codeset is invalid.
 	my $new = eval { $self->new(@pairs) } or die "$prog$@";
 	%$self = %$new;
 	$self;
@@ -276,7 +275,7 @@ sub parse_from_argv
 	my ($self, $argv, @opt) = @_;
 	my $prog = _prog_opt(parse_from_argv => $self, \@opt);
 	Carp::croak('parse_from_argv: not an array reference') unless ref $argv eq 'ARRAY';
-	# atomicity here likewise.
+	# Commit the context and arguments only after all options are valid.
 	my ($new, $n) = ($self->new, 0);
 	while ($n < @$argv && defined $argv->[$n] && $argv->[$n] =~ /\A-C(.*)\z/s) {
 		my $spec = $1;
@@ -342,7 +341,7 @@ sub _set
 	elsif ($LOCALE{$name}) {
 		$enc = $NUMBER{$enc} if defined $enc && exists $NUMBER{$enc};
 		$self->$name($enc);
-		# Save for atomicity.
+		# ASCII stderr also resets the diagnostic mode.
 		$self->diag_mode(undef) if $name eq 'stderr' && _is_ascii($self->{stderr});
 	}
 	else {
@@ -350,12 +349,10 @@ sub _set
 	}
 }
 
-# Whether an encoding, by its canonical name, is ASCII.
 sub _is_ascii
 {
 	my ($enc) = @_;
-	# Names like US-ASCII, ANSI_X3.4-1968, 646, ... should
-	# normalize to this single value by Encode::find_encoding.
+	# Encode resolves ASCII aliases to this canonical name.
 	defined $enc && $enc eq 'ascii';
 }
 
@@ -372,8 +369,7 @@ while, and no longer:
 
 sub locale
 {
-	# Save error status, since we get called a
-	# lot for error messages (diag(), namely).
+	# Preserve error status for diagnostics that include the system error.
 	local ($!, $^E);
 	my $class = shift;
 	if (@_) {
@@ -497,7 +493,6 @@ sub encoding
 		: Encode::find_encoding($LOCALE{$name})->name;
 }
 
-# ... as Encode knows it
 sub _say_encoding
 {
 	my ($self, $name) = @_;
@@ -874,7 +869,7 @@ sub _who
 	defined $prog && length $prog ? "$prog: " : '';
 }
 
-# Encode call wrapper (since croak is beyond our control...)
+# Preserve the source and return encoding errors to the caller.
 sub _code
 {
 	my ($code, $enc, $src, $check) = @_;

@@ -119,17 +119,15 @@ sub import
 	*{"${pkg}::$_"} = $sub{$_} for keys %sub;
 }
 
-# The domain and where its catalogs are, as the module says; or
-# nothing, if it cannot be loaded
+# Catalog configuration is optional; an unavailable module disables translation.
 sub _of_module
 {
 	my ($mod) = @_;
 	(my $file = "$mod.pm") =~ s{::}{/}g;
-	# (what it warns of is said if it loads, and is no news if it does
-	# not: an unbuilt one is no Perl, and says so)
+	# Report module warnings only when loading succeeds.
 	my @warn;
 	my $ok = do {
-		local $SIG{__WARN__} = sub { push @warn, @_ };
+		local $SIG{__WARN__} = sub { push @warn, @_; };
 		eval { require $file; 1; };
 	};
 	$ok or return;
@@ -140,12 +138,11 @@ sub _of_module
 	($domain, ${"${mod}::LOCALEDIR"});
 }
 
-# __, __n and N__ of the domain (as they are written, if there is no
-# domain, or nothing to read its catalogs with)
+# Fall back to source messages when catalogs cannot be used.
 sub _subs
 {
 	my ($domain, $dir) = @_;
-	my %sub = ( N__ => sub { $_[0] } );
+	my %sub = ( N__ => sub { $_[0]; } );
 	if (defined $domain && eval {
 		require Locale::Messages;
 		Locale::Messages::bindtextdomain($domain, $dir) if defined $dir;
@@ -165,8 +162,8 @@ sub _subs
 		};
 	}
 	else {
-		$sub{__} = sub { $_[0] };
-		$sub{__n} = sub { $_[2] == 1 ? $_[0] : $_[1] };
+		$sub{__} = sub { $_[0]; };
+		$sub{__n} = sub { $_[2] == 1 ? $_[0] : $_[1]; };
 	}
 	%sub;
 }

@@ -23,6 +23,19 @@ catalogs are tested.
 
 ## Style
 
+Ban parenthetical fragments unless they fit grammatically into the surrounding
+sentence. A parenthetical that stands on its own must be a complete sentence;
+its final period is optional. For example, `# (The catalog is optional)` is
+allowed; `# (which is optional)` on its own is not. Avoid incoherent, indirect,
+or unclear relative clauses. Do not inherit these parenthetical fragments or
+relative clauses from surrounding code.
+
+Prefer high-level comments that explain intent or constraints. Omit comments
+that only restate the code.
+
+Do not assume `version.pm` is already loaded. Load it explicitly before
+using its API.
+
 End statements inside Perl blocks with semicolons, including the final
 statement. The following blocks may omit the final semicolon only when
 they contain exactly one statement:

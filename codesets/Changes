@@ -54,4 +54,4 @@ Revision history of I18N-CodeSets
       for export on request (:all for all of them).
     + tagmsg: a message with each line prefixed by a program name
       (as diag says it), chomped and ended by one newline, so that
-      calls chain.  (Moved from RdKw::WwW::GenGenLib.)
+      calls chain.  (Moved from RdKw::WwW::GenGenLib during development.)

@@ -288,21 +288,21 @@ $D{A} = File::Spec->file_name_is_absolute($A)
 	? $A : File::Spec->abs2rel($Adir, $Bdir);
 
 # Set other paths and other variables.
-foreach my $k (keys %Dd) {
-	next if $k eq 'c';
-	$D{$k} = $Dd{$k} if isnull($D{$k});
+foreach (keys %Dd) {
+	next if $_ eq 'c';
+	defined $D{$_} or $D{$_} = $Dd{$_};
 }
-foreach my $k (keys %Od) {
-	$O{$k} = $Od{$k} if isnull($O{$k});
+foreach (keys %Od) {
+	defined $O{$_} or $O{$_} = $Od{$_};
 }
 
-# If there is a preset, validate our state there.
+# If there is a preset, have it validate our state.
 preset_finish(\%D, \%O) if defined &preset_finish;
 
-foreach my $k (qw( a b R F )) {
-	$D{$k} =~ s!/+$!!;
-	length $D{$k} or die status 0, $cs->tagmsg(E => $cs->diag(__(
-		'${%s} may not be empty.'), $k));
+foreach (qw( a b R F )) {
+	$D{$_} =~ s{(?!<\A)/+$}{};
+	length $D{$_} or die status 0, $cs->tagmsg(E => $cs->diag(__(
+		'${%s} may not be empty.'), $_));
 }
 # ${b} is a directory we create rules under, one parent at a time;
 # that walk ends at `.', so it must be relative.  (${a}, on the

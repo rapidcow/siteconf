@@ -343,12 +343,11 @@ COMP:		while (@path) {
 
 =item B<file2uri> I<file>[, os => 'Unix', prog => 'file2uri' ]
 
-Write the file name I<file> as a URI.  A relative name gives a
-relative URI path; an absolute one gives a C<file:> URI.  I<file>
-is a Unicode string (not the octets the file system uses), and
+Write the relative file path I<file> as a URI.  I<file> is
+a Unicode string (not the octets the file system uses), and
 its characters are written as UTF-8 escapes: C<r\x{e9}> gives
 C<r%C3%A9>.  It dies if I<file> cannot be encoded as UTF-8
-(e.g. a lone surrogate).
+(e.g. a lone surrogate) or if it is an absolute path.
 
 I<os> is the system whose file names I<file> follows, as
 in L<URI::file>; it defaults to C<'Unix'>; pass C<$^O>
@@ -371,6 +370,8 @@ sub file2uri
 	my $os = !exists $kwds{os} ? 'Unix' :
 		defined $kwds{os} ? $kwds{os} : $^O;
 	my $prog = exists $kwds{prog} ? $kwds{prog} : 'file2uri';
+	File::Spec->file_name_is_absolute($file)
+		and die _status 0, tagmsg($prog => __("absolute path"));
 	# URI::file->new alone escapes Latin-1 characters
 	# as one Latin-1 octet or as UTF-8, depending on the
 	# internal utf8 flag (see URI::Escape::escape_char).
@@ -390,7 +391,8 @@ L</file2uri>.  Pass C<$^O> or C<undef> if you explicitly want it
 in your operating system's representation.)
 Escapes are decoded as UTF-8, in either case of hex digits.
 Die if I<uri> names no file on I<os> (e.g. C<a%2Fb>, a name
-with a slash in it), or if the escapes are not UTF-8 (e.g. C<r%E9>).
+with a slash in it), if the escapes are not UTF-8 (e.g. C<r%E9>),
+or if the file path is absolute.
 
 Added in 0.03_00.
 
@@ -407,7 +409,10 @@ sub uri2file
 		# HEY! %#q is the operating system.
 		"%q: URI not representable in %#q"),
 		$uri, $os));
-	_cs_utf8()->un_fs($octets, { prog => $prog });
+	my $file = _cs_utf8()->un_fs($octets, { prog => $prog });
+	File::Spec->file_name_is_absolute($file)
+		and die _status 0, tagmsg($prog => __("absolute path"));
+	$file;
 }
 
 =item B<parse_base> \%O[, prog => 'parse_base' ]

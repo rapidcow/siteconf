@@ -796,8 +796,8 @@ sub do_list
 					"-t $t", $type));
 			push @name, grep { !$seen{$_}++ } map { $mf->$_($goal) } @kind;
 		}
-		# (with -s: each name as the file system spells it, and its
-		# segments as characters, to sort by)
+		# With -s, keep each name as the file system encodes it, and its
+		# segments as characters, to sort by.
 		my @fs;
 		for my $name (@name) {
 			my $fs = $cs->to_fs($name, { prog => $mf->file });
@@ -806,7 +806,7 @@ sub do_list
 				# says it: -0 for a NUL, -012 for a newline
 				"%q: %q conflicts with record separator %s"),
 				$file, $name, sprintf('-0%o', ord $sep)) . "\n";
-			# (written as it comes, unless it is to be sorted)
+			# A name is written as it comes, unless it is to be sorted.
 			if ($opt->{s}) {
 				push @fs, [ $fs, [ split m!/!, $name, -1 ] ];
 			} else {
@@ -988,9 +988,10 @@ sub do_init
 	}
 	# Test how far we could go, with user overrides taken into account.
 	if (defined $render) {
-		# (what the preset said, if it says anything: -P tem does not)
+		# genlib_min is the version the preset asks for, if any: -P tem
+		# asks for none.
 		$opt->{genlib_min} = $mods{'RdKw::WwW::GenLib'};
-		# (only ever because -M said so: no preset asks for it)
+		# provider is true only when -M asks for it: no preset does.
 		$opt->{provider} = $user{$PROVIDER} && exists $mods{$PROVIDER};
 	}
 	my @mod = map { "\t\t[ " . pq($_) . ", " . pq($mods{$_}) . " ]," } sort keys %mods;
@@ -1118,7 +1119,7 @@ sub render_text
 	my $can_uri = version_ge($opt->{genlib_min}, $GENLIB_URI);
 	my $provider = $opt->{provider};
 	my %sub = (
-		# (a spec, in its HAVE and in Makefile.in: a $ is a $)
+		# PATH is a spec, in its HAVE and in Makefile.in: a $ is a $.
 		PATH => escape_dep($path, unicode => 1),
 		PATH_Q => $path_q,
 		NAME => $name,

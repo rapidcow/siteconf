@@ -282,7 +282,7 @@ like($out, qr/\\x\{306a\}\\x\{3044\}\\x\{3082\}\\x\{306e\}\.html/,
 	'... and says so as \\x{...} where the locale cannot say it');
 unlike($out, qr/[^\x00-\x7f]/, '... in nothing but ASCII');
 
-# (bytes, as a UTF-8 locale would have said `-Sa=é')
+# The argument is bytes, as a UTF-8 locale would encode `-Sa=é'.
 ($status, $out) = run($C, {%ASCII}, $script, 'init', '-o', '/dev/null',
 	Encode::decode('ISO-8859-1', Encode::encode('UTF-8', '-Sa=é')));
 like($out, qr/: cannot decode argv 4: /, 'unreadable arguments are an error');

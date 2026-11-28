@@ -20,7 +20,7 @@ use RdKw::WwW::GenGenLib qw( write_make );
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
 
-# (newer than 3.81)
+# GNU make newer than 3.81:
 my $gmake = gmake_since(3, 82);
 plan tests => 10;
 

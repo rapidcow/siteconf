@@ -29,7 +29,7 @@ my $CS = 'RdKw::I18N::CodeSets';
 	like($@, qr/\Aunknown diag mode "UTF-8"/, '... says so');
 }
 
-# (stderr as it would be, whatever the locale is)
+# Both set stderr, so the tests below do not depend on the locale.
 my $u = $CS->new(stderr => 'UTF-8', diag => 'unicode');
 my $a = $CS->new(stderr => 'UTF-8', diag => 'ascii');
 
@@ -80,7 +80,8 @@ ok(!eval { $u->diag('%2$s', 'a'); 1; }, '... not even by number');
 		. (Encode::is_utf8($raw) ? 'as characters' : 'in bytes') . ')');
 	ok((Encode::is_utf8($enoent) || $enoent !~ /[^\x00-\x7f]/) && $enoent !~ /\x{fffd}/,
 		'$! as characters (and none of them U+FFFD)');
-	# (strictly, as a substitution would make what libc said of what it did not)
+	# Encode strictly, so that a substitution cannot add characters that
+	# are not in libc's message.
 	my $strict = Encode::FB_CROAK() | Encode::LEAVE_SRC();
 	is(eval { Encode::encode('locale', $enoent, $strict) },
 		Encode::is_utf8($raw) ? Encode::encode('locale', $raw, $strict) : $raw,

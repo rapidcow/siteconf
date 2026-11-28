@@ -17,7 +17,8 @@ use RdKw::WwW::SiteConf;
 
 my %D = ( A => '.', B => '.', a => 'html', b => 'site', c => 'site', X => 'a.b/c.tar.gz d e.', W => 'aa ba', Z => 'a&b', Ya => 'xa$', Yb => 'xa$$', Yc => 'xa', md => '.md', html => '.html', F => 'b.md.md', G => 'c.mdx', Sp => 'my dir/sub dir', Empty => '' );
 my $sc = bless { D => \%D }, 'RdKw::WwW::SiteConf';
-# (what a recipe says of it, as bytes: a :Q is quoted last, by the backend)
+# s_ returns what a recipe expands it to, as bytes: a :Q is quoted
+# last, by the backend.
 sub s_
 {
 	my @runs;
@@ -125,7 +126,7 @@ push @ok, (
 	['${W:S/\s/_/}',    'aa_ba'],
 	['${W:S/a/\x{41}/g}', 'AA bA'],
 	['${W:S/ /\t\n/}',  "aa\t\nba"],
-	['${Q_colon:Q}',    'c:d'],                        # (nothing to the shell)
+	['${Q_colon:Q}',    'c:d'],                        # nothing to the shell
 	['${Q_eq:Q}',       'a=b'],
 	['${Q_pipe:Q}',     "'a|b'"],
 	['${Q_sp:Q}',       "'sp ace'"],
@@ -155,7 +156,7 @@ sub sh_args
 	my $out = do { local $/; <$fh>; };
 	close $fh;
 	my @w = split /\0/, $out, -1;
-	pop @w;	# (after the last NUL)
+	pop @w;	# what comes after the last NUL
 	\@w;
 }
 for my $k (sort keys %Q) {

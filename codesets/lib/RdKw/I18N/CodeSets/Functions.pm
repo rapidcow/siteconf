@@ -108,7 +108,7 @@ our @EXPORT_OK = qw(
 );
 our %EXPORT_TAGS = ( all => [@EXPORT_OK] );
 
-# (so that Carp blames our caller, not us)
+# Carp blames our caller for what RdKw::I18N::CodeSets croaks.
 our @CARP_NOT = ('RdKw::I18N::CodeSets');
 
 # Each is a method of locale; the call is the last thing we do, so

@@ -91,7 +91,7 @@ open $fh, '>', "$dir/MANIFEST" or die; print $fh "MAKE all\n\tNEED a.css\n"; clo
 write_make("$dir/MY/config.mk", { A => '.', B => '.', a => 'html', b => 'site', c => 'site',
 	R => "$dir/Makefile.in", F => "$dir/MANIFEST", e => '.ok' }, prog => 'test');
 
-# (what is said to STDERR)
+# said returns what is printed to STDERR.
 sub said
 {
 	my ($G, %arg) = @_;

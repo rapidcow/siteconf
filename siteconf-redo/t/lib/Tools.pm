@@ -137,8 +137,8 @@ sub _together
 sub redo_sh { defined $ENV{REDO_SH} && length $ENV{REDO_SH} ? $ENV{REDO_SH} : undef; }
 
 # Whether `#!$sh' runs: as the kernel runs it, the first word is the
-# program, and the rest is one argument; then -c 'exit 0'.  (Not which:
-# on Termux, termux-exec makes exec find /usr/bin/env, but not stat.)
+# program, and the rest is one argument; then -c 'exit 0'.  which cannot tell:
+# on Termux, termux-exec makes exec find /usr/bin/env, but not stat.
 sub sh_runs
 {
 	my ($prog, $arg) = split ' ', $_[0], 2;

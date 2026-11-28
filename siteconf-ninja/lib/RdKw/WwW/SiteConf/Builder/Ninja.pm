@@ -180,7 +180,7 @@ NINJA
 		$out .= "$build\n\n";
 	}
 
-	# (a goal is typed after `ninja': as an argument is spelled)
+	# A goal is typed after `ninja', so it is encoded as an argument is.
 	$out .= "build " . RdKw::WwW::SiteConf::argv_text($_->{name}) . ": phony "
 		. join(' ', map { _path($plan->{node}{$_}{bpath}) } @{ $_->{files} })
 		. "\n" for @goal;

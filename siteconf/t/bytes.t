@@ -22,7 +22,7 @@ sub in_enc
 {
 	my ($enc, $code) = @_;
 	local $ENV{SITECONF_CODESETS} = "filesys:$enc,console:ascii";
-	# (as the script does, for what the environment says)
+	# This parses SITECONF_CODESETS as the script does.
 	open my $fh, '-|', $^X, '-e', "use strict; use warnings;
 		use RdKw::I18N::CodeSets; use RdKw::WwW::SiteConf;
 		RdKw::I18N::CodeSets->locale->parse_from_env('SITECONF_CODESETS', prog => 't');

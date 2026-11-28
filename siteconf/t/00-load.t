@@ -23,7 +23,7 @@ BEGIN {
 	}
 }
 diag( "Testing RdKw::WwW::SiteConf $RdKw::WwW::SiteConf::VERSION, Perl $], $^X" );
-# (the programs that t/e2e-*.t run)
+# The programs that t/e2e-*.t run:
 diag( describe(q(make ($MAKE)), make_cmd()) );
 diag( describe(q(BSD make ($BMAKE)), bmake_cmd()) );
 diag( describe(q(GNU make ($GMAKE)), gmake_since(3, 81), q(--version)) );

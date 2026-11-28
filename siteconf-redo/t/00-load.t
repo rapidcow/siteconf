@@ -14,13 +14,13 @@ BEGIN { use_ok('RdKw::WwW::SiteConf::Builder::Redo') or BAIL_OUT; }
 ok(eval { RdKw::WwW::SiteConf->VERSION(q(0.03_00)); 1; }, q(siteconf 0.03_00 or later))
 	or diag($@);
 diag( "Testing RdKw::WwW::SiteConf::Builder::Redo $RdKw::WwW::SiteConf::Builder::Redo::VERSION, Perl $], $^X" );
-# (the programs that t/e2e-redo.t runs: redo, and what a .do runs)
+# The programs that t/e2e-redo.t runs: redo, and what a .do runs.
 my ($redo, $dir) = redo_bin();
 diag( defined $redo ? describe(q(redo ($REDO)), $redo) : "redo: $dir" );
 diag( describe(q(redo-ifchange ($REDO_IFCHANGE)), q(redo-ifchange)) ) if defined $redo;
-# (the #! of a .do; the kernel finds its first word.  Whether it runs
+# The #! of a .do: the kernel finds its first word.  Whether it runs
 # says more than where it is: on Termux, exec finds /usr/bin/env, as
-# termux-exec says, but stat does not.)
+# termux-exec says, but stat does not.
 my $sh = redo_sh() || q(/bin/sh);
 my $label = q(sh ($REDO_SH));
 diag( !sh_runs($sh) ? "$label: $sh: does not run (exec fails)"

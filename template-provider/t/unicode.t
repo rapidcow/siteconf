@@ -63,7 +63,8 @@ sub run
 my ($ok, $out, $err) = run('ヘッダー.html');
 is($out, 'résumé', 'a source and an INCLUDE of any name') or diag $err;
 {
-	# (names said as -C stderr:UTF-8 would have them, whatever the locale)
+	# Names are printed as -C stderr:UTF-8 would encode them, whatever
+	# the locale is.
 	no warnings 'once';
 	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->locale->new(stderr => 'UTF-8', diag => 'unicode');
 	($ok, $out, $err) = run('秘密');
@@ -71,7 +72,7 @@ is($out, 'résumé', 'a source and an INCLUDE of any name') or diag $err;
 		'and undeclared, of any name');
 }
 {
-	# (names said as -C diag:ascii would have them)
+	# Names are printed as -C diag:ascii would escape them.
 	no warnings 'once';
 	local $RdKw::I18N::CodeSets::LOCALE = RdKw::I18N::CodeSets->locale->new(diag => 'ascii');
 	($ok, $out, $err) = run('秘密');

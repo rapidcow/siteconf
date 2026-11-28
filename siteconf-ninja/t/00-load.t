@@ -14,5 +14,5 @@ BEGIN { use_ok('RdKw::WwW::SiteConf::Builder::Ninja') or BAIL_OUT; }
 ok(eval { RdKw::WwW::SiteConf->VERSION(q(0.03_00)); 1; }, q(siteconf 0.03_00 or later))
 	or diag($@);
 diag( "Testing RdKw::WwW::SiteConf::Builder::Ninja $RdKw::WwW::SiteConf::Builder::Ninja::VERSION, Perl $], $^X" );
-# (the program that t/e2e-ninja.t runs)
+# The program that t/e2e-ninja.t runs:
 diag( describe(q(ninja ($NINJA)), ninja_cmd(), q(--version)) );

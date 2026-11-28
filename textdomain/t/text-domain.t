@@ -39,7 +39,7 @@ ok(install('T::Gone', ':module' => 'No::Such::L10N'), ':module that is not there
 is(T::Gone::__('炒饭'), '炒饭', '... as it is written');
 is(T::Gone::__n('one file', '%d files', 2), '%d files', '... __n too');
 
-# (a module of our own, in a directory of its own)
+# A module of our own, in a directory of its own:
 my $lib = File::Spec->catdir($tmp, 'lib');
 my $mo = File::Spec->catdir($tmp, 'mo');
 mkdir $_ or die "$_: $!" for $lib, File::Spec->catdir($lib, 'T');
@@ -144,7 +144,7 @@ PO
 		for (@try) { $locale = $_, last if POSIX::setlocale(POSIX::LC_MESSAGES(), $_); }
 		skip 'no non-C locale found', 6 unless defined $locale;
 	}
-	# (the pure Perl one reads the catalog, whatever locales are installed)
+	# The pure Perl one reads the catalog, whatever locales are installed.
 	Locale::Messages::select_package('gettext_pp');
 	local $ENV{LC_ALL} = $locale;
 	local $ENV{LANGUAGE} = 'zh';

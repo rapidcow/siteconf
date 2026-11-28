@@ -16,7 +16,7 @@ use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw( read_manifest escape_dep );
 
-# (the text as it is in a file: UTF-8)
+# The text as it is in a file, in UTF-8:
 sub parse { my $t = Encode::encode('UTF-8', shift); read_manifest({}, \$t); }
 
 my $mf = parse(<<'M');

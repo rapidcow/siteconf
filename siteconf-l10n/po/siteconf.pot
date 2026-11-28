@@ -467,8 +467,8 @@ msgstr ""
 msgid "%s: unfinished line continuation"
 msgstr ""
 
-#. HEY!  a recipe line (one that begins with a tab)
-#. with no rule above it to be the recipe of
+#. HEY!  %s is where a recipe line is.  A recipe line begins
+#. with a tab, and this one has no rule above it.
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1586
 #, perl-format
 msgid "%s: unexpected tabulation"
@@ -906,14 +906,15 @@ msgstr ""
 msgid "%s: a prefix is a letter or `_', then letters, digits and `_'"
 msgstr ""
 
-#. HEY!  %s is a name, which the encoding of arguments (what is
-#. typed after redo) has no bytes for
+#. HEY!  %s is a target name.  The encoding of arguments has no bytes
+#. for it.  Arguments are what is typed after redo.
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:481
 msgid "redo cannot name %q: arguments cannot spell it"
 msgstr ""
 
-#. HEY!  %s is a name; an argument (what is typed after redo) and the
-#. file system spell it in different bytes, in their encodings
+#. HEY!  %s is a target name.  The encoding of arguments and the encoding
+#. of file names give it different bytes.  Arguments are what is
+#. typed after redo.
 #: ../siteconf-redo/lib/RdKw/WwW/SiteConf/Builder/Redo.pm:486
 msgid "redo cannot name %q: arguments and file names spell it differently"
 msgstr ""
@@ -1304,7 +1305,8 @@ msgstr ""
 msgid "%q: no such variable %s"
 msgstr ""
 
-#. HEY!  a path, and how a header would name it (${a}/x)
+#. HEY!  The first %q is a path, and the second is how a
+#. header would write it, as ${a}/x.
 #: ../template-provider/lib/RdKw/WwW/GenGenLib/Template/Provider.pm:328
 msgid "%q (aka %q)"
 msgstr ""

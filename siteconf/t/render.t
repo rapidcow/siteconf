@@ -182,7 +182,7 @@ SKIP: {
 		'-o', 'configure:/dev/null', '-o', 'render:bin/render-checked',
 		'-MRdKw::WwW::GenGenLib::Template::Provider');
 	is($status, 0, 'init with the provider') or diag $out;
-	render('src', '${a}/x.html', 'src/x.html');	# (config.mk, for a = src)
+	render('src', '${a}/x.html', 'src/x.html');	# config.mk, for a = src
 	spew('project/src/inc.html', 'included');
 	spew('project/src/x.html', "[%#\n# HAVE: \${a}/x.html\n# NEED: \${a}/inc.html\n-%]\n[% INCLUDE inc.html %]\n");
 	($status, $out) = $run->('bin/render-checked', '-B', "$tmp/B", 'src/x.html', 'out.html');

@@ -206,7 +206,7 @@ the first goal of its own; or there is no I<name>.
 =cut
 
 use RdKw::I18N::CodeSets::Functions qw( diag tagmsg );
-# (Same gettext setup as SiteConf.pm.)
+# This is the same gettext setup as SiteConf.pm.
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 sub _status { $! = 0; $? = shift; @_; }
@@ -237,7 +237,7 @@ sub emit
 	# A goal's .do says how that goal was asked for (-t goal, or -t
 	# WANT:goal), and no other; a target's says no goal.  So a .do is the
 	# same file whatever else is asked for, and is then left alone.
-	# (#! first: a redo may run a .do as a program, by execve)
+	# The #! comes first: a redo may run a .do as a program, by execve.
 	# The options of the cleaning rules are said only in their own .do
 	# (a redo makes a target again if its .do changes)
 	my $clean_opt = qr/\A-S(?:clean|purge|arg_max|cmd_rm_f)(?:=|\z)/;
@@ -251,7 +251,7 @@ sub emit
 	my $target_head = $head->(0);
 	my $v = _vars($plan->{opt});
 	my $marker = qr{(?:\A|/)\Q$plan->{D}{e}\E\z};
-	# (the commands of -S, as they are: a .do is a shell script)
+	# The commands of -S go in as they are: a .do is a shell script.
 	my $mv = RdKw::WwW::SiteConf::command($plan->{opt}, cmd_mv_f => q(mv -f --));
 	my $rm = RdKw::WwW::SiteConf::command($plan->{opt}, cmd_rm_f => q(rm -f --));
 	my @file;
@@ -283,7 +283,7 @@ sub emit
 		# (a redo may have made $3 already, as redo-c does, for us to
 		# write into, with a mode of its own: the recipe makes its own)
 		$text .= "rm -f -- \"\$3\"\n" if defined $node->{recipe_target};
-		# (the recipe, from the build directory)
+		# The recipe runs from the build directory.
 		$text .= _cd($v);
 		for (@cmd) {
 			my ($ignore, $line) = @$_;
@@ -359,8 +359,8 @@ sub emit
 				# HEY!  %s is the name of a cleaning rule (-Sclean), which a
 				# .do file is named after
 				"redo cannot name cleaning rule %q: a file has that name"), $name));
-		# (default.do, default.EXT.do: redo would run it for other names,
-		# in that directory and below)
+		# redo would run default.do or default.EXT.do for other names, in
+		# that directory and below.
 		$name =~ m{(?:\A|/)default(?:\.[^/]*)?\z}
 			and die _status 0, tagmsg(E => diag(__(
 				# HEY!  %s is the name of a cleaning rule; default.do is what
@@ -402,7 +402,7 @@ sub build_command
 		: defined $first->{default} && defined $plan->{output} ? ($plan->{output} =~ /\A(.*)\.do\z/s)[0]
 		: (map { $_->{name} } grep { defined $_->{select} } @{ $plan->{goals} })[0];
 	my @redo = ($prog, defined $name ? $q->($name) : ());
-	# (in a subshell, so that the shell stays where it is)
+	# cd in a subshell, so that the shell stays where it is.
 	$B eq q(.) ? @redo : (q[(], q(cd), ($B =~ /\A-/ ? q(--) : ()), $q->($B), q(&&), @redo, q[)]);
 }
 
@@ -530,18 +530,19 @@ sub _argv_is_fs
 {
 	my ($name) = @_;
 	my $fs = RdKw::WwW::SiteConf::fs_text($name);
-	# (the bytes, and not the encodings: an ASCII name is the same in
-	# ASCII and UTF-8, and so is any name in the same encoding)
+	# Compare the bytes: an ASCII file name is the same in ASCII and
+	# UTF-8, and so is any file name in the same encoding.
 	my $argv = eval { RdKw::WwW::SiteConf::argv_text($name) };
 	defined $argv
 		or die _status 0, tagmsg(E => diag(__(
-			# HEY!  %s is a name, which the encoding of arguments (what is
-			# typed after redo) has no bytes for
+			# HEY!  %s is a target name.  The encoding of arguments has no bytes
+			# for it.  Arguments are what is typed after redo.
 			"redo cannot name %q: arguments cannot spell it"), $name));
 	$fs eq $argv
 		or die _status 0, tagmsg(E => diag(__(
-			# HEY!  %s is a name; an argument (what is typed after redo) and the
-			# file system spell it in different bytes, in their encodings
+			# HEY!  %s is a target name.  The encoding of arguments and the encoding
+			# of file names give it different bytes.  Arguments are what is
+			# typed after redo.
 			"redo cannot name %q: arguments and file names spell it"
 			. " differently"), $name));
 	1;

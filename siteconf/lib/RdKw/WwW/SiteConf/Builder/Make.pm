@@ -161,8 +161,8 @@ sub _fs { RdKw::WwW::SiteConf::fs_text($_[1]); }
 sub _text
 {
 	my ($class, $plan) = @_;
-	# (where a name is, for GNU Make: a `target', an `order'-only
-	# prerequisite, or another prerequisite)
+	# _name takes the position of a file name, for GNU Make: a `target',
+	# an `order'-only prerequisite, or another prerequisite.
 	my $name = sub { $class->_name(@_) };
 	my $fs = sub { $class->_fs(@_) };
 	# What is typed after `make' (the name of a goal, or of a rule): as an
@@ -214,7 +214,7 @@ sub _text
 		join ' ', (map { $name->($_) } @dep), (@mark ? ('|', map { $name->($_, 'order') } @mark) : ());
 	};
 
-	# (each command of -S, as make reads it; see _command)
+	# Each command of -S, as make reads it; see _command.
 	my ($mkdir_at, $mkdir) = $class->_command($plan->{opt}, cmd_mkdir => q(mkdir --));
 	my ($touch_at, $touch) = $class->_command($plan->{opt}, cmd_touch => q(@>));
 	my ($mkdir_p_at, $mkdir_p) = $class->_command($plan->{opt}, cmd_mkdir_p => q(mkdir -p --));
@@ -278,7 +278,7 @@ sub _order_only { 0; }
 sub _name
 {
 	my ($class, $s, $where) = @_;
-	# (and in a target, what siteconf has never let a target have)
+	# In a target, also look for what siteconf has never let a target have.
 	$s =~ /([\p{Cc} \x{2028}\x{2029}\$#:;=|(){}\[\]*?]|\\\z|\A~)/
 		|| ($where || '') eq 'target' && $s =~ /([%\\<>"'`&])/
 		or return $class->_fs($s);

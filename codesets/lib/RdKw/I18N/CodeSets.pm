@@ -182,7 +182,8 @@ its keys and values would each be read as a I<spec> of their own.
     $cs->parse($ENV{SITECONF_CODESETS})
         if exists $ENV{SITECONF_CODESETS};
 
-(Which is L</parse_from_env>, but for saying what first.)
+L</parse_from_env> does this, and prefixes its errors with I<prog> and
+the variable's name.
 
 =cut
 
@@ -460,8 +461,8 @@ left as it was if the I<encoding> is unknown.  Returns a new hash
 not set.  L</diag> is undef there unless a mode was set explicitly.
 
 The hash is a copy, and can be given to L</parse> to make another
-I<cs> the same.  (Not to L</new> as a list: a hash has no order, and
-L</stderr> set after L</diag> may reset it.)
+I<cs> the same.  L</new> cannot take it as a list: a hash has no order,
+and L</stderr> set after L</diag> may reset it.
 
     $other->parse($cs->all);
     my $same = $CS->new->parse($cs->all);
@@ -731,7 +732,7 @@ sub _argv
 
 Decodes C<@ARGV> (as L</argv>), or encodes it, as L</un_argv> and
 L</to_argv> would from L</argv> C<1>; or dies, leaving it as it was, if
-one argument cannot be.  (As L<Encode::Locale/decode_argv>.)  The
+one argument cannot be, as L<Encode::Locale/decode_argv> does.  The
 options are theirs, but for L</start>: L</prog> (here L</decode_argv> or
 L</encode_argv> unless given) and L</check>.
 
@@ -961,7 +962,8 @@ sub diag
 {
 	my ($self, $format, @args) = @_;
 	my $errno = 0 + $!;
-	# (restored when we return, so a die after us exits with errno)
+	# local restores $! and $^E when we return, so a die after us exits with
+	# errno.
 	local ($!, $^E);
 	my $enc = $self->encoding('stderr');
 	# What sprintf is given: the format, with what we say ourselves

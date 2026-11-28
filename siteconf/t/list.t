@@ -27,7 +27,7 @@ sub put
 	close $fh or die;
 }
 
-# (stdout, as bytes; stderr; whether it went well)
+# list returns stdout, as bytes; stderr; and whether it went well.
 sub list
 {
 	# Exercise list syntax with a known encoding, even in a C locale.

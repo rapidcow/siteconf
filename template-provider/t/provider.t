@@ -134,7 +134,7 @@ like("$err", qr/absent: not found/, '... and not found, used');
 		'include/x' => '${x}/include/x',              # `.' is under everything
 		'site' => '${a}',
 		'/abs/x' => undef, '../x' => undef,
-		'site/a b' => '${a}/a${U+0020}b',             # (as a header would)
+		'site/a b' => '${a}/a${U+0020}b',             # as a header would write it
 	);
 	for my $path (sort keys %alias) {
 		is($p->_alias($path), $alias{$path}, "PREFIXES: $path");
@@ -198,7 +198,7 @@ is_deeply($p->{REFUSED}, {}, '... unless the options say so');
 		'... however the variables after the root spell it');
 	ok($p->{DECLARED}{'site/../../w'}, '... but the root itself is as configured');
 }
-# (a climb spelled by code point is a climb all the same)
+# A climb written by code point is a climb all the same.
 spew('site/entry', "[%#\n# NEED: \${a}/\${U+002E}\${U+002E}/\${u+2e}./etc/passwd\n# NEED: \${U+002F}etc/group\n-%]\n");
 $p = provider();
 is_deeply($p->{REFUSED}, { 'site/../../etc/passwd' => 'RELATIVE_DEPS', '/etc/group' => 'ABSOLUTE_DEPS' },

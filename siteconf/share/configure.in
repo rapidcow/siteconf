@@ -181,8 +181,8 @@ sub section
 				push @line, $last;
 			} else {
 				push @line, length $last
-					? $cs->diag(__("%s (default: %#q)"), $last, $default->())
-					: $cs->diag(__("(default: %#q)"), $default->());
+					? $cs->diag(__("%s (default: %#Q)"), $last, $default->())
+					: $cs->diag(__("(default: %#Q)"), $default->());
 			}
 		}
 		if (defined $alias) {

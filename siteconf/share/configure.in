@@ -350,9 +350,3 @@ unless ($shutup) {
 }
 
 exit $estat;
-
-=head1 SEE ALSO
-
-L<RdKw::WwW::SiteConf::Configure>, L<siteconf>.
-
-=cut

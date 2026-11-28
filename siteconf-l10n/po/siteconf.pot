@@ -1186,8 +1186,9 @@ msgstr ""
 msgid "cannot normalize %q: %s"
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:857
-msgid "cannot normalize %q: bad escape or rune in string %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:333
+#, perl-format
+msgid "illegal escape: %s"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:864

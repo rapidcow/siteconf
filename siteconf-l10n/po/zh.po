@@ -1231,9 +1231,10 @@ msgstr "%#q 第 %d 行：你 HAVE 太多了。(ಠ_ಠ)"
 msgid "cannot normalize %q: %s"
 msgstr "无法规范化 %q：%s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:857
-msgid "cannot normalize %q: bad escape or rune in string %s"
-msgstr "无法规范化 %q：字符串 %s 中的转义或码位有误"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:333
+#, perl-format
+msgid "illegal escape: %s"
+msgstr "非法转义：%s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:864
 msgid "cannot normalize %q: bad string after ${"

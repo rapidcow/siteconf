@@ -1238,9 +1238,10 @@ msgstr "%#q line %d: You HAVE too many."
 msgid "cannot normalize %q: %s"
 msgstr "cannot normalize %q: %s"
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:857
-msgid "cannot normalize %q: bad escape or rune in string %s"
-msgstr "cannot normalize %q: bad escape or rune in string %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:333
+#, perl-format
+msgid "illegal escape: %s"
+msgstr "illegal escape: %s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:864
 msgid "cannot normalize %q: bad string after ${"

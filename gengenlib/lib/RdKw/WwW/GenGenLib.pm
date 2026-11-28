@@ -329,9 +329,8 @@ sub _decode_string
 		else {
 			$ESCAPE{$2}
 				? $ESCAPE{$2}
-				: die diag(__(
-					'illegal escape: %#Q'),
-					$2) . "\n";
+				: die diag(__('illegal escape: %s'),
+					diag('%#Q', $2)) . "\n";
 		}
 	}gesx; };
 	$@ ? return : $body;
@@ -923,8 +922,7 @@ sub norm_deps
 					$out .= escape_deps($s);
 				} else {
 					$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
-						"cannot normalize %q: bad escape or rune in string %s"),
-						$_, $str));
+						"cannot normalize %q: %s"), $_, $@));
 					$out .= ($keep ? '$' : '${$}') . "{$str}";
 				}
 			} elsif (/\G\$\{"/gc) {

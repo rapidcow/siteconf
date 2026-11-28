@@ -6,7 +6,7 @@ use utf8;
 use 5.008;
 use strict;
 use warnings;
-use Test::More tests => 29;
+use Test::More tests => 32;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use TestConsole;
@@ -42,6 +42,9 @@ is(subs_dep(undef, 'x/${"a\sb}"}y', on_missing => 'croak'), 'x/a b}y', 'subs_dep
 is(subs_dep({ a => 'A' }, '${a}/${"\s"}'), 'A/ ', 'next to a variable');
 is(norm_dep('${""}'), '', 'an empty string is nothing');
 ok(!eval { norm_dep('${"\q"}', strict => 1); 1; }, 'strict: bad escape is an error');
+like($@, qr/\Anorm_deps: cannot normalize .\$\{"\\q"\}.: illegal escape: "?q"?\n\z/, '... says which');
+ok(!eval { norm_dep('${"\x{110000}"}', strict => 1); 1; }, 'strict: bad rune in a string is an error');
+like($@, qr/\Anorm_deps: cannot normalize .\$\{"\\x\{110000\}"\}.: illegal rune: U\+110000\n\z/, '... says which');
 ok(!eval { norm_dep('${"abc', strict => 1); 1; }, 'strict: not closed is an error');
 like(norm_dep('${"abc'), qr/\A\$\{\$\}\{"abc\z/, 'not strict: spelled out');
 

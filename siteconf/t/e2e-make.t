@@ -19,7 +19,7 @@ use File::Temp qw( tempdir );
 
 my $script = E2E::setup();
 my $make = E2E::make();
-# Plan only now: we may have skipped all.
+
 plan tests => 66;
 
 run('siteconf -i', $^X, $script, qw( -i -P web -Osite_url=https://example.test -SB=build

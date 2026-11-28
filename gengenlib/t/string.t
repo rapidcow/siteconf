@@ -25,8 +25,8 @@ for my $bad ('"abc', '"\q"', '"\x{110000}"', '"\x{}"', '"a\\"') {
 	ok(!eval { scan_string($bad); 1; }, "scan_string: $bad is an error");
 	like($@, qr/\Ascan_string: /, '... said by name');
 }
-for (['"ab\qrr"', 'ab\qrr', qr/illegal escape: "?q"?/],
-	['"a\x{110000}b"', 'a\x{110000}b', qr/illegal rune: U\+110000/])
+for (['"ab\qrr"', 'ab\qrr', qr/bad escape: "?q"?/],
+	['"a\x{110000}b"', 'a\x{110000}b', qr/bad rune: U\+110000/])
 {
 	my ($bad, $body, $what) = @$_;
 	eval { scan_string($bad); 1; };
@@ -42,9 +42,9 @@ is(subs_dep(undef, 'x/${"a\sb}"}y', on_missing => 'croak'), 'x/a b}y', 'subs_dep
 is(subs_dep({ a => 'A' }, '${a}/${"\s"}'), 'A/ ', 'next to a variable');
 is(norm_dep('${""}'), '', 'an empty string is nothing');
 ok(!eval { norm_dep('${"\q"}', strict => 1); 1; }, 'strict: bad escape is an error');
-like($@, qr/\Anorm_deps: cannot normalize .\$\{"\\q"\}.: illegal escape: "?q"?\n\z/, '... says which');
+like($@, qr/\Anorm_deps: cannot normalize .\$\{"\\q"\}.: bad escape: "?q"?\n\z/, '... says which');
 ok(!eval { norm_dep('${"\x{110000}"}', strict => 1); 1; }, 'strict: bad rune in a string is an error');
-like($@, qr/\Anorm_deps: cannot normalize .\$\{"\\x\{110000\}"\}.: illegal rune: U\+110000\n\z/, '... says which');
+like($@, qr/\Anorm_deps: cannot normalize .\$\{"\\x\{110000\}"\}.: bad rune: U\+110000\n\z/, '... says which');
 ok(!eval { norm_dep('${"abc', strict => 1); 1; }, 'strict: not closed is an error');
 like(norm_dep('${"abc'), qr/\A\$\{\$\}\{"abc\z/, 'not strict: spelled out');
 

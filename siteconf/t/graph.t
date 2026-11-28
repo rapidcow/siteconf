@@ -835,7 +835,7 @@ SKIP: {
 		'${U+...} is that character, in any case and of any length') or diag $@;
 	for my $bad ('${U+110000}', '${U+}', '${U+-1}', '${U+123456789}', '${U+G}') {
 		$dir = project({ MANIFEST => $manifest, 'html/a.html' => lines( NEED => [ "x$bad" ] ) });
-		ok(!eval { plan_of($dir) } && $@ =~ /illegal rune: \Q$bad\E/, "no code point: $bad")
+		ok(!eval { plan_of($dir) } && $@ =~ /bad rune: \Q$bad\E/, "no code point: $bad")
 			or diag $@;
 	}
 	my %emit = ( %{ $plan || {} }, prog => 'test', clean => [], dirs => [], goals => [] );
@@ -861,7 +861,7 @@ SKIP: {
 		'${U+...} in a prerequisite') or diag $@;
 	$dir = project({ MANIFEST => $manifest, 'Makefile.in' => "a.html: \${U+D800000}\n\ttrue\n",
 		'html/a.html' => '' });
-	ok(!eval { plan_of($dir) } && $@ =~ /illegal rune: \$\{U\+D800000\}/,
+	ok(!eval { plan_of($dir) } && $@ =~ /bad rune: \$\{U\+D800000\}/,
 		'... that is no code point') or diag $@;
 }
 

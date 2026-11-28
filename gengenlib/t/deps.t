@@ -277,7 +277,7 @@ is(subs_deps({ a => 'v' }, 'x$a$'), 'xv$', 'bare letter and trailing dollar');
 	is_deeply([ split_dep('${U+0041}/x') ], [ '', '${U+0041}/x' ], 'split_dep: no root');
 	is_deeply([ split_dep('${a}/${U+0041}/x') ], [ '${a}', '${U+0041}/x' ], '... after one either');
 	for my $bad ('${U+100000000}', '${U+}', '${U+123456789}', '${U+x}', '${u+-1}') {
-		ok(!defined eval { norm_dep("x$bad", strict => 1) } && $@ =~ /illegal rune: /,
+		ok(!defined eval { norm_dep("x$bad", strict => 1) } && $@ =~ /bad rune: /,
 			"strict: no code point: $bad");
 	}
 	# Beyond Unicode (past U+10FFFF) is still a code point, as long

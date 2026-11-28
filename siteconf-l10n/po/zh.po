@@ -277,12 +277,12 @@ msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
 msgstr "%1$s：%2$q：${%3$s} 是相对于 ${B} 的；请写 ${B}/${%3$s}。"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:276
-msgid "illegal rune"
+msgid "bad rune"
 msgstr "非法码位"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:723
 #, perl-format
-msgid "illegal rune: %s"
+msgid "bad rune: %s"
 msgstr "非法码位：%s"
 
 #. HEY!  the last %s is the variable, as ${name}
@@ -1233,7 +1233,7 @@ msgstr "无法规范化 %q：%s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:333
 #, perl-format
-msgid "illegal escape: %s"
+msgid "bad escape: %s"
 msgstr "非法转义：%s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:864

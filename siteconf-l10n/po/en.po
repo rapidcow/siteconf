@@ -277,13 +277,13 @@ msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
 msgstr "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:276
-msgid "illegal rune"
-msgstr "illegal rune"
+msgid "bad rune"
+msgstr "bad rune"
 
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:723
 #, perl-format
-msgid "illegal rune: %s"
-msgstr "illegal rune: %s"
+msgid "bad rune: %s"
+msgstr "bad rune: %s"
 
 #. HEY!  the last %s is the variable, as ${name}
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:714
@@ -1240,8 +1240,8 @@ msgstr "cannot normalize %q: %s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:333
 #, perl-format
-msgid "illegal escape: %s"
-msgstr "illegal escape: %s"
+msgid "bad escape: %s"
+msgstr "bad escape: %s"
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:864
 msgid "cannot normalize %q: bad string after ${"

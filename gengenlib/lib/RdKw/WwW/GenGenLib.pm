@@ -273,7 +273,7 @@ sub unescape_var
 		elsif (defined $2) {
 			my $cp = hex $2;
 			$cp <= MAX_RUNE() or
-				die _status 0, tagmsg($prog => diag("%q: %s", $all, __('illegal rune')));
+				die _status 0, tagmsg($prog => diag("%q: %s", $all, __('bad rune')));
 			chr $cp;
 		}
 		else {
@@ -323,13 +323,13 @@ sub _decode_string
 			my $cp = hex $1;
 			$cp <= MAX_RUNE()
 				? chr $cp
-				: die diag(__('illegal rune: %s'),
+				: die diag(__('bad rune: %s'),
 					diag('U+%04X', $cp)) . "\n";
 		}
 		else {
 			$ESCAPE{$2}
 				? $ESCAPE{$2}
-				: die diag(__('illegal escape: %s'),
+				: die diag(__('bad escape: %s'),
 					diag('%#Q', $2)) . "\n";
 		}
 	}gesx; };
@@ -907,7 +907,7 @@ sub norm_deps
 				} else {
 					$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
 						"cannot normalize %q: %s"),
-						$_, diag(__('illegal rune: %s'), "\${$name}")));
+						$_, diag(__('bad rune: %s'), "\${$name}")));
 					$out .= ($keep ? '$' : '${$}') . "{$name}";
 				}
 			} elsif (/\G\$\{("(?:[^"\\]|\\.)*")\}/gc) {

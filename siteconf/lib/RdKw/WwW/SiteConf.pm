@@ -720,7 +720,7 @@ sub _expand
 			my $u = $1;
 			$u =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ and hex($1) <= MAX_RUNE()
 				or die _status 0, tagmsg(E => diag("%s: %q: %s",
-					$where, $spec, diag(__('illegal rune: %s'), "\${$u}")));
+					$where, $spec, diag(__('bad rune: %s'), "\${$u}")));
 			$out .= chr hex $1;
 		} elsif ($spec =~ /\G\$(?:\{(\w+)\}|(\w))/gc) {
 			my $x = defined $1 ? $1 : $2;
@@ -1324,7 +1324,7 @@ sub _subst
 			$x =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/
 				and hex($1) <= MAX_RUNE()
 				or die _status 0, tagmsg(E => diag("%s: %s",
-					$where, diag(__('illegal rune: %s'), "\${$x}")));
+					$where, diag(__('bad rune: %s'), "\${$x}")));
 			$val = chr hex $1;
 		} elsif ($x eq '@' or $x eq '.TARGET') {
 			defined $node or die _status 0, tagmsg(E => diag(__(

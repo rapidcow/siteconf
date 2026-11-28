@@ -176,15 +176,22 @@ sub section
 		@line or @line = ('');
 		if ($default) {
 			my $last = pop @line;
-			push @line, length $last
-				? $cs->diag(__("%s (default: %s)"), $last, $default->())
-				: $cs->diag(__("(default: %s)"), $default->());
+			my $value = $default->();
+			unless (defined $value) {
+				push @line, $last;
+			} else {
+				push @line, length $last
+					? $cs->diag(__("%s (default: %#q)"), $last, $default->())
+					: $cs->diag(__("(default: %#q)"), $default->());
+			}
 		}
 		if (defined $alias) {
 			my $last = pop @line;
 			push @line, $cs->diag(__("%s (alias: %s)"), $last, $alias);
 		}
-		$text .= sprintf("  %-*s %s\n", $w, $syntax, shift @line);
+		my $first = shift @line;
+		$first = " " . $first if length($first);
+		$text .= sprintf("  %-*s%s\n", $w, $syntax, $first);
 		$text .= ' ' x ($w + 3) . "$_\n" for @line;
 	}
 	$text =~ s/ +$//mg;

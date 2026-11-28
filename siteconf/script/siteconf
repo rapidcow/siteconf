@@ -519,7 +519,7 @@ sub default_setter
 		my ($name, $value) = split(/=/, $_[1], 2);
 		defined $name && length $name
 			or die _status 0, $cs->tagmsg($prog => $cs->diag(__("%s: empty name."), "-$kind"));
-		$values->{$name} = defined $value ? $value : '';
+		$values->{$name} = $value;
 		push @written, "-$kind$_[1]";
 	};
 }
@@ -536,7 +536,9 @@ GetOptions(
 	'S=s'      => sub {
 		my ($name, $value) = split(/=/, $_[1], 2);
 		defined $name && length $name
-			or die _status 0, $cs->tagmsg($prog => $cs->diag(__("%s: empty name."), "-S"));
+			or die _status 0, $cs->tagmsg(
+				$prog => $cs->diag(__(
+				"%s: empty name."), "-S"));
 		$opt{S}{$name} = $value;
 		push @written, "-S$_[1]";
 	},
@@ -879,12 +881,13 @@ sub do_init
 	my ($opt) = @_;
 	my %S = %{ $opt->{S} };
 
-	# What -S sets: where we are, and the defaults for A B a b c R F e.
+	# -S defaults for ABabcRFe.
 	my %Dd = (
 		A => '.',
 		B => '.',
 		a => 'html',
 		b => 'site',
+		c => 'temp',
 		R => 'Makefile.in',
 		F => 'MANIFEST',
 		e => '.ok',
@@ -899,7 +902,7 @@ sub do_init
 			$cs->tagmsg($prog => $cs->diag(__(
 			# HEY!  %s is the option (-Sx), and then what it may be
 			"%s: no such setting (valid: %s)"),
-			"-S$k", 'A B a b c R F e'));
+			"-S$k", 'ABabcRFe'));
 		$Dd{$k} = $S{$k};
 		defined $Dd{$k} && length $Dd{$k} or die _status 0,
 			$cs->tagmsg($prog => $cs->diag(__(

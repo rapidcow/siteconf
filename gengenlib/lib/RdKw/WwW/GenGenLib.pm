@@ -269,13 +269,16 @@ sub unescape_var
 		my $all = $&;
 		if (defined $1) {
 			'$';
-		} elsif (defined $2) {
+		}
+		elsif (defined $2) {
 			my $cp = hex $2;
 			$cp <= MAX_RUNE() or
 				die _status 0, tagmsg($prog => diag(__(
-					"illegal code point: U+%04X"), $cp));
+					'illegal code point: ${U+%04X}'),
+					$cp));
 			chr $cp;
-		} else {
+		}
+		else {
 			my $s = _decode_string($3);
 			defined $s ? $s : $all;
 		}
@@ -317,16 +320,24 @@ my %ESCAPE = (
 sub _decode_string
 {
 	my ($body) = @_;
-	my $bad;
-	$body =~ s{\\(?:x\{([0-9A-Fa-f]{1,8})\}|(.))}{
+	eval { $body =~ s{\\(?:x\{([0-9A-Fa-f]{1,8})\}|(.))}{
 		if (defined $1) {
 			my $cp = hex $1;
-			$cp <= MAX_RUNE() ? chr $cp : ($bad = 1, '');
-		} else {
-			$ESCAPE{$2} ? $ESCAPE{$2} : ($bad = 1, '');
+			$cp <= MAX_RUNE()
+				? chr $cp
+				: die diag(__(
+					'illegal code point: ${U+%04X}'),
+					$cp);
 		}
-	}gesx;
-	$bad ? undef : $body;
+		else {
+			$ESCAPE{$2}
+				? $ESCAPE{$2}
+				: die diag(__(
+					'illegal escape: %Q'),
+					$2);
+		}
+	}gesx; };
+	$@ ? return : $body;
 }
 
 sub scan_string
@@ -334,12 +345,12 @@ sub scan_string
 	my ($text, %opt) = @_;
 	my $prog = _getprog(\%opt, 'scan_string');
 	$text =~ /\A"/ or return;
-	$text =~ /\A"((?:[^"\\]|\\.)*)"/s or die _status 0, tagmsg($prog => diag(__(
-		"unterminated string: %q"), $text));
+	$text =~ /\A"((?:[^"\\]|\\.)*)"/s or die _status 0, tagmsg(
+		$prog => diag(__("unterminated string: %q"), $text));
 	my ($body, $end) = ($1, $+[0]);
-	my $s = _decode_string($body);
-	defined $s or die _status 0, tagmsg($prog => diag(__(
-		"bad escape or code point in string: %q"), substr($text, 0, $end)));
+	defined (my $s = _decode_string($body))
+		or die _status 0, tagmsg($prog =>
+			diag("%q: %s", substr($text, 0, $end), $@));
 	($s, substr($text, $end));
 }
 
@@ -425,7 +436,8 @@ sub write_file
 	# The modes come from fresh stat calls on both files, so the mode
 	# that the umask left on the temporary file is what is compared.
 	if ($exists && File::Compare::compare($tmp_fs, $file_fs) == 0
-		&& _file_mode($tmp_fs) == _file_mode($file_fs)) {
+		&& _file_mode($tmp_fs) == _file_mode($file_fs))
+	{
 		unlink $tmp_fs;
 		return 0;  # make it numeric so `>' isn't upset
 	}

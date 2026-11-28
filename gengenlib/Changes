@@ -19,7 +19,7 @@ Revision history of WwW-GenGenLib
       not.  Neither is required.
     + read_deps(FILE, lines => \%L): the line of each name read, in
       the shape of what is returned (HAVE => 1, NEED => [2, 2, 5]).
-    * read_make, update_file, read_deps, read_manifest: `cannot
+    * read_make, write_file, read_deps, read_manifest: `cannot
       open file NAME: why' (and so on), not `open <NAME: why'.
     *** read_make, write_make, write_file, load_state and
         read_deps take options as a flat hash after their fixed

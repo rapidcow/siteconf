@@ -17,7 +17,7 @@ use File::Temp qw( tempdir );
 
 use RdKw::I18N::CodeSets ();
 use RdKw::WwW::GenGenLib qw(
-	read_make write_make update_file load_state
+	read_make write_make write_file load_state
 	read_deps walk_deps );
 
 # What we name files here; if the locale cannot spell them, there is
@@ -46,14 +46,14 @@ my $bad = "x\x{D800}";
 ok(!eval { read_make("$udir/$bad"); 1; }, 'read_make: no surrogates');
 is($bad, "x\x{D800}", '... leaving the name be');
 
-# --- update_file, write_make, read_make: the name on disk is the locale's
+# --- write_file, write_make, read_make: the name on disk is the locale's
 {
 	my $f = "$udir/ß.mk";
 	cmp_ok(write_make($f, { name => 'résumé' }, prog => 'test'), '==', 2, 'write_make: created');
 	ok(-f fs($f), '... under its locale name');
 	is_deeply({ read_make($f) }, { name => 'résumé' }, 'read_make: by character name');
-	cmp_ok(update_file($f, "name=\trésumé\n"), '==', 0,
-		'update_file: unchanged is unchanged');
+	cmp_ok(write_file($f, "name=\trésumé\n"), '==', 0,
+		'write_file: unchanged is unchanged');
 }
 
 # --- load_state

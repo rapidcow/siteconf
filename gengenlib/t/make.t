@@ -14,14 +14,14 @@ use TestConsole;
 use File::Temp qw( tempdir );
 
 use RdKw::WwW::GenGenLib qw(
-	read_make write_make update_file
+	read_make write_make write_file
 	escape_vars unescape_vars
 	load_state
 );
 
 my $dir = tempdir(CLEANUP => 1);
 
-# --- write_make / read_make / update_file
+# --- write_make / read_make / write_file
 {
 	my $f = "$dir/x.mk";
 	# (a file of that name is someone else's)
@@ -123,10 +123,10 @@ ok(eval { unescape_vars('${U+FFFFFFFF}'); 1; }, 'unescape_vars: pass through');
 		'load_state: flat prog option');
 	like($@, qr/^state-test:/, 'load_state: chosen prefix');
 	my $f = "$dir/raw";
-	cmp_ok(update_file($f, "\xFF", raw => 1, prog => 'raw-test'), '==', 2,
-		'update_file: flat raw and prog options');
+	cmp_ok(write_file($f, "\xFF", raw => 1, prog => 'raw-test'), '==', 2,
+		'write_file: flat raw and prog options');
 	open my $fh, '<:raw', $f or die $!;
-	is(do { local $/; <$fh>; }, "\xFF", 'update_file: bytes unchanged');
+	is(do { local $/; <$fh>; }, "\xFF", 'write_file: bytes unchanged');
 	close $fh;
 	ok(eval { load_state($dir, prog => 'state-test'); 1; },
 		'load_state: flat options with configured state');

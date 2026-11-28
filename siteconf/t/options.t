@@ -143,7 +143,7 @@ like(said('many'), qr/Writing d\/e\/one\.do\n.*Writing two\.do\n.*To build, run:
 ok(-f "$dir/d/e/one.do" && -f "$dir/two.do", '... are written, directories and all');
 like(gen_error('many', 'x'), qr/generator many writes a file for each target, and cannot name them `x'/,
 	'... and cannot be named');
-# (update_file writes by way of a temporary file of its own, so a file
+# (write_file writes by way of a temporary file of its own, so a file
 # called tmp-x.do is only that)
 backend(Tmp => <<'PM');
 package RdKw::WwW::SiteConf::Builder::Tmp;

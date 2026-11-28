@@ -430,7 +430,7 @@ use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs to_argv tagmsg qq_ascii
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
 use RdKw::WwW::GenGenLib 0.0100 qw(
-	read_make read_deps update_file escape_dep
+	read_make read_deps write_file escape_dep
 	norm_dep uproot );
 use RdKw::WwW::SiteConf::Modifiers;
 
@@ -2666,7 +2666,7 @@ sub generate
 	$plan->{opt} = \%S;
 	my $My = "$self->{B}/MY";
 	# (one file, so that no goal is a file name; -l -F says which)
-	$self->_report('MY/MANIFEST', update_file("$My/MANIFEST",
+	$self->_report('MY/MANIFEST', write_file("$My/MANIFEST",
 		join("\n", map { $self->manifest_text($_) } @{ $plan->{goals} })));
 
 	# What made it, for the header (see header_comment): the program with
@@ -2688,8 +2688,8 @@ sub generate
 		my ($name, $text, $exec) = @$file;
 		my $path = "$self->{B}/$name";
 		_make_dir(dirname($path));
-		$self->_report($name, update_file($path, $text, raw => 1));
-		# (each time: update_file leaves a file alone that says the same)
+		$self->_report($name, write_file($path, $text, raw => 1));
+		# (each time: write_file leaves a file alone that says the same)
 		$exec and (chmod 0777 & ~umask, _to_fs($path)
 			or die tagmsg(E => diag(__("cannot chmod %q: %m"), $path)));
 	}

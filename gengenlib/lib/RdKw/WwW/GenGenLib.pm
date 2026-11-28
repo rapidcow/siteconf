@@ -54,7 +54,7 @@ use File::Spec;
 use File::Temp ();
 use IO::Handle ();
 
-# Whether File::Temp::tempfile takes PERMS (see update_file)
+# Whether File::Temp::tempfile takes PERMS (see write_file)
 use constant HAS_PERMS => eval { File::Temp->VERSION('0.2310'); 1; };
 
 # Import locale and set up gettext.
@@ -152,7 +152,7 @@ sub read_make
 
 =item B<write_make> I<file>, \%vars[, prog => 'write_make']
 
-The reverse of L</read_make>, through L</update_file>.  Keys are
+The reverse of L</read_make>, through L</write_file>.  Keys are
 sorted by length, then alphabetically.  Values are escaped by
 L</escape_vars>.  There is no header: I<prog> is only for errors.
 
@@ -180,7 +180,7 @@ sub write_make
 			$prog => diag(__("bad name: %q"), $k));
 		$text .= "$k=\t" . escape_vars($v) . "\n";  # no $opt
 	}
-	update_file($file, $text, prog => $prog);
+	write_file($file, $text, prog => $prog);
 }
 
 =item B<escape_vars> I<value>, ...
@@ -331,7 +331,7 @@ sub scan_string
 	($s, substr($text, $end));
 }
 
-=item B<update_file> I<file>, I<text>[, prog => I<prog>, encoding => "UTF-8", raw => 1]
+=item B<write_file> I<file>, I<text>[, prog => I<prog>, encoding => "UTF-8", raw => 1]
 
 Replace I<file> with I<text> (characters, written as UTF-8) -- but
 only if that would change anything.  Preserving the mtime means a
@@ -351,10 +351,10 @@ The I<prog>, I<raw>, and I<encoding> options were added in 0.0100.
 
 =cut
 
-sub update_file
+sub write_file
 {
 	my ($file, $text, %opt) = @_;
-	my $prog = _getprog(\%opt, 'update_file');
+	my $prog = _getprog(\%opt, 'write_file');
 	defined $opt{encoding} or $opt{encoding} = "UTF-8";
 	my $layer = $opt{raw} ? ':raw' : ":encoding($opt{encoding})";
 	# The temporary file is in the same directory, so that the rename

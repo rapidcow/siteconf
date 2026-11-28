@@ -39,7 +39,8 @@ sub setup
 }
 
 # `make' or whatever $MAKE says (see Tools), if it can run a makefile at all.
-# (It does not run `make -v': that is a different thing to bmake.)
+# Do not use `make -v', since not mean version universally!
+# (In bmake, `make -v unix' prints a variable named ${unix}.)
 sub make
 {
 	my $make = make_cmd();

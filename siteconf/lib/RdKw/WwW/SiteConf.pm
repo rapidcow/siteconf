@@ -426,6 +426,7 @@ use File::Basename qw( dirname basename );
 use File::Spec ();
 
 # Import locale and set up gettext.
+use RdKw::I18N::CodeSets qw( MAX_RUNE );
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs un_fs to_argv tagmsg qq_ascii );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
@@ -717,11 +718,9 @@ sub _expand
 			$out .= $self->_string($1, $where);
 		} elsif ($spec =~ /\G\$\{([Uu]\+[^}]*)\}/gc) {
 			my $u = $1;
-			$u =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ and hex($1) <= 0x10FFFF
-				or die _status 0, tagmsg(E => diag(__(
-					# HEY!  the last %s is what is in a header, as ${U+...}
-					"%s: %q: %s is no code point"),
-					$where, $spec, "\${$u}"));
+			$u =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/ and hex($1) <= MAX_RUNE()
+				or die _status 0, tagmsg(E => diag("%s: %q: %s",
+					$where, $spec, diag(__('illegal rune: %s'), "\${$u}")));
 			$out .= chr hex $1;
 		} elsif ($spec =~ /\G\$(?:\{(\w+)\}|(\w))/gc) {
 			my $x = defined $1 ? $1 : $2;
@@ -1323,11 +1322,9 @@ sub _subst
 		} elsif ($x =~ /\A[Uu]\+/) {
 			# a character, as in a header (see _expand)
 			$x =~ /\A[Uu]\+([0-9A-Fa-f]{1,8})\z/
-				and hex($1) <= 0x10FFFF
-				or die _status 0, tagmsg(E => diag(__(
-					# HEY!  the second %s is what is in Makefile.in, as ${U+...}
-					"%s: %s is not a valid Unicode code point"),
-					$where, "\${$x}"));
+				and hex($1) <= MAX_RUNE()
+				or die _status 0, tagmsg(E => diag("%s: %s",
+					$where, diag(__('illegal rune: %s'), "\${$x}")));
 			$val = chr hex $1;
 		} elsif ($x eq '@' or $x eq '.TARGET') {
 			defined $node or die _status 0, tagmsg(E => diag(__(

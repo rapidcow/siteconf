@@ -58,7 +58,7 @@ use IO::Handle ();
 use constant HAS_PERMS => eval { File::Temp->VERSION('0.2310'); 1; };
 
 # Import locale and set up gettext.
-use RdKw::I18N::CodeSets qw(MAX_RUNE);
+use RdKw::I18N::CodeSets qw( MAX_RUNE );
 use RdKw::I18N::CodeSets::Functions qw( diag to_fs tagmsg );
 use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 
@@ -273,8 +273,7 @@ sub unescape_var
 		elsif (defined $2) {
 			my $cp = hex $2;
 			$cp <= MAX_RUNE() or
-				die _status 0, tagmsg($prog => diag("%q: %s", $all,
-					diag(__('illegal code point: U+%04X'), $cp)));
+				die _status 0, tagmsg($prog => diag("%q: %s", $all, __('illegal rune')));
 			chr $cp;
 		}
 		else {
@@ -324,9 +323,8 @@ sub _decode_string
 			my $cp = hex $1;
 			$cp <= MAX_RUNE()
 				? chr $cp
-				: die diag(__(
-					'illegal code point: U+%04X'),
-					$cp) . "\n";
+				: die diag(__('illegal rune: %s'),
+					diag('U+%04X', $cp)) . "\n";
 		}
 		else {
 			$ESCAPE{$2}
@@ -909,8 +907,8 @@ sub norm_deps
 					$out .= sprintf '${U+%04X}', $n;
 				} else {
 					$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
-						"cannot normalize %q: bad Unicode code point %s"),
-						$_, "\${$name}"));
+						"cannot normalize %q: %s"),
+						$_, diag(__('illegal rune: %s'), "\${$name}")));
 					$out .= ($keep ? '$' : '${$}') . "{$name}";
 				}
 			} elsif (/\G\$\{("(?:[^"\\]|\\.)*")\}/gc) {
@@ -925,7 +923,7 @@ sub norm_deps
 					$out .= escape_deps($s);
 				} else {
 					$kwds->{strict} and die _status 0, tagmsg($prog => diag(__(
-						"cannot normalize %q: bad escape or code point in string %s"),
+						"cannot normalize %q: bad escape or rune in string %s"),
 						$_, $str));
 					$out .= ($keep ? '$' : '${$}') . "{$str}";
 				}

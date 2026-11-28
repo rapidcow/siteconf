@@ -95,7 +95,7 @@ sub bad_late
 }
 bad(qr/\Asiteconf: MANIFEST: missing goal `nope'$/, 'no such goal', '-l', '-t', 'nope');
 bad(qr/`-t all:need': expected NEED or WANT, not `need'/, 'no such type', '-l', '-t', 'all:need');
-bad(qr/-0400: not a valid ASCII octal code point/, 'too big a separator', '-l', '-0400');
+bad(qr/-0400: not a valid ASCII octal rune/, 'too big a separator', '-l', '-0400');
 bad(qr/-0 is not permitted in mode -g \(make\)/, '-0 elsewhere', '-g', '-0');
 bad(qr/-t is not permitted in mode -i \(init\)/, '-t elsewhere', '-i', '-t', 'all');
 bad(qr/\Asiteconf: cannot open file `MY\/config\.mk': /, '-B . is not configured', '-l', '-B', '.');

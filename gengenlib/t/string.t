@@ -26,7 +26,7 @@ for my $bad ('"abc', '"\q"', '"\x{110000}"', '"\x{}"', '"a\\"') {
 	like($@, qr/\Ascan_string: /, '... said by name');
 }
 for (['"ab\qrr"', 'ab\qrr', qr/illegal escape: "?q"?/],
-	['"a\x{110000}b"', 'a\x{110000}b', qr/illegal code point: U\+110000/])
+	['"a\x{110000}b"', 'a\x{110000}b', qr/illegal rune: U\+110000/])
 {
 	my ($bad, $body, $what) = @$_;
 	eval { scan_string($bad); 1; };

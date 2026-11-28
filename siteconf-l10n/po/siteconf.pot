@@ -73,7 +73,7 @@ msgid "cannot write to stdout: %m"
 msgstr ""
 
 #: ../siteconf/script/siteconf:763
-msgid "%#q: not a valid ASCII octal code point"
+msgid "%#q: not a valid ASCII octal rune"
 msgstr ""
 
 #: ../siteconf/script/siteconf:781 ../siteconf/lib/RdKw/WwW/SiteConf.pm:571
@@ -274,9 +274,13 @@ msgstr ""
 msgid "%1$s: %2$q: ${%3$s} is relative to ${B}; use ${B}/${%3$s}."
 msgstr ""
 
-#. HEY!  the last %s is what is in a header, as ${U+...}
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:707
-msgid "%s: %q: %s is no code point"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:276
+msgid "illegal rune"
+msgstr ""
+
+#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:723
+#, perl-format
+msgid "illegal rune: %s"
 msgstr ""
 
 #. HEY!  the last %s is the variable, as ${name}
@@ -363,12 +367,6 @@ msgstr ""
 #: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1280
 #, perl-format
 msgid "%s: junk after the string in %s"
-msgstr ""
-
-#. HEY!  the second %s is what is in Makefile.in, as ${U+...}
-#: ../siteconf/lib/RdKw/WwW/SiteConf.pm:1302
-#, perl-format
-msgid "%s: %s is not a valid Unicode code point"
 msgstr ""
 
 #. HEY!  the second %s is a variable, as ${@} (or ${.TARGET}),
@@ -1157,7 +1155,7 @@ msgid "unterminated string: %q"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:331
-msgid "bad escape or code point in string: %q"
+msgid "bad escape or rune in string: %q"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:409
@@ -1183,12 +1181,13 @@ msgstr ""
 msgid "%#q line %d: You HAVE too many."
 msgstr ""
 
-#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:841
-msgid "cannot normalize %q: bad Unicode code point %s"
+#: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:910
+#, perl-format
+msgid "cannot normalize %q: %s"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:857
-msgid "cannot normalize %q: bad escape or code point in string %s"
+msgid "cannot normalize %q: bad escape or rune in string %s"
 msgstr ""
 
 #: ../gengenlib/lib/RdKw/WwW/GenGenLib.pm:864

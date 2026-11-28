@@ -762,7 +762,7 @@ sub do_list
 		$opt->{0} =~ /\A[0-7]{0,3}\z/
 			&& (my $ord = oct($opt->{0} || 0)) <= 0377
 			or die _status 0, $cs->tagmsg($prog => $cs->diag(__(
-				"%#q: not a valid ASCII octal code point"),
+				"%#q: not a valid ASCII octal rune"),
 				"-0$opt->{0}"));
 		$sep = chr $ord;
 	}

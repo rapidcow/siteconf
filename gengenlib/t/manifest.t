@@ -94,7 +94,7 @@ bad("# nothing\n", qr/\Aread_manifest: MANIFEST: no goal/, 'empty');
 bad("MAKE a\nNEED a\$b\n", qr/line 2: bad substitution: \$\{b\}$/, 'a variable');
 bad("MAKE a\nNEED \${a}/x\n", qr/bad substitution: \$\{a\}/, '... even a well-known one');
 bad("MAKE a\nNEED a\$\n", qr/line 2: cannot normalize `a\$': trailing \$/, 'a stray $');
-bad("MAKE a\nNEED \${U+100000000}\n", qr/bad Unicode code point/, 'no code point');
+bad("MAKE a\nNEED \${U+100000000}\n", qr/illegal rune: /, 'no code point');
 bad("MAKE a\nNEED \${A}\n", qr/`\$\{A\}' is empty/, 'the root alone');
 bad("MAKE a\nNEED x\${U+0000}\n", qr/has a NUL/, 'NUL');
 {

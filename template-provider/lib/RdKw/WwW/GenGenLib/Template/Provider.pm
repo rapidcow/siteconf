@@ -312,7 +312,7 @@ sub _named
 	$path = File::Spec->canonpath($path);
 	my $alias = $self->_alias($path);
 	# HEY!  The first %q is a path, and the second is how a
-	# header would write it, as ${a}/x.
+	# header would write it (${a}/x).
 	defined $alias ? diag(__("%q (aka %q)"), $path, $alias) : diag('%q', $path);
 }
 

@@ -14,9 +14,9 @@ use RdKw::WwW::GenLib qw( parse_base );
 
 # --- parse_base
 {
-	my %O = (site_url => 'https://example.test/x?y#z', base_url => '/');
+	my %O = (site_url => 'https://example.test/x/?y#z', base_url => '/');
 	ok(eval { parse_base(\%O); 1; }, 'inherits path') or diag $@;
-	is($O{base_url}, '/x', 'base_url inherited');
+	is($O{base_url}, '/x/', 'base_url inherited');
 	is($O{site_url}, 'https://example.test', 'site_url is host only');
 	ok(!ref $O{site_url}, 'site_url is a plain string');
 

@@ -22,6 +22,9 @@ Revision history of WwW-GenLib
     *** parse_base now allows any URI scheme for base_url
         (not just https? and file).
 
+    *** parse_base now won't let you ruin your relative paths
+        by not terminating your base_url with a slash.
+
 
 0.02_03  2026-11-09  RC
     + locate absolute/site-relative specifications

@@ -484,14 +484,20 @@ sub parse_base
 		}
 	}
 
+	# I have been lax about this, but I realized
+	# I never should have been since this breaks
+	# relative paths beyond a doubt.
+	$base_url =~ /\/\z/ or die _status 0, tagmsg($prog => __(
+		"base_url lacks a trailing slash"));
+
 	$site_url->fragment(undef);
 	$site_url->query(undef);
 	$site_url->path('');
 
-	# Plain strings, so that what we write to MY/option.mk
-	# and what we hand over to TT2 are one and the same.
+	# unbless site_url.  (This is a bit paranoid
+	# coming from Claude, but whatever I guess >n>)
 	$D->{base_url} = $base_url;
-	$D->{site_url} = "$site_url";
+	$D->{site_url} = $site_url->as_string;
 	# All is well
 	1;
 }

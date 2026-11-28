@@ -221,7 +221,8 @@ sub parse
 		$enc = $name eq 'diag' ? 'unicode' : 'UTF-8' unless defined $enc;
 		push @pairs, $name, $enc;
 	}
-	# Leave the context unchanged if any codeset is invalid.
+	# Pass new args!  But do it on a copy first,
+	# so changes are atomic.
 	my $new = eval { $self->new(@pairs) } or die "$prog$@";
 	%$self = %$new;
 	$self;
@@ -275,7 +276,7 @@ sub parse_from_argv
 	my ($self, $argv, @opt) = @_;
 	my $prog = _prog_opt(parse_from_argv => $self, \@opt);
 	Carp::croak('parse_from_argv: not an array reference') unless ref $argv eq 'ARRAY';
-	# Commit the context and arguments only after all options are valid.
+	# atomicity here likewise.
 	my ($new, $n) = ($self->new, 0);
 	while ($n < @$argv && defined $argv->[$n] && $argv->[$n] =~ /\A-C(.*)\z/s) {
 		my $spec = $1;
@@ -352,7 +353,8 @@ sub _set
 sub _is_ascii
 {
 	my ($enc) = @_;
-	# Encode resolves ASCII aliases to this canonical name.
+	# Names like US-ASCII, ANSI_X3.4-1968, 646, ... should
+	# normalize to this single value by Encode::find_encoding.
 	defined $enc && $enc eq 'ascii';
 }
 

@@ -890,7 +890,7 @@ sub _code
 	(undef, $@ ne '' ? _encode_error($@) : 'undefined');
 }
 
-=item I<cs>->B<diag_name>( I<name>, soft => 0 )
+=item I<cs>->B<diag_name>( I<name>, soft => 0, perl => 0 )
 
 I<name>, for diagnostics C<`name'> if it is all printable ASCII
 but for C<`> and C<'> (which would confuse the quotes), and
@@ -901,7 +901,8 @@ and the like (C<\p{C}> and C<\p{Z}>, but for the ASCII space), and
 what L</stderr> cannot spell.
 
 If C<soft> is true, whole words are interpolated verbatim without
-quoting.
+quoting.  If C<perl> is true, a perl-ish qq string is returned as
+a fallback.
 
 =cut
 
@@ -925,7 +926,9 @@ sub diag_name
 			return $name;
 		}
 	}
-	return "`$name'" if $name =~ /\A(?:(?![`'])[\x20-\x7e])*\z/;
+	if (!$opt{perl} && $name =~ /\A(?:(?![`'])[\x20-\x7e])*\z/) {
+		return "`$name'";
+	}
 	$self->diag_mode eq 'ascii' ? qq_ascii($name)
 		: qq_unicode($name, $self->encoding('stderr'));
 }
@@ -977,12 +980,14 @@ sub diag
 			(my $said = $conv eq '%' ? '%' : _perlqq($enc, _strerror($errno))) =~ s/%/%%/g;
 			$out .= $said;
 		}
-		elsif ($conv =~ /\A[sqdiuoxX]\z/) {
+		elsif ($conv =~ /\A[sqdiuoxQX]\z/) {
 			my $i = defined $pos ? $pos - 1 : $next++;
 			$i < @args or Carp::croak("diag: missing argument for $spec");
 			my $arg = $args[$i];
-			if ($conv eq 'q') {
-				my $name = $self->diag_name($arg, soft => 0 + ($flags =~ /#/));
+			if ($conv eq 'q' || $conv eq 'Q') {
+				my $name = $self->diag_name($arg,
+					soft => 0 + ($flags =~ /#/),
+					perl => $conv eq 'Q');
 				($arg, $conv) = ($name, 's');
 			}
 			elsif ($conv eq 's') {
@@ -1078,8 +1083,7 @@ with an escape (C<\n>, C<\x{a0}>, C<\">, C<\$>) for all but printable
 ASCII and for what Perl would take for something else.  The result is
 printable ASCII, and the same for the same characters, however perl
 stores them (L<Data::Dumper> with C<Useqq> says some in octal, and
-only for some strings).  It is undef if I<string> is, so that a
-warning for it is the caller's.
+only for some strings).  Return undef if I<string> is undef.
 
 =cut
 
@@ -1097,7 +1101,7 @@ Not a method.  Like L</qq_ascii>, but only what would not show is
 escaped (controls, separators and the like: C<\p{C}> and C<\p{Z}>,
 but for the ASCII space), and what I<encoding> (a name that
 L<Encode> knows) cannot spell.  Without an I<encoding>, every other
-character is as it is.  It is undef if I<string> is.
+character is preserved.  Return undef if I<string> is undef.
 
 =cut
 
@@ -1108,7 +1112,8 @@ sub qq_unicode
 	return undef unless defined $s;
 	(my $q = $s) =~ s{((?! )[\p{C}\p{Z}]|["\\\$\@])|([^\x00-\x7f])}{
 		defined $1 ? _qq_char($1)
-			: !defined $enc || _spellable($enc, $2) ? $2 : _qq_char($2)
+			: !defined $enc || _spellable($enc, $2)
+			? $2 : _qq_char($2)
 	}ge;
 	qq{"$q"};
 }

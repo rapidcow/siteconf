@@ -20,8 +20,7 @@ use RdKw::WwW::GenGenLib qw( write_make );
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
 
-# GNU make newer than 3.81:
-my $gmake = gmake_since(3, 82);
+my $gmake = gmake_since(0, 0);
 plan tests => 10;
 
 sub run
@@ -85,7 +84,7 @@ sub builds
 }
 
 SKIP: {
-	skip 'no GNU Make newer than 3.81', 7 unless $gmake;
+	skip 'no GNU make', 7 unless $gmake;
 	builds('gmake', $gmake, sub { !(run($_[0], $gmake, '-q'))[0] });
 }
 {

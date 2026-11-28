@@ -22,7 +22,7 @@ $ENV{PERL5LIB} = perl5lib();
 # Whatever can run a makefile at all, as -G make; GNU make, as -G gmake
 my $make = make_cmd();
 $make = undef if system("printf 'all:\\n' | $make -f - >/dev/null 2>&1");
-my $gmake = gmake_since(3, 81);
+my $gmake = gmake_since(0, 0);
 plan tests => 6;
 
 my $X = q{d$llar $(x) ${y} $$ $ '$' "$" a|b `x`};

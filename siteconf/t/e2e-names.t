@@ -20,9 +20,9 @@ use RdKw::WwW::GenGenLib qw( write_make escape_dep );
 my $script = script_path();
 $ENV{PERL5LIB} = perl5lib();
 
-# Any (3.81 is the oldest tested); and one that can escape a `:' in a
-# prerequisite, which came in 4.0 (`unescape_char' in read.c)
-my $gmake = gmake_since(3, 81);
+# Escaping a `:' in a prerequisite came in GNU make 4.0, with
+# `unescape_char' in read.c.
+my $gmake = gmake_since(0, 0);
 my $gmake_colon = gmake_since(4, 0);
 plan tests => 58;
 

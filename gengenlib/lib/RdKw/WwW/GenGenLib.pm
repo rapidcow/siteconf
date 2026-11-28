@@ -273,9 +273,8 @@ sub unescape_var
 		elsif (defined $2) {
 			my $cp = hex $2;
 			$cp <= MAX_RUNE() or
-				die _status 0, tagmsg($prog => tagmsg($all =>
-					diag(__('illegal code point: ${U+%04X}'),
-					$cp)));
+				die _status 0, tagmsg($prog => diag("%q: %s", $all,
+					diag(__('illegal code point: U+%04X'), $cp)));
 			chr $cp;
 		}
 		else {
@@ -321,21 +320,20 @@ sub _decode_string
 {
 	my ($body) = @_;
 	eval { $body =~ s{\\(?:x\{([0-9A-Fa-f]{1,8})\}|(.))}{
-		my $all = $&;
 		if (defined $1) {
 			my $cp = hex $1;
 			$cp <= MAX_RUNE()
 				? chr $cp
-				: die tagmsg($all => diag(__(
-					'illegal code point: ${U+%04X}'),
-					$cp));
+				: die diag(__(
+					'illegal code point: U+%04X'),
+					$cp) . "\n";
 		}
 		else {
 			$ESCAPE{$2}
 				? $ESCAPE{$2}
-				: die tagmsg($all => diag(__(
-					'illegal escape: %Q'),
-					$2));
+				: die diag(__(
+					'illegal escape: %#Q'),
+					$2) . "\n";
 		}
 	}gesx; };
 	$@ ? return : $body;
@@ -351,7 +349,7 @@ sub scan_string
 	my ($body, $end) = ($1, $+[0]);
 	defined (my $s = _decode_string($body))
 		or die _status 0, tagmsg($prog =>
-			diag("%q: %s", substr($text, 0, $end), $@));
+			diag("%q: %s", $body, $@));
 	($s, substr($text, $end));
 }
 

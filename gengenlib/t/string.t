@@ -25,12 +25,12 @@ for my $bad ('"abc', '"\q"', '"\x{110000}"', '"\x{}"', '"a\\"') {
 	ok(!eval { scan_string($bad); 1; }, "scan_string: $bad is an error");
 	like($@, qr/\Ascan_string: /, '... said by name');
 }
-for (['"\q"', '\q', 'illegal escape'],
-	['"a\x{110000}b"', '\x{110000}', 'illegal code point'])
+for (['"ab\qrr"', 'ab\qrr', qr/illegal escape: "?q"?/],
+	['"a\x{110000}b"', 'a\x{110000}b', qr/illegal code point: U\+110000/])
 {
-	my ($bad, $sub, $what) = @$_;
+	my ($bad, $body, $what) = @$_;
 	eval { scan_string($bad); 1; };
-	like($@, qr/: .*\Q$sub\E.*: \Q$what\E: .*\n\z/, "scan_string: $sub says $what");
+	like($@, qr/\Ascan_string: .\Q$body\E.: $what\n\z/, "scan_string: $body is named");
 	unlike($@, qr/ at \S+ line \d+/, '... and not where in perl');
 }
 

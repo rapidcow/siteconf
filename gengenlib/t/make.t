@@ -98,13 +98,13 @@ my $dir = tempdir(CLEANUP => 1);
 	print $fh "a=\tx\${U+110000}\n";
 	close $fh;
 	ok(!eval { read_make($f); 1; }, 'read_make: no such code point');
-	like($@, qr/\$\{U\+110000\}.*: illegal code point: .*\n\z/, '... says which');
+	like($@, qr/\$\{U\+110000\}.: illegal code point: U\+110000\n\z/, '... says which');
 	ok(!eval { read_make("$dir/nonesuch.mk", prog => 'configure'); 1; }, 'read_make: no file');
 }
 is(escape_vars(undef), undef, 'escape_vars: undef is undef');
 is(unescape_vars('a${U+0020}b${$}{x}'), 'a b${x}', 'unescape_vars');
 ok(!eval { unescape_vars('${U+FFFFFFFF}'); 1; }, 'unescape_vars: no such code point');
-like($@, qr/\Aunescape_vars: .*\$\{U\+FFFFFFFF\}.*: illegal code point: .*\n\z/, '... says which');
+like($@, qr/\Aunescape_vars: .\$\{U\+FFFFFFFF\}.: illegal code point: U\+FFFFFFFF\n\z/, '... says which');
 
 # --- load_state
 {

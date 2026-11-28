@@ -65,7 +65,8 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 sub _status { $! = 0; $? = shift; @_; }
 
 our @EXPORT_OK = qw(
-	read_make write_make write_file load_state sync_edir
+	read_make write_make write_file load_state
+	write_mdir
 	read_deps norm_deps norm_dep subs_deps subs_dep
 	escape_vars escape_var
 	escape_deps escape_dep
@@ -168,8 +169,7 @@ sub write_make
 	# quoting with $cs->diag in case $prog contains
 	# a newline, and breaks the whole file for us.
 	my $text = "";
-	for my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
-		my $v = defined $H->{$k} ? $H->{$k} : '';
+	foreach my $k (sort { length($a) <=> length($b) || $a cmp $b } keys %$H) {
 		$k =~ /\A[^\s=#]+\z/ or die _status 0, tagmsg(
 			# HEY!  by bad we mean the make variable name contains
 			# metacharacters which should not exist in a legal name.
@@ -178,7 +178,8 @@ sub write_make
 			# (but let's not get into the topic of identity crisis...
 			# we're talking about SYNTACTICALLY invalid names here.))
 			$prog => diag(__("bad name: %q"), $k));
-		$text .= "$k=\t" . escape_vars($v) . "\n";  # no $opt
+		my $s = defined $H->{$k} ? escape_vars($H->{$k}) : '${.UNDEF}';
+		$text .= "$k=\t" . $s . "\n";  # no $opt
 	}
 	write_file($file, $text, prog => $prog);
 }
@@ -331,14 +332,16 @@ sub scan_string
 	($s, substr($text, $end));
 }
 
-=item B<write_file> I<file>, I<text>[, prog => I<prog>, encoding => "UTF-8", raw => 1]
+=item B<write_file> I<file>, I<text>[, prog => I<prog>, encoding => "UTF-8", mode => 0666 & ~umask, raw => 1]
 
 Replace I<file> with I<text> (characters, written as UTF-8) -- but
 only if that would change anything.  Preserving the mtime means a
 reconfiguration that changes nothing will not rebuild the world.
 Return 2 if the file is created, 1 if updated, and 0 if not modified.
 
-With I<encoding>, 
+The I<encoding> option sets the Perl IO layer to that encoding.
+The I<mode> option sets the file mode via L<perlfunc/chmod>.
+
 With C<< raw => 1 >>, I<text> is bytes.  They are written as they are.
 Use this for a Makefile: its names are spelled by
 L<RdKw::I18N::CodeSets/to_fs>, and make reads them as bytes.
@@ -356,11 +359,12 @@ sub write_file
 	my ($file, $text, %opt) = @_;
 	my $prog = _getprog(\%opt, 'write_file');
 	defined $opt{encoding} or $opt{encoding} = "UTF-8";
+	my $mode = defined $opt{mode} ? $opt{mode} : 0666 & ~umask;
 	my $layer = $opt{raw} ? ':raw' : ":encoding($opt{encoding})";
 	# The temporary file is in the same directory, so that the rename
 	# is atomic.  File::Temp gives it a name that no file has (a redo
-	# file, say, which a fixed name like tmp-Makefile could be), and
-	# creates it with O_EXCL.
+	# file, say, which a fixed name like tmp-looking.do could conflict
+	# with), and creates it with O_EXCL.
 	my $dir = dirname($file);
 	my $file_fs = to_fs($file, { prog => $prog });
 	my $dir_fs = to_fs($dir, { prog => $prog });
@@ -377,10 +381,11 @@ sub write_file
 	my ($fh, $tmp_fs) = eval {
 		File::Temp::tempfile("$template.XXXXXXXX",
 			DIR => $dir_fs,
-			(HAS_PERMS() ? (PERMS => 0666) : ()),
+			(HAS_PERMS() ? (PERMS => $mode) : ()),
 			UNLINK => 0) }
 		or die tagmsg($prog => diag(__(
-		"cannot create file %q: %m"), File::Spec->catfile($dir, "$template.XXXXXXXX")));
+			"cannot create file %q: %m"),
+			File::Spec->catfile($dir, "$template.XXXXXXXX")));
 	my $tmp = File::Spec->catfile($dir, basename($tmp_fs));
 	my $fail = sub {
 		my $msg = diag(@_);
@@ -391,7 +396,7 @@ sub write_file
 		$! = $errno;
 		die tagmsg($prog => $msg);
 	};
-	chmod 0666 & ~umask, $tmp_fs
+	chmod $mode, $tmp_fs
 		or $fail->(__("cannot write file %q: %m"), $tmp)
 		unless HAS_PERMS();
 	binmode $fh, $layer
@@ -446,6 +451,12 @@ sub load_state
 		$S{$_} = { read_make($file, prog => $prog) };
 	}
 	%S;
+}
+
+sub write_mdir
+{
+	my ($mdir, $nvar, $pick, $ovar, %opt) = @_;
+	...;
 }
 
 =item B<read_deps> I<file>[, forgive_missing => 0, prog => 'read_deps', lines => \%lines]

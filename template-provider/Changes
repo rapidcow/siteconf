@@ -28,7 +28,7 @@ Revision history of WwW-GenGenLib-Template-Provider
       `file'), and not how to fix it; and name a file as a
       header would too, after it, if one of the PREFIXES
       leads there: `site/x' (${a}/x), escaped so that it is
-      one name in a header.  (This is borrowed from Neocities code!)
+      one name in a header.  (Borrowed from Neocities code!)
 
     + PREFIXES: those symbolic prefixes (by default ${a},
       ${B}/${b} and ${B}/${c}; a list given is the whole

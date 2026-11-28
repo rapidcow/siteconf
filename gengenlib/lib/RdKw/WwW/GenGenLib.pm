@@ -332,7 +332,7 @@ sub scan_string
 	($s, substr($text, $end));
 }
 
-=item B<write_file> I<file>, I<text>[, prog => I<prog>, encoding => "UTF-8", mode => 0666 & ~umask, raw => 1]
+=item B<write_file> I<file>, I<text>[, prog => I<prog>, encoding => "UTF-8", mode => 0666, raw => 1]
 
 Replace I<file> with I<text> (characters, written as UTF-8) -- but
 only if that would change anything.  Preserving the mtime means a
@@ -340,7 +340,9 @@ reconfiguration that changes nothing will not rebuild the world.
 Return 2 if the file is created, 1 if updated, and 0 if not modified.
 
 The I<encoding> option sets the Perl IO layer to that encoding.
-The I<mode> option sets the file mode via L<perlfunc/chmod>.
+The I<mode> option sets the file mode via L<perlfunc/chmod>,
+after applying the current process's umask.  For File::Temp 0.2310
+or newer, this is passed to L<perlfunc/sysopen> directly.
 
 With C<< raw => 1 >>, I<text> is bytes.  They are written as they are.
 Use this for a Makefile: its names are spelled by
@@ -359,7 +361,7 @@ sub write_file
 	my ($file, $text, %opt) = @_;
 	my $prog = _getprog(\%opt, 'write_file');
 	defined $opt{encoding} or $opt{encoding} = "UTF-8";
-	my $mode = defined $opt{mode} ? $opt{mode} : 0666 & ~umask;
+	my $mode = defined $opt{mode} ? $opt{mode} : 0666;
 	my $layer = $opt{raw} ? ':raw' : ":encoding($opt{encoding})";
 	# The temporary file is in the same directory, so that the rename
 	# is atomic.  File::Temp gives it a name that no file has (a redo
@@ -396,7 +398,7 @@ sub write_file
 		$! = $errno;
 		die tagmsg($prog => $msg);
 	};
-	chmod $mode, $tmp_fs
+	chmod $mode & ~umask, $tmp_fs
 		or $fail->(__("cannot write file %q: %m"), $tmp)
 		unless HAS_PERMS();
 	binmode $fh, $layer

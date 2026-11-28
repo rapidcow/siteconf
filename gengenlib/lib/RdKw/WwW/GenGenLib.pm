@@ -30,10 +30,9 @@ system and now operates without web-specific libraries (i.e.,
 L<URI> and L<URI::Escape>).  For the web-specific parts see
 L<RdKw::WwW::GenLib>.
 
-File names are character strings, as is everything else: they are
-spelled as L<RdKw::I18N::CodeSets> says (L<RdKw::I18N::CodeSets/filesys>
-of C<< RdKw::I18N::CodeSets->locale >>) only on their way to the system,
-and a name that cannot be spelled there is an error.
+File names are character strings, as is everything else:
+they are encoded to the locale's file system encoding
+(L<RdKw::I18N::CodeSets/filesys>).  Contents of 
 What is I<in> the files is always UTF-8.
 
 What we say (when we die) is said in the language of the locale, from
@@ -66,7 +65,7 @@ use RdKw::L10N::TextDomain ':module' => 'RdKw::WwW::SiteConf::L10N';
 sub _status { $! = 0; $? = shift; @_; }
 
 our @EXPORT_OK = qw(
-	read_make write_make update_file load_state
+	read_make write_make write_file load_state sync_edir
 	read_deps norm_deps norm_dep subs_deps subs_dep
 	escape_vars escape_var
 	escape_deps escape_dep
@@ -332,13 +331,14 @@ sub scan_string
 	($s, substr($text, $end));
 }
 
-=item B<update_file> I<file>, I<text>[, prog => I<prog>, raw => 1]
+=item B<update_file> I<file>, I<text>[, prog => I<prog>, encoding => "UTF-8", raw => 1]
 
 Replace I<file> with I<text> (characters, written as UTF-8) -- but
 only if that would change anything.  Preserving the mtime means a
 reconfiguration that changes nothing will not rebuild the world.
 Return 2 if the file is created, 1 if updated, and 0 if not modified.
 
+With I<encoding>, 
 With C<< raw => 1 >>, I<text> is bytes.  They are written as they are.
 Use this for a Makefile: its names are spelled by
 L<RdKw::I18N::CodeSets/to_fs>, and make reads them as bytes.
@@ -347,7 +347,7 @@ This function is not compatible with the original B<update_file>
 in genlib 0.0000; use
 C<< $r > 1 ? 'created' : $r ? 'updated' : 'unchanged' >>.
 
-The I<prog> and raw options were added in 0.0100.
+The I<prog>, I<raw>, and I<encoding> options were added in 0.0100.
 
 =cut
 
@@ -355,7 +355,8 @@ sub update_file
 {
 	my ($file, $text, %opt) = @_;
 	my $prog = _getprog(\%opt, 'update_file');
-	my $layer = $opt{raw} ? ':raw' : ':encoding(UTF-8)';
+	defined $opt{encoding} or $opt{encoding} = "UTF-8";
+	my $layer = $opt{raw} ? ':raw' : ":encoding($opt{encoding})";
 	# The temporary file is in the same directory, so that the rename
 	# is atomic.  File::Temp gives it a name that no file has (a redo
 	# file, say, which a fixed name like tmp-Makefile could be), and
